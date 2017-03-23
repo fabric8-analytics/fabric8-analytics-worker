@@ -1,0 +1,12 @@
+---
+  # This flow is used in liveness probes and the flow actually does nothing. With this we just ensure that we are able
+  # to connect to the broker and publish messages there. If no broker listens on this queue, it is also OK since old
+  # messages get automatically deleted, iff the broker is not configured to persist messages forever.
+  flow-definitions:
+    - name: 'livenessFlow'
+      queue: '{DEPLOYMENT_PREFIX}_livenessFlow_v0'
+      edges:
+        - from:
+          to: 'livenessFlow'
+          condition:
+            name: 'alwaysFalse'

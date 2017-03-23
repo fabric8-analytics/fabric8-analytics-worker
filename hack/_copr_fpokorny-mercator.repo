@@ -1,0 +1,8 @@
+[podvody-mercator-go]
+name=Copr repo for mercator-go owned by fpokorny
+baseurl=http://coprbe.devel.redhat.com/repos/fpokorny/mercator-go/epel-$releasever-$basearch/
+skip_if_unavailable=True
+gpgcheck=0
+gpgkey=http://coprbe.devel.redhat.com/repos/fpokorny/mercator-go/pubkey.gpg
+enabled=1
+enabled_metadata=1

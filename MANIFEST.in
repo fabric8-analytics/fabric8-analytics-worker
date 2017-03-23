@@ -1,0 +1,15 @@
+include Dockerfile
+include Dockerfile.tests
+recursive-include hack *
+include LICENSE
+include README.md
+include requirements.txt
+recursive-include cucoslib/workers/schemas/generated *.json
+recursive-include cucoslib/schemas *.json
+
+include runtest.sh
+graft tests
+graft cucoslib/dispatcher
+
+global-exclude __pycache__
+global-exclude *.py[co]

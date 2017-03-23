@@ -1,0 +1,29 @@
+{
+   "ecosystem":"ruby",
+   "name":"github-linguist",
+   "homepage":"https://github.com/github/linguist",
+   "description":"We use this library at GitHub to detect blob languages, highlight code, ignore binary files, suppress generated files in diffs, and generate language breakdown graphs.",
+   "metadata":{
+
+   },
+   "declared_license":"MIT",
+   "platform":"ruby",
+   "devel_dependencies":[
+      "minitest >=5.0,",
+      "mocha >=0,",
+      "plist ~>3.1,",
+      "pry >=0,",
+      "rake >=0,",
+      "yajl-ruby >=0,",
+      "color-proximity ~>0.2.1,",
+      "licensed >=0,"
+   ],
+   "version":"4.8.4",
+   "dependencies":[
+      "charlock_holmes ~>0.7.3",
+      "escape_utils ~>1.1.0",
+      "mime-types >=1.19",
+      "rugged >=0.23.0b"
+   ],
+   "author":"GitHub"
+}

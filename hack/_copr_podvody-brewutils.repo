@@ -1,0 +1,8 @@
+[podvody-Brewutils]
+name=Copr repo for Brewutils owned by podvody
+baseurl=http://coprbe.devel.redhat.com/repos/podvody/Brewutils/epel-$releasever-$basearch/
+skip_if_unavailable=True
+gpgcheck=0
+gpgkey=http://coprbe.devel.redhat.com/repos/podvody/Brewutils/pubkey.gpg
+enabled=1
+enabled_metadata=1

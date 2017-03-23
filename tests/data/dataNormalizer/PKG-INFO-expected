@@ -1,0 +1,11 @@
+{
+  "ecosystem": "python-dist",
+  "author": "OpenStack <openstack-dev@lists.openstack.org>",
+  "homepage": "http://docs.openstack.org/developer/python-openstackclient",
+  "declared_license": "UNKNOWN",
+  "dependencies": null,
+  "name": "python-openstackclient",
+  "description": "OpenStack Command-line Client",
+  "platform": "UNKNOWN",
+  "version": "2.2.0"
+}

@@ -1,0 +1,10 @@
+{
+ "ecosystem": "python",
+ "author": "Kenneth Reitz <me@kennethreitz.com>",
+ "declared_license": "Apache 2.0",
+ "dependencies": [],
+ "description": "Python HTTP for Humans.",
+ "homepage": "http://python-requests.org",
+ "name": "requests",
+ "version": "2.10.0"
+}

@@ -1,0 +1,25 @@
+{
+   "versions": {
+      "Python-Dist": "9401937e71722e685561d64c810406d5b0886a0a"
+   },
+   "items": [
+      {
+         "time": "2016-12-01T13:02:30.297466531+01:00",
+         "path": "/tmp/abasds.egg-info/PKG-INFO",
+         "ecosystem": "Python-Dist",
+         "sha1": "ca1aa61b13d7b2e238b28696dd2c5fc6753f7539",
+         "result": {
+            "author": "OpenStack",
+            "author-email": "openstack-dev@lists.openstack.org",
+            "classifier": "Environment :: OpenStack\nIntended Audience :: Information Technology\nIntended Audience :: System Administrators\nLicense :: OSI Approved :: Apache Software License\nOperating System :: POSIX :: Linux\nProgramming Language :: Python\nProgramming Language :: Python :: 2\nProgramming Language :: Python :: 2.7\nProgramming Language :: Python :: 3\nProgramming Language :: Python :: 3.4",
+            "description": "===============\nOpenStackClient\n===============\n.. image:: https://img.shields.io/pypi/v/python-openstackclient.svg\n:target: https://pypi.python.org/pypi/python-openstackclient/\n:alt: Latest Version\n.. image:: https://img.shields.io/pypi/dm/python-openstackclient.svg\n:target: https://pypi.python.org/pypi/python-openstackclient/\n:alt: Downloads\nOpenStackClient (aka OSC) is a command-line client for OpenStack that brings\nthe command set for Compute, Identity, Image, Object Store and Block Storage\nAPIs together in a single shell with a uniform command structure.\nThe primary goal is to provide a unified shell command structure and a common\nlanguage to describe operations in OpenStack.\n* `PyPi`_ - package installation\n* `Online Documentation`_\n* `Launchpad project`_ - release management\n* `Blueprints`_ - feature specifications\n* `Bugs`_ - issue tracking\n* `Source`_\n* `Developer` - getting started as a developer\n* `Contributing` - contributing code\n* IRC: #openstack-sdks on Freenode (irc.freenode.net)\n* License: Apache 2.0\n.. _PyPi: https://pypi.python.org/pypi/python-openstackclient\n.. _Online Documentation: http://docs.openstack.org/developer/python-openstackclient/\n.. _Launchpad project: https://launchpad.net/python-openstackclient\n.. _Blueprints: https://blueprints.launchpad.net/python-openstackclient\n.. _Bugs: https://bugs.launchpad.net/python-openstackclient\n.. _Source: https://git.openstack.org/cgit/openstack/python-openstackclient\n.. _Developer: http://docs.openstack.org/infra/manual/python.html\n.. _Contributing: http://docs.openstack.org/infra/manual/developers.html\nGetting Started\n===============\nOpenStack Client can be installed from PyPI using pip::\npip install python-openstackclient\nThere are a few variants on getting help.  A list of global options and supported\ncommands is shown with ``--help``::\nopenstack --help\nThere is also a ``help`` command that can be used to get help text for a specific\ncommand::\nopenstack help\nopenstack help server create\nConfiguration\n=============\nThe CLI is configured via environment variables and command-line\noptions as listed in  http://docs.openstack.org/developer/python-openstackclient/authentication.html.\nAuthentication using username/password is most commonly used::\nexport OS_AUTH_URL=\u003curl-to-openstack-identity\u003e\nexport OS_PROJECT_NAME=\u003cproject-name\u003e\nexport OS_USERNAME=\u003cusername\u003e\nexport OS_PASSWORD=\u003cpassword\u003e  # (optional)\nThe corresponding command-line options look very similar::\n--os-auth-url \u003curl\u003e\n--os-project-name \u003cproject-name\u003e\n--os-username \u003cusername\u003e\n[--os-password \u003cpassword\u003e]\nIf a password is not provided above (in plaintext), you will be interactively\nprompted to provide one securely.\nAuthentication may also be performed using an already-acquired token\nand a URL pointing directly to the service API that presumably was acquired\nfrom the Service Catalog::\nexport OS_TOKEN=\u003ctoken\u003e\nexport OS_URL=\u003curl-to-openstack-service\u003e\nThe corresponding command-line options look very similar::\n--os-token \u003ctoken\u003e\n--os-url \u003curl-to-openstack-service\u003e",
+            "home-page": "http://docs.openstack.org/developer/python-openstackclient",
+            "license": "UNKNOWN",
+            "name": "python-openstackclient",
+            "platform": "UNKNOWN",
+            "summary": "OpenStack Command-line Client",
+            "version": "2.2.0"
+         }
+      }
+   ]
+}

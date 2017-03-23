@@ -1,0 +1,23 @@
+FROM registry.centos.org/centos/centos:7
+
+MAINTAINER Jiri Popelka <jpopelka@redhat.com>
+
+RUN yum install -y epel-release && \
+    yum install -y python34-pip postgresql-devel python34-devel gcc-c++ && \
+    pip3 install requests sqlalchemy psycopg2
+
+# populate DB with latest dist-git snapshot and
+# related information from SCL configuration files and Brew
+COPY downstream/downstream-data-import.py /tmp/
+
+# Download dist-git snapshot and put it into image
+# to have at least older one in case of possible networking problems during container start up.
+# Make sure downstream-data-import.py can later overwrite
+# the files in /tmp even if run as non-root (but root group).
+RUN /tmp/downstream-data-import.py --download-only && \
+    chmod g+w /tmp/reverse-dist-git.latest.tsv && \
+    chmod g+w /tmp/primary.sqlite
+
+# During container start up download newer snapshot and import into DB.
+# If the download fails the older snapshot from image is used.
+CMD ["/tmp/downstream-data-import.py"]

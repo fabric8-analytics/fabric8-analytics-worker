@@ -1,0 +1,22 @@
+pymongo>=3.0
+# also handles Celery as a requirement
+selinonlib==0.1.0rc3
+selinon==0.1.0rc3
+sqlalchemy
+psycopg2
+PyGithub
+lxml
+beautifulsoup4
+# We install a patched version from dnf as we cannot use requests from PyPI - we need own certificates
+#requests
+anymarkup
+jsl
+jsonschema
+BigQuery-Python
+unidiff
+requests
+# Amazon AWS SQS
+# Celery transparently uses boto
+boto
+# We are using boto3 for S3
+boto3

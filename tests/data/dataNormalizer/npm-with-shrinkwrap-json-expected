@@ -1,0 +1,102 @@
+{
+   "devel_dependencies":[
+      "tap 0.x",
+      "rimraf 1.x",
+      "mkdirp ^0.5.0",
+      "graceful-fs ^4.1.2"
+   ],
+   "bug_reporting":"https://github.com/isaacs/node-tar/issues",
+   "author":"Isaac Z. Schlueter <i@izs.me>",
+   "keywords":null,
+   "_tests_implemented":true,
+   "_dependency_tree_lock":{
+      "runtime":"2.2.2",
+      "name":"tar",
+      "version":null,
+      "dependencies":[
+         {
+            "resolved":"https://registry.npmjs.org/fstream/-/fstream-1.0.10.tgz",
+            "name":"fstream",
+            "specification":"fstream@>=1.0.2 <2.0.0",
+            "version":"1.0.10",
+            "dependencies":[
+
+            ]
+         },
+         {
+            "resolved":"https://registry.npmjs.org/block-stream/-/block-stream-0.0.9.tgz",
+            "name":"block-stream",
+            "specification":"block-stream@*",
+            "version":"0.0.9",
+            "dependencies":[
+
+            ]
+         },
+         {
+            "resolved":"https://registry.npmjs.org/inherits/-/inherits-2.0.3.tgz",
+            "name":"inherits",
+            "specification":"inherits@>=2.0.0 <3.0.0",
+            "version":"2.0.3",
+            "dependencies":[
+
+            ]
+         },
+         {
+            "resolved":"https://registry.npmjs.org/mkdirp/-/mkdirp-0.5.1.tgz",
+            "name":"mkdirp",
+            "specification":"mkdirp@>=0.5.0 >=0.0.0 <1.0.0",
+            "version":"0.5.1",
+            "dependencies":[
+
+            ]
+         },
+         {
+            "resolved":"https://registry.npmjs.org/minimist/-/minimist-0.0.8.tgz",
+            "name":"minimist",
+            "specification":"minimist@0.0.8",
+            "version":"0.0.8",
+            "dependencies":[
+
+            ]
+         },
+         {
+            "resolved":"https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.1.11.tgz",
+            "name":"graceful-fs",
+            "specification":"graceful-fs@>=4.1.2 <5.0.0",
+            "version":"4.1.11",
+            "dependencies":[
+
+            ]
+         }
+      ]
+   },
+   "engines":null,
+   "files":null,
+   "git_head":"52237e39d2eb68d22a32d9a98f1d762189fe6a3d",
+   "readme":"ERROR: No README data found!",
+   "description":"tar for node",
+   "homepage":"https://github.com/isaacs/node-tar#readme",
+   "dependencies":[
+      "block-stream *",
+      "inherits 2",
+      "fstream ^1.0.2"
+   ],
+   "contributors":null,
+   "maintainers":[
+      "isaacs <isaacs@npmjs.com>",
+      "othiym23 <ogd@aoaioxxysz.net>",
+      "soldair <soldair@gmail.com>",
+      "zkat <kat@sykosomatic.org>"
+   ],
+   "declared_license":"ISC",
+   "code_repository":{
+      "type":"git",
+      "url":"git://github.com/isaacs/node-tar.git"
+   },
+   "name":"tar",
+   "ecosystem":"npm",
+   "version":"2.2.1",
+   "scripts":{
+      "test":"tap test/*.js"
+   }
+}

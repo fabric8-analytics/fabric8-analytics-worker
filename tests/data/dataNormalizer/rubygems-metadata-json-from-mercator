@@ -1,0 +1,102 @@
+{
+   "versions": {
+      "NPM": "0e81ec2e697e3c43661e959c52ae71a4003ce502",
+      "Ruby": "ed60e3ccebbcf53d03ff6ba8a0cc0fffce3eb96f"
+   },
+   "items": [
+      {
+         "time": "2016-12-01T13:16:13.287948909+01:00",
+         "path": "/tmp/linguist/github-linguist.gemspec",
+         "ecosystem": "Ruby",
+         "sha1": "c9c062fcb49b2a78629cdf3cc58bf443cc489b0b",
+         "result": {
+            "authors": [
+               "GitHub"
+            ],
+            "bindir": "bin",
+            "cert_chain": [],
+            "date": "2016-12-01 00:00:00 UTC",
+            "dependencies": [
+               "charlock_holmes (~\u003e 0.7.3)",
+               "escape_utils (~\u003e 1.1.0)",
+               "mime-types (\u003e= 1.19)",
+               "rugged (\u003e= 0.23.0b)",
+               "minitest (\u003e= 5.0, development)",
+               "mocha (\u003e= 0, development)",
+               "plist (~\u003e 3.1, development)",
+               "pry (\u003e= 0, development)",
+               "rake (\u003e= 0, development)",
+               "yajl-ruby (\u003e= 0, development)",
+               "color-proximity (~\u003e 0.2.1, development)",
+               "licensed (\u003e= 0, development)"
+            ],
+            "description": "We use this library at GitHub to detect blob languages, highlight code, ignore binary files, suppress generated files in diffs, and generate language breakdown graphs.",
+            "executables": [
+               "linguist",
+               "git-linguist"
+            ],
+            "extensions": [],
+            "extra_rdoc_files": [],
+            "files": [
+               "lib/linguist",
+               "lib/linguist/version.rb",
+               "lib/linguist/vendor.yml",
+               "lib/linguist/samples.rb",
+               "lib/linguist/languages.yml",
+               "lib/linguist/language.rb",
+               "lib/linguist/heuristics.rb",
+               "lib/linguist/generated.rb",
+               "lib/linguist/blob.rb",
+               "lib/linguist/tokenizer.rb",
+               "lib/linguist/strategy",
+               "lib/linguist/strategy/modeline.rb",
+               "lib/linguist/strategy/filename.rb",
+               "lib/linguist/shebang.rb",
+               "lib/linguist/repository.rb",
+               "lib/linguist/popular.yml",
+               "lib/linguist/md5.rb",
+               "lib/linguist/lazy_blob.rb",
+               "lib/linguist/grammars.rb",
+               "lib/linguist/file_blob.rb",
+               "lib/linguist/documentation.yml",
+               "lib/linguist/classifier.rb",
+               "lib/linguist/blob_helper.rb",
+               "lib/linguist.rb",
+               "LICENSE"
+            ],
+            "homepage": "https://github.com/github/linguist",
+            "licenses": [
+               "MIT"
+            ],
+            "metadata": {},
+            "name": "github-linguist",
+            "platform": "ruby",
+            "rdoc_options": [],
+            "require_paths": [
+               "lib"
+            ],
+            "required_ruby_version": "\u003e= 0",
+            "required_rubygems_version": "\u003e= 0",
+            "requirements": [],
+            "rubygems_version": "2.5.2",
+            "specification_version": 4,
+            "summary": "GitHub Language detection",
+            "test_files": [],
+            "version": "4.8.4"
+         }
+      },
+      {
+         "time": "2016-12-01T13:16:13.288942871+01:00",
+         "path": "/tmp/linguist/package.json",
+         "ecosystem": "NPM",
+         "sha1": "1d31d49fec1fca786ad2ad15e1b3b6af4d1c415c",
+         "result": {
+            "dependencies": {
+               "season": "~\u003e5.0"
+            },
+            "license": "MIT",
+            "repository": "https://github.com/github/linguist"
+         }
+      }
+   ]
+}

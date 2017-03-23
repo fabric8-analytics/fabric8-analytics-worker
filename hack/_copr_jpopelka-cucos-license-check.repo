@@ -1,0 +1,8 @@
+[jpopelka-cucos-license-check]
+name=Copr repo for cucos-license-check owned by jpopelka
+baseurl=http://coprbe.devel.redhat.com/repos/jpopelka/cucos-license-check/epel-$releasever-$basearch/
+skip_if_unavailable=True
+gpgcheck=0
+gpgkey=http://coprbe.devel.redhat.com/repos/jpopelka/cucos-license-check/pubkey.gpg
+enabled=1
+enabled_metadata=1

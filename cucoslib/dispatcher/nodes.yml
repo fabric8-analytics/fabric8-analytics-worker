@@ -1,0 +1,257 @@
+
+---
+  tasks:
+    - name: 'blackduck'
+      classname: 'BlackDuckLatentCollector'
+      import: 'cucoslib.workers'
+      max_retry: 3
+      retry_countdown: 15
+      storage: 'BayesianPostgres'
+      queue: '{DEPLOYMENT_PREFIX}_BlackDuckLatentCollector_v0'
+      selective_run_function:
+        name: 'selective_run_function'
+        import: 'cucoslib.dispatcher.selective'
+    - name: 'blackduck_executor'
+      storage_readonly: true
+      classname: 'BlackDuckTask'
+      import: 'cucoslib.workers'
+      max_retry: 5
+      retry_countdown: 120
+      storage: 'BayesianPostgres'
+      queue: '{DEPLOYMENT_PREFIX}_BlackDuckTask_v0'
+      ## only 1 task per 5 seconds
+      #throttle:
+      #   seconds: 5
+    - name: 'redhat_downstream'
+      classname: 'DownstreamUsageTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      storage: 'BayesianPostgres'
+      queue: '{DEPLOYMENT_PREFIX}_DownstreamUsageTask_v0'
+      selective_run_function:
+        name: 'selective_run_function'
+        import: 'cucoslib.dispatcher.selective'
+    - name: 'security_issues'
+      classname: 'CVEcheckerTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      storage: 'BayesianPostgres'
+      queue: '{DEPLOYMENT_PREFIX}_CVEcheckerTask_v0'
+      selective_run_function:
+        name: 'selective_run_function'
+        import: 'cucoslib.dispatcher.selective'
+    - name: 'github_details'
+      classname: 'GithubTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      storage: 'BayesianPostgres'
+      queue: '{DEPLOYMENT_PREFIX}_GithubTask_v0'
+      ## only 1 task per 5 seconds
+      #throttle:
+      #   seconds: 5
+      selective_run_function:
+        name: 'selective_run_function'
+        import: 'cucoslib.dispatcher.selective'
+    - name: 'static_analysis'
+      classname: 'CsmockTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      storage: 'BayesianPostgres'
+      queue: '{DEPLOYMENT_PREFIX}_CsmockTask_v0'
+      selective_run_function:
+        name: 'selective_run_function'
+        import: 'cucoslib.dispatcher.selective'
+    - name: 'crypto_algorithms'
+      classname: 'OSCryptoCatcherTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      storage: 'BayesianPostgres'
+      queue: '{DEPLOYMENT_PREFIX}_OSCryptoCatcherTask_v0'
+      selective_run_function:
+        name: 'selective_run_function'
+        import: 'cucoslib.dispatcher.selective'
+    - name: 'digests'
+      classname: 'DigesterTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      storage: 'BayesianPostgres'
+      queue: '{DEPLOYMENT_PREFIX}_DigesterTask_v0'
+      selective_run_function:
+        name: 'selective_run_function'
+        import: 'cucoslib.dispatcher.selective'
+    - name: 'source_licenses'
+      classname: 'LicenseCheckTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      storage: 'BayesianPostgres'
+      queue: '{DEPLOYMENT_PREFIX}_LicenseCheckTask_v0'
+      selective_run_function:
+        name: 'selective_run_function'
+        import: 'cucoslib.dispatcher.selective'
+    - name: 'anitya'
+      classname: 'AnityaTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      # Even AnityaTask does not store results in database, we provide database as a source
+      storage: 'BayesianPostgres'
+      storage_readonly: true
+      queue: '{DEPLOYMENT_PREFIX}_AnityaTask_v0'
+      selective_run_function:
+        name: 'selective_run_function'
+        import: 'cucoslib.dispatcher.selective'
+    - name: 'binary_data'
+      classname: 'BinwalkTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      storage: 'BayesianPostgres'
+      queue: '{DEPLOYMENT_PREFIX}_BinwalkTask_v0'
+      selective_run_function:
+        name: 'selective_run_function'
+        import: 'cucoslib.dispatcher.selective'
+    - name: 'metadata'
+      classname: 'MercatorTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      storage: 'BayesianPostgres'
+      queue: '{DEPLOYMENT_PREFIX}_MercatorTask_v0'
+      selective_run_function:
+        name: 'selective_run_function'
+        import: 'cucoslib.dispatcher.selective'
+    - name: 'code_metrics'
+      classname: 'CodeMetricsTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      storage: 'BayesianPostgres'
+      queue: '{DEPLOYMENT_PREFIX}_CodeMetricsTask_v0'
+      selective_run_function:
+        name: 'selective_run_function'
+        import: 'cucoslib.dispatcher.selective'
+    - name: 'languages'
+      classname: 'LinguistTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      storage: 'BayesianPostgres'
+      queue: '{DEPLOYMENT_PREFIX}_LinguistTask_v0'
+      selective_run_function:
+        name: 'selective_run_function'
+        import: 'cucoslib.dispatcher.selective'
+    - name: 'dependency_snapshot'
+      classname: 'DependencySnapshotTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      storage: 'BayesianPostgres'
+      queue: '{DEPLOYMENT_PREFIX}_DependencySnapshotTask_v0'
+      selective_run_function:
+        name: 'selective_run_function'
+        import: 'cucoslib.dispatcher.selective'
+    - name: 'FinalizeTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_FinalizeTask_v0'
+      storage: 'BayesianPostgres'
+      storage_readonly: true
+    - name: 'FinalizeTaskError'
+      # FinalizeTaskError is in fact alias for FinalizeTask, the implementation is shared, but FinalizeTaskError raises
+      # an exception at the end so we recursively propagate flow error to parent flows
+      classname: 'FinalizeTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_FinalizeTaskError_v0'
+      storage: 'BayesianPostgres'
+      storage_readonly: true
+    - name: 'GraphAggregatorTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_GraphAggregatorTask_v0'
+      storage: 'BayesianPostgres'
+    - name: 'stack_aggregator'
+      classname: 'StackAggregatorTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_StackAggregatorTask_v0'
+      storage: 'BayesianPostgres'
+    - name: 'recommendation'
+      classname: 'RecommendationTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_RecommendationTask_v0'
+      storage: 'BayesianPostgres'
+    - name: 'InitAnalysisFlow'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_InitAnalysisFlow_v0'
+      storage: 'BayesianPostgres'
+      # Let's run the init task always so we are sure that we have artifacts on S3
+      #selective_run_function:
+      #  name: 'selective_run_function'
+      #  import: 'cucoslib.dispatcher.selective'
+    - name: 'ResultCollector'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_ResultCollector_v0'
+      storage: 'AmazonS3'
+    - name: 'BigQueryTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_BigQueryTask_v0'
+    - name: 'SnykSyncTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_SnykSyncTask_v0'
+      storage: 'BayesianPostgres'
+    - name: 'ManifestKeeperTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_ManifestKeeperTask_v0'
+    - name: 'FinishedAnalysisGateTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_FinishedAnalysisGateTask_v0'
+    - name: 'GraphSyncTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_GraphSyncTask_v0'
+    - name: 'GitReadmeCollectorTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_GitReadmeCollector_v0'
+
+  flows:
+    - 'bayesianAnalysisFlow'
+    - 'bayesianFlow'
+    - 'bigQueryFlow'
+    - 'stackApiGraphFlow'
+    - 'livenessFlow'
+    - 'cveCheckFlow'
+    - 'graphSyncFlow'
+
+  storages:
+    - name: 'BayesianPostgres'
+      import: 'cucoslib.storages'
+      configuration:
+        # take configuration from environment variables
+        connection_string: 'postgres://{POSTGRESQL_USER}:{POSTGRESQL_PASSWORD}@{PGBOUNCER_SERVICE_HOST}:5432/{POSTGRESQL_DATABASE}?sslmode=disable'
+    - name: 'AmazonS3'
+      import: 'cucoslib.storages'
+      configuration:
+        # This is kinda hack-ish as most of the configuration options could be overwritted by their env variable
+        # counterparts, but this allows us to transparently switch from local deployment to Amazon AWS-ready
+        # deployment without big changes - just by providing key and key id env variables
+        #
+        # Could be overwritten by AWS_S3_ACCESS_KEY_ID env variable
+        aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
+        # Could be overwritten by AWS_S3_SECRET_ACCESS_KEY env variable
+        aws_secret_access_key: 'ZmvMwngonaDK5ymlCd6ptaalDdJsCn3aSSxASPaZ'
+        #
+        # Other configuraion options - defaults are listed in AmazonS3 implementation:
+        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-data'  # could be overwritten by AWS_S3_BUCKET_NAME
+        # region_name: 'us-east-1'  # could be overwritten by AWS_S3_REGION
+        # endpoint_url: 'http://coreapi-scality-s3:8000
+        # use_ssl=False
+        # encryption=  'aws:kms' / 'AES256' / False
+
+  global:
+    # trace using Python's logging for now
+    trace: true
+    # you can configure tracing to a database, see https://fridex.github.io/selinon/yaml.conf.html#trace
+    predicates_module: 'cucoslib.dispatcher.predicates'

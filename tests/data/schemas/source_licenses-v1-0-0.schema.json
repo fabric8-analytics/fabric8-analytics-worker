@@ -1,0 +1,251 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "definitions": {
+        "failed_license_scan": {
+            "type": "object",
+            "description": "Failed automated software copyright license scan",
+            "properties": {
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "Name of the schema",
+                            "pattern": "^[a-zA-Z0-9_]+$"
+                        },
+                        "version": {
+                            "type": "string",
+                            "description": "Version of the schema",
+                            "pattern": "^[0-9]+-[0-9]+-[0-9]+$"
+                        },
+                        "url": {
+                            "type": "string",
+                            "description": "Full URL of the schema",
+                            "format": "uri"
+                        }
+                    },
+                    "required": [
+                        "name",
+                        "version"
+                    ],
+                    "additionalProperties": false
+                },
+                "_release": {
+                    "type": "string",
+                    "description": "Unique release id in form of \"ecosystem:package:version\""
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "error"
+                    ]
+                },
+                "summary": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "details": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            },
+            "required": [
+                "status",
+                "summary",
+                "details"
+            ],
+            "additionalProperties": false
+        },
+        "file_details": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": true
+                    }
+                }
+            },
+            "required": [
+                "path"
+            ],
+            "additionalProperties": false
+        },
+        "license_count": {
+            "type": "object",
+            "description": "Detected license with occurrence count",
+            "properties": {
+                "count": {
+                    "type": "number",
+                    "description": "Combined count of detected variants"
+                },
+                "license_name": {
+                    "type": "string",
+                    "description": "Common name of the detected license"
+                }
+            },
+            "required": [
+                "count",
+                "license_name"
+            ],
+            "additionalProperties": false
+        },
+        "license_details": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "string",
+                    "description": "Number of occurrences of this variant"
+                },
+                "license_name": {
+                    "type": "string",
+                    "description": "Common name of the detected license"
+                },
+                "variant_id": {
+                    "type": "string",
+                    "description": "Specific license variant detected"
+                }
+            },
+            "required": [
+                "count",
+                "license_name",
+                "variant_id"
+            ],
+            "additionalProperties": false
+        },
+        "license_scan_details": {
+            "type": "object",
+            "properties": {
+                "files": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/file_details"
+                    }
+                },
+                "license_stats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/license_details"
+                    }
+                },
+                "oslc_stats": {
+                    "$ref": "#/definitions/oslc_stats"
+                }
+            },
+            "additionalProperties": true
+        },
+        "license_scan_summary": {
+            "type": "object",
+            "properties": {
+                "all_files": {
+                    "type": "number",
+                    "description": "Total number of files analysed"
+                },
+                "license_files": {
+                    "type": "number"
+                },
+                "source_files": {
+                    "type": "number"
+                },
+                "distinct_licenses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/license_count"
+                    }
+                },
+                "sure_licenses": {
+                    "type": "array",
+                    "description": "Licenses detected with high match confidence",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "licensed_files": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "distinct_licenses",
+                "sure_licenses"
+            ],
+            "additionalProperties": false
+        },
+        "oslc_stats": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+        },
+        "successful_license_scan": {
+            "type": "object",
+            "description": "Successful automated software copyright license scan",
+            "properties": {
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "Name of the schema",
+                            "pattern": "^[a-zA-Z0-9_]+$"
+                        },
+                        "version": {
+                            "type": "string",
+                            "description": "Version of the schema",
+                            "pattern": "^[0-9]+-[0-9]+-[0-9]+$"
+                        },
+                        "url": {
+                            "type": "string",
+                            "description": "Full URL of the schema",
+                            "format": "uri"
+                        }
+                    },
+                    "required": [
+                        "name",
+                        "version"
+                    ],
+                    "additionalProperties": false
+                },
+                "_release": {
+                    "type": "string",
+                    "description": "Unique release id in form of \"ecosystem:package:version\""
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "success"
+                    ]
+                },
+                "summary": {
+                    "$ref": "#/definitions/license_scan_summary"
+                },
+                "details": {
+                    "$ref": "#/definitions/license_scan_details"
+                }
+            },
+            "required": [
+                "status",
+                "summary",
+                "details"
+            ],
+            "additionalProperties": false
+        }
+    },
+    "oneOf": [
+        {
+            "$ref": "#/definitions/failed_license_scan"
+        },
+        {
+            "$ref": "#/definitions/successful_license_scan"
+        },
+        {
+            "type": "object",
+            "description": "Successful automated software copyright license scan",
+            "properties": {},
+            "additionalProperties": false
+        }
+    ],
+    "title": "source_licenses-v1-0-0"
+}

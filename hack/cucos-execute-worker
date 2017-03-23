@@ -1,0 +1,26 @@
+#!/usr/bin/env python
+
+#
+# WARNING: This is just testing/debugging script, not intended for production.
+#
+
+import argparse
+import json
+import sys
+from cucoslib.workers import *
+from os import path, listdir
+
+def main():
+    argparser = argparse.ArgumentParser(description = 'Execute CuCoS worker.')
+    argparser.add_argument('worker', help='Name of the worker')
+    argparser.add_argument('dir', help='Directory to analyse')
+    args = argparser.parse_args()
+
+    task_args = {'cache_path': args.dir}
+
+    result = getattr(sys.modules[__name__], args.worker)().execute(task_args)
+
+    print(json.dumps(result, sort_keys=True, indent=4, separators=(',', ': ')))
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,45 @@
+---
+  flow-definitions:
+    - name: 'bayesianFlow'
+      queue: '{DEPLOYMENT_PREFIX}_bayesianFlow_v0'
+      # propagate arguments to sub-flows
+      propagate_node_args: 'bayesianAnalysisFlow'
+      # propagate arguments from InitAnalysisFlow to bayesianAnalysisFlow
+      node_args_from_first: true
+      sampling:
+        name: 'constant'
+        args:
+          # check for flow state each 10 seconds
+          retry: 10
+      edges:
+        - from:
+          to: 'InitAnalysisFlow'
+        - from: 'InitAnalysisFlow'
+          to: 'bayesianAnalysisFlow'
+          condition:
+            # InitAnalysisFlow returns flow arguments or None if analysis was already done
+            # exclude metadata we store with each task result
+            name: 'fieldExist'
+            args:
+              key: 'ecosystem'
+        - from: 'bayesianAnalysisFlow'
+          to: 'FinalizeTask'
+        - from: 'FinalizeTask'
+          to: 'ResultCollector'
+          condition:
+            name: 'envEqual'
+            args:
+              env: 'BAYESIAN_SYNC_S3'
+              value: '1'
+        - from: 'FinalizeTaskError'
+          to: 'ResultCollector'
+          condition:
+            name: 'envEqual'
+            args:
+              env: 'BAYESIAN_SYNC_S3'
+              value: '1'
+      failures:
+        - nodes:
+            - 'bayesianAnalysisFlow'
+          fallback:
+            - 'FinalizeTaskError'

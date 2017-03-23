@@ -1,0 +1,17 @@
+---
+  flow-definitions:
+    - name: 'cveCheckFlow'
+      queue: '{DEPLOYMENT_PREFIX}_cveCheckFlow_v0'
+      sampling:
+        name: 'constant'
+        args:
+          retry: 5
+      edges:
+        - from:
+          to: 'SnykSyncTask'
+        - from: 'SnykSyncTask'
+          to: 'bayesianFlow'
+          foreach:
+            import: 'cucoslib.dispatcher.foreach'
+            function: 'iter_snyk_updates'
+            propagate_result: true
