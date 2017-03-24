@@ -13,7 +13,7 @@ if [ -z "${WORKER_QUEUES}" ]; then
     WORKER_QUEUES=`selinonlib-cli inspect  \
       -n ${DISPATCHER_YAML_FILES_DIR}/nodes.yml  \
       -f ${DISPATCHER_YAML_FILES_DIR}/flows/*.yml  \
-      --list-task-queues --list-dispatcher-queue | cut -d':' -f2 | sort -u | tr '\n' ','`
+      --list-task-queues --list-dispatcher-queue | grep -v '^livenessFlow:' | cut -d':' -f2 | sort -u | tr '\n' ','`
     WORKER_QUEUES="${WORKER_QUEUES:0:-1}"  # remove trailing ','
 fi
 
