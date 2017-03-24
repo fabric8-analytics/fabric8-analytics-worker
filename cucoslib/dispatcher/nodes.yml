@@ -181,10 +181,9 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_InitAnalysisFlow_v0'
       storage: 'BayesianPostgres'
-      # Let's run the init task always so we are sure that we have artifacts on S3
-      #selective_run_function:
-      #  name: 'selective_run_function'
-      #  import: 'cucoslib.dispatcher.selective'
+      selective_run_function:
+        name: 'selective_run_function'
+        import: 'cucoslib.dispatcher.selective'
     - name: 'ResultCollector'
       import: 'cucoslib.workers'
       max_retry: 0
