@@ -67,7 +67,7 @@ COPY hack/install_owasp_dependency-check.sh /tmp/install_deps/
 RUN /tmp/install_deps/install_owasp_dependency-check.sh
 
 # Install dependencies required in both Python 2 and 3 versions
-COPY lib/hack/py23requirements.txt /tmp/install_deps/
+COPY ./hack/py23requirements.txt /tmp/install_deps/
 RUN pip2 install -r /tmp/install_deps/py23requirements.txt
 RUN pip3 install -r /tmp/install_deps/py23requirements.txt
 
