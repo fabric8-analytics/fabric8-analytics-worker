@@ -212,10 +212,9 @@ class GithubTask(BaseTask):
 
 
 class GitReadmeCollectorTask(BaseTask):
-    """ Store README files stored on Github in AWS S3"""
+    """ Store README files stored on Github """
 
     _GITHUB_README_PATH = 'https://raw.githubusercontent.com/{project}/{repo}/master/README.{extension}'
-    _README_BUCKET_NAME = '{DEPLOYMENT_PREFIX}-bayesian-core-readme'
 
     # Based on https://github.com/github/markup#markups
     # Markup type to its possible extensions mapping, we use OrderedDict as we check the most used types first
@@ -230,15 +229,6 @@ class GitReadmeCollectorTask(BaseTask):
         ('MediaWiki', ('mediawiki', 'wiki')),
         ('Pod', ('pod',)),
     ))
-
-    @staticmethod
-    def _get_object_key(arguments):
-        return "{ecosystem}/{package}/README.json".format(ecosystem=arguments['ecosystem'],
-                                                          package=arguments['name'])
-
-    @property
-    def bucket_name(self):
-        return self._README_BUCKET_NAME.format(**os.environ)
 
     def _get_github_repo_tuple(self):
         repo_url = self.parent_task_result('metadata')['details'][0]['code_repository']['url']
@@ -267,11 +257,4 @@ class GitReadmeCollectorTask(BaseTask):
         if not readme:
             self.log.warning("No README file found for '%s/%s'", arguments['ecosystem'], arguments['name'])
 
-        s3 = StoragePool.get_connected_storage('AmazonS3')
-        s3.store_dict(
-            readme,
-            self._get_object_key(arguments),
-            bucket_name=self.bucket_name,
-            versioned=True,
-            encrypted=False
-        )
+        return readme
