@@ -78,6 +78,7 @@ docker run -t \
   --link=${TESTDB_CONTAINER_NAME} \
   -e PGBOUNCER_SERVICE_HOST=$TESTDB_CONTAINER_NAME \
   -e DEPLOYMENT_PREFIX='test' \
+  -e WORKER_ADMINISTRATION_REGION='api' \
   --env-file tests/postgres.env \
   --name=${CONTAINER_NAME} \
   $TEST_IMAGE_NAME ./hack/exec_tests.sh $@ tests/

@@ -1,7 +1,7 @@
 ---
   flow-definitions:
     - name: 'stackApiGraphFlow'
-      queue: '{DEPLOYMENT_PREFIX}_stackApiGraphFlow_v0'
+      queue: '{DEPLOYMENT_PREFIX}_api_stackApiGraphFlow_v0'
       edges:
         - from:
           to:
