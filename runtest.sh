@@ -8,6 +8,8 @@ set -e
 # unable to prepare context: The Dockerfile (Dockerfile.tests) must be within the build context (.)
 set -x
 
+here=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)
+
 TIMESTAMP="$(date +%F-%H-%M-%S)"
 # DB_CONTAINER_NAME="db-lib-tests-${TIMESTAMP}"
 CONTAINER_NAME="lib-tests-${TIMESTAMP}"
@@ -64,10 +66,15 @@ for i in {1..10}; do
 done;
 set -x
 
+secrets_file="${here}/hack/secrets.yaml"
+if [ -e ${secrets_file} ]; then
+    secrets_vol="-v \"${secrets_file}:/var/lib/secrets/secrets.yaml:ro,Z\""
+fi
+
 echo "Starting test suite"
 docker run -t \
-  -v "${PWD}:/cucoslib:ro,Z" \
-  -v "${PWD}/hack/secrets.yaml:/var/lib/secrets/secrets.yaml:ro,Z" \
+  -v "${here}:/cucoslib:ro,Z" \
+  ${secrets_vol:-} \
   --link=${TESTDB_CONTAINER_NAME} \
   -e PGBOUNCER_SERVICE_HOST=$TESTDB_CONTAINER_NAME \
   -e DEPLOYMENT_PREFIX='test' \
