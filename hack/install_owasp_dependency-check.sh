@@ -24,5 +24,5 @@ curl "http://central.maven.org/maven2/junit/junit/${JUNITVER}/junit-${JUNITVER}.
 echo "Running Dependency-Check to update CVE/CPE data files"
 bin/dependency-check.sh --format XML --project test --scan junit-${JUNITVER}.jar || :
 # to be able to update the DB later as non-root:root
-chmod g+w data/dc.h2.db
+chmod -R u+rwX,g+rwX data/
 rm -f junit-${JUNITVER}.jar dependency-check-report.xml
