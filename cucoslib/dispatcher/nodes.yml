@@ -188,7 +188,6 @@
       import: 'cucoslib.workers'
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_ResultCollector_v0'
-      storage: 'S3Data'
     - name: 'BigQueryTask'
       import: 'cucoslib.workers'
       max_retry: 0

@@ -14,7 +14,11 @@ class S3Data(AmazonS3):
 
     @staticmethod
     def _base_file_content(old_file_content, result):
-        analyses_list = list(set(old_file_content.get('analyses', [])) | set(result.get('analyses', {}).keys()))
+        # remove entries we don't want to keep
+        result.pop('access_count', None)
+        # do not keep track of tasks that were used for Selinon's Dispatcher book-keeping
+        analyses_list = set(old_file_content.get('analyses', [])) | set(result.get('analyses', {}).keys())
+        analyses_list = [a for a in analyses_list if not a[0].isupper()]
 
         content = result
         content['analyses'] = analyses_list
@@ -25,12 +29,28 @@ class S3Data(AmazonS3):
 
         return content
 
-    def _add_base_file_record(self, base_name, result):
-        """Add info about analyses available for the given EPV"""
-        base_file_name = base_name + '.json'
+    def store_base_file_record(self, arguments, result):
+        """ Add info about analyses available for the given EPV
 
-        # remove entries we don't want to keep
-        result.pop('access_count', None)
+        :param arguments: flow arguments
+        :param result: flow result - JSON describing whole analyses result
+        :return: base file record version identifier
+        """
+        # There available a top level JSON file located at:
+        #
+        #   <ecosystem>/<package_name>/<version>.json
+        #
+        # that stores JSON in where tasks are available under 'tasks' key:
+        #
+        #  {'tasks': [ 'digests', 'metadata', ...]}
+        #
+        assert 'name' in arguments
+        assert 'version' in arguments
+        assert 'ecosystem' in arguments
+
+        base_file_name = "{}.json".format(self._construct_base_file_name(arguments['ecosystem'],
+                                                                         arguments['name'],
+                                                                         arguments['version']))
 
         try:
             file_content = self.retrieve_blob(base_file_name)
@@ -46,37 +66,27 @@ class S3Data(AmazonS3):
 
         # we keep track only of tasks that were run, so keep only keys
         file_content = self._base_file_content(file_content, result)
-        self.store_dict(file_content, base_file_name)
+        return self.store_dict(file_content, base_file_name)
 
-    def store(self, node_args, flow_name, task_name, task_id, result):
+    def store_task_result(self, arguments, task_name, task_result):
+        """ Store result of a task on S3
+
+        :param arguments: flow arguments
+        :param task_name: name of the task for which result should be stored
+        :param task_result: task result
+        :return: base file version identifier
+        """
         # For the given EPV, the path to task result is:
         #
         #   <ecosystem>/<package_name>/<version>/<task_name>.json
         #
-        # There is also a top level JSON file located at:
-        #
-        #   <ecosystem>/<package_name>/<version>.json
-        #
-        # that stores JSON in where tasks are available under 'tasks' key:
-        #
-        #  {'tasks': [ 'digests', 'metadata', ...]}
-        #
-        assert 'ecosystem' in node_args
-        assert 'name' in node_args
-        assert 'version' in node_args
+        assert 'ecosystem' in arguments
+        assert 'name' in arguments
+        assert 'version' in arguments
 
-        # we don't want args propagated from init
-        result.get('analyses', {}).pop('InitAnalysisFlow', None)
-
-        base_file_name = self._construct_base_file_name(node_args['ecosystem'],
-                                                        node_args['name'],
-                                                        node_args['version'])
-
-        for task_name, task_result in result.get('analyses', {}).items():
-            object_key = "{base_file_name}/{task_name}.json".format(base_file_name=base_file_name,
-                                                                    task_name=task_name)
-            # use the custom JSON serializer as we store datetimes to postgres that are not serializable by json
-            self.store_dict(task_result, object_key)
-
-        self._add_base_file_record(base_file_name, result)
-        return "{}:{}".format(self.bucket_name, base_file_name)
+        base_file_name = self._construct_base_file_name(arguments['ecosystem'],
+                                                        arguments['name'],
+                                                        arguments['version'])
+        object_key = "{base_file_name}/{task_name}.json".format(base_file_name=base_file_name,
+                                                                task_name=task_name)
+        return self.store_dict(task_result, object_key)

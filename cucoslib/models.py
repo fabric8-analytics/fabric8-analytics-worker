@@ -151,6 +151,13 @@ class Analysis(Base):
         return {}
 
     @property
+    def raw_analyses(self):
+        s = Session.object_session(self)
+        if s:
+            return s.query(WorkerResult).filter(WorkerResult.analysis_id == self.id)
+        return []
+
+    @property
     def latest_version(self):
         # prevent import loop
         from cucoslib.utils import safe_get_latest_version

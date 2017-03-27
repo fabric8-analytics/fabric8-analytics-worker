@@ -160,21 +160,44 @@ class AmazonS3(DataStorage):
         return uuid.uuid4().hex + '-unknown'
 
     def store_file(self, file_path, object_key):
-        """Store file determined by the `file_path` to S3."""
+        """ Store file on S3
+
+        :param file_path: path to file to be stored
+        :param object_key: object key under which the file should be stored
+        :return: object version or None if versioning is off
+        """
         with open(file_path, 'rb') as f:
-            self.store_blob(f.read(), object_key)
+            return self.store_blob(f.read(), object_key)
 
     def store_blob(self, blob, object_key):
+        """ Store blob on S3
+
+        :param blob: bytes to be stored
+        :param object_key: object key under which the blob should be stored
+        :return: object version or None if versioning is off
+        """
         self._create_bucket_if_needed()
         put_kwargs = {'Body': blob}
         if self.encryption:
             put_kwargs['ServerSideEncryption'] = self.encryption
-        self._s3.Object(self.bucket_name, object_key).put(**put_kwargs)
+
+        response = self._s3.Object(self.bucket_name, object_key).put(**put_kwargs)
+
+        if 'VersionId' not in response and self._is_local_deployment() and self.versioned:
+            # If we run local deployment, our local S3 alternative does not support versioning. Return a fake one.
+            return self._get_fake_version_id()
+
+        return response.get('VersionId')
 
     def store_dict(self, dictionary, object_key):
-        """ Store dictionary as JSON on S3 """
+        """ Store dictionary as JSON on S3
+
+        :param dictionary: dictionary to be stored
+        :param object_key: object key under which the blob should be stored
+        :return: object version or None if versioning is off
+        """
         blob = self.dict2blob(dictionary)
-        self.store_blob(blob, object_key)
+        return self.store_blob(blob, object_key)
 
     def retrieve_file(self, object_key, file_path):
         """ Download an S3 object to a file. """
