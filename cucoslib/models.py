@@ -224,6 +224,18 @@ class WorkerResult(Base):
 
     analysis = relationship(Analysis)
 
+    @property
+    def ecosystem(self):
+        return self.analysis.version.package.ecosystem
+
+    @property
+    def package(self):
+        return self.analysis.version.package
+
+    @property
+    def version(self):
+        return self.analysis.version.package
+
 
 class StackAnalysisRequest(Base):
    __tablename__ = "stack_analyses_request"

@@ -12,6 +12,12 @@ class S3Data(AmazonS3):
         """Construct location of EPV in the bucket"""
         return "{ecosystem}/{name}/{version}".format(ecosystem=ecosystem, name=name, version=version)
 
+    @classmethod
+    def _construct_task_result_object_key(cls, ecosystem, name, version, task_name):
+        """Construct object key on S3 for a task_result for the given EPV"""
+        base_file_name = cls._construct_base_file_name(ecosystem, name, version)
+        return "{base_file_name}/{task_name}.json".format(base_file_name=base_file_name, task_name=task_name)
+
     @staticmethod
     def _base_file_content(old_file_content, result):
         # remove entries we don't want to keep
@@ -84,9 +90,24 @@ class S3Data(AmazonS3):
         assert 'name' in arguments
         assert 'version' in arguments
 
-        base_file_name = self._construct_base_file_name(arguments['ecosystem'],
-                                                        arguments['name'],
-                                                        arguments['version'])
-        object_key = "{base_file_name}/{task_name}.json".format(base_file_name=base_file_name,
-                                                                task_name=task_name)
+        object_key = self._construct_task_result_object_key(arguments['ecosystem'],
+                                                            arguments['name'],
+                                                            arguments['version'],
+                                                            task_name)
         return self.store_dict(task_result, object_key)
+
+    def retrieve_task_result(self, ecosystem, name, version, task_name):
+        """ Retrieve task result stored on S3
+
+        :param ecosystem: ecosystem name
+        :param name: package name
+        :param version: package version
+        :param task_name: task name
+        :return: task results as stored on S3
+        """
+        object_key = self._construct_task_result_object_key(ecosystem,
+                                                            name,
+                                                            version,
+                                                            task_name)
+        return self.retrieve_dict(object_key)
+
