@@ -9,7 +9,7 @@ from cucoslib.models import Analysis
 
 
 class FinalizeTask(BaseTask):
-    def execute(self, arguments):
+    def run(self, arguments):
         self._strict_assert(arguments.get('document_id'))
 
         # As we are the last, mark finished_at
