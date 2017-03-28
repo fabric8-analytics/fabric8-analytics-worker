@@ -16,6 +16,7 @@ from cucoslib.workers.manifest_keeper import ManifestKeeperTask
 from cucoslib.workers.mercator import MercatorTask
 from cucoslib.workers.githuber import GithubTask
 from cucoslib.workers.githuber import GitReadmeCollectorTask
+from cucoslib.workers.graph_importer import GraphImporterTask
 from cucoslib.workers.graph_sync import GraphSyncTask
 from cucoslib.workers.oscryptocatcher import OSCryptoCatcherTask
 from cucoslib.workers.blackduck import BlackDuckLatentCollector
