@@ -13,10 +13,11 @@ node('docker') {
         dockerCleanup()
         // build worker image
         docker.build(workerImage.id, '--pull --no-cache .')
+        sh "docker tag ${workerImage.id} docker-registry.usersys.redhat.com/${workerImage.id}"
         // build downstream-data-import image
         docker.build(downstreamImage.id, '-f Dockerfile.downstream-data-import --pull --no-cache .')
+        sh "docker tag ${downstreamImage.id} docker-registry.usersys.redhat.com/${downstreamImage.id}"
         // build test image
-        sh "docker tag ${workerImage.id} docker-registry.usersys.redhat.com/${workerImage.id}"
         docker.build('cucos-lib-tests', '-f Dockerfile.tests .')
     }
 
@@ -26,15 +27,20 @@ node('docker') {
         }
     }
 
-    stage('Integraion Tests') {
+    stage('Integration Tests') {
         ws {
-            // skipped for the first run as we need to "bootstrap" the docker images first
-            //git url: 'https://github.com/baytemp/common.git', branch: 'master', credentialsId: 'baytemp-ci-gh'
-            //dir('integration-tests') {
-            //    timeout(30) {
-            //        sh './runtest.sh'
-            //    }
-            //}
+            docker.withRegistry('https://docker-registry.usersys.redhat.com/') {
+                docker.image('bayesian/bayesian-api').pull()
+                docker.image('bayesian/coreapi-jobs').pull()
+                docker.image('bayesian/coreapi-pgbouncer').pull()
+            }
+
+            git url: 'https://github.com/baytemp/common.git', branch: 'master', credentialsId: 'baytemp-ci-gh'
+            dir('integration-tests') {
+                timeout(30) {
+                    sh './runtest.sh'
+                }
+            }
         }
     }
 
@@ -48,27 +54,27 @@ node('docker') {
                 downstreamImage.push(commitId)
             }
             docker.withRegistry('https://registry.devshift.net/') {
-                //workerImage.push('latest')
-                //workerImage.push(commitId)
-                //downstreamImage.push('latest')
-                //downstreamImage.push(commitId)
+                workerImage.push('latest')
+                workerImage.push(commitId)
+                downstreamImage.push('latest')
+                downstreamImage.push(commitId)
             }
         }
     }
 }
 
-//if (env.BRANCH_NAME == 'master') {
-//    node('oc') {
-//        stage('Deploy - dev') {
-//            sh 'oc --context=dev deploy bayesian-worker --latest'
-//        }
-//
-//        stage('Deploy - rh-idev') {
-//            sh 'oc --context=dev deploy bayesian-worker --latest'
-//        }
-//
-//        stage('Deploy - dsaas') {
-//            sh 'oc --context=dsaas deploy bayesian-worker --latest'
-//        }
-//    }
-//}
+if (env.BRANCH_NAME == 'master') {
+    node('oc') {
+        stage('Deploy - dev') {
+            sh 'oc --context=dev deploy bayesian-worker --latest'
+        }
+
+        stage('Deploy - rh-idev') {
+            sh 'oc --context=rh-idev deploy bayesian-worker --latest'
+        }
+
+        stage('Deploy - dsaas') {
+            sh 'oc --context=dsaas deploy bayesian-worker --latest'
+        }
+    }
+}
