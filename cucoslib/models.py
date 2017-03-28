@@ -151,6 +151,13 @@ class Analysis(Base):
         return {}
 
     @property
+    def raw_analyses(self):
+        s = Session.object_session(self)
+        if s:
+            return s.query(WorkerResult).filter(WorkerResult.analysis_id == self.id)
+        return []
+
+    @property
     def latest_version(self):
         # prevent import loop
         from cucoslib.utils import safe_get_latest_version
@@ -216,6 +223,18 @@ class WorkerResult(Base):
     task_result = Column(JSONB)
 
     analysis = relationship(Analysis)
+
+    @property
+    def ecosystem(self):
+        return self.analysis.version.package.ecosystem
+
+    @property
+    def package(self):
+        return self.analysis.version.package
+
+    @property
+    def version(self):
+        return self.analysis.version
 
 
 class StackAnalysisRequest(Base):

@@ -5,7 +5,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
-from selinon import DataStorage
+from selinon import DataStorage, StoragePool
 from cucoslib.models import Ecosystem, WorkerResult, Analysis
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -44,9 +44,22 @@ class BayesianPostgres(DataStorage):
             self.connect()
 
         record = self.session.query(WorkerResult).filter_by(worker_id=task_id).one()
-
         assert record.worker == task_name
-        return record.task_result
+
+        task_result = record.task_result
+        if 'version_id' in task_result.keys() \
+                and len(task_result.keys()) == 1:
+            # we synced results to S3, retrieve them from there
+            # We do not care about some specific version, so no time-based collisions possible
+            s3 = StoragePool.get_connected_storage('S3Data')
+            return s3.retrieve_task_result(
+                record.ecosystem.name,
+                record.package.name,
+                record.version.identifier,
+                task_name
+            )
+
+        return task_result
 
     def store(self, node_args, flow_name, task_name, task_id, result):
         if not self.is_connected():

@@ -14,19 +14,6 @@ class CVEcheckerTask(BaseTask):
     description = "Security issues scanner. Uses Snyk vulndb for npm and OWASP Dep.Check for maven"
     schema_ref = SchemaRef(_analysis_name, '3-0-0')
 
-    # TODO: merge with SnykSyncTask
-    _DEFAULT_S3_BUCKET_NAME = '{DEPLOYMENT_PREFIX}-bayesian-core-snyk'
-    _S3_BUCKET_NAME = os.getenv('{DEPLOYMENT_PREFIX}-SNYK_S3_BUCKET_NAME', _DEFAULT_S3_BUCKET_NAME)
-    _S3_SNYK_DB_OBJECT_KEY = 'vulndb.json'
-    _S3_METAINFO_OBJECT_KEY = 'meta.json'
-
-    @property
-    def s3_bucket_name(self):
-        """
-        :return: bucket name expanded based on env variables
-        """
-        return self._S3_BUCKET_NAME.format(**os.environ)
-
     @staticmethod
     def _filter_vulndb_fields(entry):
         result = {
@@ -60,12 +47,11 @@ class CVEcheckerTask(BaseTask):
         return result
 
     def _npm_scan(self, arguments):
-        s3 = StoragePool.get_connected_storage('AmazonS3')
+        s3 = StoragePool.get_connected_storage('S3Snyk')
 
         try:
             self.log.debug('Retrieving Snyk vulndb from S3')
-            vulndb = s3.retrieve_dict(bucket_name=self.s3_bucket_name,
-                                      object_key=self._S3_SNYK_DB_OBJECT_KEY)
+            vulndb = s3.retrieve_vulndb()
         except:
             self.log.error('Failed to obtain Snyk vulndb database')
             return {'summary': ['Failed to obtain Snyk vulndb database'],

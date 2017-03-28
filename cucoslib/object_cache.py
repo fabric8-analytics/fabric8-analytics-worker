@@ -3,7 +3,6 @@
 import os
 import shutil
 import logging
-import json
 from selinon import StoragePool
 from cucoslib.conf import get_configuration
 from cucoslib.process import Archive
@@ -20,21 +19,19 @@ class EPVCache(object):
     # Meta-information about artifact
     _META_JSON_NAME = 'meta.json'
 
-    def __init__(self, ecosystem, name, version, bucket_name, cache_dir):
+    def __init__(self, ecosystem, name, version, cache_dir):
         """
         :param ecosystem: ecosystem for the given EPV
         :param name: name for the given EPV
         :param version: version of the given EPV
-        :param bucket_name: name of the S3 bucket where artifacts will sit
         :param cache_dir: path to dir on the filesystem that should be used for caching artifacts
         """
         self.ecosystem = ecosystem
         self.name = name
         self.version = version
-        self.bucket_name = bucket_name
         self.cache_dir = cache_dir
         self._eco_obj = None
-        self._s3 = StoragePool.get_connected_storage('AmazonS3')
+        self._s3 = StoragePool.get_connected_storage('S3Artifacts')
         self._postgres = StoragePool.get_connected_storage('BayesianPostgres')
         self._base_object_key = "{ecosystem}/{name}/{version}".format(ecosystem=ecosystem,
                                                                       name=name,
@@ -56,11 +53,11 @@ class EPVCache(object):
 
     def _retrieve_s3_object(self, object_key, dst_path):
         """Retrieve object stored in S3"""
-        self.log.debug("Retrieving object '%s' from bucket '%s' to '%s'", object_key, self.bucket_name, dst_path)
+        self.log.debug("Retrieving object '%s' from bucket '%s' to '%s'", object_key, self._s3.bucket_name, dst_path)
         basedir = os.path.dirname(dst_path)
         if not os.path.isdir(basedir):
             os.makedirs(basedir)
-        self._s3.retrieve_file(self.bucket_name, object_key, dst_path)
+        self._s3.retrieve_file(object_key, dst_path)
 
     def _get_meta(self):
         """Get artifact meta-information stored on S3
@@ -69,10 +66,10 @@ class EPVCache(object):
         """
         if not self._meta:
             try:
-                obj = self._s3.retrieve_blob(self.bucket_name, self._meta_json_object_key)
+                self._meta = self._s3.retrieve_dict(self._meta_json_object_key)
             except:
+                self.log.exception("Failed to retrieve %s", self._meta_json_object_key)
                 return None
-            self._meta = json.loads(obj.decode())
         return self._meta
 
     def _has_meta(self):
@@ -91,10 +88,7 @@ class EPVCache(object):
         tarball_name = {
             'tarball_name': tarball_name
         }
-        self._s3.store_blob(json.dumps(tarball_name).encode(),
-                            self._meta_json_object_key,
-                            self.bucket_name,
-                            versioned=False)
+        self._s3.store_dict(tarball_name, self._meta_json_object_key)
 
     def _construct_source_tarball_names(self):
         """Construct source tarball object key and source tarball path based on meta-information"""
@@ -139,7 +133,7 @@ class EPVCache(object):
             return False
 
         self._construct_source_tarball_names()
-        return self._s3.object_exists(self.bucket_name, self._source_tarball_object_key)
+        return self._s3.object_exists(self._source_tarball_object_key)
 
     def put_source_tarball(self, source_tarball_path):
         """Upload source tarball to S3
@@ -148,8 +142,7 @@ class EPVCache(object):
         """
         self._put_meta(os.path.basename(source_tarball_path))
         self._construct_source_tarball_names()
-        self._s3.store_file(source_tarball_path, self._source_tarball_object_key, self.bucket_name,
-                            versioned=False, encrypted=False)
+        self._s3.store_file(source_tarball_path, self._source_tarball_object_key)
 
     def get_extracted_source_tarball(self):
         """
@@ -180,14 +173,13 @@ class EPVCache(object):
 
         :param pom_xml_path: path to pom.xml file
         """
-        self._s3.store_file(pom_xml_path, self._pom_xml_object_key, self.bucket_name,
-                            versioned=False, encrypted=False)
+        self._s3.store_file(pom_xml_path, self._pom_xml_object_key)
 
     def has_pom_xml(self):
         """
         :return: True if the given EPV has pom.xml in the remote S3 bucket
         """
-        return self._s3.object_exists(self.bucket_name, self._pom_xml_object_key)
+        return self._s3.object_exists(self._pom_xml_object_key)
 
     def get_source_jar(self):
         """Get package source jar file (un-extracted)
@@ -218,14 +210,13 @@ class EPVCache(object):
 
         :param source_jar_path: path to source jar to be uploaded
         """
-        self._s3.store_file(source_jar_path, self._source_jar_object_key, self.bucket_name,
-                            versioned=False, encrypted=False)
+        self._s3.store_file(source_jar_path, self._source_jar_object_key)
 
     def has_source_jar(self):
         """
         :return: True if the given EPV has source jar in the remote S3 bucket
         """
-        return self._s3.object_exists(self.bucket_name, self._source_jar_object_key)
+        return self._s3.object_exists(self._source_jar_object_key)
 
     def get_sources(self):
         """
@@ -247,10 +238,10 @@ class EPVCache(object):
             self._eco_obj = Ecosystem.by_name(self._postgres.session, self.ecosystem)
 
         if self._eco_obj.is_backed_by(EcosystemBackend.maven):
-            return self._s3.object_exists(self.bucket_name, self._source_jar_object_key)
+            return self._s3.object_exists(self._source_jar_object_key)
         else:
             self._construct_source_tarball_names()
-            return self._s3.object_exists(self.bucket_name, self._source_tarball_object_key)
+            return self._s3.object_exists(self._source_tarball_object_key)
 
 
 class ObjectCache(object):
@@ -259,7 +250,6 @@ class ObjectCache(object):
     >>> epv_cache = ObjectCache.get(ecosystem='npm', name='serve-static', version='1.7.1')
     >>> extracted_tarball_path = epv_cache.get_extracted_source_tarball()
     """
-    _ARTIFACTS_BUCKET = os.environ.get('AWS_S3_ARTIFACTS_BUCKET_NAME', '{DEPLOYMENT_PREFIX}-bayesian-core-artifacts')
     _cache = {}
     _base_cache_dir = get_configuration().worker_data_dir
 
@@ -287,7 +277,7 @@ class ObjectCache(object):
         if key not in cls._cache:
             cache_dir = cls._cache_dir(ecosystem, name, version)
             # Artifacts bucket used for caching can be expanded based on env variables
-            item = EPVCache(ecosystem, name, version, cls._ARTIFACTS_BUCKET.format(**os.environ), cache_dir)
+            item = EPVCache(ecosystem, name, version, cache_dir)
             cls._cache[key] = item
             return item
         else:

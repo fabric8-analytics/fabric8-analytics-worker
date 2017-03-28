@@ -126,15 +126,15 @@ class BigQueryTask(SelinonTask):
     @classmethod
     def store_results(cls, results, table_name):
         """Store results from BigQuery in our DB."""
+        # TODO: implement store() method in S3BigQuery for this and assign S3BigQuery to this task in nodes.yml
         csv_file = None
         try:
             csv_file, csv_header = cls.prepare_csv_file(results)
             cls.dump_to_rdb(csv_file, csv_header, table_name)
 
             if AmazonS3.is_enabled():
-                s3 = StoragePool.get_connected_storage('AmazonS3')
-                s3.store_file(csv_file, table_name, bucket_name=_DEFAULT_BUCKET_NAME,
-                              versioned=False, encrypted=False)
+                s3 = StoragePool.get_connected_storage('S3BigQuery')
+                s3.store_file(csv_file, table_name)
 
         finally:
             if csv_file:

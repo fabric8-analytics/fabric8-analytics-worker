@@ -188,7 +188,6 @@
       import: 'cucoslib.workers'
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_ResultCollector_v0'
-      storage: 'AmazonS3'
     - name: 'BigQueryTask'
       import: 'cucoslib.workers'
       max_retry: 0
@@ -202,6 +201,7 @@
       import: 'cucoslib.workers'
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_ManifestKeeperTask_v0'
+      storage: 'S3Manifests'
     - name: 'FinishedAnalysisGateTask'
       import: 'cucoslib.workers'
       max_retry: 0
@@ -214,6 +214,7 @@
       import: 'cucoslib.workers'
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_GitReadmeCollector_v0'
+      storage: 'S3Readme'
 
   flows:
     - 'bayesianAnalysisFlow'
@@ -230,24 +231,76 @@
       configuration:
         # take configuration from environment variables
         connection_string: 'postgres://{POSTGRESQL_USER}:{POSTGRESQL_PASSWORD}@{PGBOUNCER_SERVICE_HOST}:5432/{POSTGRESQL_DATABASE}?sslmode=disable'
+
     - name: 'AmazonS3'
       import: 'cucoslib.storages'
       configuration:
-        # This is kinda hack-ish as most of the configuration options could be overwritted by their env variable
-        # counterparts, but this allows us to transparently switch from local deployment to Amazon AWS-ready
-        # deployment without big changes - just by providing key and key id env variables
-        #
-        # Could be overwritten by AWS_S3_ACCESS_KEY_ID env variable
         aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
-        # Could be overwritten by AWS_S3_SECRET_ACCESS_KEY env variable
         aws_secret_access_key: 'ZmvMwngonaDK5ymlCd6ptaalDdJsCn3aSSxASPaZ'
-        #
-        # Other configuraion options - defaults are listed in AmazonS3 implementation:
-        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-data'  # could be overwritten by AWS_S3_BUCKET_NAME
-        # region_name: 'us-east-1'  # could be overwritten by AWS_S3_REGION
-        # endpoint_url: 'http://coreapi-scality-s3:8000
-        # use_ssl=False
-        # encryption=  'aws:kms' / 'AES256' / False
+        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-unknown'
+        region_name: 'us-east-1'
+        encryption: false
+        versioned: false
+
+    - name: 'S3Artifacts'
+      import: 'cucoslib.storages'
+      configuration:
+        aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
+        aws_secret_access_key: 'ZmvMwngonaDK5ymlCd6ptaalDdJsCn3aSSxASPaZ'
+        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-artifacts'
+        region_name: 'us-east-1'
+        encryption: false
+        versioned: false
+
+    - name: 'S3BigQuery'
+      import: 'cucoslib.storages'
+      configuration:
+        aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
+        aws_secret_access_key: 'ZmvMwngonaDK5ymlCd6ptaalDdJsCn3aSSxASPaZ'
+        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-big-query'
+        region_name: 'us-east-1'
+        encryption: false
+        versioned: true
+
+    - name: 'S3Data'
+      import: 'cucoslib.storages'
+      configuration:
+        aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
+        aws_secret_access_key: 'ZmvMwngonaDK5ymlCd6ptaalDdJsCn3aSSxASPaZ'
+        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-data'
+        region_name: 'us-east-1'
+        encryption: 'aws:kms'
+        versioned: true
+
+    - name: 'S3Manifests'
+      import: 'cucoslib.storages'
+      configuration:
+        aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
+        aws_secret_access_key: 'ZmvMwngonaDK5ymlCd6ptaalDdJsCn3aSSxASPaZ'
+        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-manifests'
+        region_name: 'us-east-1'
+        encryption: 'aws:kms'
+        versioned: true
+
+    - name: 'S3Readme'
+      import: 'cucoslib.storages'
+      configuration:
+        aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
+        aws_secret_access_key: 'ZmvMwngonaDK5ymlCd6ptaalDdJsCn3aSSxASPaZ'
+        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-readme'
+        region_name: 'us-east-1'
+        encryption: false
+        versioned: true
+
+    - name: 'S3Snyk'
+      import: 'cucoslib.storages'
+      configuration:
+        aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
+        aws_secret_access_key: 'ZmvMwngonaDK5ymlCd6ptaalDdJsCn3aSSxASPaZ'
+        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-snyk'
+        region_name: 'us-east-1'
+        encryption: false
+        versioned: true
 
   global:
     # trace using Python's logging for now
