@@ -29,7 +29,19 @@ class LicenseCheckTask(BaseTask):
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))
 
-        cache_path = ObjectCache.get_from_dict(arguments).get_sources()
+        try:
+            cache_path = ObjectCache.get_from_dict(arguments).get_sources()
+        except Exception as e:
+            eco = arguments.get('ecosystem')
+            pkg = arguments.get('name')
+            ver = arguments.get('version')
+            if arguments['ecosystem'] != 'maven':
+                self.log.error('Could not get sources for package {e}/{p}/{v}'.
+                               format(e=eco, p=pkg, v=ver))
+                raise
+            self.log.info('Could not get sources for maven package {p}/{v},'
+                          'will try to run on binary jar'.format(p=pkg, v=ver))
+            cache_path = ObjectCache.get_from_dict(arguments).get_extracted_source_tarball()
 
         result_data = {'status': 'unknown',
                        'summary': {},
