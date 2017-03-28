@@ -26,7 +26,7 @@ from json import loads as to_json
 from itertools import chain
 from cucoslib.enums import EcosystemBackend
 from cucoslib.utils import (
-    get_command_output, get_package_dependents_count, get_analysis
+    TimedCommand, get_package_dependents_count, get_analysis
 )
 from cucoslib.data_normalizer import DataNormalizer
 import os
@@ -62,17 +62,16 @@ class MercatorTask(BaseTask):
     def run_mercator(self, arguments, cache_path):
         result_data = {'status': 'unknown',
                        'summary': [],
-                       'details': {}}
+                       'details': []}
 
         # TODO: we should probably rather query by ecosystem backend?
         if arguments['ecosystem'] == 'go':
             # We are getting only deps of main and packages for Go, skip tests
-            try:
-                data = get_command_output(['gofedlib-cli', '--dependencies-main',
-                                           '--dependencies-packages', cache_path],
-                                          graceful=False)
-            except TaskError as e:
-                self.log.exception(str(e))
+            tc = TimedCommand(['gofedlib-cli', '--dependencies-main',
+                               '--dependencies-packages', cache_path])
+            status, data, err = tc.run(timeout=300)
+            if status != 0:
+                self.log.error(err)
                 result_data['status'] = 'error'
                 return result_data
 
@@ -86,17 +85,17 @@ class MercatorTask(BaseTask):
                 jsondata = []
 
             self.log.debug('gofedlib found %i dependencies', len(jsondata))
-            result_data['details']['dependencies'] = jsondata
+            result_data['details'].append({'dependencies': jsondata})
         else:
             mercator_target = arguments.get('cache_sources_path', cache_path)
-            env = dict(os.environ, MERCATOR_JAVA_RESOLVE_POMS="true")
-            try:
-                data = get_command_output(['mercator', mercator_target],
-                                          graceful=False, is_json=True, env=env)
-            except TaskError as e:
-                self.log.exception(str(e))
+            tc = TimedCommand(['mercator', mercator_target])
+            status, output, err = tc.run(timeout=300,
+                                         update_env={'MERCATOR_JAVA_RESOLVE_POMS': 'true'})
+            if status != 0:
+                self.log.error(err)
                 result_data['status'] = 'error'
                 return result_data
+            data = to_json('\n'.join(output))
             items = self._data_normalizer.get_outermost_items(data.get('items') or [])
             self.log.debug('mercator found %i projects, outermost %i',
                            len(data), len(items))
