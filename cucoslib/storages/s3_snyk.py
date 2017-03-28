@@ -13,12 +13,10 @@ class S3Snyk(AmazonS3):
     def update_sync_date(self):
         """ Update Snyk sync associated metadata on S3
 
-        :param s3: S3 instance where to store metadata
         :return: datetime when the last sync was done
         """
         if self.object_exists(self._S3_METAINFO_OBJECT_KEY):
-            content = self.retrieve_blob(self._S3_METAINFO_OBJECT_KEY)
-            content = json.loads(content.decode())
+            content = self.retrieve_dict(self._S3_METAINFO_OBJECT_KEY)
             last_sync_datetime = datetime_parser.parse(content['updated'])
         else:
             content = {}

@@ -134,7 +134,7 @@ class BigQueryTask(SelinonTask):
 
             if AmazonS3.is_enabled():
                 s3 = StoragePool.get_connected_storage('S3BigQuery')
-                s3.store_file(csv_file, table_name, versioned=False, encrypted=False)
+                s3.store_file(csv_file, table_name)
 
         finally:
             if csv_file:

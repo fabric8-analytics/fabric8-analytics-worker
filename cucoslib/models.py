@@ -234,7 +234,7 @@ class WorkerResult(Base):
 
     @property
     def version(self):
-        return self.analysis.version.package
+        return self.analysis.version
 
 
 class StackAnalysisRequest(Base):

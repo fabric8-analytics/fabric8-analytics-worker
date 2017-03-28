@@ -237,7 +237,7 @@
       configuration:
         aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
         aws_secret_access_key: 'ZmvMwngonaDK5ymlCd6ptaalDdJsCn3aSSxASPaZ'
-        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-data'
+        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-unknown'
         region_name: 'us-east-1'
         encryption: false
         versioned: false

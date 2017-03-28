@@ -68,7 +68,7 @@ class EPVCache(object):
             try:
                 self._meta = self._s3.retrieve_dict(self._meta_json_object_key)
             except:
-                self.log.exception("Failed to retrieve %s for %s", self._meta, self._base_object_key)
+                self.log.exception("Failed to retrieve %s", self._meta_json_object_key)
                 return None
         return self._meta
 

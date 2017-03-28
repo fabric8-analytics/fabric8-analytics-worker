@@ -15,6 +15,6 @@ class S3Manifests(AmazonS3):
         # TODO: get from Postgres
         for manifest in node_args['manifests']:
             assert 'content' in manifest
-            self.store_blob(manifest['conent'].encode(), self._construct_object_key(node_args, manifest))
+            self.store_blob(manifest['content'].encode(), self._construct_object_key(node_args, manifest))
 
         return "{}:{}".format(self.bucket_name, node_args['external_request_id'])
