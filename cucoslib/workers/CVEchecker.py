@@ -87,7 +87,7 @@ class CVEcheckerTask(BaseTask):
                 'details': entries}
 
     def _maven_scan(self, arguments):
-        jar = ObjectCache.get_from_dict(arguments).get_source_jar()
+        jar = ObjectCache.get_from_dict(arguments).get_source_tarball()
         depcheck = os.path.join(os.environ['OWASP_DEP_CHECK_PATH'], 'bin', 'dependency-check.sh')
         with tempdir() as report_dir:
             report_path = os.path.join(report_dir, 'report.xml')
