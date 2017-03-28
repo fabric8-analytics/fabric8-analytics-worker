@@ -127,4 +127,3 @@ class FinishedAnalysisGateTask(BaseTask):
         if not analysis_result.finished_at:
             self.retry(self._RETRY_COUNTDOWN)
 
-        raise NotImplementedError()

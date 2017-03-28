@@ -206,6 +206,10 @@
       import: 'cucoslib.workers'
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_FinishedAnalysisGateTask_v0'
+    - name: 'GraphImporterTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_GraphImporterTask_v0'
     - name: 'GraphSyncTask'
       import: 'cucoslib.workers'
       max_retry: 0
