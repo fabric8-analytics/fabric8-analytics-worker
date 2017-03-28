@@ -65,10 +65,10 @@ def iter_dependencies_stack(storage_pool, node_args):
         return []
 
 
-def iter_snyk_updates(storage_pool, node_args):
+def iter_cvedb_updates(storage_pool, node_args):
     # Be safe here as fatal errors will cause errors in Dispatcher
     try:
-        modified = storage_pool.get('SnykSyncTask')['modified']
+        modified = storage_pool.get('CVEDBSyncTask')['modified']
         # let's force all analyses for now
         for epv in modified:
             epv['force'] = True
