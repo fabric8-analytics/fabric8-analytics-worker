@@ -48,6 +48,9 @@ class CVEcheckerTask(BaseTask):
         return result
 
     def _npm_scan(self, arguments):
+        """
+        Query Snyk vulndb stored on S3
+        """
         s3 = StoragePool.get_connected_storage('S3Snyk')
 
         try:
@@ -73,19 +76,22 @@ class CVEcheckerTask(BaseTask):
                 'status': 'success',
                 'details': entries}
 
-    def _maven_scan(self, arguments):
-        jar = ObjectCache.get_from_dict(arguments).get_source_tarball()
+    def _run_owasp_dep_check(self, scan_path, experimental=False):
         s3 = StoragePool.get_connected_storage('S3OWASPDepCheck')
         s3.retrieve_depcheck_db_if_exists()
         depcheck = os.path.join(os.environ['OWASP_DEP_CHECK_PATH'], 'bin', 'dependency-check.sh')
         with tempdir() as report_dir:
             report_path = os.path.join(report_dir, 'report.xml')
-            self.log.debug('Running OWASP Dependency-Check to scan %s for vulnerabilities' % jar)
+            self.log.debug('Running OWASP Dependency-Check to scan %s for vulnerabilities' %
+                           scan_path)
             command = [depcheck,
                        '--format', 'XML',
                        '--project', 'test',
-                       '--scan', jar,
+                       '--scan', scan_path,
                        '--out', report_path]
+            if experimental:
+                command.extend(['--enableExperimental'])
+            output = []
             try:
                 output = TimedCommand.get_command_output(command,
                                                          graceful=False,
@@ -143,16 +149,55 @@ class CVEcheckerTask(BaseTask):
                 'status': 'success',
                 'details': results}
 
+    def _maven_scan(self, arguments):
+        """
+        Run OWASP dependency-check
+        """
+        jar_path = ObjectCache.get_from_dict(arguments).get_source_tarball()
+        return self._run_owasp_dep_check(jar_path, experimental=False)
+
+    def _python_scan(self, arguments):
+        """
+        Run OWASP dependency-check experimental analyzer for Python artifacts
+
+        https://jeremylong.github.io/DependencyCheck/analyzers/python-analyzer.html
+        """
+        tarball = ObjectCache.get_from_dict(arguments).get_source_tarball()
+        if tarball.endswith('zip') or tarball.endswith('.whl'):  # tar.gz seems to be not supported
+            scan_path = tarball
+        else:
+            extracted_tarball = ObjectCache.get_from_dict(arguments).get_extracted_source_tarball()
+            # depcheck needs to be pointed to a specific file, we can't just scan whole directory
+            egg_info, pkg_info, metadata = None, None, None
+            for root, dirs, files in os.walk(extracted_tarball):
+                if root.endswith('.egg-info'):
+                    egg_info = root
+                if 'PKG-INFO' in files:
+                    pkg_info = os.path.join(root, 'PKG-INFO')
+                if 'METADATA' in files:
+                    metadata = os.path.join(root, 'METADATA')
+
+            scan_path = egg_info or pkg_info or metadata
+
+        if not scan_path:
+            return {'summary': ['File types not supported by OWASP dependency-check'],
+                    'status': 'error',
+                    'details': []}
+
+        return self._run_owasp_dep_check(scan_path, experimental=True)
+
     def execute(self, arguments):
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))
 
-        if arguments['ecosystem'] == 'npm':
-            return self._npm_scan(arguments)
-        elif arguments['ecosystem'] == 'maven':
+        if arguments['ecosystem'] == 'maven':
             return self._maven_scan(arguments)
+        elif arguments['ecosystem'] == 'npm':
+            return self._npm_scan(arguments)
+        elif arguments['ecosystem'] == 'pypi':
+            return self._python_scan(arguments)
         else:
-            return {'summary': 'Unsupported ecosystem',
+            return {'summary': ['Unsupported ecosystem'],
                     'status': 'error',
                     'details': []}
