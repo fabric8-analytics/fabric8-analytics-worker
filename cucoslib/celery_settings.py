@@ -39,6 +39,9 @@ class CelerySettings(object):
     task_acks_late = True
     result_backend = os.environ.get('CELERY_RESULT_BACKEND') or _DEFAULT_RESULT_BACKEND
 
+    # do not retry on connection errors, rather let OpenShift kill the worker
+    broker_connection_retry = False
+
     # Set up message broker
     if _use_sqs():
         broker_url = 'sqs://{aws_access_key_id}:{aws_secret_access_key}@'.format(
