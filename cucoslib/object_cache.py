@@ -57,7 +57,9 @@ class EPVCache(object):
     def _retrieve_s3_object(self, object_key, dst_path):
         """Retrieve object stored in S3"""
         self.log.debug("Retrieving object '%s' from bucket '%s' to '%s'", object_key, self.bucket_name, dst_path)
-        os.makedirs(os.path.dirname(dst_path))
+        basedir = os.path.dirname(dst_path)
+        if not os.path.isdir(basedir):
+            os.makedirs(basedir)
         self._s3.retrieve_file(self.bucket_name, object_key, dst_path)
 
     def _get_meta(self):
