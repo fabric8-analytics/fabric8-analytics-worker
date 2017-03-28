@@ -239,6 +239,7 @@ class TimedCommand(object):
         self.command = command
 
     def run(self, timeout=None, **kwargs):
+        logger.debug("running command '%s'; timeout '%s'", self.command, timeout)
         # this gets executed in a separate thread
         def target(**kwargs):
             try:
