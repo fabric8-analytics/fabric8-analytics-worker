@@ -68,7 +68,7 @@ set -x
 
 secrets_file="${here}/hack/secrets.yaml"
 if [ -e ${secrets_file} ]; then
-    secrets_vol="-v \"${secrets_file}:/var/lib/secrets/secrets.yaml:ro,Z\""
+    secrets_vol="-v ${secrets_file}:/var/lib/secrets/secrets.yaml:ro,Z"
 fi
 
 echo "Starting test suite"
