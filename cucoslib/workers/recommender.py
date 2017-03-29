@@ -78,9 +78,9 @@ class GraphDB:
         str_packages = ','.join(map(
             lambda x: "'" + GraphDB.str_value_cleaner(x) + "'", list_packages))
         payload = {
-            'gremlin': "g.V().hasLabel('Version').\
+            'gremlin': "g.V().has('vertex_label','Version').\
                         has('pname', within(str_packages)).\
-                        in('StackVersion').valueMap(true);",
+                        in('has_dependency').valueMap(true);",
             'bindings': {
                 "str_packages": str_packages
             }
