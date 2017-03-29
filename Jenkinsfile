@@ -67,14 +67,26 @@ if (env.BRANCH_NAME == 'master') {
     node('oc') {
         stage('Deploy - dev') {
             sh 'oc --context=dev deploy bayesian-worker --latest'
+            rerunOpenShiftJob {
+                jobName = 'bayesian-downstream-data-import'
+                cluster = 'dev'
+            }
         }
 
         stage('Deploy - rh-idev') {
             sh 'oc --context=rh-idev deploy bayesian-worker --latest'
+            rerunOpenShiftJob {
+                jobName = 'bayesian-downstream-data-import'
+                cluster = 'rh-idev'
+            }
         }
 
         stage('Deploy - dsaas') {
             sh 'oc --context=dsaas deploy bayesian-worker --latest'
+            rerunOpenShiftJob {
+                jobName = 'bayesian-downstream-data-import'
+                cluster = 'dsaas'
+            }
         }
     }
 }
