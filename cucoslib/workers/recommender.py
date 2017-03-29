@@ -9,13 +9,12 @@ from cucoslib.graphutils import GREMLIN_SERVER_URL_REST
 from cucoslib.base import BaseTask
 from cucoslib.conf import get_configuration
 
-
 config = get_configuration()
 
 danger_word_list = ["drop\(\)", "V\(\)", "count\(\)"]
 remove = '|'.join(danger_word_list)
 pattern = re.compile(r'(' + remove + ')', re.IGNORECASE)
-pattern_to_save = '[^\w\*\.Xx\-\>\=\<\~\^\|\/]'
+pattern_to_save = '[^\w\*\.Xx\-\>\=\<\~\^\|\/\:]'
 pattern_n2_remove = re.compile(pattern_to_save)
 
 
@@ -75,14 +74,15 @@ class GraphDB:
 
     def get_full_ref_stacks(self, list_packages):
         full_ref_stacks = []
-        str_packages = ','.join(map(
-            lambda x: "'" + GraphDB.str_value_cleaner(x) + "'", list_packages))
+        str_packages = []
+        for package in list_packages:
+            str_packages.append(GraphDB.str_value_cleaner(package))
+        str_gremlin = "g.V().has('vertex_label','Version').has('pname',within(str_packages))" \
+                      ".in('has_dependency').valueMap(true);"
         payload = {
-            'gremlin': "g.V().has('vertex_label','Version').\
-                        has('pname', within(str_packages)).\
-                        in('has_dependency').valueMap(true);",
+            'gremlin': str_gremlin,
             'bindings': {
-                "str_packages": str_packages
+                'str_packages': str_packages
             }
         }
         json_response = self.execute_gremlin_dsl(payload)
@@ -180,10 +180,10 @@ class GraphDB:
         for package, version in input_list.items():
             if package is not None:
                 payload = {
-                    'gremlin': "g.V().has('pecosystem',ecosystem).has('pname',package).has('version',version).valueMap();",
+                    'gremlin': "g.V().has('pecosystem',ecosystem).has('pname',pkg).has('version',version).valueMap();",
                     'bindings': {
                         "ecosystem": GraphDB.str_value_cleaner(ecosystem),
-                        "package": GraphDB.str_value_cleaner(package),
+                        "pkg": GraphDB.str_value_cleaner(package),
                         "version": GraphDB.str_value_cleaner(version)
                     }
                 }
