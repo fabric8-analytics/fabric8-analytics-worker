@@ -15,3 +15,9 @@
             import: 'cucoslib.dispatcher.foreach'
             function: 'iter_cvedb_updates'
             propagate_result: true
+          selective:
+            tasks:
+              - 'security_issues'
+              - 'ResultCollector'
+            follow_subflows: true
+            run_subsequent: false
