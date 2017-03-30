@@ -229,7 +229,8 @@ def assert_not_none(name, value):
 
 
 class TimedCommand(object):
-    "Execute arbitrary shell command in a timeout-able manner"
+    """Execute arbitrary shell command in a timeout-able manner."""
+
     def __init__(self, command):
         # parse with shlex if not execve friendly
         if isinstance(command, str):
@@ -237,8 +238,15 @@ class TimedCommand(object):
 
         self.command = command
 
-    def run(self, timeout=None, **kwargs):
+    def run(self, timeout=None, is_json=False, **kwargs):
+        """Run the self.command and wait up to given time period for results.
+
+        :param timeout: how long to wait, in seconds, for the command to finish before terminating it
+        :param is_json: hint whether output of the command is a JSON
+        :return: triplet (return code, stdout, stderr), stdout will be a dictionary if `is_json` is True
+        """
         logger.debug("running command '%s'; timeout '%s'", self.command, timeout)
+
         # this gets executed in a separate thread
         def target(**kwargs):
             try:
@@ -246,7 +254,7 @@ class TimedCommand(object):
                 self.output, self.error = self.process.communicate()
                 self.status = self.process.returncode
             except:
-                self.output = []
+                self.output = {} if is_json else []
                 self.error = format_exc()
                 self.status = -1
 
@@ -267,12 +275,23 @@ class TimedCommand(object):
 
         # timeout reached, terminate the thread
         if thread.is_alive():
+            logger.error('Command {cmd} timed out after {t} seconds'.format(cmd=self.command, t=timeout))
             self.process.terminate()
             thread.join()
+            if not self.error:
+                self.error = 'Killed by timeout after {t} seconds'.format(t=timeout)
         if self.output:
-            self.output = [f for f in self.output.split('\n') if f]
+            if is_json:
+                self.output = json.loads(self.output)
+            else:
+                self.output = [f for f in self.output.split('\n') if f]
 
         return self.status, self.output, self.error
+
+    @staticmethod
+    def get_command_output(args, graceful=True, is_json=False, timeout=300, **kwargs):
+        """Wrapper around get_command_output() with implicit timeout of 5 minutes."""
+        return get_command_output(**locals())
 
 
 def get_command_output(args, graceful=True, is_json=False, **kwargs):
