@@ -136,6 +136,10 @@ class Archive(object):
             raise ValueError('Unknown archive for {0}'.format(target))
 
     @staticmethod
+    def zip_file(file, archive):
+        get_command_output(['zip', archive, file])
+
+    @staticmethod
     def extract_zip(target, dest):
         # -o: overwrite existing files without prompting
         get_command_output(['unzip', '-o', '-d', dest, target])

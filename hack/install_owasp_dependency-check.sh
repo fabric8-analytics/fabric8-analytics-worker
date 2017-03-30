@@ -16,13 +16,5 @@ wget -q "https://bintray.com/jeremy-long/owasp/download_file?file_path=dependenc
 unzip -q "${NAME}.zip"
 rm -f "${NAME}.zip"
 mv "${NAME}"/* .
+mkdir --mode 775 "data/"
 rm -rf "${NAME}"/
-
-# to update CVE/CPE data files we need to actually scan some jar
-JUNITVER='4.12'
-curl "http://central.maven.org/maven2/junit/junit/${JUNITVER}/junit-${JUNITVER}.jar" -o junit-${JUNITVER}.jar
-echo "Running Dependency-Check to update CVE/CPE data files"
-bin/dependency-check.sh --format XML --project test --scan junit-${JUNITVER}.jar || :
-# to be able to update the DB later as non-root:root
-chmod -R u+rwX,g+rwX data/
-rm -f junit-${JUNITVER}.jar dependency-check-report.xml

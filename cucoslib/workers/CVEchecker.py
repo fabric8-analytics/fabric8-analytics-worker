@@ -74,6 +74,8 @@ class CVEcheckerTask(BaseTask):
 
     def _maven_scan(self, arguments):
         jar = ObjectCache.get_from_dict(arguments).get_source_tarball()
+        s3 = StoragePool.get_connected_storage('S3OWASPDepCheck')
+        s3.retrieve_depcheck_db_if_exists()
         depcheck = os.path.join(os.environ['OWASP_DEP_CHECK_PATH'], 'bin', 'dependency-check.sh')
         with tempdir() as report_dir:
             report_path = os.path.join(report_dir, 'report.xml')

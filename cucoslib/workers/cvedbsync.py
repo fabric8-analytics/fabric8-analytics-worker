@@ -6,15 +6,19 @@ from cucoslib.process import Git
 from cucoslib.utils import analysis_count, cwd, get_command_output, tempdir
 from cucoslib.base import BaseTask
 from cucoslib.solver import get_ecosystem_solver
-from cucoslib.utils import analysis_count
 
 
-class SnykSyncTask(BaseTask):
+class CVEDBSyncTask(BaseTask):
     """ Download and update NPM vulnerability database """
     _VULNDB_GIT_REPO = 'https://github.com/snyk/vulndb'
     _VULNDB_FILENAME = 'vulndb.json'
 
-    def _get_cve_db(self):
+    def _update_dep_check_db(self):
+        depcheck = os.path.join(os.environ['OWASP_DEP_CHECK_PATH'], 'bin', 'dependency-check.sh')
+        self.log.debug('Updating OWASP Dependency-Check CVE DB')
+        get_command_output([depcheck, '--updateonly'])
+
+    def _get_snyk_vulndb(self):
         """
         :return: retrieve Snyk CVE db
         """
@@ -73,8 +77,12 @@ class SnykSyncTask(BaseTask):
         ignore_modification_time = arguments.pop('ignore_modification_time', False) if arguments else False
         self._strict_assert(not arguments)
 
-        cve_db = self._get_cve_db()
+        s3 = StoragePool.get_connected_storage('S3OWASPDepCheck')
+        s3.retrieve_depcheck_db_if_exists()
+        self._update_dep_check_db()
+        s3.store_depcheck_db()
 
+        cve_db = self._get_snyk_vulndb()
         s3 = StoragePool.get_connected_storage('S3Snyk')
         s3.store_vulndb(cve_db)
         last_sync_datetime = s3.update_sync_date()

@@ -7,7 +7,7 @@ from cucoslib.workers.bigquery_gh import BigQueryTask
 from cucoslib.workers.code_metrics import CodeMetricsTask
 from cucoslib.workers.csmock_worker import CsmockTask
 from cucoslib.workers.CVEchecker import CVEcheckerTask
-from cucoslib.workers.snyk import SnykSyncTask
+from cucoslib.workers.cvedbsync import CVEDBSyncTask
 from cucoslib.workers.dependency_snapshot import DependencySnapshotTask
 from cucoslib.workers.digester import DigesterTask
 from cucoslib.workers.license import LicenseCheckTask

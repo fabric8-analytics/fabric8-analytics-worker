@@ -8,10 +8,10 @@
           retry: 5
       edges:
         - from:
-          to: 'SnykSyncTask'
-        - from: 'SnykSyncTask'
+          to: 'CVEDBSyncTask'
+        - from: 'CVEDBSyncTask'
           to: 'bayesianFlow'
           foreach:
             import: 'cucoslib.dispatcher.foreach'
-            function: 'iter_snyk_updates'
+            function: 'iter_cvedb_updates'
             propagate_result: true
