@@ -473,7 +473,7 @@ def compute_digest(target, function='sha256', raise_on_error=False):
     function += 'sum'
     # returns e.g.:
     # 65ecde5d025fcf57ceaa32230e2ff884ab204065b86e0e34e609313c7bdc7b47  /etc/passwd
-    data = get_command_output([function, target], graceful=not raise_on_error)
+    data = TimedCommand.get_command_output([function, target], graceful=not raise_on_error)
     try:
         return data[0].split(' ')[0].strip()
     except IndexError:

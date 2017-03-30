@@ -18,7 +18,7 @@ sample output:
 
 import os
 from cucoslib.utils import (
-    get_all_files_from, get_command_output, skip_git_files, compute_digest, assert_not_none
+    get_all_files_from, TimedCommand, skip_git_files, compute_digest
 )
 from cucoslib.schemas import SchemaRef
 from cucoslib.base import BaseTask
@@ -34,7 +34,7 @@ class DigesterTask(BaseTask):
         """ Compute SSdeep piece-wise linear hash of target """
         # 0 : ssdeep header
         # 1 : hash,filename
-        data = get_command_output(['ssdeep', '-c', '-s', target])
+        data = TimedCommand.get_command_output(['ssdeep', '-c', '-s', target])
         try:
             return data[1].split(',')[0].strip()
         except IndexError:

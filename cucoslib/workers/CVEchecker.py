@@ -5,7 +5,7 @@ from cucoslib.base import BaseTask
 from cucoslib.object_cache import ObjectCache
 from cucoslib.schemas import SchemaRef
 from cucoslib.solver import get_ecosystem_solver
-from cucoslib.utils import get_command_output, tempdir
+from cucoslib.utils import TimedCommand, tempdir
 
 
 class CVEcheckerTask(BaseTask):
@@ -80,8 +80,8 @@ class CVEcheckerTask(BaseTask):
         with tempdir() as report_dir:
             report_path = os.path.join(report_dir, 'report.xml')
             self.log.debug('Running OWASP Dependency-Check to scan %s for vulnerabilities' % jar)
-            get_command_output([depcheck, '--format', 'XML', '--project', 'test', '--scan', jar,
-                                '--out', report_path])
+            TimedCommand.get_command_output([depcheck, '--format', 'XML', '--project', 'test', '--scan', jar,
+                                            '--out', report_path])
             with open(report_path) as r:
                 report_dict = anymarkup.parse(r.read())
 

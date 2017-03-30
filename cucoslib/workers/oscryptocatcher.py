@@ -4,7 +4,7 @@ Matches crypto algorithms in sources based on content
 Output: list of files along with crypto algorithm they contain
 """
 
-from cucoslib.utils import get_command_output
+from cucoslib.utils import TimedCommand
 from cucoslib.base import BaseTask
 from cucoslib.schemas import SchemaRef
 from cucoslib.object_cache import ObjectCache
@@ -27,8 +27,8 @@ class OSCryptoCatcherTask(BaseTask):
                    'details': []}
 
         try:
-            oscc = get_command_output(['oscryptocatcher', '--subdir-in-result', cache_path],
-                                      graceful=False, is_json=True)
+            oscc = TimedCommand.get_command_output(['oscryptocatcher', '--subdir-in-result', cache_path],
+                                                   graceful=False, is_json=True)
 
             self.log.debug("oscryptocatcher %s output: %s", cache_path, oscc)
             results['details'] = oscc['details']

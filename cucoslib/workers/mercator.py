@@ -61,13 +61,13 @@ class MercatorTask(BaseTask):
 
         mercator_target = arguments.get('cache_sources_path', cache_path)
         tc = TimedCommand(['mercator', mercator_target])
-        status, output, err = tc.run(timeout=300,
-                                     update_env={'MERCATOR_JAVA_RESOLVE_POMS': 'true'})
+        status, data, err = tc.run(timeout=300,
+                                   is_json=True,
+                                   update_env={'MERCATOR_JAVA_RESOLVE_POMS': 'true'})
         if status != 0:
             self.log.error(err)
             result_data['status'] = 'error'
             return result_data
-        data = to_json('\n'.join(output))
         items = self._data_normalizer.get_outermost_items(data.get('items') or [])
         self.log.debug('mercator found %i projects, outermost %i',
                        len(data), len(items))
