@@ -5,8 +5,7 @@ import tempfile
 import shutil
 from os import path as os_path, walk, getcwd, chdir, environ as os_environ
 from threading import Thread
-from subprocess import (Popen, PIPE, check_output,
-                        CalledProcessError)
+from subprocess import Popen, PIPE, check_output, CalledProcessError, TimeoutExpired
 from traceback import format_exc
 from urllib.parse import urlparse
 from shlex import split
@@ -290,7 +289,7 @@ def get_command_output(args, graceful=True, is_json=False, **kwargs):
         # Using universal_newlines mostly for the side-effect of decoding
         # the output as UTF-8 text on Python 3.x
         out = check_output(args, universal_newlines=True, **kwargs)
-    except CalledProcessError as ex:
+    except (CalledProcessError, TimeoutExpired) as ex:
         # TODO: we may want to use subprocess.Popen to be able to also print stderr here
         #  (while not mixing it with stdout that is returned if the subprocess succeeds)
         logger.warning("command %s ended with %s\n%s", args, ex.returncode, ex.output)
