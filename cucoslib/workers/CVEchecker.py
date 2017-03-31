@@ -2,6 +2,7 @@ import anymarkup
 import os
 from selinon import StoragePool
 from cucoslib.base import BaseTask
+from cucoslib.errors import TaskError
 from cucoslib.object_cache import ObjectCache
 from cucoslib.schemas import SchemaRef
 from cucoslib.solver import get_ecosystem_solver
@@ -80,14 +81,22 @@ class CVEcheckerTask(BaseTask):
         with tempdir() as report_dir:
             report_path = os.path.join(report_dir, 'report.xml')
             self.log.debug('Running OWASP Dependency-Check to scan %s for vulnerabilities' % jar)
-            TimedCommand.get_command_output([depcheck, '--format', 'XML', '--project', 'test', '--scan', jar,
-                                            '--out', report_path], timeout=600)  # 10 minutes
+            command = [depcheck,
+                       '--format', 'XML',
+                       '--project', 'test',
+                       '--scan', jar,
+                       '--out', report_path]
             try:
+                output = TimedCommand.get_command_output(command,
+                                                         graceful=False,
+                                                         timeout=600) # 10 minutes
                 with open(report_path) as r:
                     report_dict = anymarkup.parse(r.read())
-            except FileNotFoundError:
-                error_msg = 'No report from OWASP Dependency-Check'
-                self.log.error(error_msg)
+            except (TaskError, FileNotFoundError) as e:
+                for line in output:
+                    self.log.warning(line)
+                self.log.exception(str(e))
+                error_msg = 'OWASP Dependency-Check scan failed'
                 return {'summary': error_msg,
                         'status': 'error',
                         'details': []}
