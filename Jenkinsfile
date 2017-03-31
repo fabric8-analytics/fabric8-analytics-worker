@@ -66,7 +66,8 @@ node('docker') {
 if (env.BRANCH_NAME == 'master') {
     node('oc') {
         stage('Deploy - dev') {
-            sh 'oc --context=dev deploy bayesian-worker --latest'
+            sh 'oc --context=dev deploy bayesian-worker-api --latest'
+            sh 'oc --context=dev deploy bayesian-worker-ingestion --latest'
             rerunOpenShiftJob {
                 jobName = 'bayesian-downstream-data-import'
                 cluster = 'dev'
@@ -74,7 +75,8 @@ if (env.BRANCH_NAME == 'master') {
         }
 
         stage('Deploy - rh-idev') {
-            sh 'oc --context=rh-idev deploy bayesian-worker --latest'
+            sh 'oc --context=rh-idev deploy bayesian-worker-api --latest'
+            sh 'oc --context=rh-idev deploy bayesian-worker-ingestion --latest'
             rerunOpenShiftJob {
                 jobName = 'bayesian-downstream-data-import'
                 cluster = 'rh-idev'
