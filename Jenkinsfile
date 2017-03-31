@@ -80,13 +80,5 @@ if (env.BRANCH_NAME == 'master') {
                 cluster = 'rh-idev'
             }
         }
-
-        stage('Deploy - dsaas') {
-            sh 'oc --context=dsaas deploy bayesian-worker --latest'
-            rerunOpenShiftJob {
-                jobName = 'bayesian-downstream-data-import'
-                cluster = 'dsaas'
-            }
-        }
     }
 }
