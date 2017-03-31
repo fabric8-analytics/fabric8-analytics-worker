@@ -81,7 +81,7 @@ class CVEcheckerTask(BaseTask):
             report_path = os.path.join(report_dir, 'report.xml')
             self.log.debug('Running OWASP Dependency-Check to scan %s for vulnerabilities' % jar)
             TimedCommand.get_command_output([depcheck, '--format', 'XML', '--project', 'test', '--scan', jar,
-                                            '--out', report_path])
+                                            '--out', report_path], timeout=600)  # 10 minutes
             with open(report_path) as r:
                 report_dict = anymarkup.parse(r.read())
 
