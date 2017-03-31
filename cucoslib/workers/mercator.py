@@ -23,14 +23,9 @@ sample output:
 """
 
 from json import loads as to_json
-from itertools import chain
 from cucoslib.enums import EcosystemBackend
-from cucoslib.utils import (
-    TimedCommand, get_package_dependents_count, get_analysis
-)
+from cucoslib.utils import TimedCommand
 from cucoslib.data_normalizer import DataNormalizer
-import os
-from cucoslib.errors import TaskError
 from cucoslib.schemas import SchemaRef
 from cucoslib.base import BaseTask
 from cucoslib.object_cache import ObjectCache
@@ -64,49 +59,26 @@ class MercatorTask(BaseTask):
                        'summary': [],
                        'details': []}
 
-        # TODO: we should probably rather query by ecosystem backend?
-        if arguments['ecosystem'] == 'go':
-            # We are getting only deps of main and packages for Go, skip tests
-            tc = TimedCommand(['gofedlib-cli', '--dependencies-main',
-                               '--dependencies-packages', cache_path])
-            status, data, err = tc.run(timeout=300)
-            if status != 0:
-                self.log.error(err)
-                result_data['status'] = 'error'
-                return result_data
+        mercator_target = arguments.get('cache_sources_path', cache_path)
+        tc = TimedCommand(['mercator', mercator_target])
+        status, data, err = tc.run(timeout=300,
+                                   is_json=True,
+                                   update_env={'MERCATOR_JAVA_RESOLVE_POMS': 'true'})
+        if status != 0:
+            self.log.error(err)
+            result_data['status'] = 'error'
+            return result_data
+        items = self._data_normalizer.get_outermost_items(data.get('items') or [])
+        self.log.debug('mercator found %i projects, outermost %i',
+                       len(data), len(items))
 
-            jsondata = to_json(data[0])
-            if len(jsondata.values()) > 0:
-                # gofedlib-cli returns a list of dependencies for "main" and
-                # "packages", each available under a separate key in the returned
-                # dict - make a single array of it.
-                jsondata = list(chain(jsondata.values()))
-            else:
-                jsondata = []
-
-            self.log.debug('gofedlib found %i dependencies', len(jsondata))
-            result_data['details'].append({'dependencies': jsondata})
-        else:
-            mercator_target = arguments.get('cache_sources_path', cache_path)
-            tc = TimedCommand(['mercator', mercator_target])
-            status, output, err = tc.run(timeout=300,
-                                         update_env={'MERCATOR_JAVA_RESOLVE_POMS': 'true'})
-            if status != 0:
-                self.log.error(err)
-                result_data['status'] = 'error'
-                return result_data
-            data = to_json('\n'.join(output))
-            items = self._data_normalizer.get_outermost_items(data.get('items') or [])
-            self.log.debug('mercator found %i projects, outermost %i',
-                           len(data), len(items))
-
-            ecosystem_object = self.storage.get_ecosystem(arguments['ecosystem'])
-            if ecosystem_object.is_backed_by(EcosystemBackend.maven):
-                # for maven we download both Jar and POM, we consider POM to be *the*
-                #  source of information and don't want to duplicate info by including
-                #  data from pom included in artifact (assuming it's included)
-                items = [data for data in items if data['ecosystem'].lower() == 'java-pom']
-            result_data['details'] = [self._data_normalizer.handle_data(data) for data in items]
+        ecosystem_object = self.storage.get_ecosystem(arguments['ecosystem'])
+        if ecosystem_object.is_backed_by(EcosystemBackend.maven):
+            # for maven we download both Jar and POM, we consider POM to be *the*
+            #  source of information and don't want to duplicate info by including
+            #  data from pom included in artifact (assuming it's included)
+            items = [data for data in items if data['ecosystem'].lower() == 'java-pom']
+        result_data['details'] = [self._data_normalizer.handle_data(data) for data in items]
 
         result_data['status'] = 'success'
         return result_data

@@ -7,7 +7,7 @@ Output: list of detected licenses
 
 """
 
-from cucoslib.utils import (get_command_output, assert_not_none)
+from cucoslib.utils import TimedCommand
 from cucoslib.base import BaseTask
 from cucoslib.schemas import SchemaRef
 from cucoslib.object_cache import ObjectCache
@@ -47,10 +47,9 @@ class LicenseCheckTask(BaseTask):
                        'summary': {},
                        'details': {}}
         try:
-            result_data['details'] = get_command_output(['cucos_license_check.py',
-                                                         cache_path],
-                                                        graceful=False,
-                                                        is_json=True)
+            result_data['details'] = TimedCommand.get_command_output(['cucos_license_check.py', cache_path],
+                                                                     graceful=False,
+                                                                     is_json=True)
             result_data['status'] = result_data['details'].pop('status')
             result_data['summary'] = result_data['details'].pop('summary')
         except:

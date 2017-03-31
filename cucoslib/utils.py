@@ -5,8 +5,7 @@ import tempfile
 import shutil
 from os import path as os_path, walk, getcwd, chdir, environ as os_environ
 from threading import Thread
-from subprocess import (Popen, PIPE, check_output,
-                        CalledProcessError)
+from subprocess import Popen, PIPE, check_output, CalledProcessError, TimeoutExpired
 from traceback import format_exc
 from urllib.parse import urlparse
 from shlex import split
@@ -230,7 +229,8 @@ def assert_not_none(name, value):
 
 
 class TimedCommand(object):
-    "Execute arbitrary shell command in a timeout-able manner"
+    """Execute arbitrary shell command in a timeout-able manner."""
+
     def __init__(self, command):
         # parse with shlex if not execve friendly
         if isinstance(command, str):
@@ -238,8 +238,15 @@ class TimedCommand(object):
 
         self.command = command
 
-    def run(self, timeout=None, **kwargs):
+    def run(self, timeout=None, is_json=False, **kwargs):
+        """Run the self.command and wait up to given time period for results.
+
+        :param timeout: how long to wait, in seconds, for the command to finish before terminating it
+        :param is_json: hint whether output of the command is a JSON
+        :return: triplet (return code, stdout, stderr), stdout will be a dictionary if `is_json` is True
+        """
         logger.debug("running command '%s'; timeout '%s'", self.command, timeout)
+
         # this gets executed in a separate thread
         def target(**kwargs):
             try:
@@ -247,7 +254,7 @@ class TimedCommand(object):
                 self.output, self.error = self.process.communicate()
                 self.status = self.process.returncode
             except:
-                self.output = []
+                self.output = {} if is_json else []
                 self.error = format_exc()
                 self.status = -1
 
@@ -268,12 +275,24 @@ class TimedCommand(object):
 
         # timeout reached, terminate the thread
         if thread.is_alive():
+            logger.error('Command {cmd} timed out after {t} seconds'.format(cmd=self.command, t=timeout))
             self.process.terminate()
             thread.join()
+            if not self.error:
+                self.error = 'Killed by timeout after {t} seconds'.format(t=timeout)
         if self.output:
-            self.output = [f for f in self.output.split('\n') if f]
+            if is_json:
+                self.output = json.loads(self.output)
+            else:
+                self.output = [f for f in self.output.split('\n') if f]
 
         return self.status, self.output, self.error
+
+    @staticmethod
+    def get_command_output(args, graceful=True, is_json=False, timeout=300, **kwargs):
+        """Wrapper around get_command_output() with implicit timeout of 5 minutes."""
+        kwargs['timeout'] = timeout
+        return get_command_output(args, graceful, is_json, **kwargs)
 
 
 def get_command_output(args, graceful=True, is_json=False, **kwargs):
@@ -290,10 +309,13 @@ def get_command_output(args, graceful=True, is_json=False, **kwargs):
         # Using universal_newlines mostly for the side-effect of decoding
         # the output as UTF-8 text on Python 3.x
         out = check_output(args, universal_newlines=True, **kwargs)
-    except CalledProcessError as ex:
+    except (CalledProcessError, TimeoutExpired) as ex:
         # TODO: we may want to use subprocess.Popen to be able to also print stderr here
         #  (while not mixing it with stdout that is returned if the subprocess succeeds)
-        logger.warning("command %s ended with %s\n%s", args, ex.returncode, ex.output)
+        if isinstance(ex, TimeoutExpired):
+            logger.warning("command %s timed out:\n%s", args, ex.output)
+        else:
+            logger.warning("command %s ended with %s\n%s", args, ex.returncode, ex.output)
         if not graceful:
             logger.error("exception is fatal")
             raise TaskError("Error during running command %s: %r" % (args, ex.output))
@@ -455,7 +477,7 @@ def compute_digest(target, function='sha256', raise_on_error=False):
     function += 'sum'
     # returns e.g.:
     # 65ecde5d025fcf57ceaa32230e2ff884ab204065b86e0e34e609313c7bdc7b47  /etc/passwd
-    data = get_command_output([function, target], graceful=not raise_on_error)
+    data = TimedCommand.get_command_output([function, target], graceful=not raise_on_error)
     try:
         return data[0].split(' ')[0].strip()
     except IndexError:

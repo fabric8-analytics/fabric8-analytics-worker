@@ -12,7 +12,7 @@ from urllib.parse import urljoin, urlparse
 
 from cucoslib.conf import get_configuration
 from cucoslib.enums import EcosystemBackend
-from cucoslib.utils import (cwd, get_command_output, compute_digest,
+from cucoslib.utils import (cwd, TimedCommand, compute_digest,
                             MavenCoordinates, mvn_find_latest_version)
 
 logger = logging.getLogger(__name__)
@@ -42,10 +42,10 @@ class Git(object):
         """
         user_name = configuration.git_user_name
         user_email = configuration.git_user_email
-        if not get_command_output(["git", "config", "--get", "user.name"]):
-            get_command_output(["git", "config", "--global", "user.name", user_name])
-        if not get_command_output(["git", "config", "--get", "user.email"]):
-            get_command_output(["git", "config", "--global", "user.email", user_email])
+        if not TimedCommand.get_command_output(["git", "config", "--get", "user.name"]):
+            TimedCommand.get_command_output(["git", "config", "--global", "user.name", user_name])
+        if not TimedCommand.get_command_output(["git", "config", "--get", "user.email"]):
+            TimedCommand.get_command_output(["git", "config", "--global", "user.email", user_email])
 
     @classmethod
     def clone(cls, url, path):
@@ -57,7 +57,7 @@ class Git(object):
         :return: instance of Git()
         """
         cls.config()
-        get_command_output(["git", "clone", url, path], graceful=False)
+        TimedCommand.get_command_output(["git", "clone", url, path], graceful=False)
         return cls(path=path)
 
     @classmethod
@@ -69,7 +69,7 @@ class Git(object):
         :return: instance of Git()
         """
         cls.config()
-        get_command_output(["git", "init", path], graceful=False)
+        TimedCommand.get_command_output(["git", "init", path], graceful=False)
         return cls(path=path)
 
     def commit(self, message='blank'):
@@ -81,7 +81,7 @@ class Git(object):
         # --git-dir is #$%^&&
         # http://stackoverflow.com/questions/1386291/git-git-dir-not-working-as-expected
         with cwd(self.repo_path):
-            get_command_output(["git", "commit", "-m", message], graceful=False)
+            TimedCommand.get_command_output(["git", "commit", "-m", message], graceful=False)
 
     def add(self, path):
         """
@@ -90,7 +90,7 @@ class Git(object):
         :param path: str
         """
         with cwd(self.repo_path):
-            get_command_output(["git", "add", path], graceful=False)
+            TimedCommand.get_command_output(["git", "add", path], graceful=False)
 
     def add_and_commit_everything(self, message="blank"):
         """
@@ -104,8 +104,8 @@ class Git(object):
         # first we need to remove any .git dirs/files from the archive, they could contain
         #  directions that would break adding (e.g. Flask 0.10 contains .git with gitpath
         #  pointing to Mitsuhiko's home dir)
-        get_command_output(['find', self.repo_path, '-mindepth', '2', '-name', '.git',
-                            '-exec', 'rm', '-rf', '{}', ';'])
+        TimedCommand.get_command_output(['find', self.repo_path, '-mindepth', '2', '-name', '.git',
+                                        '-exec', 'rm', '-rf', '{}', ';'])
         # add everything
         self.add(self.repo_path)
         self.commit(message=message)
@@ -113,8 +113,8 @@ class Git(object):
     def archive(self, basename):
         suffix = "tar.gz"
         filename = basename + "." + suffix
-        get_command_output(["git", "archive", "--format={}".format(suffix),
-                            "--output={}".format(filename), "HEAD"])
+        TimedCommand.get_command_output(["git", "archive", "--format={}".format(suffix),
+                                        "--output={}".format(filename), "HEAD"])
         return filename
 
 
@@ -137,18 +137,18 @@ class Archive(object):
 
     @staticmethod
     def zip_file(file, archive):
-        get_command_output(['zip', archive, file])
+        TimedCommand.get_command_output(['zip', archive, file])
 
     @staticmethod
     def extract_zip(target, dest):
         # -o: overwrite existing files without prompting
-        get_command_output(['unzip', '-o', '-d', dest, target])
+        TimedCommand.get_command_output(['unzip', '-o', '-d', dest, target])
         # Fix possibly wrong permissions in zip files that would prevent us from deleting files.
-        get_command_output(['chmod', '-R', 'u+rwX,g+rwX', dest])
+        TimedCommand.get_command_output(['chmod', '-R', 'u+rwX,g+rwX', dest])
 
     @staticmethod
     def extract_tar(target, dest):
-        get_command_output(['tar', 'xf', target, '-C', dest])
+        TimedCommand.get_command_output(['tar', 'xf', target, '-C', dest])
 
     @staticmethod
     def extract_gem(target, dest):
@@ -158,14 +158,13 @@ class Archive(object):
         """
         sources = os.path.join(dest, 'sources')
         metadata = os.path.join(dest, 'metadata')
-        get_command_output(['mkdir', '-p', sources, metadata])
-        get_command_output(['gem', 'unpack', target, '--target', sources])
+        TimedCommand.get_command_output(['mkdir', '-p', sources, metadata])
+        TimedCommand.get_command_output(['gem', 'unpack', target, '--target', sources])
         with cwd(metadata):
             # --spec ignores --target, so we need to cwd
-            get_command_output(['gem', 'unpack', target, '--spec'])
+            TimedCommand.get_command_output(['gem', 'unpack', target, '--spec'])
             metadatayaml = glob.glob('*.gemspec').pop()
             os.rename(metadatayaml, 'rubygems-metadata.yaml')
-
 
 
 class IndianaJones(object):
@@ -194,7 +193,7 @@ class IndianaJones(object):
     def get_revision(target_directory):
         """ Get digest of last commit """
         with cwd(target_directory):
-            return get_command_output(['git', 'rev-parse', 'HEAD'], graceful=False).pop()
+            return TimedCommand.get_command_output(['git', 'rev-parse', 'HEAD'], graceful=False).pop()
 
     @staticmethod
     def fetch_artifact(ecosystem=None,
@@ -255,7 +254,7 @@ class IndianaJones(object):
 
             # $ npm config get cache
             # /root/.npm
-            cache_path = get_command_output(['npm', 'config', 'get', 'cache'], graceful=False).pop()
+            cache_path = TimedCommand.get_command_output(['npm', 'config', 'get', 'cache'], graceful=False).pop()
 
             # add package to cache:
             # /root/.npm/express/
@@ -273,13 +272,13 @@ class IndianaJones(object):
             if version:
                 name_ver = "{}@{}".format(artifact, version)
             # make sure the artifact is not in the cache yet
-            get_command_output(['npm', 'cache', 'clean', artifact], graceful=False)
+            TimedCommand.get_command_output(['npm', 'cache', 'clean', artifact], graceful=False)
             logger.info("downloading npm module %s", name_ver)
             npm_command = ['npm', 'cache', 'add']
             if _USE_ARTIFACTORY:
                 npm_command.extend(['--registry', artifactory_npm])
             npm_command.append(name_ver)
-            get_command_output(npm_command, graceful=False)
+            TimedCommand.get_command_output(npm_command, graceful=False)
 
             # copy tarball to workpath
             tarball_name = "package.tgz"
@@ -318,7 +317,7 @@ class IndianaJones(object):
             gem_command.append(artifact)
             gem_command.extend(version_arg)
             with cwd(target_dir):
-                get_command_output(gem_command, graceful=False)
+                TimedCommand.get_command_output(gem_command, graceful=False)
 
             if not version:
                 # if version is None we need to glob for the version that was downloaded

@@ -3,7 +3,7 @@ import json
 from dateutil import parser as datetime_parser
 from selinon import StoragePool
 from cucoslib.process import Git
-from cucoslib.utils import analysis_count, cwd, get_command_output, tempdir
+from cucoslib.utils import analysis_count, cwd, TimedCommand, tempdir
 from cucoslib.base import BaseTask
 from cucoslib.solver import get_ecosystem_solver
 
@@ -16,7 +16,7 @@ class CVEDBSyncTask(BaseTask):
     def _update_dep_check_db(self):
         depcheck = os.path.join(os.environ['OWASP_DEP_CHECK_PATH'], 'bin', 'dependency-check.sh')
         self.log.debug('Updating OWASP Dependency-Check CVE DB')
-        get_command_output([depcheck, '--updateonly'])
+        TimedCommand.get_command_output([depcheck, '--updateonly'], timeout=1800)
 
     def _get_snyk_vulndb(self):
         """
@@ -30,13 +30,12 @@ class CVEDBSyncTask(BaseTask):
             with cwd(vulndb_dir):
                 # install dependencies
                 self.log.debug("Installing snyk/vulndb dependencies")
-                get_command_output(['npm', 'install'])
+                TimedCommand.get_command_output(['npm', 'install'])
                 # generate database (json in file)
                 self.log.debug("Generating snyk/vulndb")
-                # TODO: use TimedCommand
-                get_command_output([os.path.join('cli', 'shrink.js'),
-                                    'data',
-                                    self._VULNDB_FILENAME])
+                TimedCommand.get_command_output([os.path.join('cli', 'shrink.js'),
+                                                'data',
+                                                self._VULNDB_FILENAME])
                 # parse the JSON so we are sure that we have a valid JSON
                 with open(self._VULNDB_FILENAME) as f:
                     return json.load(f)

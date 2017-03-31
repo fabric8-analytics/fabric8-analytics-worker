@@ -31,7 +31,7 @@ import re
 import os
 
 from cucoslib.utils import (
-    get_command_output, get_all_files_from, skip_git_files, ThreadPool, assert_not_none
+    TimedCommand, get_all_files_from, skip_git_files, ThreadPool
 )
 from cucoslib.schemas import SchemaRef
 from cucoslib.base import BaseTask
@@ -71,15 +71,15 @@ class LinguistTask(BaseTask):
         cache_path = ObjectCache.get_from_dict(arguments).get_extracted_source_tarball()
 
         def worker(path):
-            mime = get_command_output(['file', path, '-b', '-i']).pop()
+            mime = TimedCommand.get_command_output(['file', path, '-b', '-i']).pop()
             self.log.debug("%s mime = %s", path, mime)
-            typ = get_command_output(['file', path, '-b'])
+            typ = TimedCommand.get_command_output(['file', path, '-b'])
             self.log.debug("%s filetype = %s", path, typ)
 
             linguist = None
             if 'charset=binary' not in mime:
                 linguist = self._parse_linguist(
-                    get_command_output(['linguist', path])
+                    TimedCommand.get_command_output(['linguist', path])
                 )
                 self.log.debug("%s linguist output = %s", path, linguist)
 
