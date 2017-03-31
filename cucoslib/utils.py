@@ -291,7 +291,8 @@ class TimedCommand(object):
     @staticmethod
     def get_command_output(args, graceful=True, is_json=False, timeout=300, **kwargs):
         """Wrapper around get_command_output() with implicit timeout of 5 minutes."""
-        return get_command_output(**locals())
+        kwargs['timeout'] = timeout
+        return get_command_output(args, graceful, is_json, **kwargs)
 
 
 def get_command_output(args, graceful=True, is_json=False, **kwargs):
