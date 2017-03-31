@@ -1,8 +1,9 @@
 
 ---
   flow-definitions:
-    - name: 'bayesianAnalysisFlow'
-      queue: '{DEPLOYMENT_PREFIX}_bayesianAnalysisFlow_v0'
+    - &bayesianAnalysisFlow
+      name: 'bayesianAnalysisFlow'
+      queue: '{DEPLOYMENT_PREFIX}_ingestion_bayesianAnalysisFlow_v0'
       # we will not wait for recursive analyses
       nowait:
        - 'bayesianFlow'
@@ -103,3 +104,7 @@
           #        value: 'maven'
         - from: 'blackduck_executor'
           to: 'blackduck'
+
+    - <<: *bayesianAnalysisFlow
+      name: 'bayesianApiAnalysisFlow'
+      queue: '{DEPLOYMENT_PREFIX}_api_bayesianAnalysisFlow_v0'

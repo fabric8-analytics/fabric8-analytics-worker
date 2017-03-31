@@ -1,7 +1,7 @@
 ---
   flow-definitions:
     - name: 'graphSyncFlow'
-      queue: '{DEPLOYMENT_PREFIX}_graphSyncFlow_v0'
+      queue: '{DEPLOYMENT_PREFIX}_api_graphSyncFlow_v0'
       propagate_node_args: true
       edges:
         - from:
