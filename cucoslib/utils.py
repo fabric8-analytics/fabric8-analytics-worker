@@ -312,7 +312,10 @@ def get_command_output(args, graceful=True, is_json=False, **kwargs):
     except (CalledProcessError, TimeoutExpired) as ex:
         # TODO: we may want to use subprocess.Popen to be able to also print stderr here
         #  (while not mixing it with stdout that is returned if the subprocess succeeds)
-        logger.warning("command %s ended with %s\n%s", args, ex.returncode, ex.output)
+        if isinstance(ex, TimeoutExpired):
+            logger.warning("command %s timed out:\n%s", args, ex.output)
+        else:
+            logger.warning("command %s ended with %s\n%s", args, ex.returncode, ex.output)
         if not graceful:
             logger.error("exception is fatal")
             raise TaskError("Error during running command %s: %r" % (args, ex.output))
