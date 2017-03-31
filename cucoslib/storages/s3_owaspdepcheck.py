@@ -15,7 +15,8 @@ class S3OWASPDepCheck(AmazonS3):
 
     def store_depcheck_db(self):
         """ Zip CVE DB file and store to S3 """
-        Archive.zip_file(self._DB_FILE_PATH, self._DB_ARCHIVE_PATH)  # 272Mib -> 44MiB(deflated 84%)
+        # 272Mib -> 44MiB(deflated 84%)
+        Archive.zip_file(self._DB_FILE_PATH, self._DB_ARCHIVE_PATH, junk_paths=True)
         self.store_file(self._DB_ARCHIVE_PATH, self._DB_ARCHIVE)
 
     def retrieve_depcheck_db_if_exists(self):

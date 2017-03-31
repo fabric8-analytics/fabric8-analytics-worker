@@ -136,8 +136,13 @@ class Archive(object):
             raise ValueError('Unknown archive for {0}'.format(target))
 
     @staticmethod
-    def zip_file(file, archive):
-        TimedCommand.get_command_output(['zip', archive, file])
+    def zip_file(file, archive, junk_paths=False):
+        command = ['zip', archive, file]
+        if junk_paths:
+            # Store just the name of a saved file (junk the path), not directory names.
+            # By default, zip will store the full path (relative to the current directory).
+            command.extend(['--junk-paths'])
+        TimedCommand.get_command_output(command)
 
     @staticmethod
     def extract_zip(target, dest):
