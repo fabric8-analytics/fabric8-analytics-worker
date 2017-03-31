@@ -82,8 +82,15 @@ class CVEcheckerTask(BaseTask):
             self.log.debug('Running OWASP Dependency-Check to scan %s for vulnerabilities' % jar)
             TimedCommand.get_command_output([depcheck, '--format', 'XML', '--project', 'test', '--scan', jar,
                                             '--out', report_path], timeout=600)  # 10 minutes
-            with open(report_path) as r:
-                report_dict = anymarkup.parse(r.read())
+            try:
+                with open(report_path) as r:
+                    report_dict = anymarkup.parse(r.read())
+            except FileNotFoundError:
+                error_msg = 'No report from OWASP Dependency-Check'
+                self.log.error(error_msg)
+                return {'summary': error_msg,
+                        'status': 'error',
+                        'details': []}
 
         results = []
         dependencies = report_dict.get('analysis', {}).get('dependencies', {}).get('dependency', [])
