@@ -19,6 +19,10 @@ class S3OWASPDepCheck(AmazonS3):
         Archive.zip_file(self._DB_FILE_PATH, self._DB_ARCHIVE_PATH, junk_paths=True)
         self.store_file(self._DB_ARCHIVE_PATH, self._DB_ARCHIVE)
 
+    def store_depcheck_db_if_not_exists(self):
+        if not self.object_exists(self._DB_ARCHIVE):
+            self.store_depcheck_db()
+
     def retrieve_depcheck_db_if_exists(self):
         """ Retrieve zipped CVE DB file as stored on S3 and extract"""
         if self.object_exists(self._DB_ARCHIVE):
