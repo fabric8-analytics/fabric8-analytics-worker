@@ -27,6 +27,7 @@ import json
 from os import path
 from itertools import zip_longest
 
+from cucoslib.utils import parse_gh_repo
 
 # TODO: we need to unify the output from different ecosystems
 class DataNormalizer(object):
@@ -219,6 +220,14 @@ class DataNormalizer(object):
         base['_tests_implemented'] = self._are_tests_implemented(base)
         return base
 
+    def _python_identify_repo(self, homepage):
+        """Returns code repository dict filled with homepage, if homepage is GH repo
+        (None otherwise)
+        """
+        if parse_gh_repo(homepage):
+            return {'url': homepage, 'type': 'git'}
+        return None
+
     def _handle_python(self, data):
         "Handle Python package (setup.py) analysis data"
         key_map = (('license', 'declared_license'), ('url', 'homepage'),
@@ -227,10 +236,12 @@ class DataNormalizer(object):
 
         transformed = self.transform_keys(data, key_map)
         transformed['author'] = self._join_name_email(data, 'author', 'author_email')
+        transformed['code_repository'] = self._python_identify_repo(transformed.get('homepage', ''))
         return transformed
 
     def _handle_python_dist(self, data):
         details = data.get('extensions', {}).get('python.details', None)
+        result = None
         if details is not None:
             contacts = details.get('contacts', [])
             urls = details.get('project_urls', {})
@@ -253,15 +264,15 @@ class DataNormalizer(object):
                       'dependencies': sorted(dependencies), 'name': data.get('name', None),
                       'version': data.get('version', None),
                       'declared_license': details.get('license', None)}
-            return result
         else:
             key_map = (('summary', 'description'), ('requires_dist', 'dependencies'), ('name',),
                        ('home-page', 'homepage'), ('version',), ('license', 'declared_license'),
                        ('platform',), )
 
-            transformed = self.transform_keys(data, key_map)
-            transformed['author'] = self._join_name_email(data, 'author', 'author-email')
-            return transformed
+            result = self.transform_keys(data, key_map)
+            result['author'] = self._join_name_email(data, 'author', 'author-email')
+        result['code_repository'] = self._python_identify_repo(result.get('homepage', ''))
+        return result
 
     def _handle_java(self, data):
         # we expect pom.xml to be there, since it's always downloaded to top level by InitTask
