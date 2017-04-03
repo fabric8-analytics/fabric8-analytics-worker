@@ -1,7 +1,7 @@
 import anymarkup
+import glob
 import os
 from selinon import StoragePool
-from shutil import rmtree
 from cucoslib.base import BaseTask
 from cucoslib.errors import TaskError
 from cucoslib.object_cache import ObjectCache
@@ -80,7 +80,10 @@ class CVEcheckerTask(BaseTask):
     def _run_owasp_dep_check(self, scan_path, experimental=False):
         def _clean_data_dir():
             # to remove DB and any stale files
-            rmtree(os.path.join(os.environ['OWASP_DEP_CHECK_PATH'], 'data'))
+            files = glob.glob(os.path.join(os.environ['OWASP_DEP_CHECK_PATH'], 'data', '*'))
+            for f in files:
+                os.remove(f)
+
         s3 = StoragePool.get_connected_storage('S3OWASPDepCheck')
         s3.retrieve_depcheck_db_if_exists()
         depcheck = os.path.join(os.environ['OWASP_DEP_CHECK_PATH'], 'bin', 'dependency-check.sh')
