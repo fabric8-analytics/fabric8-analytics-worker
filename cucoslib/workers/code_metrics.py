@@ -283,7 +283,7 @@ class CodeMetricsTask(BaseTask):
                     to_run = command + [os.path.join(root, f)]
                     status, output, error = self._run_analyzer(to_run, json_output=False)
                     if status != 0:
-                        self.log.info('Analazying with Py3 failed, trying to analyze with Py2 ...')
+                        self.log.info('Analyzing with Py3 failed, trying to analyze with Py2 ...')
                         to_run[0] = 'python2'
                         status, output, error = self._run_analyzer(to_run, json_output=False)
                         if status != 0:
