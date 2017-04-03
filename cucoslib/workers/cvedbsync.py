@@ -13,10 +13,11 @@ class CVEDBSyncTask(BaseTask):
     _VULNDB_GIT_REPO = 'https://github.com/snyk/vulndb'
     _VULNDB_FILENAME = 'vulndb.json'
 
-    def _update_dep_check_db(self):
+    def _update_dep_check_db(self, data_dir):
         depcheck = os.path.join(os.environ['OWASP_DEP_CHECK_PATH'], 'bin', 'dependency-check.sh')
         self.log.debug('Updating OWASP Dependency-Check CVE DB')
-        TimedCommand.get_command_output([depcheck, '--updateonly'], timeout=1800)
+        TimedCommand.get_command_output([depcheck, '--updateonly', '--data', data_dir],
+                                        timeout=1800)
 
     def _get_snyk_vulndb(self):
         """
@@ -77,9 +78,10 @@ class CVEDBSyncTask(BaseTask):
         self._strict_assert(not arguments)
 
         s3 = StoragePool.get_connected_storage('S3OWASPDepCheck')
-        s3.retrieve_depcheck_db_if_exists()
-        self._update_dep_check_db()
-        s3.store_depcheck_db()
+        with tempdir() as temp_data_dir:
+            s3.retrieve_depcheck_db_if_exists(temp_data_dir)
+            self._update_dep_check_db(temp_data_dir)
+            s3.store_depcheck_db(temp_data_dir)
 
         cve_db = self._get_snyk_vulndb()
         s3 = StoragePool.get_connected_storage('S3Snyk')
