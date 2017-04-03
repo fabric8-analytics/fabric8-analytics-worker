@@ -1,5 +1,10 @@
 #!/usr/bin/bash
 
+if [ "$WORKER_ADMINISTRATION_REGION" != "ingestion" ]; then
+    echo "Only ingestion workers can run the DB migrations, not \"$WORKER_ADMINISTRATION_REGION\" workers. Skipping..."
+    exit 0
+fi
+
 export POSTGRESQL_HOST=${PGBOUNCER_SERVICE_HOST:-coreapi-pgbouncer}
 export POSTGRESQL_PORT=${PGBOUNCER_SERVICE_PORT:-5432}
 export CCS_POSTGRES=postgresql://${POSTGRESQL_USER}:${POSTGRESQL_PASSWORD}@${POSTGRESQL_HOST}:${POSTGRESQL_PORT}/${POSTGRESQL_DATABASE}
