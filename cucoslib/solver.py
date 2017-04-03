@@ -108,13 +108,23 @@ class PypiReleasesFetcher(ReleasesFetcher):
         :param package: str, Name of the package
         :return:
         """
-        packages = self._rpc.search({'name': package})
-        if packages:
-            exact_match = [p['name']
-                           for p in packages
-                           if p['name'].lower() == package.lower()]
-            if exact_match:
-                return exact_match.pop()
+        def find_pypi_pkg(package):
+            packages = self._rpc.search({'name': package})
+            if packages:
+                exact_match = [p['name']
+                            for p in packages
+                            if p['name'].lower() == package.lower()]
+                if exact_match:
+                    return exact_match.pop()
+        res = find_pypi_pkg(package)
+        if res is None and '-' in package:
+            # this is soooo annoying; you can `pip3 install argon2-cffi and it installs
+            #  argon2_cffi (underscore instead of dash), but searching through XMLRPC
+            #  API doesn't find it... so we try to search for underscore variant
+            #  if the dash variant isn't found
+            res = find_pypi_pkg(package.replace('-', '_'))
+        if res:
+            return res
 
         raise ValueError("Package {} not found".format(package))
 
