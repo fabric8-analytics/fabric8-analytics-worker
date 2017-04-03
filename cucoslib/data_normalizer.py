@@ -378,6 +378,7 @@ class DataNormalizer(object):
         # TODO: some fallback if ecosystem is not matched
         switch = {'python': self._handle_python,
                   'python-dist': self._handle_python_dist,
+                  'python-requirementstxt': self._handle_python_dist,
                   'npm': self._handle_javascript,
                   'java-pom': self._handle_java,
                   'ruby': self._handle_rubygems}
