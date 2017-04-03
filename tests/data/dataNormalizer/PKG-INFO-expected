@@ -1,6 +1,7 @@
 {
   "ecosystem": "python-dist",
   "author": "OpenStack <openstack-dev@lists.openstack.org>",
+  "code_repository": null,
   "homepage": "http://docs.openstack.org/developer/python-openstackclient",
   "declared_license": "UNKNOWN",
   "dependencies": null,
