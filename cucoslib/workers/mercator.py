@@ -80,9 +80,21 @@ class MercatorTask(BaseTask):
             elif item['ecosystem'] == 'Python-Dist':  # PKG-INFO
                 # we prefer PKG_INFO files from .egg-info directories,
                 #  since these have the very useful `requires.txt` next to them
-                if pkg_info is None or (is_deeper(pkg_info, item) and \
-                    not pkg_info['path'].endswith('.egg-info/PKG-INFO')):
+                if pkg_info is None:
                     pkg_info = item
+                else:
+                    pkg_info_in_egg = pkg_info['path'].endswith('.egg-info/PKG-INFO')
+                    item_in_egg = item['path'].endswith('.egg-info/PKG-INFO')
+                    # rather than one insane condition, we use several less complex ones
+                    if pkg_info_in_egg and item_in_egg and is_deeper(pkg_info, item):
+                        # if both are in .egg-info, but current pkg_info is deeper
+                        pkg_info = item
+                    elif item_in_egg and not pkg_info_in_egg:
+                        # if item is in .egg-info and current pkg_info is not
+                        pkg_info = item
+                    elif not (item_in_egg or pkg_info_in_egg) and is_deeper(pkg_info, item):
+                        # if none of them are in .egg-info, but current pkg_info is deeer
+                        pkg_info = item
             elif item['ecosystem'] == 'Python-RequirementsTXT' and is_deeper(pkg_info, item):
                 requirements_txt = item
 
