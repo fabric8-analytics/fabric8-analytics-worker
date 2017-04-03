@@ -100,6 +100,9 @@ class CVEcheckerTask(BaseTask):
                 return {'summary': error_msg,
                         'status': 'error',
                         'details': []}
+            # If the CVEDBSyncTask has never been run before, we just had to create the DB ourselves
+            # Make the life easier for other workers and store it to S3
+            s3.store_depcheck_db_if_not_exists()
 
         results = []
         dependencies = report_dict.get('analysis', {}).get('dependencies', {}).get('dependency', [])
