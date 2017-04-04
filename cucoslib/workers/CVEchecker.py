@@ -80,40 +80,34 @@ class CVEcheckerTask(BaseTask):
                 'details': entries}
 
     def _run_owasp_dep_check(self, scan_path, experimental=False):
-        def _clean_data_dir():
-            # to remove DB and any stale files
-            files = glob.glob(os.path.join(os.environ['OWASP_DEP_CHECK_PATH'], 'data', '*'))
-            for f in files:
-                os.remove(f)
-
         def _clean_dep_check_tmp():
             for dcdir in glob.glob(os.path.join(gettempdir(), 'dctemp*')):
                 rmtree(dcdir)
 
         s3 = StoragePool.get_connected_storage('S3OWASPDepCheck')
-        s3.retrieve_depcheck_db_if_exists()
         depcheck = os.path.join(os.environ['OWASP_DEP_CHECK_PATH'], 'bin', 'dependency-check.sh')
-        with tempdir() as report_dir:
-            report_path = os.path.join(report_dir, 'report.xml')
-            self.log.debug('Running OWASP Dependency-Check to scan %s for vulnerabilities' %
-                           scan_path)
+        with tempdir() as temp_data_dir:
+            s3.retrieve_depcheck_db_if_exists(temp_data_dir)
+            report_path = os.path.join(temp_data_dir, 'report.xml')
             command = [depcheck,
                        '--format', 'XML',
                        '--project', 'test',
+                       '--data', temp_data_dir,
                        '--scan', scan_path,
                        '--out', report_path]
             if experimental:
                 command.extend(['--enableExperimental'])
             output = []
             try:
+                self.log.debug('Running OWASP Dependency-Check to scan %s for vulnerabilities' %
+                               scan_path)
                 output = TimedCommand.get_command_output(command,
                                                          graceful=False,
-                                                         timeout=600) # 10 minutes
+                                                         timeout=600)  # 10 minutes
                 with open(report_path) as r:
                     report_dict = anymarkup.parse(r.read())
             except (TaskError, FileNotFoundError) as e:
                 _clean_dep_check_tmp()
-                _clean_data_dir()
                 for line in output:
                     self.log.warning(line)
                 self.log.exception(str(e))
@@ -122,9 +116,8 @@ class CVEcheckerTask(BaseTask):
                         'details': []}
             # If the CVEDBSyncTask has never been run before, we just had to create the DB ourselves
             # Make the life easier for other workers and store it to S3
-            s3.store_depcheck_db_if_not_exists()
+            s3.store_depcheck_db_if_not_exists(temp_data_dir)
             _clean_dep_check_tmp()
-            _clean_data_dir()
 
 
         results = []
