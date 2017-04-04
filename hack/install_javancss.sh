@@ -10,4 +10,4 @@ curl "${JAVANCSS_URL}" -o "${JAVANCSS_FILENAME}.zip"
 unzip "${JAVANCSS_FILENAME}.zip"
 rm "${JAVANCSS_FILENAME}.zip"
 mv "${JAVANCSS_FILENAME}"/* .
-rm -rf "${JAVANCSS_FILENAME}"/
+rm -rf "${JAVANCSS_FILENAME:?}/"

@@ -1,4 +1,4 @@
-#!/usr/bin/sh -e
+#!/usr/bin/sh -ex
 
 RELEASE='1.4.5'
 NAME='dependency-check'
@@ -17,4 +17,4 @@ unzip -q "${NAME}.zip"
 rm -f "${NAME}.zip"
 mv "${NAME}"/* .
 mkdir --mode 775 "data/"
-rm -rf "${NAME}"/
+rm -rf "${NAME:?}/"
