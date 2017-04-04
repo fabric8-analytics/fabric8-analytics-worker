@@ -291,10 +291,6 @@ class CucosConfiguration(Configuration):
         super(CucosConfiguration, self).__init__(self.backends)
 
         self.add_configuration_entry(
-            "artifactory_host", ["artifactory", "host"], env_var_name="CCS_ARTIFACTORY_HOST")
-        self.add_configuration_entry(
-            "artifactory_port", ["artifactory", "port"], env_var_name="CCS_ARTIFACTORY_PORT")
-        self.add_configuration_entry(
             "postgres_connection", ["postgres", "connection_string"], env_var_name="CCS_POSTGRES")
         self.add_configuration_entry(
             "cve_db_mongo_connection", ["cve_db_mongo", "connection_string"],
