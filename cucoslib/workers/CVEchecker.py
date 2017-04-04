@@ -1,6 +1,8 @@
 import anymarkup
 import glob
 import os
+from shutil import rmtree
+from tempfile import gettempdir
 from selinon import StoragePool
 from cucoslib.base import BaseTask
 from cucoslib.errors import TaskError
@@ -84,6 +86,10 @@ class CVEcheckerTask(BaseTask):
             for f in files:
                 os.remove(f)
 
+        def _clean_dep_check_tmp():
+            for dcdir in glob.glob(os.path.join(gettempdir(), 'dctemp*')):
+                rmtree(dcdir)
+
         s3 = StoragePool.get_connected_storage('S3OWASPDepCheck')
         s3.retrieve_depcheck_db_if_exists()
         depcheck = os.path.join(os.environ['OWASP_DEP_CHECK_PATH'], 'bin', 'dependency-check.sh')
@@ -106,17 +112,18 @@ class CVEcheckerTask(BaseTask):
                 with open(report_path) as r:
                     report_dict = anymarkup.parse(r.read())
             except (TaskError, FileNotFoundError) as e:
+                _clean_dep_check_tmp()
                 _clean_data_dir()
                 for line in output:
                     self.log.warning(line)
                 self.log.exception(str(e))
-                error_msg = 'OWASP Dependency-Check scan failed'
-                return {'summary': error_msg,
+                return {'summary': ['OWASP Dependency-Check scan failed'],
                         'status': 'error',
                         'details': []}
             # If the CVEDBSyncTask has never been run before, we just had to create the DB ourselves
             # Make the life easier for other workers and store it to S3
             s3.store_depcheck_db_if_not_exists()
+            _clean_dep_check_tmp()
             _clean_data_dir()
 
 
