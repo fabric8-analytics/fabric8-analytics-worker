@@ -25,7 +25,7 @@ class AmazonS3(DataStorage):
         self._s3 = None
 
         self.region_name = os.environ.get('AWS_S3_REGION', region_name) or self._DEFAULT_REGION_NAME
-        self.bucket_name = os.environ.get('AWS_S3_BUCKET_NAME', bucket_name) or self._DEFAULT_BUCKET_NAME
+        self.bucket_name = bucket_name or self._DEFAULT_BUCKET_NAME
         self.bucket_name = self.bucket_name.format(**os.environ)
         self._aws_access_key_id = os.environ.get('AWS_S3_ACCESS_KEY_ID', aws_access_key_id)
         self._aws_secret_access_key = os.environ.get('AWS_S3_SECRET_ACCESS_KEY', aws_secret_access_key)
