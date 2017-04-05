@@ -211,6 +211,21 @@ class AmazonS3(DataStorage):
         """ Retrieve a dictionary stored as JSON from S3 """
         return json.loads(self.retrieve_blob(object_key).decode())
 
+    def retrieve_latest_version_id(self, object_key):
+        """ Retrieve latest version identifier for the given object
+
+        :param object_key: key under which the object is stored
+        :return: version identifier
+        """
+        if not self.versioned:
+            raise AttributeError("Cannot retrieve version of object '{}': "
+                                 "bucket '{}' is not configured to be versioned".format(object_key, self.bucket_name))
+
+        if self._is_local_deployment():
+            return self._get_fake_version_id()
+
+        return self._s3.Object(self.bucket_name, object_key).version_id
+
     @staticmethod
     def is_enabled():
         """:return: True if S3 sync is enabled, False otherwise."""
