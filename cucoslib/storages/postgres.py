@@ -47,8 +47,7 @@ class BayesianPostgres(DataStorage):
         assert record.worker == task_name
 
         task_result = record.task_result
-        if 'version_id' in task_result.keys() \
-                and len(task_result.keys()) == 1:
+        if not self.is_real_task_result(task_result):
             # we synced results to S3, retrieve them from there
             # We do not care about some specific version, so no time-based collisions possible
             s3 = StoragePool.get_connected_storage('S3Data')
@@ -96,3 +95,8 @@ class BayesianPostgres(DataStorage):
             return None
 
         return record
+
+    @staticmethod
+    def is_real_task_result(task_result):
+        """ Check that the task result is not just S3 object version reference """
+        return len(task_result.keys()) != 1 or 'version_id' not in task_result.keys()
