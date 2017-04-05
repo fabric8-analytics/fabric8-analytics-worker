@@ -1,0 +1,7 @@
+---
+  flow-definitions:
+    - name: 'graphImportFlow'
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_graphImportFlow_v0'
+      edges:
+        - from:
+          to: 'GraphImporterTask'
