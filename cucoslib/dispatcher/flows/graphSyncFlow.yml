@@ -9,8 +9,8 @@
         - from: 'bayesianFlow'
           to: 'FinishedAnalysisGateTask'
         - from: 'FinishedAnalysisGateTask'
-          to: 'GraphImporterTask'
+          to: 'graphImportFlow'
         # Following flow will make sense when we decide on the mechanism
         # of notifying the user. Currently, keeping this commented out
-        #- from: 'GraphImporterTask'
+        #- from: 'graphImportFlow'
         #  to: 'GraphSyncTask'

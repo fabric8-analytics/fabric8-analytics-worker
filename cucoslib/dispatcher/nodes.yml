@@ -230,6 +230,7 @@
     - 'livenessFlow'
     - 'cveCheckFlow'
     - 'graphSyncFlow'
+    - 'graphImportFlow'
 
   storages:
     - name: 'BayesianPostgres'
