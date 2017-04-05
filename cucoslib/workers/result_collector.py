@@ -26,6 +26,11 @@ class ResultCollector(BaseTask):
             if worker_result.worker[0].isupper():
                 continue
 
+            if not postgres.is_real_task_result(worker_result.task_result):
+                # Do not overwrite results stored on S3 with references to their version - this can occur on
+                # selective task runs.
+                continue
+
             version_id = s3.store_task_result(arguments, worker_result.worker, worker_result.task_result)
             # Substitute task's result with version that we got on S3
             worker_result.task_result = {'version_id': version_id}
