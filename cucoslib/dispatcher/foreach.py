@@ -34,7 +34,10 @@ def iter_dependencies_analysis(storage_pool, node_args):
             if _is_url_dependency(dep):
                 logger.info('skipping URL dependency name "%(ecosystem)s/%(name)s/%(version)s"', dep)
             else:
-                arguments.append(_create_analysis_arguments(dep['ecosystem'], dep['name'], dep['version']))
+                new_node_args = _create_analysis_arguments(dep['ecosystem'], dep['name'], dep['version'])
+                if 'recursive_limit' in node_args:
+                    new_node_args['recursive_limit'] = node_args['recursive_limit'] - 1
+                arguments.append(new_node_args)
 
         logger.info("Arguments for next flows: %s" % str(arguments))
         return arguments

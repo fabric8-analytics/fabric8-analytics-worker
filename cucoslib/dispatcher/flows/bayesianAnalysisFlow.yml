@@ -70,6 +70,16 @@
             function: 'iter_dependencies_analysis'
             # result of the function is used as sub-flow arguments
             propagate_result: true
+          condition:
+            or:
+              - not:
+                 name: 'argsFieldExist'
+                 args:
+                   key: 'recursive_limit'
+              - name: 'argsFieldGreater'
+                args:
+                   key: 'recursive_limit'
+                   value: 0
         - from:
             - 'digests'
             - 'metadata'
