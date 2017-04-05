@@ -18,10 +18,6 @@ from cucoslib.utils import (cwd, TimedCommand, compute_digest,
 logger = logging.getLogger(__name__)
 configuration = get_configuration()
 
-# TODO: Default to True, switch to False if Artifactory is unreachable
-#       Alternatively, try-and-fallback on every component download attempt
-_USE_ARTIFACTORY = False
-
 
 class Git(object):
     """ Git process helper """
@@ -214,18 +210,6 @@ class IndianaJones(object):
         :param target_dir:
         :return: tuple: (digest, artifact_path)
         """
-        artifactory_host = configuration.artifactory_host
-        artifactory_port = configuration.artifactory_port
-
-        artifactory_maven = 'http://%s:%s/artifactory/libs-release/' % \
-                            (artifactory_host, artifactory_port)
-        artifactory_pypi = 'http://%s:%s/artifactory/api/pypi/pypi/simple/' % \
-                           (artifactory_host, artifactory_port)
-        artifactory_npm = 'http://%s:%s/artifactory/api/npm/npm/' % \
-                          (artifactory_host, artifactory_port)
-        artifactory_rubygems = 'http://%s:%s/artifactory/api/gems/gems/' % \
-                               (artifactory_host, artifactory_port)
-
         parsed = urlparse(artifact)
         digest = None
         artifact_path = None
@@ -279,10 +263,7 @@ class IndianaJones(object):
             # make sure the artifact is not in the cache yet
             TimedCommand.get_command_output(['npm', 'cache', 'clean', artifact], graceful=False)
             logger.info("downloading npm module %s", name_ver)
-            npm_command = ['npm', 'cache', 'add']
-            if _USE_ARTIFACTORY:
-                npm_command.extend(['--registry', artifactory_npm])
-            npm_command.append(name_ver)
+            npm_command = ['npm', 'cache', 'add', name_ver]
             TimedCommand.get_command_output(npm_command, graceful=False)
 
             # copy tarball to workpath
@@ -316,10 +297,7 @@ class IndianaJones(object):
             version_arg = []
             if version:
                 version_arg = ['--version', version]
-            gem_command = ['gem', 'fetch']
-            if _USE_ARTIFACTORY:
-                gem_command.extend(['--source', artifactory_rubygems])
-            gem_command.append(artifact)
+            gem_command = ['gem', 'fetch', artifact]
             gem_command.extend(version_arg)
             with cwd(target_dir):
                 TimedCommand.get_command_output(gem_command, graceful=False)
@@ -336,11 +314,8 @@ class IndianaJones(object):
         elif ecosystem.is_backed_by(EcosystemBackend.maven):
             git = Git.create_git(target_dir)
             artifact_coords = MavenCoordinates.from_str(artifact)
-            if _USE_ARTIFACTORY:
-                maven_url = artifactory_maven
-            else:
-                # lxml can't handle HTTPS URLs
-                maven_url = "http://repo1.maven.org/maven2/"
+            # lxml can't handle HTTPS URLs
+            maven_url = "http://repo1.maven.org/maven2/"
             if not version:
                 version = mvn_find_latest_version(maven_url, artifact_coords)
             artifact_coords.version = version
