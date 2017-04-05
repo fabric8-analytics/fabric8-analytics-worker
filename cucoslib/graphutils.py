@@ -122,6 +122,20 @@ def extract_component_details(component):
         "published_in": component.get("version", {}).get("is_published_in", [])
     }
 
+    cves = []
+    security = {}
+    for cve in component.get("version", {}).get("cve_ids", []):
+        component_cve = {
+            'id': cve.split(':')[0],
+            'cvss': cve.split(':')[1]
+        }
+        cves.append(component_cve)
+
+    if len(cves) > 0:
+        security = {
+            "vulnerabilities": cves
+        }
+
     licenses = component.get("version", {}).get("licenses", [])
     name = component.get("version", {}).get("pname", [""])[0]
     version = component.get("version", {}).get("version", [""])[0]
@@ -136,7 +150,8 @@ def extract_component_details(component):
         "github_details": github_details,
         "licenses": licenses,
         "redhat_usage": redhat_usage,
-        "code_metrics": code_metrics
+        "code_metrics": code_metrics,
+        "security": security
     }
     return component_summary,licenses
 
