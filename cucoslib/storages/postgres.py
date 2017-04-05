@@ -64,12 +64,28 @@ class BayesianPostgres(DataStorage):
         if not self.is_connected():
             self.connect()
 
-        # TODO: I'm not sure whether request_id corresponds to
-        # external_request_id, but external_request_id is not present
         res = WorkerResult(worker=task_name,
                            worker_id=task_id,
                            analysis_id=node_args.get('document_id'),
                            task_result=result,
+                           error=result.get('status') == 'error',
+                           external_request_id=node_args.get('external_request_id'))
+        try:
+            self.session.add(res)
+            self.session.commit()
+        except:
+            self.session.rollback()
+            raise
+
+    def store_error(self, node_args, flow_name, task_name, task_id, exc_info):
+        if not self.is_connected():
+            self.connect()
+
+        res = WorkerResult(worker=task_name,
+                           worker_id=task_id,
+                           analysis_id=node_args.get('document_id'),
+                           task_result=None,
+                           error=True,
                            external_request_id=node_args.get('external_request_id'))
         try:
             self.session.add(res)

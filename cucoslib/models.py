@@ -221,6 +221,7 @@ class WorkerResult(Base):
     external_request_id = Column(String(64))
     analysis_id = Column(ForeignKey(Analysis.id))
     task_result = Column(JSONB)
+    error = Column(Boolean, nullable=False, default=False)
 
     analysis = relationship(Analysis)
 
