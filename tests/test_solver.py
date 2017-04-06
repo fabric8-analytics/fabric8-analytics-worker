@@ -5,7 +5,16 @@ import flexmock
 from cucoslib.enums import EcosystemBackend
 from cucoslib.models import Analysis, Ecosystem, Package, Version
 from cucoslib.solver import Dependency, NpmDependencyParser,\
-    get_ecosystem_solver, CucosReleasesFetcher, NpmSolver, NpmReleasesFetcher
+    get_ecosystem_solver, CucosReleasesFetcher, NpmReleasesFetcher
+
+
+@pytest.fixture
+def maven(rdb):
+    maven = Ecosystem(name='maven', backend=EcosystemBackend.maven,
+                      fetch_url='')
+    rdb.add(maven)
+    rdb.commit()
+    return maven
 
 
 @pytest.fixture
@@ -119,6 +128,21 @@ class TestSolver(object):
         solver_result = solver.solve([name + ' ' + semver_string], all_versions=True)
         # {'name': ['1.0.0', '1.0.1']}
         assert set(solver_result.get(name, [])) == set(expected)
+
+    @pytest.mark.parametrize('dependencies, expected', [
+        ([], {}),
+        (['group:artifact 1.2.3'],  # not to be resolved
+         {'group:artifact': '1.2.3'}),
+        # https://mvnrepository.com/artifact/org.webjars.npm/jquery
+        (['foo:bar 6.6.6', 'org.webjars.npm:jquery:: [2.2.0,3.1)'],  # mixed
+         {'foo:bar': '6.6.6', 'org.webjars.npm:jquery': '3.0.0'})
+    ])
+    def test_maven_solver(self, maven, dependencies, expected):
+        solver = get_ecosystem_solver(maven)
+        solver_result = solver.solve(dependencies)
+        assert len(solver_result) == len(dependencies)
+        for name, version in solver_result.items():
+            assert expected.get(name, '') == version
 
     def test_pypi(self, pypi):
         solver = get_ecosystem_solver(pypi)

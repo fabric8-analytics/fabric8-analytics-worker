@@ -1,7 +1,10 @@
+import anymarkup
 from collections import defaultdict
 from functools import cmp_to_key
 import logging
+from lxml import etree
 from pip.req.req_file import parse_requirements
+import re
 from requests import get
 from xmlrpc.client import ServerProxy
 from subprocess import check_output
@@ -9,6 +12,7 @@ from tempfile import NamedTemporaryFile
 
 from cucoslib.enums import EcosystemBackend
 from cucoslib.models import Analysis, Ecosystem, Package, Version
+from cucoslib.utils import cwd, tempdir, TimedCommand
 
 
 logger = logging.getLogger(__name__)
@@ -547,6 +551,86 @@ class RubyGemsSolver(Solver):
                                              fetcher or RubyGemsReleasesFetcher(ecosystem))
 
 
+class MavenSolver(object):
+    """
+    Doesn't inherit from Solver, because we don't use its solve().
+    We also don't need a DependencyParser nor a ReleasesFetcher for Maven.
+    'mvn versions:resolve-ranges' does all the dirty work for us.
+    """
+
+    @staticmethod
+    def _generate_pom_xml(to_solve):
+        """
+        Create pom.xml with dependencies from to_solve and run 'mvn versions:resolve-ranges',
+        which resolves the version ranges (overwrites the pom.xml).
+        :param to_solve: {"groupId:artifactId": "version-range"}
+        """
+        project = etree.Element('project')
+        etree.SubElement(project, 'modelVersion').text = '4.0.0'
+        etree.SubElement(project, 'groupId').text = 'foo.bar.baz'
+        etree.SubElement(project, 'artifactId').text = 'testing'
+        etree.SubElement(project, 'version').text = '1.0.0'
+        dependencies = etree.SubElement(project, 'dependencies')
+        for name, version_range in to_solve.items():
+            group_id, artifact_id = name.rstrip(':').split(':')
+            dependency = etree.SubElement(dependencies, 'dependency')
+            etree.SubElement(dependency, 'groupId').text = group_id
+            etree.SubElement(dependency, 'artifactId').text = artifact_id
+            etree.SubElement(dependency, 'version').text = version_range
+        with open('pom.xml', 'wb') as pom:
+            pom.write(etree.tostring(project, xml_declaration=True, pretty_print=True))
+        TimedCommand.get_command_output(['mvn', 'versions:resolve-ranges'], graceful=False)
+
+    @staticmethod
+    def _dependencies_from_pom_xml():
+        """
+        Extract dependencies from pom.xml in current directory
+        :return: {"groupId:artifactId": "version"}
+        """
+        solved = {}
+        with open('pom.xml') as r:
+            pom_dict = anymarkup.parse(r.read())
+        dependencies = pom_dict.get('project', {}).get('dependencies', {}).get('dependency', [])
+        if not isinstance(dependencies, list):
+            dependencies = [dependencies]
+        for dependency in dependencies:
+            name = "{}:{}".format(dependency['groupId'], dependency['artifactId'])
+            solved[name] = dependency['version']
+        return solved
+
+    @staticmethod
+    def _resolve_versions(to_solve):
+        """
+        Resolve version ranges in to_solve
+        :param to_solve: {"groupId:artifactId": "version-range"}
+        :return: {"groupId:artifactId": "version"}
+        """
+        if not to_solve:
+            return {}
+        with tempdir() as tmpdir:
+            with cwd(tmpdir):
+                MavenSolver._generate_pom_xml(to_solve)
+                return MavenSolver._dependencies_from_pom_xml()
+
+    @staticmethod
+    def is_version_range(ver_spec):
+        # http://maven.apache.org/enforcer/enforcer-rules/versionRanges.html
+        return re.search('[,()\[\]]', ver_spec) is not None
+
+    def solve(self, dependencies):
+        already_solved = {}
+        to_solve = {}
+        for dependency in dependencies:
+            name, ver_spec = dependency.split(' ', 1)
+            if not self.is_version_range(ver_spec):
+                already_solved[name] = ver_spec
+            else:
+                to_solve[name] = ver_spec
+        result = already_solved.copy()
+        result.update(self._resolve_versions(to_solve))
+        return result
+
+
 def get_ecosystem_solver(ecosystem, with_fetcher=None):
     """
     Get `Solver` instance for particular ecosystem
@@ -554,10 +638,12 @@ def get_ecosystem_solver(ecosystem, with_fetcher=None):
     :param ecosystem: Ecosystem
     :return: Solver
     """
-    if ecosystem.is_backed_by(EcosystemBackend.pypi):
-        return PypiSolver(ecosystem, with_fetcher)
+    if ecosystem.is_backed_by(EcosystemBackend.maven):
+        return MavenSolver()
     elif ecosystem.is_backed_by(EcosystemBackend.npm):
         return NpmSolver(ecosystem, with_fetcher)
+    elif ecosystem.is_backed_by(EcosystemBackend.pypi):
+        return PypiSolver(ecosystem, with_fetcher)
     elif ecosystem.is_backed_by(EcosystemBackend.rubygems):
         return RubyGemsSolver(ecosystem, with_fetcher)
 
@@ -565,13 +651,13 @@ def get_ecosystem_solver(ecosystem, with_fetcher=None):
 
 
 def get_ecosystem_parser(ecosystem):
-    if ecosystem.is_backed_by(EcosystemBackend.pypi):
-        return PypiDependencyParser()
+    if ecosystem.is_backed_by(EcosystemBackend.maven):
+        return NoOpDependencyParser()
     elif ecosystem.is_backed_by(EcosystemBackend.npm):
         return NpmDependencyParser()
+    elif ecosystem.is_backed_by(EcosystemBackend.pypi):
+        return PypiDependencyParser()
     elif ecosystem.is_backed_by(EcosystemBackend.rubygems):
         return RubyGemsDependencyParser()
-    elif ecosystem.is_backed_by(EcosystemBackend.maven):
-        return NoOpDependencyParser()
 
     raise ValueError('Unknown ecosystem: {}'.format(ecosystem.name))
