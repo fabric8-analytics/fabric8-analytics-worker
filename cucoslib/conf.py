@@ -293,9 +293,6 @@ class CucosConfiguration(Configuration):
         self.add_configuration_entry(
             "postgres_connection", ["postgres", "connection_string"], env_var_name="CCS_POSTGRES")
         self.add_configuration_entry(
-            "cve_db_mongo_connection", ["cve_db_mongo", "connection_string"],
-            env_var_name="CCS_CVE_DB")
-        self.add_configuration_entry(
             "worker_data_dir", ["worker", "data_dir"], env_var_name="WORKER_DATA_DIR")
         self.add_configuration_entry(
             "github_token", ["github", "token"], env_var_name="GITHUB_TOKEN")
