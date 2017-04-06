@@ -21,7 +21,7 @@ class GraphImporterTask(BaseTask):
 
         dm_host = environ.get("BAYESIAN_DATA_MODEL_HTTP_SERVICE_HOST", "bayesian-data-model-http")
         dm_port = environ.get("BAYESIAN_DATA_MODEL_HTTP_SERVICE_PORT", "5001")
-        dm_endpoint = "api/v1/import_epv_from_s3"
+        dm_endpoint = "api/v1/ingest_to_graph"
         api_url = "http://{host}:{port}/{endpoint}".format(host=dm_host, port=dm_port, endpoint=dm_endpoint)
 
         future = session.post(api_url, json=epv)
