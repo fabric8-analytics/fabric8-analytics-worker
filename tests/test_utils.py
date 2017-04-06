@@ -315,6 +315,7 @@ class TestParseGHRepo:
         'https://bitbucket.org/foo/bar',
         'something',
         'something@else',
+        'http://github.com/user/repo/something',
     ])
     def test_parse_gh_repo_nok(self, url):
         assert parse_gh_repo(url) is None

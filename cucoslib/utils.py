@@ -749,6 +749,9 @@ def parse_gh_repo(potential_url):
     We return repository name in form `<username>/<reponame>` or `None` if this does not
     seem to be a Github repo (or if someone invented yet another form that we can't parse yet...)
 
+    Notably, the Github repo *must* have exactly username and reponame, nothing else and nothing
+    more. E.g. `github.com/<username>/<reponame>/<something>` is *not* recognized.
+
     Fun, eh?
     """
     repo_name = None
@@ -769,7 +772,11 @@ def parse_gh_repo(potential_url):
         repo_name = parsed.path
         if repo_name.endswith('.git'):
             repo_name = repo_name[:-len('.git')]
+
+    if repo_name:
         repo_name = repo_name.strip('/')
+        if repo_name.count('/') != 1:
+            return None
 
     return repo_name
 
