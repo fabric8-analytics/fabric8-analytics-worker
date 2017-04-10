@@ -3,9 +3,6 @@ data = {
         # TODO: find out if this uses SSL by default and if not, enable it
         "connection_string": "postgres://coreapi:coreapi@localhost:5432/coreapi"
     },
-    "cve_db_mongo": {
-        "connection_string": "mongodb://localhost:27017"
-    },
     "coreapi_server": {
         "url": "http://coreapi-server:32000",
     },

@@ -32,7 +32,6 @@ psycopg2==2.6.2
 pyasn1-modules==0.0.8     # via oauth2client
 pyasn1==0.1.9             # via oauth2client, pyasn1-modules, rsa
 PyGithub==1.29
-pymongo==3.3.1
 python-dateutil==2.5.3    # via bigquery-python, botocore
 pytz==2016.7              # via celery
 pyyaml==3.12              # via anymarkup, selinonlib
