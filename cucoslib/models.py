@@ -247,13 +247,6 @@ class StackAnalysisRequest(Base):
    team = Column(String(64), nullable=True)
 
 
-class ESMarker(Base):
-    __tablename__ = 'esmarker'
-
-    id = Column(Integer, primary_key=True)
-    worker_result_id = Column(Integer, ForeignKey('worker_results.id'))
-
-
 class PackageGHUsage(Base):
     """Table for storing package results from BigQuery."""
     __tablename__ = 'package_gh_usage'
@@ -282,46 +275,6 @@ class ComponentGHUsage(Base):
     percentile_rank = Column(Integer, nullable=False)
     ecosystem_backend = Column(ENUM(*[b.name for b in EcosystemBackend], name='ecosystem_backend_enum', create_type=False))
     timestamp = Column(DateTime, nullable=False, server_default=func.localtimestamp())
-
-
-# -----------------------------------------------------------------------------
-# The tables below are used by analytics side of the project Bayesian.
-# TODO: move them to the analytics repository(?)
-
-class Stack(Base):
-    """Table for storing application/reference stacks."""
-    __tablename__ = 'stacks'
-
-    id = Column(Integer, primary_key=True)
-    # indicates whether this stack is reference stack or not
-    is_ref_stack = Column(Boolean, nullable=False, default=False)
-    stack_json = Column(JSONB, nullable=False)
-
-
-class SimilarStack(Base):
-    """Table for storing similarity results."""
-    __tablename__ = 'similar_stacks'
-    __table_args__ = (UniqueConstraint('stack_id', 'similar_stack_id', name='sim_unique'),)
-
-    id = Column(Integer, primary_key=True)
-    # app stack
-    stack_id = Column(Integer, ForeignKey(Stack.id), nullable=False)
-    # stack that is similar to app stack ("stack_id")
-    similar_stack_id = Column(Integer, ForeignKey(Stack.id), nullable=False)
-    similarity_value = Column(Float, nullable=False)
-    analysis = Column(JSONB)
-
-
-class SimilarComponents(Base):
-    """Table for storing similar component results."""
-    __tablename__ = 'similar_components'
-    __table_args__ = (UniqueConstraint('fromcomponent', 'tocomponent', name='sim_comps'),)
-
-    id = Column(Integer, primary_key=True)
-    # input stack component
-    fromcomponent = Column(Text, nullable=False)
-    tocomponent = Column(Text, nullable=False)
-    similarity_distance = Column(Float, nullable=False)
 
 
 class DownstreamMap(Base):
