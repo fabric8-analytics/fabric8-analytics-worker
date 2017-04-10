@@ -276,7 +276,7 @@ class TimedCommand(object):
         # timeout reached, terminate the thread
         if thread.is_alive():
             logger.error('Command {cmd} timed out after {t} seconds'.format(cmd=self.command, t=timeout))
-            self.process.terminate()
+            self.process.kill()
             thread.join()
             if not self.error:
                 self.error = 'Killed by timeout after {t} seconds'.format(t=timeout)
