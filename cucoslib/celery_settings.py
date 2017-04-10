@@ -1,7 +1,8 @@
 import os
 import logging
 from urllib.parse import quote
-from cucoslib.conf import get_configuration, get_postgres_connection_string
+from celery.signals import setup_logging
+from cucoslib.conf import get_configuration, get_postgres_connection_string, is_local_deployment
 
 _logger = logging.getLogger(__name__)
 configuration = get_configuration()
@@ -74,3 +75,81 @@ class CelerySettings(object):
     def disable_result_backend(cls):
         """Disable backend so we don't need to connect to it if not necessary"""
         cls.result_backend = None
+
+
+@setup_logging.connect
+def configure_logging(**kwargs):
+    """Set up logging for worker."""
+    level = 'DEBUG' if is_local_deployment() else 'INFO'
+
+    handlers = {
+        'default': {
+            'level': 'INFO',
+            'formatter': 'default',
+            'class': 'logging.StreamHandler',
+        },
+        'selinon_trace': {
+            'level': level,
+            'formatter': 'selinon_trace_formatter',
+            'class': 'logging.StreamHandler',
+        },
+        'verbose': {
+            'level': level,
+            'formatter': 'default',
+            'class': 'logging.StreamHandler',
+        },
+    }
+
+    # If you would like to track some library, place it's handler here with appropriate entry - see celery as an example
+    loggers = {
+        '': {
+            'handlers': ['default'],
+            'level': 'INFO',
+        },
+        'selinon': {
+            'handlers': ['verbose'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+        'selinonlib': {
+            'handlers': ['verbose'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+        'cucoslib.dispatcher.trace': {
+            'handlers': ['selinon_trace'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+        'cucoslib': {
+            'handlers': ['verbose'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+        'kombu': {
+            'handlers': ['verbose'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+        'celery': {
+            'handlers': ['verbose'],
+            'level': 'DEBUG',
+            'propagate': False
+        }
+    }
+
+    logging.config.dictConfig({
+        'version': 1,
+        'loggers': loggers,
+        'formatters': {
+            'default': {
+              'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+            },
+            'selinon_trace_formatter': {
+                # no prefixes to parse JSON when aggregating
+                'format': '%(message)s'
+            }
+        },
+        'handlers': handlers
+    })
+

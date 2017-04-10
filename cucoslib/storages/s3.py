@@ -6,6 +6,7 @@ import uuid
 import boto3
 import botocore
 from selinon import DataStorage
+from cucoslib.conf import is_local_deployment
 
 
 class AmazonS3(DataStorage):
@@ -38,33 +39,13 @@ class AmazonS3(DataStorage):
         self.versioned = self._DEFAULT_VERSIONED if versioned is None else versioned
 
         # if we run locally, make connection properties configurable
-        if self._is_local_deployment():
+        if is_local_deployment():
             self._endpoint_url = endpoint_url or self._DEFAULT_LOCAL_ENDPOINT
             self._use_ssl = use_ssl
             self.encryption = False
 
         if self._aws_access_key_id is None or self._aws_secret_access_key is None:
             raise ValueError("AWS configuration not provided correctly, both key id and key is needed")
-
-    @staticmethod
-    def _is_local_deployment():
-        """
-        :return: True if this storage does not store data directly in AWS S3 but in some fake S3 instead
-        """
-        aws_access_key_id_provided = os.environ.get('AWS_S3_ACCESS_KEY_ID') is not None
-        aws_secret_access_key_provided = os.environ.get('AWS_S3_SECRET_ACCESS_KEY') is not None
-
-        if aws_access_key_id_provided != aws_secret_access_key_provided:
-            raise ValueError("Misleading configuration, you have to provide both 'AWS_S3_ACCESS_KEY_ID' "
-                             "and 'AWS_S3_SECRET_ACCESS_KEY' for connection to AWS")
-
-        if "AWS_ACCESS_KEY_ID" in os.environ:
-            raise RuntimeError("Do not use AWS_ACCESS_KEY_ID in order to access S3, use 'AWS_S3_ACCESS_KEY_ID'")
-
-        if "AWS_SECRET_ACCESS_KEY" in os.environ:
-            raise RuntimeError("Do not use AWS_SECRET_ACCESS_KEY in order to access S3, use 'AWS_S3_SECRET_ACCESS_KEY'")
-
-        return not (aws_access_key_id_provided or aws_secret_access_key_provided)
 
     @staticmethod
     def dict2blob(dictionary):
@@ -103,12 +84,12 @@ class AmazonS3(DataStorage):
                                    CreateBucketConfiguration={
                                        'LocationConstraint': self.region_name
                                    })
-        if self.versioned and not self._is_local_deployment():
+        if self.versioned and not is_local_deployment():
             # Do not enable versioning when running locally. Our S3 alternatives are not capable to handle it.
             self._s3.BucketVersioning(self.bucket_name).enable()
 
         bucket_tag = os.environ.get('DEPLOYMENT_PREFIX')
-        if tagged and bucket_tag and not self._is_local_deployment():
+        if tagged and bucket_tag and not is_local_deployment():
             self._s3.BucketTagging(self.bucket_name).put(
                 Tagging={
                     'TagSet': [
@@ -183,7 +164,7 @@ class AmazonS3(DataStorage):
 
         response = self._s3.Object(self.bucket_name, object_key).put(**put_kwargs)
 
-        if 'VersionId' not in response and self._is_local_deployment() and self.versioned:
+        if 'VersionId' not in response and is_local_deployment() and self.versioned:
             # If we run local deployment, our local S3 alternative does not support versioning. Return a fake one.
             return self._get_fake_version_id()
 
@@ -221,7 +202,7 @@ class AmazonS3(DataStorage):
             raise AttributeError("Cannot retrieve version of object '{}': "
                                  "bucket '{}' is not configured to be versioned".format(object_key, self.bucket_name))
 
-        if self._is_local_deployment():
+        if is_local_deployment():
             return self._get_fake_version_id()
 
         return self._s3.Object(self.bucket_name, object_key).version_id

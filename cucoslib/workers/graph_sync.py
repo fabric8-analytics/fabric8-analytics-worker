@@ -8,7 +8,6 @@ import json
 from os import environ
 from requests import post
 
-logger = get_task_logger(__name__)
 
 class GraphSyncTask(BaseTask):
     def execute(self, arguments):
@@ -30,11 +29,11 @@ class GraphSyncTask(BaseTask):
         try:
             result = graph_req.json()
             if  len(result.get('result',{}).get('result',{}).get('data', [])) > 0:
-                logger.info("Data for {eco}/{name}/{version} has been published on database".format(eco=ecosystem, name=name, version=version))
+                self.log.info("Data for {eco}/{name}/{version} has been published on database".format(eco=ecosystem, name=name, version=version))
             else:
-                logger.info("Package is not yet available on the database. Retrying in a while ...")
+                self.log.info("Package is not yet available on the database. Retrying in a while ...")
                 self.retry(self._RETRY_COUNTDOWN)
         except:
-            logger.error("Exception while parsing database response")
+            self.log.error("Exception while parsing database response")
             self.retry(self._RETRY_COUNTDOWN)
 
