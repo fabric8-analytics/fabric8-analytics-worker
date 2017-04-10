@@ -57,6 +57,8 @@
         # TODO: Fridolin - we can get rid of this duplicity once dispatcher will be able to propagate subflow failures
         - from: 'bayesianApiAnalysisFlow'
           to: 'FinalizeTask'
+        - from: 'ResultCollector'
+          to: 'GraphImporterTask'
       failures:
         - nodes:
             - 'bayesianAnalysisFlow'

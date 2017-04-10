@@ -229,7 +229,6 @@
     - 'stackApiGraphFlow'
     - 'livenessFlow'
     - 'cveCheckFlow'
-    - 'graphSyncFlow'
     - 'graphImportFlow'
 
   storages:
