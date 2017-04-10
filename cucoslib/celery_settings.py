@@ -1,10 +1,39 @@
 import os
+import json
 import logging
 from urllib.parse import quote
-from cucoslib.conf import get_configuration, get_postgres_connection_string
+from celery.signals import setup_logging
+from logstash.formatter import LogstashFormatterVersion1
+from cucoslib.conf import get_configuration, get_postgres_connection_string, is_local_deployment
 
 _logger = logging.getLogger(__name__)
 configuration = get_configuration()
+
+
+class _StringLogstashFormatterV1(LogstashFormatterVersion1):
+    """ Logstash formatter to string, Version1 """
+    def format(self, record):
+        # The default formatter should be used with LogstashHandler that accepts bytes, let's decode the message that is
+        # a JSON and print it to stdout as logs are gathered transparently
+        return super().format(record).decode()
+
+
+class _SelinonLocalTraceFormatter(LogstashFormatterVersion1):
+    """ Format Selinon traces for local development"""
+    def format(self, record):
+        # Derivation from LogstashFormatterVersion1 is because of reusing keys gathering from
+        # log call - see get_extra_fields()
+        #
+        # This formatter is used for local development so there is no need to set up two different
+        # loggers (we need to support 'extra' kwarg passed to logger because of python-logstash API design)
+        message = {
+            '@fields': self.get_extra_fields(record),
+            '@message': record.getMessage(),
+            'logger_name': record.name,
+            'level': record.levelname
+        }
+
+        return json.dumps(message, sort_keys=True)
 
 
 def _use_sqs():
@@ -74,3 +103,87 @@ class CelerySettings(object):
     def disable_result_backend(cls):
         """Disable backend so we don't need to connect to it if not necessary"""
         cls.result_backend = None
+
+
+@setup_logging.connect
+def configure_logging(**kwargs):
+    """ Set up logging for worker """
+    is_local = is_local_deployment()
+    formatter = 'local' if is_local else 'deployment'
+    selinon_formatter = 'selinon_local' if is_local else 'deployment'
+
+    logging_formatters = {
+        'local': {
+            'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+        },
+        'deployment': {
+            '()': _StringLogstashFormatterV1
+        },
+        'selinon_local': {
+            '()': _SelinonLocalTraceFormatter
+        }
+    }
+
+    handlers = {
+        'default': {
+            'level': 'INFO',
+            'formatter': formatter,
+            'class': 'logging.StreamHandler',
+        },
+        'selinon_trace': {
+            'level': 'DEBUG',
+            'formatter': selinon_formatter,
+            'class': 'logging.StreamHandler',
+        },
+        'verbose': {
+            'level': 'DEBUG',
+            'formatter': formatter,
+            'class': 'logging.StreamHandler',
+        },
+    }
+
+    # If you would like to track some library, place it's handler here with appropriate entry - see celery as an example
+    loggers = {
+        '': {
+            'handlers': ['default'],
+            'level': 'INFO',
+        },
+        'selinon': {
+            'handlers': ['verbose'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+        'selinonlib': {
+            'handlers': ['verbose'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+        'cucoslib.dispatcher.trace': {
+            'handlers': ['selinon_trace'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+        'cucoslib': {
+            'handlers': ['verbose'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+        'kombu': {
+            'handlers': ['verbose'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+        'celery': {
+            'handlers': ['verbose'],
+            'level': 'DEBUG',
+            'propagate': False
+        }
+    }
+
+    logging.config.dictConfig({
+        'version': 1,
+        'loggers': loggers,
+        'formatters': logging_formatters,
+        'handlers': handlers
+    })
+
