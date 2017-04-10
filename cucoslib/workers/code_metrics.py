@@ -13,7 +13,7 @@ class CodeMetricsTask(BaseTask):
     _analysis_name = 'code_metrics'
     description = 'Compute various code metrics for a project'
     schema_ref = SchemaRef(_analysis_name, '1-0-0')
-    _CLI_TIMEOUT = 600
+    _CLI_TIMEOUT = 300
 
     def _run_analyzer(self, command, json_output=True):
         """Run command (analyzer), if a JSON output is expected, parse it
