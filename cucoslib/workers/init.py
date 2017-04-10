@@ -113,17 +113,3 @@ class InitAnalysisFlow(BaseTask):
             pom_xml_path
         )
         return pom_xml_path
-
-
-class FinishedAnalysisGateTask(BaseTask):
-    _RETRY_COUNTDOWN = 10
-
-    def run(self, arguments):
-        self._strict_assert(arguments.get('ecosystem'))
-        self._strict_assert(arguments.get('name'))
-        self._strict_assert(arguments.get('version'))
-
-        analysis_result = get_latest_analysis(arguments['ecosystem'], arguments['name'], arguments['version'])
-        if not analysis_result.finished_at:
-            self.retry(self._RETRY_COUNTDOWN)
-
