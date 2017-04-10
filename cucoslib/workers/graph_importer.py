@@ -19,8 +19,8 @@ class GraphImporterTask(BaseTask):
         # Initiate data model importer session
         epv = [{ 'ecosystem': ecosystem, 'name': name, 'version': version }]
 
-        dm_host = environ.get("BAYESIAN_DATA_MODEL_HTTP_SERVICE_HOST", "bayesian-data-model-http")
-        dm_port = environ.get("BAYESIAN_DATA_MODEL_HTTP_SERVICE_PORT", "5001")
+        dm_host = environ.get("BAYESIAN_DATA_IMPORTER_SERVICE_HOST", "bayesian-data-importer")
+        dm_port = environ.get("BAYESIAN_DATA_IMPORTER_SERVICE_PORT", "9192")
         dm_endpoint = "api/v1/ingest_to_graph"
         api_url = "http://{host}:{port}/{endpoint}".format(host=dm_host, port=dm_port, endpoint=dm_endpoint)
 
