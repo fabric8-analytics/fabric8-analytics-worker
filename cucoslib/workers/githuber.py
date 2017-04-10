@@ -214,7 +214,7 @@ class GithubTask(BaseTask):
 class GitReadmeCollectorTask(BaseTask):
     """ Store README files stored on Github """
 
-    _GITHUB_README_PATH = 'https://raw.githubusercontent.com/{project}/{repo}/master/README.{extension}'
+    _GITHUB_README_PATH = 'https://raw.githubusercontent.com/{project}/{repo}/master/README{extension}'
 
     # Based on https://github.com/github/markup#markups
     # Markup type to its possible extensions mapping, we use OrderedDict as we check the most used types first
@@ -228,6 +228,7 @@ class GitReadmeCollectorTask(BaseTask):
         ('Creole', ('creole',)),
         ('MediaWiki', ('mediawiki', 'wiki')),
         ('Pod', ('pod',)),
+        ('Unknown', ('')),
     ))
 
     def _get_github_repo_tuple(self):
@@ -240,13 +241,15 @@ class GitReadmeCollectorTask(BaseTask):
 
         for readme_type, extensions in self.README_TYPES.items():
             for extension in extensions:
+                if extension:
+                    extension = '.' + extension
                 url = self._GITHUB_README_PATH.format(project=project, repo=repo, extension=extension)
                 response = requests.get(url)
                 if response.status_code != 200:
-                    self.log.debug('No README.%s found for type "%s" at "%s"', extension, readme_type, url)
+                    self.log.debug('No README%s found for type "%s" at "%s"', extension, readme_type, url)
                     continue
 
-                self.log.debug('README.%s found for type "%s" at "%s"', extension, readme_type, url)
+                self.log.debug('README%s found for type "%s" at "%s"', extension, readme_type, url)
                 return {'type': readme_type, 'content': response.text}
 
     def run(self, arguments):
