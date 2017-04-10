@@ -3,7 +3,8 @@ import logging
 import datetime
 import tempfile
 import shutil
-from os import path as os_path, walk, getcwd, chdir, environ as os_environ
+import signal
+from os import path as os_path, walk, getcwd, chdir, environ as os_environ, killpg, getpgid
 from threading import Thread
 from subprocess import Popen, PIPE, check_output, CalledProcessError, TimeoutExpired
 from traceback import format_exc
@@ -249,7 +250,11 @@ class TimedCommand(object):
         # timeout reached, terminate the thread
         if thread.is_alive():
             logger.error('Command {cmd} timed out after {t} seconds'.format(cmd=self.command, t=timeout))
-            self.process.kill()
+            # this is tricky - we need to make sure we kill the process with all its subprocesses;
+            #  using just kill might create zombie process waiting for subprocesses to finish
+            #  and leaving us hanging on thread.join()
+            # TODO: we should do the same for get_command_output!
+            killpg(getpgid(self.process.pid), signal.SIGKILL)
             thread.join()
             if not self.error:
                 self.error = 'Killed by timeout after {t} seconds'.format(t=timeout)
