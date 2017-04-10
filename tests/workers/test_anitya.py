@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-import pytest
 import flexmock
-from cucoslib.workers import AnityaTask
-from cucoslib.utils import DownstreamMapCache
+import pytest
 from requests import Response
+
+from cucoslib.enums import EcosystemBackend
+from cucoslib.models import Ecosystem, create_db_scoped_session
+from cucoslib.utils import DownstreamMapCache
+from cucoslib.workers import AnityaTask
+
+from ..conftest import rdb
 
 example_projects = [
         ('npm', 'underscore', '563b1d9f13887d4bdcb6b06270a54825', 'rh-dist-git filenam nodejs-underscore'),
@@ -18,10 +22,14 @@ class TestAnitya(object):
     """
     @pytest.mark.parametrize(('ecosystem', 'project', 'md5sum', 'dist_git'), example_projects)
     def test_execute_with_mock_anitya(self, ecosystem, project, md5sum, dist_git):
+        rdb()
+        s = create_db_scoped_session()
         dummy_homepage = "http://project-homepage.com"
 
         dummy_response = Response()
         dummy_response.status_code = 200
+        s.add(Ecosystem(name='npm', backend=EcosystemBackend.npm))
+        s.commit()
         DownstreamMapCache()[md5sum] = dist_git  # fill in key-value mapping in cache
 
         task = AnityaTask.create_test_instance(task_name='anitya')
