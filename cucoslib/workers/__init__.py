@@ -27,5 +27,4 @@ from cucoslib.workers.graphaggregator import GraphAggregatorTask
 from cucoslib.workers.stackaggregator import StackAggregatorTask
 from cucoslib.workers.recommender import RecommendationTask
 from cucoslib.workers.init import InitAnalysisFlow
-from cucoslib.workers.init import FinishedAnalysisGateTask
 from cucoslib.workers.result_collector import ResultCollector

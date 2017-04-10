@@ -202,10 +202,6 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_ManifestKeeperTask_v0'
       storage: 'S3Manifests'
-    - name: 'FinishedAnalysisGateTask'
-      import: 'cucoslib.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_FinishedAnalysisGateTask_v0'
     - name: 'GraphImporterTask'
       import: 'cucoslib.workers'
       max_retry: 0
