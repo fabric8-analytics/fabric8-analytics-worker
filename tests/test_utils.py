@@ -19,19 +19,15 @@ from cucoslib.errors import TaskError
 from cucoslib.models import (Analysis, Ecosystem, Package, Version, create_db_scoped_session)
 from cucoslib import utils # so that we can mock functions from here
 from cucoslib.utils import (get_all_files_from,
-                            get_analysis,
                             hidden_path_filter,
                             skip_git_files,
-                            DictList,
                             ThreadPool,
                             MavenCoordinates,
                             mvn_find_latest_version,
-                            epv2repopath,
                             compute_digest,
                             get_latest_upstream_details,
                             safe_get_latest_version,
                             DownstreamMapCache,
-                            parse_release_str,
                             parse_gh_repo)
 
 from .conftest import rdb
@@ -45,13 +41,6 @@ class TestUtilFunctions(object):
 
     def teardown_method(self, method):
         pass
-
-    def test_dictlist(self):
-        dl = DictList()
-        dl['a'] = 1
-        dl['a'] = 2
-        assert dl.get_one('a') == 1
-        assert dl['a'] == [1, 2]
 
     def test_get_all_files_from(self, tmpdir):
         test_dir = os.path.abspath(str(tmpdir))
@@ -98,39 +87,6 @@ class TestUtilFunctions(object):
         a = MavenCoordinates('org.junit', 'junit')
         latest = mvn_find_latest_version(repo_url, a)
         assert latest == '4.12'
-
-    def test_parse_release_str(self):
-        assert parse_release_str('npm:arrify:1.0.1') == ('npm', 'arrify', '1.0.1')
-        assert parse_release_str('maven:junit:junit:4.12') == ('maven', 'junit:junit', '4.12')
-
-    def test_epv2repopath(self):
-        npm = Ecosystem(name='npm', backend=EcosystemBackend.npm)
-        rg = Ecosystem(name='rubygems', backend=EcosystemBackend.rubygems)
-        pp = Ecosystem(name='pypi', backend=EcosystemBackend.pypi)
-        mvn = Ecosystem(name='maven', backend=EcosystemBackend.maven)
-        result = epv2repopath(npm, 'arrify', '1.0.1')
-        assert result == 'arrify/-/arrify-1.0.1.tgz'
-        result = epv2repopath(npm, 'arrify', '1.0.1', repo_name='npm-cache')
-        assert result == 'npm-cache/arrify/-/arrify-1.0.1.tgz'
-        result = epv2repopath(npm, 'arrify', '1.0.1',
-                              repo_url='artifactory.example.com:8081/artifactory/')
-        assert result == 'arrify/-/arrify-1.0.1.tgz'
-        result = epv2repopath(npm, 'arrify', '1.0.1',
-                              repo_url='http://artifactory.example.com:8081/artifactory/',
-                              repo_name='npm-cache')
-        assert result == 'http://artifactory.example.com:8081/artifactory/npm-cache/arrify/-/arrify-1.0.1.tgz'
-        # same as previous, but this time repo_url is missing trailing slash
-        result = epv2repopath(npm, 'arrify', '1.0.1',
-                              repo_url='http://artifactory.example.com:8081/artifactory',
-                              repo_name='npm-cache')
-        assert result == 'http://artifactory.example.com:8081/artifactory/npm-cache/arrify/-/arrify-1.0.1.tgz'
-
-        result = epv2repopath(rg, 'rake', '11.1.2')
-        assert result == 'gems/rake-11.1.2.gem'
-        result = epv2repopath(pp, 'requests', '2.9.1')
-        assert result == 'source/r/requests/requests-2.9.1.tar.gz'
-        result = epv2repopath(mvn, 'org.junit:junit', '4.12')
-        assert result == 'org/junit/junit/4.12/junit-4.12.jar'
 
     def test_compute_digest(self):
         assert compute_digest("/etc/os-release")
@@ -211,29 +167,6 @@ class TestMavenCoordinates(object):
     def test_to_repo_url(self, coords, from_str, is_from_str_ok, to_str, to_str_omit_version, to_repo_url):
         if to_repo_url:
             assert coords.to_repo_url() == to_repo_url
-
-
-class TestGetAnalysis(object):
-    def setup_method(self, method):
-        # we cannot use this with pytest.mark.usefixtures, since that runs *after* setup_method
-        #    which means it wouldn't clean up the DB before we try to create the test ecosystem
-        rdb()
-        self.s = create_db_scoped_session()
-        self.e = Ecosystem(name='npm', backend=EcosystemBackend.npm)
-        self.p = Package(name='serve-static', ecosystem=self.e)
-        self.v = Version(identifier='1.7.1', package=self.p)
-        self.a = Analysis(version=self.v)
-        self.s.add(self.a)
-        self.s.commit()
-
-    @pytest.mark.usefixtures("dispatcher_setup")
-    def test_analysis_exists(self):
-        a = get_analysis('npm', 'serve-static', '1.7.1')
-        assert a.id == self.a.id
-
-    @pytest.mark.usefixtures("dispatcher_setup")
-    def test_analysis_doesnt_exist(self):
-        assert get_analysis('npm', 'serve-static', '1.7.2') is None
 
 
 class TestGetAnityaProject(object):

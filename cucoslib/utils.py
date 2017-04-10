@@ -30,33 +30,6 @@ logger = logging.getLogger(__name__)
 configuration = get_configuration()
 
 
-def get_analysis(ecosystem, package, version, db_session=None):
-    """Get result of previously scheduled analysis for given EPV triplet.
-
-    :param ecosystem: str, Ecosystem name
-    :param package: str, Package name
-    :param version: str, Package version
-    :param db_session: obj, Database session to use for querying
-    :return:
-    """
-    if not db_session:
-        storage = StoragePool.get_connected_storage("BayesianPostgres")
-        db_session = storage.session
-
-    if ecosystem == 'maven':
-        package = MavenCoordinates.normalize_str(package)
-
-    found = db_session.query(Analysis).\
-        join(Version).join(Package).join(Ecosystem).\
-        filter(Ecosystem.name == ecosystem).\
-        filter(Package.name == package).\
-        filter(Version.identifier == version).\
-        order_by(Analysis.started_at.desc()).\
-        first()
-
-    return found
-
-
 def get_analysis_by_id(ecosystem, package, version, analysis_id, db_session=None):
     """Get result of previously scheduled analysis for given EPV triplet by analysis ID
 
@@ -328,49 +301,6 @@ def get_command_output(args, graceful=True, is_json=False, **kwargs):
             return [f for f in out.split('\n') if f]  # py2 & 3 compat
 
 
-class DictList(UserDict):
-    "one2many mapping dictionary"
-    def __init__(self, parent_dict=None):
-        UserDict.__init__(self, parent_dict or {})
-
-    def __setitem__(self, key, value):
-        if key not in self.data:
-            self.data[key] = [value]
-        else:
-            self.data[key].append(value)
-
-    def get_one(self, key):
-        data = self.data[key]
-        return data[0]
-
-
-def cleanup_dict_keys(dictionary, char, substitute, keys_whitelist=None):
-    "Performs in-place sanitization of keys in the dictionary"
-    if keys_whitelist is None:
-        keys_whitelist = []
-    for key, value in dictionary.items():
-        # replace char with substitute
-        if char in key and not key.startswith(tuple(keys_whitelist)):
-            del dictionary[key]
-            replaced = key.replace(char, substitute)
-            dictionary[replaced] = value
-            key = replaced
-
-        # walk down inner dictionaries
-        if isinstance(value, dict):
-            cleanup_dict_keys(dictionary[key], char, substitute)
-        # walk down inner lists
-        elif isinstance(value, list):
-            for sub_value in value:
-                if isinstance(sub_value, dict):
-                    cleanup_dict_keys(sub_value, char, substitute)
-
-
-def path_component_startswith(needle, path):
-    "Check if any component in the part starts with the given value"
-    return needle.startswith(tuple(path.split(os_path.sep)))
-
-
 def get_all_files_from(target, path_filter=None, file_filter=None):
     "Enumerate all files in target directory, can be filtered with custom delegates"
     for root, dirs, files in walk(target):
@@ -599,60 +529,6 @@ def mvn_find_latest_version(repo_url, coordinates):
     except IOError:
         pass
     raise ValueError("Unable to determine artifact version: {a}".format(a=coordinates))
-
-
-def parse_release_str(release_str):
-    """Parse release string and return (ecosystem, package, version)."""
-    ecosystem, rest = release_str.split(':', maxsplit=1)
-    package, version = rest.rsplit(':', maxsplit=1)
-    return ecosystem, package, version
-
-
-def epv2repopath(ecosystem, package, version, repo_url='', repo_name=''):
-    """
-    Converts EPV to the repository path.
-
-    Currently supported language ecosystems:
-        - NPM
-        - PyPI (source distribution)
-        - RubyGems
-        - Maven
-
-    Example:
-    >>> epv2repopath(cucoslib.ecosystem.npm, 'arrify', '1.0.1')
-    'arrify/-/arrify-1.0.1.tgz'
-    >>> epv2repopath(cucoslib.ecosystem.npm, 'arrify', '1.0.1', repo_url='http://example.com/', repo_name='npm-repo')
-    'http://example.com/npm-repo/arrify/-/arrify-1.0.1.tgz'
-
-    :param ecosystem: cucoslib.models.Ecosystem, language ecosystem, determines repository layout
-    :param package: str, name of the package in given ecosystem
-    :param version: str, version of the package
-    :param repo_url: str, URL where repository management software is running
-    :param repo_name: str, name of the repository
-    :return: str, path to the artifact
-    """
-    layouts = {EcosystemBackend.npm: "{package}/-/{package}-{version}.tgz",
-               EcosystemBackend.pypi: "source/{p}/{package}/{package}-{version}.tar.gz",
-               EcosystemBackend.rubygems: "gems/{package}-{version}.gem"}
-
-    layout = layouts.get(ecosystem.backend)
-    if layout:
-        repo_path = layout.format(package=package, version=version, p=package[0])
-    elif ecosystem.is_backed_by(EcosystemBackend.maven):
-        coords = MavenCoordinates.from_str(package)
-        coords.version = version
-        repo_path = coords.to_repo_url()
-    else:
-        raise ValueError('Unsupported ecosystem: \'{e}\''.format(e=ecosystem.name))
-
-    if repo_name:
-        repo_path = repo_name + '/' + repo_path
-        if repo_url:
-            if not repo_url.endswith('/'):
-                repo_url += '/'
-            repo_path = repo_url + repo_path
-
-    return repo_path
 
 
 def get_latest_upstream_details(ecosystem, package):
