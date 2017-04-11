@@ -10,7 +10,6 @@ from subprocess import Popen, PIPE, check_output, CalledProcessError, TimeoutExp
 from traceback import format_exc
 from urllib.parse import urlparse
 from shlex import split
-from collections import UserDict
 from queue import Queue, Empty
 from contextlib import contextmanager
 from lxml import etree
@@ -21,7 +20,6 @@ from sqlalchemy import desc
 
 from cucoslib.conf import get_configuration
 from cucoslib.errors import TaskError
-from cucoslib.enums import EcosystemBackend
 from cucoslib.models import (Analysis, Ecosystem, Package, Version,
                              PackageGHUsage, ComponentGHUsage, DownstreamMap)
 
@@ -57,32 +55,6 @@ def get_analysis_by_id(ecosystem, package, version, analysis_id, db_session=None
         one()
 
     return found
-
-
-def analysis_count(ecosystem, package, version, db_session=None):
-    """Get count of previously scheduled analysis for given EPV triplet
-
-    :param ecosystem: str, Ecosystem name
-    :param package: str, Package name
-    :param version: str, Package version
-    :param db_session: obj, Database session to use for querying
-    :return: analysis count
-    """
-    if not db_session:
-        storage = StoragePool.get_connected_storage("BayesianPostgres")
-        db_session = storage.session
-
-    if ecosystem == 'maven':
-        package = MavenCoordinates.normalize_str(package)
-
-    count = db_session.query(Analysis).\
-        join(Version).join(Package).join(Ecosystem).\
-        filter(Ecosystem.name == ecosystem).\
-        filter(Package.name == package).\
-        filter(Version.identifier == version).\
-        count()
-
-    return count
 
 
 def get_package_dependents_count(ecosystem_backend, package, db_session=None):
