@@ -90,6 +90,7 @@ class CVEcheckerTask(BaseTask):
             s3.retrieve_depcheck_db_if_exists(temp_data_dir)
             report_path = os.path.join(temp_data_dir, 'report.xml')
             command = [depcheck,
+                       '--noupdate',
                        '--format', 'XML',
                        '--project', 'test',
                        '--data', temp_data_dir,
