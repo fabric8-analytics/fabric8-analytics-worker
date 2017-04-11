@@ -51,22 +51,15 @@ class DependencySnapshotTask(BaseTask):
             return ret
 
         # second, figure out what is the latest upstream version matching the spec and return it
-        if ecosystem.is_backed_by(EcosystemBackend.maven):
-            # in maven ecosystem, we already get resolved versions from mercator
-            package, version = dep.split()
-            # mercator right now uses the format groupId:artifactId:type:classifier,
-            #  but we only care about groupId:artifactId right now
-            package = ':'.join(package.split(':')[:2])
-        else:
-            solver = get_ecosystem_solver(ecosystem)
-            pkgspec = solver.solve([dep])
+        solver = get_ecosystem_solver(ecosystem)
+        pkgspec = solver.solve([dep])
 
-            if not pkgspec:
-                raise TaskError("invalid dependency: {}".format(dep))
+        if not pkgspec:
+            raise TaskError("invalid dependency: {}".format(dep))
 
-            package, version = pkgspec.popitem()
-            if not version:
-                raise TaskError("bad version resolved for {}".format(dep))
+        package, version = pkgspec.popitem()
+        if not version:
+            raise TaskError("bad version resolved for {}".format(dep))
 
         ret['name'] = package
         ret['version'] = version
