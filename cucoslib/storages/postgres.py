@@ -119,7 +119,7 @@ class BayesianPostgres(DataStorage):
     @staticmethod
     def is_real_task_result(task_result):
         """ Check that the task result is not just S3 object version reference """
-        return len(task_result.keys()) != 1 or 'version_id' not in task_result.keys()
+        return task_result and (len(task_result.keys()) != 1 or 'version_id' not in task_result.keys())
 
     def get_analysis_count(self, ecosystem, package, version):
         """Get count of previously scheduled analysis for given EPV triplet
