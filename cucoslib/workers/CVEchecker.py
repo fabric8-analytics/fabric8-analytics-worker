@@ -87,7 +87,12 @@ class CVEcheckerTask(BaseTask):
         s3 = StoragePool.get_connected_storage('S3OWASPDepCheck')
         depcheck = os.path.join(os.environ['OWASP_DEP_CHECK_PATH'], 'bin', 'dependency-check.sh')
         with tempdir() as temp_data_dir:
-            s3.retrieve_depcheck_db_if_exists(temp_data_dir)
+            retrieved = s3.retrieve_depcheck_db_if_exists(temp_data_dir)
+            if not retrieved:
+                self.log.debug('No cached OWASP Dependency-Check DB, generating fresh now ...')
+                command = [depcheck, '--updateonly', '--data', temp_data_dir]
+                # give DependencyCheck 30 minutes to download the DB
+                TimedCommand.get_command_output(command, graceful=False, timeout=1800)
             report_path = os.path.join(temp_data_dir, 'report.xml')
             command = [depcheck,
                        '--noupdate',

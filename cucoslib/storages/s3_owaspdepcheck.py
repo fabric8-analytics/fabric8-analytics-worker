@@ -27,3 +27,6 @@ class S3OWASPDepCheck(AmazonS3):
                 archive_path = os.path.join(archive_dir, self._DB_ARCHIVE)
                 self.retrieve_file(self._DB_ARCHIVE, archive_path)
                 Archive.extract_zip(archive_path, data_dir)
+                return True
+
+        return False
