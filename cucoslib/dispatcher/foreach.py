@@ -27,12 +27,15 @@ def _is_url_dependency(dep):
 def iter_dependencies_analysis(storage_pool, node_args):
     # Be safe here as fatal errors will cause errors in Dispatcher
     try:
+        postgres = storage_pool.get_connected_storage('BayesianPostgres')
         deps = storage_pool.get('dependency_snapshot').get('details', {}).get('runtime', [])
-
         arguments = []
         for dep in deps:
             if _is_url_dependency(dep):
                 logger.info('skipping URL dependency name "%(ecosystem)s/%(name)s/%(version)s"', dep)
+            elif postgres.get_analysis_count(dep['ecosystem'], dep['name'], dep['version']) > 0:
+                logger.info('skipping already analysed dependency "%(ecosystem)s/%(name)s/%(version)s"', dep)
+                continue
             else:
                 new_node_args = _create_analysis_arguments(dep['ecosystem'], dep['name'], dep['version'])
                 if 'recursive_limit' in node_args:
@@ -50,6 +53,7 @@ def iter_dependencies_stack(storage_pool, node_args):
     # Be safe here as fatal errors will cause errors in Dispatcher
     try:
         aggregated = storage_pool.get('AggregatingMercatorTask')
+        postgres = storage_pool.get_connected_storage('BayesianPostgres')
 
         arguments = []
         for result in aggregated["result"]:
@@ -59,6 +63,11 @@ def iter_dependencies_stack(storage_pool, node_args):
             for dep in resolved:
                 name = dep['package']
                 version = dep['version']
+
+                if postgres.get_analysis_count(ecosystem, name, version) > 0:
+                    logger.info('skipping already analysed dependency "%s/%s/%s"', ecosystem, name, version)
+                    continue
+
                 arguments.append(_create_analysis_arguments(ecosystem, name, version))
 
         logger.info("Arguments for next flows: %s" % str(arguments))

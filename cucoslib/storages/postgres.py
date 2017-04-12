@@ -6,7 +6,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 from selinon import DataStorage, StoragePool
-from cucoslib.models import Ecosystem, WorkerResult, Analysis
+from cucoslib.models import Analysis, Ecosystem, Package, Version, WorkerResult
+from cucoslib.utils import MavenCoordinates
 from sqlalchemy.orm.exc import NoResultFound
 
 
@@ -119,3 +120,25 @@ class BayesianPostgres(DataStorage):
     def is_real_task_result(task_result):
         """ Check that the task result is not just S3 object version reference """
         return len(task_result.keys()) != 1 or 'version_id' not in task_result.keys()
+
+    def get_analysis_count(self, ecosystem, package, version):
+        """Get count of previously scheduled analysis for given EPV triplet
+
+        :param ecosystem: str, Ecosystem name
+        :param package: str, Package name
+        :param version: str, Package version
+        :return: analysis count
+        """
+        if ecosystem == 'maven':
+            package = MavenCoordinates.normalize_str(package)
+
+        count = self.session.query(Analysis).\
+            join(Version).join(Package).join(Ecosystem).\
+            filter(Ecosystem.name == ecosystem).\
+            filter(Package.name == package).\
+            filter(Version.identifier == version).\
+            count()
+
+        return count
+
+

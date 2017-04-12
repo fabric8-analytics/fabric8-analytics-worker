@@ -3,7 +3,7 @@ import json
 from dateutil import parser as datetime_parser
 from selinon import StoragePool
 from cucoslib.process import Git
-from cucoslib.utils import analysis_count, cwd, TimedCommand, tempdir
+from cucoslib.utils import cwd, TimedCommand, tempdir
 from cucoslib.base import BaseTask
 from cucoslib.solver import get_ecosystem_solver
 
@@ -61,7 +61,7 @@ class CVEDBSyncTask(BaseTask):
         if only_already_scanned:
             result = []
             for version in resolved_versions:
-                if analysis_count('npm', package_name, version) > 0:
+                if self.storage.get_analysis_count('npm', package_name, version) > 0:
                     result.append(version)
             return result
         else:
