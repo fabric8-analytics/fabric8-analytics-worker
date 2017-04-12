@@ -226,6 +226,7 @@
     - 'livenessFlow'
     - 'cveCheckFlow'
     - 'graphImportFlow'
+    - 'graphApiImportFlow'
 
   storages:
     - name: 'BayesianPostgres'
