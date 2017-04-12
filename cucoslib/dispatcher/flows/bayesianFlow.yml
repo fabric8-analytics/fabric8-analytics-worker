@@ -38,6 +38,16 @@
                 args:
                   env: 'WORKER_ADMINISTRATION_REGION'
                   value: 'api'
+        - from: 'InitAnalysisFlow'
+          to: 'GraphImporterTask'
+          condition:
+            and:
+              - not:
+                  <<: *shouldScheduleAnalysisCheck
+              - name: 'argsFieldEqual'
+                args:
+                  key: 'force_graph_sync'
+                  value: true
         - from: 'bayesianAnalysisFlow'
           to: 'FinalizeTask'
         - from: 'FinalizeTask'
