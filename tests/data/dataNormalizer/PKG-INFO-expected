@@ -8,5 +8,6 @@
   "name": "python-openstackclient",
   "description": "OpenStack Command-line Client",
   "platform": "UNKNOWN",
-  "version": "2.2.0"
+  "version": "2.2.0",
+  "keywords": ["made", "this", "up"]
 }

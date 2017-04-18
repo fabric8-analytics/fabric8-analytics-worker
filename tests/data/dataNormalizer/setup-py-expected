@@ -7,5 +7,6 @@
  "description": "Python HTTP for Humans.",
  "homepage": "http://python-requests.org",
  "name": "requests",
- "version": "2.10.0"
+ "version": "2.10.0",
+ "keywords": ["made", "this", "up"]
 }
