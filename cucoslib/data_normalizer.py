@@ -228,6 +228,13 @@ class DataNormalizer(object):
             return {'url': homepage, 'type': 'git'}
         return None
 
+    def _python_split_keywords(self, keywords):
+        if isinstance(keywords, list):
+            return keywords
+        keywords = keywords.split(',')
+        keywords = [kw.strip() for kw in keywords]
+        return keywords
+
     def _handle_python(self, data):
         "Handle Python package (setup.py) analysis data"
         key_map = (('license', 'declared_license'), ('url', 'homepage'),
@@ -237,6 +244,7 @@ class DataNormalizer(object):
         transformed = self.transform_keys(data, key_map)
         transformed['author'] = self._join_name_email(data, 'author', 'author_email')
         transformed['code_repository'] = self._python_identify_repo(transformed.get('homepage', ''))
+        transformed['keywords'] = self._python_split_keywords(data.get('keywords', []))
         return transformed
 
     def _handle_python_dist(self, data):
@@ -272,6 +280,7 @@ class DataNormalizer(object):
             result = self.transform_keys(data, key_map)
             result['author'] = self._join_name_email(data, 'author', 'author-email')
         result['code_repository'] = self._python_identify_repo(result.get('homepage', ''))
+        result['keywords'] = self._python_split_keywords(data.get('keywords', []))
         return result
 
     def _handle_java(self, data):
