@@ -21,8 +21,9 @@ pattern_n2_remove = re.compile(pattern_to_save)
 class SimilarStack(object):
     def __init__(self, stack_id, usage_score=None, source=None,
                  original_score=None, missing_packages=None,
-                 version_mismatch=None):
+                 version_mismatch=None, stack_name=None):
         self.stack_id = stack_id
+        self.stack_name = stack_name
         self.usage_score = usage_score
         self.source = source
         self.original_score = original_score
@@ -333,10 +334,11 @@ class RelativeSimilarity:
             # We give the result no matter what similarity score is
             # if original_score > similarity_score_threshold:
             objid = str(ref_stack["appstack_id"])
+            stack_name = str(ref_stack["application_name"])
             usage_score = ref_stack["usage"] if "usage" in ref_stack else None
             source = ref_stack["source"] if "source" in ref_stack else None
             similar_stack = SimilarStack(objid, usage_score, source, original_score,
-                                         missing_packages, version_mismatch)
+                                         missing_packages, version_mismatch, stack_name)
             similar_stack_lists.append(similar_stack)
 
         return similar_stack_lists
@@ -376,6 +378,7 @@ class RecommendationTask(BaseTask):
         for stack in similar_stacks_list:
             s_stack = {
                 "stack_id": stack.stack_id,
+                "stack_name": stack.stack_name,
                 "similarity": stack.original_score,
                 "usage": stack.usage_score,
                 "source": stack.source,
