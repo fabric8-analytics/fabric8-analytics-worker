@@ -279,7 +279,7 @@ class DataNormalizer(object):
 
             result = self.transform_keys(data, key_map)
             result['author'] = self._join_name_email(data, 'author', 'author-email')
-        result['code_repository'] = self._python_identify_repo(result.get('homepage', ''))
+        result['code_repository'] = self._python_identify_repo(result.get('homepage') or '')
         result['keywords'] = self._python_split_keywords(data.get('keywords', []))
         return result
 
