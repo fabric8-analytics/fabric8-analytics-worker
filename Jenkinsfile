@@ -3,9 +3,11 @@
 node('docker') {
 
     def image = docker.image('bayesian/cucos-worker')
+    def commitId
 
     stage('Checkout') {
         checkout scm
+        commitId = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
     }
 
     stage('Build') {
@@ -41,7 +43,6 @@ node('docker') {
 
     if (env.BRANCH_NAME == 'master') {
         stage('Push Images') {
-            def commitId = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
             docker.withRegistry('https://docker-registry.usersys.redhat.com/') {
                 image.push('latest')
                 image.push(commitId)
@@ -51,19 +52,29 @@ node('docker') {
                 image.push(commitId)
             }
         }
+
+        stage('Prepare Template') {
+            dir('openshift') {
+                sh "sed -i \"/image-tag\$/ s|latest|${commitId}|\" template.yaml"
+                stash name: 'template', includes: 'template.yaml'
+                archiveArtifacts artifacts: 'template.yaml'
+            }
+        }
     }
 }
 
 if (env.BRANCH_NAME == 'master') {
     node('oc') {
         stage('Deploy - dev') {
-            sh 'oc --context=dev deploy bayesian-worker-api --latest'
-            sh 'oc --context=dev deploy bayesian-worker-ingestion --latest'
+            unstash 'template'
+            sh 'oc --context=dev process --v DEPLOYMENT_PREFIX=DEV -v WORKER_ADMINISTRATION_REGION=ingestion -v S3_BUCKET_FOR_ANALYSES=DEV-bayesian-core-data f template.yaml | oc --context=dev apply -f -'
+            sh 'oc --context=dev process --v DEPLOYMENT_PREFIX=DEV -v WORKER_ADMINISTRATION_REGION=api -v S3_BUCKET_FOR_ANALYSES=DEV-bayesian-core-data f template.yaml | oc --context=dev apply -f -'
         }
 
         stage('Deploy - rh-idev') {
-            sh 'oc --context=rh-idev deploy bayesian-worker-api --latest'
-            sh 'oc --context=rh-idev deploy bayesian-worker-ingestion --latest'
+            unstash 'template'
+            sh 'oc --context=rh-idev process --v DEPLOYMENT_PREFIX=STAGE -v WORKER_ADMINISTRATION_REGION=ingestion -v S3_BUCKET_FOR_ANALYSES=STAGE-bayesian-core-data f template.yaml | oc --context=rh-idev apply -f -'
+            sh 'oc --context=rh-idev process --v DEPLOYMENT_PREFIX=STAGE -v WORKER_ADMINISTRATION_REGION=api -v S3_BUCKET_FOR_ANALYSES=STAGE-bayesian-core-data f template.yaml | oc --context=rh-idev apply -f -'
         }
     }
 }
