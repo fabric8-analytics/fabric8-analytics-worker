@@ -7,6 +7,7 @@ from datetime import datetime
 from cucoslib.schemas import load_worker_schema, set_schema_ref
 from cucoslib.utils import json_serial
 from cucoslib.object_cache import ObjectCache
+from cucoslib.storages import BayesianPostgres
 
 
 class BaseTask(SelinonTask):
@@ -25,6 +26,11 @@ class BaseTask(SelinonTask):
             raise FatalTaskError("Strict assert failed in task '%s'" % cls.__name__)
 
     def run(self, node_args):
+        if self.storage and isinstance(self.storage, BayesianPostgres):
+            # SQS guarantees 'deliver at least once', so there could be multiple messages of a type, give up immediately
+            if self.storage.get_worker_id_count(self.task_id) > 0:
+                raise FatalTaskError("Task with ID '%s' was already processed" % self.task_id)
+
         start = datetime.now()
         try:
             result = self.execute(node_args)
@@ -55,9 +61,9 @@ class BaseTask(SelinonTask):
         return result
 
     @classmethod
-    def create_test_instance(cls, flow_name=None, task_name=None, parent=None, finished=None):
+    def create_test_instance(cls, flow_name=None, task_name=None, parent=None, task_id=None, dispatcher_id=None):
         # used in tests so we do not do ugly things like this, this correctly done by dispatcher
-        return cls(flow_name, task_name or cls.__name__, parent, finished)
+        return cls(flow_name, task_name or cls.__name__, parent, task_id, dispatcher_id)
 
     def validate_result(self, result):
         """

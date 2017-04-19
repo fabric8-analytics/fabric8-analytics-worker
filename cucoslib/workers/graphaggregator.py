@@ -38,7 +38,7 @@ class GraphAggregatorTask(BaseTask):
                     f.write(json.dumps({}))
 
             # TODO: this is a workaround since stack analysis is not handled by dispatcher, so we create instance manually for now
-            subtask = MercatorTask(None, None, None, None)
+            subtask = MercatorTask(None, None, None, None, None)
             # since we're creating MercatorTask dynamically in code, we need to make sure
             #  that it has storage; storage is assigned to tasks dynamically based on task_name
             subtask.task_name = self.task_name
