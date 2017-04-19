@@ -141,4 +141,10 @@ class BayesianPostgres(DataStorage):
 
         return count
 
+    def get_worker_id_count(self, worker_id):
+        """ Get number of results that has the given worker_id assigned (should be always 0 or 1)
 
+        :param worker_id: unique worker id
+        :return: worker result count
+        """
+        return self.session.query(WorkerResult).filter(WorkerResult.worker_id == worker_id).count()
