@@ -1,0 +1,211 @@
+apiVersion: v1
+kind: Template
+labels:
+  template: bayesian-worker
+metadata:
+  name: bayesian-worker
+  annotations:
+    description: bayesian-worker
+objects:
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      service: bayesian-worker-${WORKER_ADMINISTRATION_REGION}
+    name: bayesian-worker-${WORKER_ADMINISTRATION_REGION}
+  spec:
+    replicas: 1
+    selector:
+      service: bayesian-worker-${WORKER_ADMINISTRATION_REGION}
+    strategy:
+      type: Rolling
+      rollingParams:
+        pre:
+          failurePolicy: Retry
+          execNewPod:
+            containerName: bayesian-worker
+            command: ["/alembic/run-db-migrations.sh"]
+    template:
+      metadata:
+        labels:
+          service: bayesian-worker-${WORKER_ADMINISTRATION_REGION}
+      spec:
+        containers:
+        - env:
+          - name: OPENSHIFT_DEPLOYMENT
+            value: "${OPENSHIFT_DEPLOYMENT}"
+          - name: DEPLOYMENT_PREFIX
+            value: "${DEPLOYMENT_PREFIX}"
+          - name: WORKER_ADMINISTRATION_REGION
+            value: "${WORKER_ADMINISTRATION_REGION}"
+          - name: POSTGRESQL_DATABASE
+            valueFrom:
+              secretKeyRef:
+                name: coreapi-postgres
+                key: database
+          - name: POSTGRESQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: coreapi-postgres
+                key: password
+          - name: POSTGRESQL_USER
+            valueFrom:
+              secretKeyRef:
+                name: coreapi-postgres
+                key: username
+          - name: POSTGRESQL_INITIAL_DATABASE
+            valueFrom:
+              secretKeyRef:
+                name: coreapi-postgres
+                key: initial-database
+          - name: AWS_SQS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: aws
+                key: sqs-access-key-id
+          - name: AWS_SQS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: aws
+                key: sqs-secret-access-key
+          - name: AWS_S3_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+               name: aws
+               key: s3-access-key-id
+          - name: AWS_S3_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: aws
+                key: s3-secret-access-key
+          - name: BAYESIAN_SYNC_S3
+            valueFrom:
+              secretKeyRef:
+                name: aws
+                key: sync-s3
+          - name: GITHUB_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: worker
+                key: github-token
+          - name: PULP_URL
+            valueFrom:
+              secretKeyRef:
+                name: worker
+                key: pulp-url
+          - name: PULP_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: worker
+                key: pulp-username
+          - name: PULP_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: worker
+                key: pulp-password
+          - name: BLACKDUCK_HOST
+            valueFrom:
+              secretKeyRef:
+                name: worker
+                key: blackduck-host
+          - name: BLACKDUCK_PORT
+            valueFrom:
+              secretKeyRef:
+                name: worker
+                key: blackduck-port
+          - name: BLACKDUCK_SCHEME
+            valueFrom:
+              secretKeyRef:
+                name: worker
+                key: blackduck-scheme
+          - name: BLACKDUCK_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: worker
+                key: blackduck-username
+          - name: BLACKDUCK_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: worker
+                key: blackduck-password
+          - name: BLACKDUCK_PATH
+            valueFrom:
+              secretKeyRef:
+                name: worker
+                key: blackduck-path
+          - name: PGBOUNCER_SERVICE_HOST
+            value: bayesian-pgbouncer
+          - name: CCS_SERVER_SERVICE_HOST
+            value: bayesian-api
+          - name: ANITYA_SERVICE_HOST
+            value: bayesian-anitya
+          - name: AWS_S3_BUCKET_NAME
+            value: "${S3_BUCKET_FOR_ANALYSES}"
+          # this won't get used if running with SQS
+          - name: RABBITMQ_SERVICE_SERVICE_HOST
+            value: bayesian-broker
+          image: "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${IMAGE_TAG}"
+          name: bayesian-worker
+          readinessProbe:
+            exec:
+              command: ["worker-readiness.sh"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["worker-liveness.sh"]
+            initialDelaySeconds: 20
+            periodSeconds: 60
+            timeoutSeconds: 5
+          resources:
+            requests:
+              memory: "512Mi"
+            limits:
+              memory: "2048Mi"
+        restartPolicy: Always
+    test: false
+    triggers:
+    - type: ConfigChange
+
+parameters:
+- description: Worker region for serving tasks - api or ingestion
+  displayName: Worker administration region
+  required: true
+  name: WORKER_ADMINISTRATION_REGION
+  value: "api"
+
+- description: Deployment prefix used for deployment-specific AWS resources
+  displayName: Deployment prefix
+  required: true
+  name: DEPLOYMENT_PREFIX
+  value: "os"
+
+- description: Turn off tasks that are run on OpenShift instance and require internal services
+  displayName: Openshift deployment
+  required: true
+  name: OPENSHIFT_DEPLOYMENT
+  value: "1"
+
+- description: Name of the S3 bucket where to store analyses
+  displayName: S3 bucket for analyses
+  required: true
+  name: S3_BUCKET_FOR_ANALYSES
+
+- description: Docker registry where the image is
+  displayName: Docker registry
+  required: true
+  name: DOCKER_REGISTRY
+  value: "registry.devshift.net"
+
+- description: Docker image to use
+  displayName: Docker image
+  required: true
+  name: DOCKER_IMAGE
+  value: "bayesian/cucos-worker"
+
+- description: Image tag
+  displayName: Image tag
+  required: true
+  name: IMAGE_TAG
+  value: "latest"
