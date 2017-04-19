@@ -181,9 +181,9 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_InitAnalysisFlow_v0'
       storage: 'BayesianPostgres'
-      selective_run_function:
-        name: 'selective_run_function'
-        import: 'cucoslib.dispatcher.selective'
+      #selective_run_function:
+      #  name: 'selective_run_function'
+      #  import: 'cucoslib.dispatcher.selective'
     - name: 'ResultCollector'
       import: 'cucoslib.workers'
       max_retry: 0
