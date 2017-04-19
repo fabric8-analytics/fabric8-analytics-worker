@@ -13,7 +13,7 @@ class S3Manifests(AmazonS3):
         assert 'external_request_id' in node_args
 
         # TODO: get from Postgres
-        for manifest in node_args['manifests']:
+        for manifest in node_args['manifest']:
             assert 'content' in manifest
             self.store_blob(manifest['content'].encode(), self._construct_object_key(node_args, manifest))
 
