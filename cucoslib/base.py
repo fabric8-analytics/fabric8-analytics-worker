@@ -12,6 +12,8 @@ from cucoslib.object_cache import ObjectCache
 class BaseTask(SelinonTask):
     description = 'Root of the Task object hierarchy'
     schema_ref = _schema = None
+    # set this to False if your task shouldn't get the `_audit` value added to result dict
+    add_audit_info = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -41,17 +43,18 @@ class BaseTask(SelinonTask):
             # Keep track of None results and add _audit and _release keys
             result = {}
 
-        # `_audit` key is added to every analysis info submitted
-        result['_audit'] = {
-                'started_at': json_serial(start),
-                'ended_at': json_serial(end),
-                'version': 'v1'
-        }
+        if self.add_audit_info:
+            # `_audit` key is added to every analysis info submitted
+            result['_audit'] = {
+                    'started_at': json_serial(start),
+                    'ended_at': json_serial(end),
+                    'version': 'v1'
+            }
 
-        ecosystem_name = node_args.get('ecosystem')
-        result['_release'] = '{}:{}:{}'.format(ecosystem_name,
-                                               node_args.get('name'),
-                                               node_args.get('version'))
+            ecosystem_name = node_args.get('ecosystem')
+            result['_release'] = '{}:{}:{}'.format(ecosystem_name,
+                                                   node_args.get('name'),
+                                                   node_args.get('version'))
         return result
 
     @classmethod
