@@ -108,8 +108,11 @@ class BayesianPostgres(DataStorage):
             self.connect()
 
         try:
-            record = self.session.query(WorkerResult).join(Analysis).\
+            record = self.session.query(WorkerResult).join(Analysis).join(Ecosystem).join(Package).join(Version).\
                 filter(WorkerResult.worker == task_name).\
+                filter(Package.name == package).\
+                filter(Version.identifier == version).\
+                filter(Ecosystem.name == ecosystem).\
                 order_by(Analysis.finished_at.desc()).first()
         except NoResultFound:
             return None
