@@ -1,15 +1,14 @@
 from cucoslib.base import BaseTask
 import requests
 from os import environ
-import json
+
 
 class GraphImporterTask(BaseTask):
-
     def execute(self, arguments):
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))
- 
+
         ecosystem = arguments.get('ecosystem')
         name = arguments.get('name')
         version = arguments.get('version')
@@ -24,7 +23,5 @@ class GraphImporterTask(BaseTask):
 
         self.log.info("Invoke graph importer at url: %s", api_url)
         response = requests.post(api_url, json=epv)
-        if response.status_code != 200:
-            self.log.error("Graph import failed with respose: %s", response.text)
-            raise RuntimeError("Graph import failed with status code: %s" % (response.status_code))
-
+        response.raise_for_status()
+        self.log.info("Graph import succeeded with response: %s", response.text)
