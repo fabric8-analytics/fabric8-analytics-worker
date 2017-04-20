@@ -2,22 +2,18 @@
 
 node('docker') {
 
-    def workerImage = docker.image('bayesian/cucos-worker')
-    def downstreamImage = docker.image('bayesian/coreapi-downstream-data-import')
+    def image = docker.image('bayesian/cucos-worker')
+    def commitId
 
     stage('Checkout') {
         checkout scm
+        commitId = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
     }
 
     stage('Build') {
         dockerCleanup()
-        // build worker image
-        docker.build(workerImage.id, '--pull --no-cache .')
-        sh "docker tag ${workerImage.id} docker-registry.usersys.redhat.com/${workerImage.id}"
-        // build downstream-data-import image
-        docker.build(downstreamImage.id, '-f Dockerfile.downstream-data-import --pull --no-cache .')
-        sh "docker tag ${downstreamImage.id} docker-registry.usersys.redhat.com/${downstreamImage.id}"
-        // build test image
+        docker.build(image.id, '--pull --no-cache .')
+        sh "docker tag ${image.id} docker-registry.usersys.redhat.com/${image.id}"
         docker.build('cucos-lib-tests', '-f Dockerfile.tests .')
     }
 
@@ -33,6 +29,7 @@ node('docker') {
                 docker.image('bayesian/bayesian-api').pull()
                 docker.image('bayesian/coreapi-jobs').pull()
                 docker.image('bayesian/coreapi-pgbouncer').pull()
+                docker.image('bayesian/coreapi-downstream-data-import').pull()
             }
 
             git url: 'https://github.com/baytemp/common.git', branch: 'master', credentialsId: 'baytemp-ci-gh'
@@ -46,18 +43,21 @@ node('docker') {
 
     if (env.BRANCH_NAME == 'master') {
         stage('Push Images') {
-            def commitId = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
             docker.withRegistry('https://docker-registry.usersys.redhat.com/') {
-                workerImage.push('latest')
-                workerImage.push(commitId)
-                downstreamImage.push('latest')
-                downstreamImage.push(commitId)
+                image.push('latest')
+                image.push(commitId)
             }
             docker.withRegistry('https://registry.devshift.net/') {
-                workerImage.push('latest')
-                workerImage.push(commitId)
-                downstreamImage.push('latest')
-                downstreamImage.push(commitId)
+                image.push('latest')
+                image.push(commitId)
+            }
+        }
+
+        stage('Prepare Template') {
+            dir('openshift') {
+                sh "sed -i \"/image-tag\$/ s|latest|${commitId}|\" template.yaml"
+                stash name: 'template', includes: 'template.yaml'
+                archiveArtifacts artifacts: 'template.yaml'
             }
         }
     }
@@ -66,21 +66,15 @@ node('docker') {
 if (env.BRANCH_NAME == 'master') {
     node('oc') {
         stage('Deploy - dev') {
-            sh 'oc --context=dev deploy bayesian-worker-api --latest'
-            sh 'oc --context=dev deploy bayesian-worker-ingestion --latest'
-            rerunOpenShiftJob {
-                jobName = 'bayesian-downstream-data-import'
-                cluster = 'dev'
-            }
+            unstash 'template'
+            sh 'oc --context=dev process --v DEPLOYMENT_PREFIX=DEV -v WORKER_ADMINISTRATION_REGION=ingestion -v S3_BUCKET_FOR_ANALYSES=DEV-bayesian-core-data f template.yaml | oc --context=dev apply -f -'
+            sh 'oc --context=dev process --v DEPLOYMENT_PREFIX=DEV -v WORKER_ADMINISTRATION_REGION=api -v S3_BUCKET_FOR_ANALYSES=DEV-bayesian-core-data f template.yaml | oc --context=dev apply -f -'
         }
 
         stage('Deploy - rh-idev') {
-            sh 'oc --context=rh-idev deploy bayesian-worker-api --latest'
-            sh 'oc --context=rh-idev deploy bayesian-worker-ingestion --latest'
-            rerunOpenShiftJob {
-                jobName = 'bayesian-downstream-data-import'
-                cluster = 'rh-idev'
-            }
+            unstash 'template'
+            sh 'oc --context=rh-idev process --v DEPLOYMENT_PREFIX=STAGE -v WORKER_ADMINISTRATION_REGION=ingestion -v S3_BUCKET_FOR_ANALYSES=STAGE-bayesian-core-data f template.yaml | oc --context=rh-idev apply -f -'
+            sh 'oc --context=rh-idev process --v DEPLOYMENT_PREFIX=STAGE -v WORKER_ADMINISTRATION_REGION=api -v S3_BUCKET_FOR_ANALYSES=STAGE-bayesian-core-data f template.yaml | oc --context=rh-idev apply -f -'
         }
     }
 }
