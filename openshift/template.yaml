@@ -35,7 +35,10 @@ objects:
           - name: OPENSHIFT_DEPLOYMENT
             value: "${OPENSHIFT_DEPLOYMENT}"
           - name: DEPLOYMENT_PREFIX
-            value: "${DEPLOYMENT_PREFIX}"
+            valueFrom:
+              configMapKeyRef:
+                name: bayesian-config
+                key: deployment-prefix
           - name: WORKER_ADMINISTRATION_REGION
             value: "${WORKER_ADMINISTRATION_REGION}"
           - name: POSTGRESQL_DATABASE
@@ -140,7 +143,10 @@ objects:
           - name: ANITYA_SERVICE_HOST
             value: bayesian-anitya
           - name: AWS_S3_BUCKET_NAME
-            value: "${S3_BUCKET_FOR_ANALYSES}"
+            valueFrom:
+              configMapKeyRef:
+                name: bayesian-config
+                key: s3-bucket-for-analyses
           # this won't get used if running with SQS
           - name: RABBITMQ_SERVICE_SERVICE_HOST
             value: bayesian-broker
@@ -175,22 +181,11 @@ parameters:
   name: WORKER_ADMINISTRATION_REGION
   value: "api"
 
-- description: Deployment prefix used for deployment-specific AWS resources
-  displayName: Deployment prefix
-  required: true
-  name: DEPLOYMENT_PREFIX
-  value: "os"
-
 - description: Turn off tasks that are run on OpenShift instance and require internal services
   displayName: Openshift deployment
   required: true
   name: OPENSHIFT_DEPLOYMENT
   value: "1"
-
-- description: Name of the S3 bucket where to store analyses
-  displayName: S3 bucket for analyses
-  required: true
-  name: S3_BUCKET_FOR_ANALYSES
 
 - description: Docker registry where the image is
   displayName: Docker registry

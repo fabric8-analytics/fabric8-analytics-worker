@@ -13,13 +13,6 @@ function oc_process_apply() {
 here=`dirname $0`
 template="${here}/template.yaml"
 
-if [[ $PTH_ENV ]]; then
-  deployment_prefix=$PTH_ENV
-else
-  deployment_prefix=$(oc whoami)
-fi
-s3_bucket_for_analyses=${deployment_prefix}-${S3_BUCKET_FOR_ANALYSES:-bayesian-core-data}
-
-oc_process_apply "$template" "-v DEPLOYMENT_PREFIX=${deployment_prefix} -v WORKER_ADMINISTRATION_REGION=ingestion -v S3_BUCKET_FOR_ANALYSES=${s3_bucket_for_analyses}"
-oc_process_apply "$template" "-v DEPLOYMENT_PREFIX=${deployment_prefix} -v WORKER_ADMINISTRATION_REGION=api -v S3_BUCKET_FOR_ANALYSES=${s3_bucket_for_analyses}"
+oc_process_apply "$template" "-v WORKER_ADMINISTRATION_REGION=ingestion"
+oc_process_apply "$template" "-v WORKER_ADMINISTRATION_REGION=api"
 
