@@ -67,14 +67,14 @@ if (env.BRANCH_NAME == 'master') {
     node('oc') {
         stage('Deploy - dev') {
             unstash 'template'
-            sh 'oc --context=dev process --v DEPLOYMENT_PREFIX=DEV -v WORKER_ADMINISTRATION_REGION=ingestion -v S3_BUCKET_FOR_ANALYSES=DEV-bayesian-core-data f template.yaml | oc --context=dev apply -f -'
-            sh 'oc --context=dev process --v DEPLOYMENT_PREFIX=DEV -v WORKER_ADMINISTRATION_REGION=api -v S3_BUCKET_FOR_ANALYSES=DEV-bayesian-core-data f template.yaml | oc --context=dev apply -f -'
+            sh 'oc --context=dev process -v DEPLOYMENT_PREFIX=DEV -v WORKER_ADMINISTRATION_REGION=ingestion -v S3_BUCKET_FOR_ANALYSES=DEV-bayesian-core-data -f template.yaml | oc --context=dev apply -f -'
+            sh 'oc --context=dev process -v DEPLOYMENT_PREFIX=DEV -v WORKER_ADMINISTRATION_REGION=api -v S3_BUCKET_FOR_ANALYSES=DEV-bayesian-core-data -f template.yaml | oc --context=dev apply -f -'
         }
 
         stage('Deploy - rh-idev') {
             unstash 'template'
-            sh 'oc --context=rh-idev process --v DEPLOYMENT_PREFIX=STAGE -v WORKER_ADMINISTRATION_REGION=ingestion -v S3_BUCKET_FOR_ANALYSES=STAGE-bayesian-core-data f template.yaml | oc --context=rh-idev apply -f -'
-            sh 'oc --context=rh-idev process --v DEPLOYMENT_PREFIX=STAGE -v WORKER_ADMINISTRATION_REGION=api -v S3_BUCKET_FOR_ANALYSES=STAGE-bayesian-core-data f template.yaml | oc --context=rh-idev apply -f -'
+            sh 'oc --context=rh-idev process -v DEPLOYMENT_PREFIX=STAGE -v WORKER_ADMINISTRATION_REGION=ingestion -v S3_BUCKET_FOR_ANALYSES=STAGE-bayesian-core-data -f template.yaml | oc --context=rh-idev apply -f -'
+            sh 'oc --context=rh-idev process -v DEPLOYMENT_PREFIX=STAGE -v WORKER_ADMINISTRATION_REGION=api -v S3_BUCKET_FOR_ANALYSES=STAGE-bayesian-core-data -f template.yaml | oc --context=rh-idev apply -f -'
         }
     }
 }
