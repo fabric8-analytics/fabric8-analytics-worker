@@ -17,7 +17,8 @@ def selective_run_function(flow_name, node_name, node_args, task_names, storage_
             node_args['ecosystem'],
             node_args['name'],
             node_args['version'],
-            node_name
+            node_name,
+            error=False
         )
         if task_result:
             return task_result.worker_id

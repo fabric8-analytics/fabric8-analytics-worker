@@ -101,7 +101,7 @@ class BayesianPostgres(DataStorage):
 
         return Ecosystem.by_name(self.session, name)
 
-    def get_latest_task_result(self, ecosystem, package, version, task_name):
+    def get_latest_task_result(self, ecosystem, package, version, task_name, error=False):
         """ Get latest task id based on task name """
         # TODO: we should store date timestamps directly in WorkerResult
         if not self.is_connected():
@@ -113,6 +113,7 @@ class BayesianPostgres(DataStorage):
                 filter(Package.name == package).\
                 filter(Version.identifier == version).\
                 filter(Ecosystem.name == ecosystem).\
+                filter(WorkerResult.error.is_(error)).\
                 order_by(Analysis.finished_at.desc()).first()
         except NoResultFound:
             return None
