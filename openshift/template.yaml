@@ -14,7 +14,6 @@ objects:
       service: bayesian-worker-${WORKER_ADMINISTRATION_REGION}
     name: bayesian-worker-${WORKER_ADMINISTRATION_REGION}
   spec:
-    replicas: 1
     selector:
       service: bayesian-worker-${WORKER_ADMINISTRATION_REGION}
     strategy:
