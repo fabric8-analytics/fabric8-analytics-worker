@@ -299,7 +299,7 @@ class RelativeSimilarity:
             original_score = RelativeSimilarity().compute_modified_jaccard_similarity(len(input_set),
                                                                 len(refstack_component_list),
                                                                 vcount)
-            if original_score > jaccard_threshold:
+            if original_score > self.jaccard_threshold:
                 filtered_ref_stacks.append(ref_stack)
         return filtered_ref_stacks
 
@@ -332,14 +332,14 @@ class RelativeSimilarity:
             # downstream_score = original_score + boosted_score
 
             # We give the result no matter what similarity score is
-            # if original_score > similarity_score_threshold:
-            objid = str(ref_stack["appstack_id"])
-            stack_name = str(ref_stack["application_name"])
-            usage_score = ref_stack["usage"] if "usage" in ref_stack else None
-            source = ref_stack["source"] if "source" in ref_stack else None
-            similar_stack = SimilarStack(objid, usage_score, source, original_score,
-                                         missing_packages, version_mismatch, stack_name)
-            similar_stack_lists.append(similar_stack)
+            if original_score > self.similarity_score_threshold:
+                objid = str(ref_stack["appstack_id"])
+                stack_name = str(ref_stack["application_name"])
+                usage_score = ref_stack["usage"] if "usage" in ref_stack else None
+                source = ref_stack["source"] if "source" in ref_stack else None
+                similar_stack = SimilarStack(objid, usage_score, source, original_score,
+                                             missing_packages, version_mismatch, stack_name)
+                similar_stack_lists.append(similar_stack)
 
         return similar_stack_lists
 
