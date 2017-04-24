@@ -239,13 +239,13 @@ class WorkerResult(Base):
 
 
 class StackAnalysisRequest(Base):
-   __tablename__ = "stack_analyses_request"
-   id = Column(String(64), primary_key=True)
-   submitTime = Column(DateTime, nullable=False)
-   requestJson = Column(JSON, nullable=False)
-   origin = Column(String(64), nullable=True)
-   result = Column(JSON, nullable=True)
-   team = Column(String(64), nullable=True)
+    __tablename__ = "stack_analyses_request"
+    id = Column(String(64), primary_key=True)
+    submitTime = Column(DateTime, nullable=False)
+    requestJson = Column(JSON, nullable=False)
+    origin = Column(String(64), nullable=True)
+    result = Column(JSON, nullable=True)
+    team = Column(String(64), nullable=True)
 
 
 class PackageGHUsage(Base):
