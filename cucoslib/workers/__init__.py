@@ -1,6 +1,3 @@
-# you are doing it right celery:
-#   ImportError: No module named celery
-#
 from cucoslib.workers.anitya import AnityaTask
 from cucoslib.workers.binwalk import BinwalkTask
 from cucoslib.workers.bigquery_gh import BigQueryTask
