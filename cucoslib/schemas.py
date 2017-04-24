@@ -321,7 +321,7 @@ external_schema = SchemaValidator(_external_schemas)
 
 
 def get_schema_ref(analysis, default=None):
-    """Retrieves a schema refence from a component analysis"""
+    """Retrieves a schema reference from a component analysis"""
     try:
         schema_ref_dict = analysis["schema"]
     except KeyError:
@@ -339,14 +339,14 @@ def get_schema_ref(analysis, default=None):
 
 
 def pop_schema_ref(analysis, default=None):
-    """Retrieves and removes a schema refence from a component analysis"""
+    """Retrieves and removes a schema reference from a component analysis"""
     schema_ref = get_schema_ref(analysis, default)
     analysis.pop("schema", None)
     return schema_ref
 
 
 def set_schema_ref(analysis, schema_ref):
-    """Sets the schema refence for a component analysis"""
+    """Sets the schema reference for a component analysis"""
     analysis["schema"] = schema_ref._asdict()
 
 
