@@ -1,13 +1,17 @@
 #!/usr/bin/env groovy
+@Library('github.com/msrb/cicd-pipeline-helpers')
 
+def commitId
 node('docker') {
 
     def image = docker.image('bayesian/cucos-worker')
-    def commitId
 
     stage('Checkout') {
         checkout scm
         commitId = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+        dir('openshift') {
+            stash name: 'template', includes: 'template.yaml'
+        }
     }
 
     stage('Build') {
@@ -52,14 +56,6 @@ node('docker') {
                 image.push(commitId)
             }
         }
-
-        stage('Prepare Template') {
-            dir('openshift') {
-                sh "sed -i \"/image-tag\$/ s|latest|${commitId}|\" template.yaml"
-                stash name: 'template', includes: 'template.yaml'
-                archiveArtifacts artifacts: 'template.yaml'
-            }
-        }
     }
 }
 
@@ -67,14 +63,14 @@ if (env.BRANCH_NAME == 'master') {
     node('oc') {
         stage('Deploy - dev') {
             unstash 'template'
-            sh 'oc --context=dev process -v WORKER_ADMINISTRATION_REGION=ingestion -f template.yaml | oc --context=dev apply -f -'
-            sh 'oc --context=dev process -v WORKER_ADMINISTRATION_REGION=api -f template.yaml | oc --context=dev apply -f -'
+            sh "oc --context=dev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=ingestion -f template.yaml | oc --context=dev apply -f -"
+            sh "oc --context=dev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=api -f template.yaml | oc --context=dev apply -f -"
         }
 
-        stage('Deploy - rh-idev') {
-            unstash 'template'
-            sh 'oc --context=rh-idev process -v WORKER_ADMINISTRATION_REGION=ingestion -f template.yaml | oc --context=rh-idev apply -f -'
-            sh 'oc --context=rh-idev process -v WORKER_ADMINISTRATION_REGION=api -f template.yaml | oc --context=rh-idev apply -f -'
-        }
+        //stage('Deploy - rh-idev') {
+        //    unstash 'template'
+        //    sh "oc --context=rh-idev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=ingestion -f template.yaml | oc --context=rh-idev apply -f -"
+        //    sh "oc --context=rh-idev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=api -f template.yaml | oc --context=rh-idev apply -f -"
+        //}
     }
 }
