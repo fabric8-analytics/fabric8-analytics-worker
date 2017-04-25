@@ -24,7 +24,12 @@ class InitAnalysisFlow(BaseTask):
             # TODO: this is OK for now, but if we will scale and there will be 2+ workers running this task
             # they can potentially schedule two flows of a same type at the same time
             if db.query(Analysis).filter(Analysis.version_id == v.id).count() > 0:
-                return None
+                # we need to propagate flags that were passed to flow, but not E/P/V - this way we are sure that for
+                # example graph import is scheduled (arguments['force_graph_sync'] == True)
+                arguments.pop('name')
+                arguments.pop('version')
+                arguments.pop('ecosystem')
+                return arguments
 
         cache_path = mkdtemp(dir=self.configuration.worker_data_dir)
         epv_cache = ObjectCache.get_from_dict(arguments)
