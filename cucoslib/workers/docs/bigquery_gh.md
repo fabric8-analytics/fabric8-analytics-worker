@@ -13,7 +13,7 @@ Known limitations:
 
 #### Configuration
 
-This worker is meant to be run periodically and the interval is configurable, see [cucoslib.celery_settings.CELERYBEAT_SCHEDULE](../../celery_settings.py) for the default settings.
+This worker is meant to be run periodically and the interval is configurable, see default jobs in Jobs service.
 
 By default, the worker looks for the JSON key required for communication with the BigQuery service in `/var/lib/secrets/bigquery.json`. You can either put your key there, or you can override the location via `BIGQUERY_JSON_KEY` environment variable.
 You can generate the key in the [Google API Console](https://console.developers.google.com/) (authentication required).
