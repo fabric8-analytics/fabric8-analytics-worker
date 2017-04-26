@@ -98,7 +98,7 @@ class GraphDB:
         Similarity score is calculated as, given,
         input_stack is a list of package names in manifest file
         ref_stack is a list of package names in a reference stack
-        sim_score = count(input_stack intersection ref_stack / max(len(input_stack, ref_stack)
+        sim_score = count(input_stack intersection ref_stack) / max(len(input_stack, ref_stack))
         """
         str_packages = []
         ref_stack_matching_components = {}
