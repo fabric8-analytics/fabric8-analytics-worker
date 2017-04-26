@@ -120,7 +120,7 @@ class GraphDB:
         if json_response is not None:
             ref_stack_matching_components = self.get_response_data(json_response, data_default=[])
 
-        #
+        # Collect all the stack names
         for sname, val in ref_stack_matching_components[0].items():
             list_stack_names.append(sname)
 
