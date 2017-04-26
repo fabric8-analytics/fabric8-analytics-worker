@@ -16,8 +16,9 @@ See ./cucoslib/workers/README.md for a listing of the concrete services.
 
 ## Running worker environment with docker-compose
 
-```
-$ docker-compose up worker
+There are two sets of workers - API and ingestion. API workers serve requests that are passed from API endpoint. Ingestion workers are used for background data ingestion. To run them use:
+```shell
+$ docker-compose up worker-api worker-ingestion
 ```
 
 # Running the tests locally
@@ -26,8 +27,9 @@ $ docker-compose up worker
 
 Run the tests in a container using the helper
 script:
-
-    $ ./runtests.sh
+```shell
+$ ./runtests.sh
+```
 
 (The above command assumes you have passwordless docker invocation configured -
 if you don't, then `sudo` will be necessary to enable docker invocation).
@@ -38,8 +40,9 @@ can set environment variable `REBUILD=1` to request image rebuilding.
 
 If the offline virtualenv based tests have been run, then this may complain
 about mismatched locations in compiled files. Those can be deleted using:
-
-    $ find -name *.pyc -delete
+```shell
+$ find -name *.pyc -delete
+```
 
 NOTE: Running the container based tests is likely to cause any already
 running local Bayesian instance launched via Docker Compose to fall over due to
@@ -54,19 +57,21 @@ Docker daemon running locally.
 
 To configure a virtualenv (called `cucos-worker` in the example) to run these
 tests:
-
-    (cucos-worker) $ python -m pip install -r requirements.txt
-    (cucos-worker) $ python -m pip install -r tests/requirements.txt
+```shell
+(cucos-worker) $ python -m pip install -r requirements.txt
+(cucos-worker) $ python -m pip install -r tests/requirements.txt
+```
 
 The marked offline tests can then be run as:
-
-    (cucos-worker) $ py.test -m offline tests/
+```shell
+(cucos-worker) $ py.test -m offline tests/
+```
 
 If the Docker container based tests have been run, then this may complain
 about mismatched locations in compiled files. Those can be deleted using:
-
-    (cucos-worker) $ sudo find -name *.pyc -delete
-
+```shell
+(cucos-worker) $ sudo find -name *.pyc -delete
+```
 
 # Testing against not-yet-released worker dependencies
 
