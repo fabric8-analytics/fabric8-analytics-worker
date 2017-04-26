@@ -92,6 +92,76 @@ class GraphDB:
                                                      data_default=[])
         return full_ref_stacks
 
+    def get_topmost_ref_stack(self, list_packages):
+        """
+        Get best matching reference stack in terms of similarity score
+        Similarity score is calculated as, given,
+        input_stack is a list of package names in manifest file
+        ref_stack is a list of package names in a reference stack
+        sim_score = count(input_stack intersection ref_stack / max(len(input_stack, ref_stack)
+        """
+        str_packages = []
+        ref_stack_matching_components = {}
+        ref_stack_full_components = {}
+        list_stack_names = []
+        for package in list_packages:
+            str_packages.append(GraphDB.str_value_cleaner(package))
+
+        # Get count of matching components across reference stacks for a given input stack
+        str_gremlin = "g.V().has('vertex_label','Version').has('pname',within(str_packages))" \
+                      ".in('has_dependency').values('sname').groupCount();"
+        payload = {
+            'gremlin': str_gremlin,
+            'bindings': {
+                'str_packages': str_packages
+            }
+        }
+        json_response = self.execute_gremlin_dsl(payload)
+        if json_response is not None:
+            ref_stack_matching_components = self.get_response_data(json_response, data_default=[])
+
+        #
+        for sname, val in ref_stack_matching_components[0].items():
+            list_stack_names.append(sname)
+
+        # Get total counts of components in reference stacks
+        str_gremlin = "g.V().has('vertex_label','Stack').has('sname',within(list_stack_names)).as('stk')" \
+                      ".out('has_dependency').select('stk').values('sname').groupCount()"
+
+        payload = {
+            'gremlin': str_gremlin,
+            'bindings': {
+                'list_stack_names': list_stack_names
+            }
+        }
+        json_response = self.execute_gremlin_dsl(payload)
+        if json_response is not None:
+            ref_stack_full_components = self.get_response_data(json_response, data_default=[])
+        ref_stk = {}
+
+        # Calculate similarity score of all reference stacks vs. input stack
+        for key, val in ref_stack_matching_components[0].items():
+            if key in ref_stack_full_components[0]:
+                ref_stk[key] = float(val) / float(ref_stack_full_components[0].get(key))
+
+        # Get the name of reference stack with topmost similarity score
+        sname = max(ref_stk.keys(), key=(lambda key: ref_stk[key]))
+
+        # Get data of reference stack based on sname above
+        str_gremlin = "g.V().has('vertex_label','Stack').has('sname', sname).valueMap(true);"
+
+        payload = {
+            'gremlin': str_gremlin,
+            'bindings': {
+                'sname': sname
+            }
+        }
+        json_response = self.execute_gremlin_dsl(payload)
+        if json_response is not None:
+            return self.get_response_data(json_response, data_default=[])
+
+        return []
+
     def get_top_5_ref_stack(self, full_ref_stacks):
         frr = []
         top_ref_stacks = []
@@ -151,12 +221,14 @@ class GraphDB:
         """
         list_ref_stacks = []
 
-        full_ref_stacks = self.get_full_ref_stacks(list_packages)
-        if len(full_ref_stacks) == 0:
-            return []
+        # full_ref_stacks = self.get_full_ref_stacks(list_packages)
+        # if len(full_ref_stacks) == 0:
+        #     return []
+        #
+        # # Get only the  TOP 5 Reference Stacks
+        # top_ref_stacks = self.get_top_5_ref_stack(full_ref_stacks)
 
-        # Get only the  TOP 5 Reference Stacks
-        top_ref_stacks = self.get_top_5_ref_stack(full_ref_stacks)
+        top_ref_stacks = self.get_topmost_ref_stack(list_packages)
         if len(top_ref_stacks) == 0:
             return []
 
@@ -239,7 +311,9 @@ class RelativeSimilarity:
         loc = comp.get('loc', 0)
         num_files = comp.get('num_files', 0)
         code_complexity = comp.get('code_complexity', 0)
-        code_metric_data = [loc, num_files, code_complexity]
+        code_metric_data = [loc if loc > 0 else 0,
+                            num_files if num_files > 0 else 0,
+                            code_complexity if code_complexity > 0 else 0]
         return code_metric_data
 
     def getp_value_graph(self, component_name, input_stack, ref_stack):
