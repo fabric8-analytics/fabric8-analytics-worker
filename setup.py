@@ -24,5 +24,5 @@ setup(
     description='Bayesian workers & utilities',
     license='MIT',
     keywords='bayesian analysis worker',
-    url='https://gitlab.cee.redhat.com/bayesian/worker'
+    url='https://github.com/baytemp/worker'
 )
