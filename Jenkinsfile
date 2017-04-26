@@ -67,10 +67,10 @@ if (env.BRANCH_NAME == 'master') {
             sh "oc --context=dev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=api -f template.yaml | oc --context=dev apply -f -"
         }
 
-        stage('Deploy - rh-idev') {
-            unstash 'template'
-            sh "oc --context=rh-idev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=ingestion -f template.yaml | oc --context=rh-idev apply -f -"
-            sh "oc --context=rh-idev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=api -f template.yaml | oc --context=rh-idev apply -f -"
-        }
+        //stage('Deploy - rh-idev') {
+        //    unstash 'template'
+        //    sh "oc --context=rh-idev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=ingestion -f template.yaml | oc --context=rh-idev apply -f -"
+        //    sh "oc --context=rh-idev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=api -f template.yaml | oc --context=rh-idev apply -f -"
+        //}
     }
 }
