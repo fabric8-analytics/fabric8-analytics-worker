@@ -20,11 +20,10 @@ CMD ["/usr/bin/workers.sh"]
 #   - changes in minimum and/or pinned versions will invalidate the cache
 RUN mkdir -p /tmp/install_deps
 
-# https://copr.devel.redhat.com/coprs/jpopelka/cucos-license-check
-# https://copr.devel.redhat.com/coprs/hhorak/oscryptocatcher/
-# https://copr.devel.redhat.com/coprs/podvody/Brewutils/
-# https://copr.devel.redhat.com/coprs/fpokorny/mercator-go/
-COPY hack/_copr_jpopelka-cucos-license-check.repo hack/_copr_hhorak-oscryptocatcher.repo hack/_copr_podvody-brewutils.repo hack/_copr_fpokorny-mercator.repo /etc/yum.repos.d/
+# https://copr.fedorainfracloud.org/coprs/jpopelka/license-check/
+# https://copr.fedorainfracloud.org/coprs/jpopelka/mercator/
+# https://copr.fedorainfracloud.org/coprs/jpopelka/python-brewutils/
+COPY hack/_copr_jpopelka-license-check.repo hack/_copr_jpopelka-mercator.repo hack/_copr_jpopelka-python-brewutils.repo /etc/yum.repos.d/
 
 # Install RPM dependencies
 COPY hack/install_deps_rpm.sh /tmp/install_deps/

@@ -12,10 +12,10 @@ REQUIRES_TASK='ssdeep'
 # LinguistTask
 # github-linguist gem is installed using "gem install" in Dockerfile since no epel package is available for this gem.
 # LINGUIST='rubygem-github-linguist'
-# license check requires oslc, both are in internal copr repo: jpopelka/cucos-license-check
-LICENSE_CHECK='cucos-license-check-0.3'
-# oscryptocatcher check from internal copr repo: hhorak/oscryptocatcher
-OSCRYPTOCATCHER='oscryptocatcher'
+# license check requires oslc, both are in copr
+LICENSE_CHECK='license-check'
+# oscryptocatcher check from copr repo
+# OSCRYPTOCATCHER='oscryptocatcher'
 # covscan
 CSMOCK_TASK_DEPS="csmock"
 # gofedlib

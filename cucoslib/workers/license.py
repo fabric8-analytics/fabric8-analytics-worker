@@ -47,7 +47,7 @@ class LicenseCheckTask(BaseTask):
                        'summary': {},
                        'details': {}}
         try:
-            result_data['details'] = TimedCommand.get_command_output(['cucos_license_check.py', cache_path],
+            result_data['details'] = TimedCommand.get_command_output(['license_check.py', cache_path],
                                                                      graceful=False,
                                                                      is_json=True)
             result_data['status'] = result_data['details'].pop('status')
