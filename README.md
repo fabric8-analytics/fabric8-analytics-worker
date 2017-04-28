@@ -14,6 +14,10 @@ The following libraries are provided:
 
 See ./cucoslib/workers/README.md for a listing of the concrete services.  
 
+## Contributing
+
+See our [contributing guidelines](https://github.com/fabric8-analytics/common/blob/master/CONTRIBUTING.md) for more info.
+
 ## Running worker environment with docker-compose
 
 There are two sets of workers - API and ingestion. API workers serve requests that are passed from API endpoint. Ingestion workers are used for background data ingestion. To run them use:
