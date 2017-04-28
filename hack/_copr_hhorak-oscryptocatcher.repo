@@ -1,8 +1,0 @@
-[hhorak-oscryptocatcher]
-name=Copr repo for oscryptocatcher owned by hhorak
-baseurl=http://coprbe.devel.redhat.com/repos/hhorak/oscryptocatcher/epel-$releasever-$basearch/
-skip_if_unavailable=True
-gpgcheck=0
-gpgkey=http://coprbe.devel.redhat.com/repos/hhorak/oscryptocatcher/pubkey.gpg
-enabled=1
-enabled_metadata=1

@@ -33,8 +33,8 @@ class TestLicenseCheck(object):
         assert results['status'] == 'error'
         task.validate_result(results)
 
-    @pytest.mark.skipif(which("cucos_license_check.py") is None,
-                        reason="requires cucos-license-check RPM")
+    @pytest.mark.skipif(which("license_check.py") is None,
+                        reason="requires license-check RPM")
     @pytest.mark.usefixtures("no_s3_connection")
     def test_execute(self):
         data = os.path.join(
