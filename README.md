@@ -1,5 +1,7 @@
-Bayesian Core library and services
-----------------------------------
+Fabric8-Analytics Core library and services
+-------------------------------------------
+
+*Note on naming: The Fabric8-Analytics project has evolved from 2 different projects called "cucos" and "bayesian". We're currently in process of renaming the modules and updating documentation. Until that is completed, please consider "cucos" and "bayesian" to be synonyms of "Fabric8-Analytics".*
 
 This library provides basic infrastructure for development of services and concrete implemementation of services. 
 
@@ -45,7 +47,7 @@ $ find -name *.pyc -delete
 ```
 
 NOTE: Running the container based tests is likely to cause any already
-running local Bayesian instance launched via Docker Compose to fall over due to
+running local Fabric8-Analytics instance launched via Docker Compose to fall over due to
 changes in the SELinux labels on mounted volumes, and may also cause
 spurious test failures.
 
