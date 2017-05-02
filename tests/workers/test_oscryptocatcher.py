@@ -8,6 +8,7 @@ from cucoslib.workers import OSCryptoCatcherTask
 from cucoslib.object_cache import EPVCache
 
 
+@pytest.mark.skip(reason="we don't have oscryptocatcher installed in the image")
 @pytest.mark.usefixtures("dispatcher_setup")
 class TestOSCryptoCatcher(object):
     @pytest.mark.usefixtures("no_s3_connection")
