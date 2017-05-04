@@ -54,8 +54,8 @@ COPY hack/install_deps_npm.sh /tmp/install_deps/
 RUN /tmp/install_deps/install_deps_npm.sh
 
 # Install BlackDuck CLI
-COPY hack/install_bd.sh /tmp/install_deps/
-RUN /tmp/install_deps/install_bd.sh
+#COPY hack/install_bd.sh /tmp/install_deps/
+#RUN /tmp/install_deps/install_bd.sh
 
 # Install JavaNCSS for code metrics
 COPY hack/install_javancss.sh /tmp/install_deps/
@@ -75,8 +75,8 @@ COPY hack/import_RH_CA_cert.sh /tmp/install_deps/
 RUN /tmp/install_deps/import_RH_CA_cert.sh
 
 # Import BlackDuck Hub CA cert
-COPY hack/import_BD_CA_cert.sh /tmp/install_deps/
-RUN /tmp/install_deps/import_BD_CA_cert.sh
+#COPY hack/import_BD_CA_cert.sh /tmp/install_deps/
+#RUN /tmp/install_deps/import_BD_CA_cert.sh
 
 # Make sure random user has place to store files
 RUN mkdir -p ${HOME} ${WORKER_DATA_DIR} ${ALEMBIC_DIR}/alembic/ && \
