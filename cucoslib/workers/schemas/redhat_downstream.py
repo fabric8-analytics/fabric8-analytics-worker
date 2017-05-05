@@ -100,8 +100,8 @@ class ToolchainResponses(jsl.Document):
 
     # These fields are optional, as this spec currently covers error responses
     # in addition to successful toolchain queries.
-    # They can change to being required once the "standard error schema" RFE
-    # is implemented: https://github.com/baytemp/worker/issues/109
+    # They can change to being required once a "standard error schema"
+    # is implemented
 
     redhat_anitya = jsl.DocumentField(
         AnityaResponse,

@@ -75,7 +75,7 @@ at our disposal. The failed task can be automatically rescheduled after
 predefined time period, if it makes sense.
 
 For up2date list of all currently implemented tasks see
-[nodes.yml](https://github.com/baytemp/worker/blob/master/cucoslib/dispatcher/nodes.yml)
+[nodes.yml](https://github.com/fabric8-analytics/fabric8-analytics-worker/blob/master/cucoslib/dispatcher/nodes.yml)
 Selinon configuration file that states all flow nodes available in the system.
 
 ## Utility workers
