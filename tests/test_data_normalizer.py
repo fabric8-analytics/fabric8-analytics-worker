@@ -230,14 +230,14 @@ class TestDataNormalizer(object):
                                        'provided': {'p:p::': '1000'}}}},
          {'dependencies': sorted(['g:a 1.0', 'g2:a2 1.0.3-SNAPSHOT', 'r:r version', 'p:p 1000']),
           'devel_dependencies': sorted(['t:t 0'])}),
-        ({'pom.xml': {'scm_url': 'git@github.com:redhat-developer/Bayesian.git'}},
-         {'code_repository': {'url': 'git@github.com:redhat-developer/Bayesian.git', 'type': 'unknown'}}),
+        ({'pom.xml': {'scm_url': 'git@github.com:fabric8-analytics/fabric8-analytics-worker.git'}},
+         {'code_repository': {'url': 'git@github.com:fabric8-analytics/fabric8-analytics-worker.git', 'type': 'unknown'}}),
         ({'pom.xml': {'licenses': ['ASL 2.0', 'MIT']}},
          {'declared_license': 'ASL 2.0, MIT'}),
         ({'pom.xml': {'description': 'Ich bin ein Bayesianer'}},
          {'description': 'Ich bin ein Bayesianer'}),
-        ({'pom.xml': {'url': 'https://github.com/redhat-developer/Bayesian'}},
-         {'homepage': 'https://github.com/redhat-developer/Bayesian'}),
+        ({'pom.xml': {'url': 'https://github.com/fabric8-analytics/fabric8-analytics-worker'}},
+         {'homepage': 'https://github.com/fabric8-analytics/fabric8-analytics-worker'}),
     ])
     def test_transforming_java_data(self, data, expected):
         transformed_data = self._dataNormalizer._handle_java(data)
