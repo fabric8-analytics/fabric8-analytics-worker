@@ -40,9 +40,8 @@ import requests
 import datetime
 import github
 import random
-import os
+import time
 from collections import OrderedDict
-from selinon import StoragePool
 
 from cucoslib.schemas import SchemaRef
 from cucoslib.base import BaseTask
@@ -72,8 +71,24 @@ class GithubTask(BaseTask):
         return instance
 
     @staticmethod
-    def _get_last_years_commits(repo):
-        activity = repo.get_stats_commit_activity()
+    def _retry_no_cached(call, sleep_time=2, retry_count=10):
+        """ Deal with cached results from GitHub as PyGitHub does not check this
+
+        https://developer.github.com/v3/repos/statistics/#a-word-about-caching
+        """
+        result = None
+
+        for _ in range(retry_count):
+            result = call()
+            if result:
+                break
+            time.sleep(sleep_time)
+
+        return result
+
+    @classmethod
+    def _get_last_years_commits(cls, repo):
+        activity = cls._retry_no_cached(repo.get_stats_commit_activity)
         if not activity:
             return []
         return [x.total for x in activity]
@@ -91,11 +106,12 @@ class GithubTask(BaseTask):
         items = gh.search_issues(query=query)
         return getattr(items, 'totalCount', -1)
 
-    @staticmethod
-    def _get_repo_stats(repo):
+    @classmethod
+    def _get_repo_stats(cls, repo):
         # len(list()) is workaround for totalCount being None
         # https://github.com/PyGithub/PyGithub/issues/415
-        d = {'contributors_count': len(list(repo.get_contributors()))}
+        contributors = cls._retry_no_cached(repo.get_contributors)
+        d = {'contributors_count': len(list(contributors)) if contributors is not None else 'N/A'}
         for prop in REPO_PROPS:
             d[prop] = repo.raw_data.get(prop, -1)
         return d
