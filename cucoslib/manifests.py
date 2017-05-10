@@ -58,7 +58,12 @@ def xml_validator(data):
         return False
     return True
 
+def python_validator(data):
+    """Very simple Python requirements.txt validator."""
+    # TODO
+    return True
 
 register_manifest_descriptor(ManifestDescriptor('package.json', 'npm', has_resolved_deps=False, has_recursive_deps=False, validator=json_validator))
 register_manifest_descriptor(ManifestDescriptor('npm-shrinkwrap.json', 'npm', has_resolved_deps=True, has_recursive_deps=True, validator=json_validator))
 register_manifest_descriptor(ManifestDescriptor('pom.xml', 'maven', has_resolved_deps=True, has_recursive_deps=False, validator=xml_validator))
+register_manifest_descriptor(ManifestDescriptor('requirements.txt', 'pypi', has_resolved_deps=False, has_recursive_deps=False, validator=python_validator))

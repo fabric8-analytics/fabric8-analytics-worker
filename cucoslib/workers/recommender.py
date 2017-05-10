@@ -135,30 +135,31 @@ class GraphDB:
             }
         }
         json_response = self.execute_gremlin_dsl(payload)
-        if json_response is not None:
-            ref_stack_full_components = self.get_response_data(json_response, data_default=[])
-        ref_stk = {}
+        if len(json_response.get("result",[{}]).get("data",[{}])[0].items()) > 0:
+            if json_response is not None:
+                ref_stack_full_components = self.get_response_data(json_response, data_default=[])
+            ref_stk = {}
 
-        # Calculate similarity score of all reference stacks vs. input stack
-        for key, val in ref_stack_matching_components[0].items():
-            if key in ref_stack_full_components[0]:
-                denominator = float(max(ref_stack_full_components[0].get(key), len(list_packages)))
-                ref_stk[key] = float(val) / denominator
-        # Get the name of reference stack with topmost similarity score
-        sname = max(ref_stk.keys(), key=(lambda key: ref_stk[key]))
+            # Calculate similarity score of all reference stacks vs. input stack
+            for key, val in ref_stack_matching_components[0].items():
+                if key in ref_stack_full_components[0]:
+                    ref_stk[key] = float(val) / float(ref_stack_full_components[0].get(key))
 
-        # Get data of reference stack based on sname above
-        str_gremlin = "g.V().has('vertex_label','Stack').has('sname', sname).valueMap(true);"
+            # Get the name of reference stack with topmost similarity score
+            sname = max(ref_stk.keys(), key=(lambda key: ref_stk[key]))
 
-        payload = {
-            'gremlin': str_gremlin,
-            'bindings': {
-                'sname': sname
+            # Get data of reference stack based on sname above
+            str_gremlin = "g.V().has('vertex_label','Stack').has('sname', sname).valueMap(true);"
+
+            payload = {
+                'gremlin': str_gremlin,
+                'bindings': {
+                    'sname': sname
+                }
             }
-        }
-        json_response = self.execute_gremlin_dsl(payload)
-        if json_response is not None:
-            return self.get_response_data(json_response, data_default=[])
+            json_response = self.execute_gremlin_dsl(payload)
+            if json_response is not None:
+                return self.get_response_data(json_response, data_default=[])
 
         return []
 
