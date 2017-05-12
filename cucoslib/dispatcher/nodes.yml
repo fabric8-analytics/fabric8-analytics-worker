@@ -285,6 +285,26 @@
         encryption: 'aws:kms'
         versioned: true
 
+    - name: 'S3MavenIndex'
+      import: 'cucoslib.storages'
+      configuration:
+        aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
+        aws_secret_access_key: 'ZmvMwngonaDK5ymlCd6ptaalDdJsCn3aSSxASPaZ'
+        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-maven-index'
+        region_name: 'us-east-1'
+        encryption: false
+        versioned: false
+
+    - name: 'S3OWASPDepCheck'
+      import: 'cucoslib.storages'
+      configuration:
+        aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
+        aws_secret_access_key: 'ZmvMwngonaDK5ymlCd6ptaalDdJsCn3aSSxASPaZ'
+        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-owasp-dep-check'
+        region_name: 'us-east-1'
+        encryption: false
+        versioned: false
+
     - name: 'S3Readme'
       import: 'cucoslib.storages'
       configuration:
@@ -304,16 +324,6 @@
         region_name: 'us-east-1'
         encryption: false
         versioned: true
-
-    - name: 'S3OWASPDepCheck'
-      import: 'cucoslib.storages'
-      configuration:
-        aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
-        aws_secret_access_key: 'ZmvMwngonaDK5ymlCd6ptaalDdJsCn3aSSxASPaZ'
-        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-owasp-dep-check'
-        region_name: 'us-east-1'
-        encryption: false
-        versioned: false
 
   global:
     # trace using Python's logging for now
