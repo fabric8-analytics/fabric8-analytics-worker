@@ -133,7 +133,7 @@ class Archive(object):
 
     @staticmethod
     def zip_file(file, archive, junk_paths=False):
-        command = ['zip', archive, file]
+        command = ['zip', '-r', archive, file]
         if junk_paths:
             # Store just the name of a saved file (junk the path), not directory names.
             # By default, zip will store the full path (relative to the current directory).
@@ -141,7 +141,12 @@ class Archive(object):
         TimedCommand.get_command_output(command)
 
     @staticmethod
-    def extract_zip(target, dest):
+    def extract_zip(target, dest, mkdest=False):
+        if mkdest:
+            try:
+                os.mkdir(dest, mode=0o775)
+            except FileExistsError:
+                pass
         # -o: overwrite existing files without prompting
         TimedCommand.get_command_output(['unzip', '-o', '-d', dest, target])
         # Fix possibly wrong permissions in zip files that would prevent us from deleting files.
