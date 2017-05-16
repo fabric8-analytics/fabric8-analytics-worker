@@ -172,6 +172,7 @@ objects:
     test: false
     triggers:
     - type: ConfigChange
+    replicas: 1
 
 parameters:
 - description: Worker region for serving tasks - api or ingestion
