@@ -154,15 +154,15 @@ objects:
           readinessProbe:
             exec:
               command: ["worker-readiness.sh"]
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            timeoutSeconds: 5
+            initialDelaySeconds: 20
+            periodSeconds: 60
+            timeoutSeconds: 30
           livenessProbe:
             exec:
               command: ["worker-liveness.sh"]
             initialDelaySeconds: 20
             periodSeconds: 60
-            timeoutSeconds: 5
+            timeoutSeconds: 30
           resources:
             requests:
               memory: "512Mi"
