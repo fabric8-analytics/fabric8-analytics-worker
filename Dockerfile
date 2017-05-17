@@ -85,18 +85,18 @@ WORKDIR ${HOME}
 
 # You don't want to repeat all the above when changing something in repo
 # while it's okay to rerun this \/
-RUN mkdir -p /tmp/cucoslib
+RUN mkdir -p /tmp/f8a_worker
 
-COPY requirements.txt /tmp/cucoslib
-RUN cd /tmp/cucoslib && \
+COPY requirements.txt /tmp/f8a_worker
+RUN cd /tmp/f8a_worker && \
     pip3 install -r requirements.txt
 
 COPY alembic.ini hack/run-db-migrations.sh ${ALEMBIC_DIR}/
 COPY alembic/ ${ALEMBIC_DIR}/alembic
 
-# Install cucoslib
-COPY ./ /tmp/cucoslib
-RUN cd /tmp/cucoslib && pip3 install .
+# Install f8a_worker
+COPY ./ /tmp/f8a_worker
+RUN cd /tmp/f8a_worker && pip3 install .
 
 # Make sure there are no root-owned files and directories in the home directory,
 # as this directory can be used by non-root user at runtime.

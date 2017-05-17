@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from cucoslib.schemas import (SchemaRef, SchemaLibrary,
+from f8a_worker.schemas import (SchemaRef, SchemaLibrary,
                               BundledSchemaLibrary,
                               BundledDynamicSchemaLibrary,
                               SchemaLookupError,

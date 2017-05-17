@@ -2,9 +2,9 @@ import pytest
 
 import datetime
 import flexmock
-from cucoslib.enums import EcosystemBackend
-from cucoslib.models import Analysis, Ecosystem, Package, Version
-from cucoslib.solver import Dependency, NpmDependencyParser,\
+from f8a_worker.enums import EcosystemBackend
+from f8a_worker.models import Analysis, Ecosystem, Package, Version
+from f8a_worker.solver import Dependency, NpmDependencyParser,\
     get_ecosystem_solver, CucosReleasesFetcher, NpmReleasesFetcher
 
 

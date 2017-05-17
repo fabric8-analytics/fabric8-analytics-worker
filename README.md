@@ -14,7 +14,7 @@ The following libraries are provided:
   * One-to-many dictionary
   * Shell command wrapper with timeout support
 
-See ./cucoslib/workers/README.md for a listing of the concrete services.  
+See ./f8a_worker/workers/README.md for a listing of the concrete services.  
 
 ## Contributing
 

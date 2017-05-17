@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import pytest
-import cucoslib.workers.downstream
-import cucoslib.utils
-from cucoslib.workers import DownstreamUsageTask
-from cucoslib.enums import EcosystemBackend
-from cucoslib.models import Ecosystem
+import f8a_worker.workers.downstream
+import f8a_worker.utils
+from f8a_worker.workers import DownstreamUsageTask
+from f8a_worker.enums import EcosystemBackend
+from f8a_worker.models import Ecosystem
 from requests import Response
 import json, os
 
@@ -78,11 +78,11 @@ class TestDownstreamUsage(object):
     def test_execute_no_anitya(self, rdb, ecosystem, project, package, version, monkeypatch):
         rdb.add(_make_ecosystem(ecosystem))
         rdb.commit()
-        monkeypatch.setattr(cucoslib.workers.downstream,
+        monkeypatch.setattr(f8a_worker.workers.downstream,
                             "TimedCommand",
                             _make_brew_command([]))
         # ensure we return None for digests
-        monkeypatch.setattr(cucoslib.workers.downstream.DownstreamUsageTask,
+        monkeypatch.setattr(f8a_worker.workers.downstream.DownstreamUsageTask,
                             "parent_task_result",
                             lambda x, y: None)
         task = DownstreamUsageTask.create_test_instance(task_name='redhat_downstream')
@@ -119,7 +119,7 @@ class TestDownstreamUsage(object):
             }
             result._content = json.dumps(dummy_data).encode(result.encoding)
             return result
-        monkeypatch.setattr(cucoslib.workers.downstream,
+        monkeypatch.setattr(f8a_worker.workers.downstream,
                             "_query_anitya_url",
                             _query_anitya_url)
 
@@ -143,7 +143,7 @@ class TestDownstreamUsage(object):
                 'filename': dummy_srpm_names[1],
             },
         ]
-        monkeypatch.setattr(cucoslib.workers.downstream,
+        monkeypatch.setattr(f8a_worker.workers.downstream,
                             "TimedCommand",
                             _make_brew_command(dummy_srpm_details))
         # Mock the attempted access to Pulp (these are not real product names)
@@ -159,11 +159,11 @@ class TestDownstreamUsage(object):
                 "rhsm_content_sets": ["rhsm-rhel-7"],
             },
         }
-        monkeypatch.setattr(cucoslib.workers.downstream,
+        monkeypatch.setattr(f8a_worker.workers.downstream,
                             "Pulp",
                             _make_pulp_client(dummy_usage_details))
         # ensure we return None for digests
-        monkeypatch.setattr(cucoslib.workers.downstream.DownstreamUsageTask,
+        monkeypatch.setattr(f8a_worker.workers.downstream.DownstreamUsageTask,
                             "parent_task_result",
                             lambda x, y: None)
 

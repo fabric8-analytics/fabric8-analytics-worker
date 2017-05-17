@@ -5,11 +5,11 @@ import pytest
 import selinon
 from sqlalchemy.exc import IntegrityError
 
-from cucoslib.conf import get_postgres_connection_string
-from cucoslib.enums import EcosystemBackend
-from cucoslib.models import (Ecosystem, Package, Version, Analysis, WorkerResult,
+from f8a_worker.conf import get_postgres_connection_string
+from f8a_worker.enums import EcosystemBackend
+from f8a_worker.models import (Ecosystem, Package, Version, Analysis, WorkerResult,
                              create_db_scoped_session)
-from cucoslib.storages.postgres import BayesianPostgres
+from f8a_worker.storages.postgres import BayesianPostgres
 
 from ..conftest import rdb
 

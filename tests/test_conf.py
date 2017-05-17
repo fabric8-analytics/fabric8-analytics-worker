@@ -1,7 +1,7 @@
 import os
 
-from cucoslib import defaultconf
-from cucoslib.conf import get_configuration, CucosConfiguration, merge_dicts, ObjectBackend, \
+from f8a_worker import defaultconf
+from f8a_worker.conf import get_configuration, CucosConfiguration, merge_dicts, ObjectBackend, \
     FileBackend
 
 

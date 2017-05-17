@@ -1,9 +1,9 @@
 import pytest
 from flexmock import flexmock
 
-from cucoslib.models import Base, create_db_scoped_session
-from cucoslib.setup_celery import get_dispatcher_config_files
-from cucoslib.storages import AmazonS3
+from f8a_worker.models import Base, create_db_scoped_session
+from f8a_worker.setup_celery import get_dispatcher_config_files
+from f8a_worker.storages import AmazonS3
 from selinon import Config
 
 
@@ -17,7 +17,7 @@ def rdb():
     # NOTE: this also drops any data created by fixtures (e.g. builtin ecosystems),
     #   so if you want to use these, create them by hand before running your tests
     # We can't use Base.metadata.drop_all(bind=session.bind), since they may be tables from
-    #   e.g. bayesian server, that reference cucoslib tables and will prevent dropping them
+    #   e.g. bayesian server, that reference f8a_worker tables and will prevent dropping them
     tables = session.bind.table_names()
     for t in tables:
         session.execute('drop table if exists "{t}" cascade'.format(t=t))

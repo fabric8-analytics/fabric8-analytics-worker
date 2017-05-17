@@ -3,8 +3,8 @@ MAINTAINER Tomas Tomecek <ttomecek@redhat.com>
 
 ENV PYTHONDONTWRITEBYTECODE 1
 
-COPY . /cucoslib
-WORKDIR /cucoslib
+COPY . /f8a_worker
+WORKDIR /f8a_worker
 RUN cd tests && pip3 install -r ./requirements.txt
 
 # Install cucos-license-check prerelease if present in lib dir

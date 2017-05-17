@@ -1,6 +1,6 @@
 import pytest
 
-from cucoslib.workers import CVEcheckerTask
+from f8a_worker.workers import CVEcheckerTask
 
 
 @pytest.mark.usefixtures("dispatcher_setup")

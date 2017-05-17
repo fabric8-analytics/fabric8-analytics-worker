@@ -4,12 +4,12 @@ import pytest
 from flexmock import flexmock
 
 import pytest
-from cucoslib.object_cache import EPVCache
-from cucoslib.enums import EcosystemBackend
-from cucoslib.models import Ecosystem
-from cucoslib.workers import DigesterTask
-from cucoslib.process import IndianaJones
-from cucoslib.utils import compute_digest
+from f8a_worker.object_cache import EPVCache
+from f8a_worker.enums import EcosystemBackend
+from f8a_worker.models import Ecosystem
+from f8a_worker.workers import DigesterTask
+from f8a_worker.process import IndianaJones
+from f8a_worker.utils import compute_digest
 
 PYPI_MODULE_NAME = "six"
 PYPI_MODULE_VERSION = "1.0.0"
