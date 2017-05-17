@@ -5,7 +5,7 @@ import flexmock
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.models import Analysis, Ecosystem, Package, Version
 from f8a_worker.solver import Dependency, NpmDependencyParser,\
-    get_ecosystem_solver, CucosReleasesFetcher, NpmReleasesFetcher
+    get_ecosystem_solver, F8aReleasesFetcher, NpmReleasesFetcher
 
 
 @pytest.fixture
@@ -175,7 +175,7 @@ class TestSolver(object):
             rdb.add(analysis)
             rdb.commit()
 
-        f = CucosReleasesFetcher(npm, rdb)
+        f = F8aReleasesFetcher(npm, rdb)
 
         r = f.fetch_releases('f8a')[1]
 

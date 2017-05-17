@@ -12,7 +12,7 @@ configuration = get_configuration()
 
 It reads configuration from various backends and merges it into a single object (nested dict). You
 can check the structure in `f8a_worker.defaultconf`. Configuration is read in following order, where
-latter overwrites former (see CucosConfiguration._default_backends):
+latter overwrites former (see F8aConfiguration._default_backends):
 
  1. default configuration read from `f8a_worker.defaultconf`
  2. configuration read from /etc/f8a.yaml
@@ -26,7 +26,7 @@ This nested dict is referred in comments as merged configuration.
 
 Values can be retrieved via `configuration.value` where value is the name specified as
 key in `add_configuration_entry`; you may also define convenience aliases for these dynamic lookups,
-check bottom of CucosConfiguration
+check bottom of F8aConfiguration
 
 """
 
@@ -98,7 +98,7 @@ class Configuration(object):
     @property
     def data(self):
         """
-        this is lazy evaluator; so we don't have to call some method in CucosConfiguration
+        this is lazy evaluator; so we don't have to call some method in F8aConfiguration
         """
         if self._data is None:
             self._data = {}
@@ -271,7 +271,7 @@ def get_postgres_connection_string(url_encoded_password=True):
            'sslmode=disable'.format(**postgres_env)
 
 
-class CucosConfiguration(Configuration):
+class F8aConfiguration(Configuration):
     """
     f8a-specific configuration
     """
@@ -288,7 +288,7 @@ class CucosConfiguration(Configuration):
         else:
             self.backends = backends
 
-        super(CucosConfiguration, self).__init__(self.backends)
+        super(F8aConfiguration, self).__init__(self.backends)
 
         self.add_configuration_entry(
             "postgres_connection", ["postgres", "connection_string"], env_var_name="CCS_POSTGRES")
@@ -363,10 +363,10 @@ def get_configuration(configuration_override=None):
     """
     :param configuration_override: dict, overrides configuration of all backends; if set,
                                    configuration is reinitialized
-    :return: instance of CucosConfiguration
+    :return: instance of F8aConfiguration
     """
     global configuration
     if configuration_override is not None or configuration is None:
-        configuration = CucosConfiguration(configuration_override=configuration_override)
-        logger.debug("creating new instance of CucosConfiguration: %s", id(configuration))
+        configuration = F8aConfiguration(configuration_override=configuration_override)
+        logger.debug("creating new instance of F8aConfiguration: %s", id(configuration))
     return configuration

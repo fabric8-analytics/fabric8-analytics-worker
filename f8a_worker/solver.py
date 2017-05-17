@@ -225,9 +225,9 @@ class RubyGemsReleasesFetcher(ReleasesFetcher):
         return package, [ver['number'] for ver in r.json()]
 
 
-class CucosReleasesFetcher(ReleasesFetcher):
+class F8aReleasesFetcher(ReleasesFetcher):
     def __init__(self, ecosystem, database):
-        super(CucosReleasesFetcher, self).__init__(ecosystem)
+        super(F8aReleasesFetcher, self).__init__(ecosystem)
         self.database = database
 
     def fetch_releases(self, package):
