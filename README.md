@@ -1,8 +1,6 @@
 Fabric8-Analytics Core library and services
 -------------------------------------------
 
-*Note on naming: The Fabric8-Analytics project has evolved from 2 different projects called "f8a" and "bayesian". We're currently in process of renaming the modules and updating documentation. Until that is completed, please consider "f8a" and "bayesian" to be synonyms of "Fabric8-Analytics".*
-
 This library provides basic infrastructure for development of services and concrete implemementation of services. 
 
 The following libraries are provided:
