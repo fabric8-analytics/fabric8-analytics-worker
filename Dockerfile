@@ -6,7 +6,7 @@ ENV LANG=en_US.UTF-8 \
     JAVANCSS_PATH='/opt/javancss/' \
     OWASP_DEP_CHECK_PATH='/opt/dependency-check/' \
     # place where to download & unpack artifacts
-    WORKER_DATA_DIR='/var/lib/cucos-lib/worker_data' \
+    WORKER_DATA_DIR='/var/lib/f8a-lib/worker_data' \
     # home directory
     HOME='/workdir' \
     # place for alembic migrations

@@ -1,5 +1,5 @@
 """
-configuration module for cucos
+configuration module for f8a
 
 # usage
 
@@ -15,7 +15,7 @@ can check the structure in `f8a_worker.defaultconf`. Configuration is read in fo
 latter overwrites former (see CucosConfiguration._default_backends):
 
  1. default configuration read from `f8a_worker.defaultconf`
- 2. configuration read from /etc/cucos.yaml
+ 2. configuration read from /etc/f8a.yaml
  3. environment variables
  4. dict passed to `get_configuration` which is able to override everything
 
@@ -273,7 +273,7 @@ def get_postgres_connection_string(url_encoded_password=True):
 
 class CucosConfiguration(Configuration):
     """
-    cucos-specific configuration
+    f8a-specific configuration
     """
 
     def __init__(self, backends=None, configuration_override=None):
@@ -343,7 +343,7 @@ class CucosConfiguration(Configuration):
         :param configuration_override: dict, overrides configuration of all backends
         :return: list of ConfigurationBackend instances
         """
-        config_path = os.getenv("CCS_CONFIG_PATH", "/etc/cucos.yaml")
+        config_path = os.getenv("CCS_CONFIG_PATH", "/etc/f8a.yaml")
         secrets_path = os.getenv("CCS_SECRETS_PATH", "/var/lib/secrets/secrets.yaml")
         return [
             ObjectBackend(defaultconf.data),

@@ -26,7 +26,7 @@ def test_configuration_is_a_singleton():
 def test_get_postgres_conn():
     c = CucosConfiguration(backends=[
         ObjectBackend(defaultconf.data),
-        FileBackend(path="/etc/cucos.json", graceful=True),
+        FileBackend(path="/etc/f8a.json", graceful=True),
     ])
     assert c.postgres_connection == "postgres://coreapi:coreapi@localhost:5432/coreapi"
 

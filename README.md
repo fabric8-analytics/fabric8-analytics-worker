@@ -1,7 +1,7 @@
 Fabric8-Analytics Core library and services
 -------------------------------------------
 
-*Note on naming: The Fabric8-Analytics project has evolved from 2 different projects called "cucos" and "bayesian". We're currently in process of renaming the modules and updating documentation. Until that is completed, please consider "cucos" and "bayesian" to be synonyms of "Fabric8-Analytics".*
+*Note on naming: The Fabric8-Analytics project has evolved from 2 different projects called "f8a" and "bayesian". We're currently in process of renaming the modules and updating documentation. Until that is completed, please consider "f8a" and "bayesian" to be synonyms of "Fabric8-Analytics".*
 
 This library provides basic infrastructure for development of services and concrete implemementation of services. 
 
@@ -61,28 +61,28 @@ spurious test failures.
 Test cases marked with `pytest.mark.offline` may be executed without having a
 Docker daemon running locally.
 
-To configure a virtualenv (called `cucos-worker` in the example) to run these
+To configure a virtualenv (called `f8a-worker` in the example) to run these
 tests:
 ```shell
-(cucos-worker) $ python -m pip install -r requirements.txt
-(cucos-worker) $ python -m pip install -r tests/requirements.txt
+(f8a-worker) $ python -m pip install -r requirements.txt
+(f8a-worker) $ python -m pip install -r tests/requirements.txt
 ```
 
 The marked offline tests can then be run as:
 ```shell
-(cucos-worker) $ py.test -m offline tests/
+(f8a-worker) $ py.test -m offline tests/
 ```
 
 If the Docker container based tests have been run, then this may complain
 about mismatched locations in compiled files. Those can be deleted using:
 ```shell
-(cucos-worker) $ sudo find -name *.pyc -delete
+(f8a-worker) $ sudo find -name *.pyc -delete
 ```
 
 # Testing against not-yet-released worker dependencies
 
 The `Dockerfile.tests` file is set up to install any
-`cucos-license-check-unreleased.rpm` file stored locally in this directory.
+`f8a-license-check-unreleased.rpm` file stored locally in this directory.
 In combination with the `license-check-worker/make_rpm.sh` script in the
 data-mining-tools repo, this feature can be used to run the worker tests
-against a version of `cucos-license-check` that is not yet released.
+against a version of `f8a-license-check` that is not yet released.

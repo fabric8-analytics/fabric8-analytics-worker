@@ -159,9 +159,9 @@ class TestSolver(object):
 
         assert len(out) == len(deps)
 
-    def test_cucos_fetcher(self, rdb, npm):
+    def test_f8a_fetcher(self, rdb, npm):
         # create initial dataset
-        package = Package(ecosystem=npm, name='cucos')
+        package = Package(ecosystem=npm, name='f8a')
         rdb.add(package)
         rdb.commit()
         versions = {'0.5.0', '0.5.1', '0.6.0', '0.6.4', '0.7.0', '0.8.0', '0.9.0', '1.0.0', '1.0.5'}
@@ -177,7 +177,7 @@ class TestSolver(object):
 
         f = CucosReleasesFetcher(npm, rdb)
 
-        r = f.fetch_releases('cucos')[1]
+        r = f.fetch_releases('f8a')[1]
 
         # make sure we fetched the same stuff we inserted
         assert set(r) == versions
@@ -187,11 +187,11 @@ class TestSolver(object):
 
         # try different dependency specs
         s = get_ecosystem_solver(npm, f)
-        assert s.solve(['cucos ^0.5.0'])['cucos'] == '0.5.1'
-        assert s.solve(['cucos 0.x.x'])['cucos'] == '0.9.0'
-        assert s.solve(['cucos >1.0.0'])['cucos'] == '1.0.5'
-        assert s.solve(['cucos ~>0.6.0'])['cucos'] == '0.6.4'
+        assert s.solve(['f8a ^0.5.0'])['f8a'] == '0.5.1'
+        assert s.solve(['f8a 0.x.x'])['f8a'] == '0.9.0'
+        assert s.solve(['f8a >1.0.0'])['f8a'] == '1.0.5'
+        assert s.solve(['f8a ~>0.6.0'])['f8a'] == '0.6.4'
 
         # check that with `all_versions` we return all the relevant ones
-        assert set(s.solve(['cucos >=0.6.0'], all_versions=True)['cucos']) == \
+        assert set(s.solve(['f8a >=0.6.0'], all_versions=True)['f8a']) == \
             (versions - {'0.5.0', '0.5.1'})

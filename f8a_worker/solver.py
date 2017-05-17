@@ -232,7 +232,7 @@ class CucosReleasesFetcher(ReleasesFetcher):
 
     def fetch_releases(self, package):
         """
-        Fetch analysed versions for specific ecosystem + package from cucos
+        Fetch analysed versions for specific ecosystem + package from f8a
         """
         query = self.database.query(Version).\
             join(Analysis).join(Package).join(Ecosystem).\

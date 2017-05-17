@@ -4,7 +4,7 @@
 def commitId
 node('docker') {
 
-    def image = docker.image('bayesian/cucos-worker')
+    def image = docker.image('bayesian/f8a-worker')
 
     stage('Checkout') {
         checkout scm
@@ -18,7 +18,7 @@ node('docker') {
         dockerCleanup()
         docker.build(image.id, '--pull --no-cache .')
         sh "docker tag ${image.id} docker-registry.usersys.redhat.com/${image.id}"
-        docker.build('cucos-lib-tests', '-f Dockerfile.tests .')
+        docker.build('f8a-lib-tests', '-f Dockerfile.tests .')
     }
 
     stage('Tests') {
