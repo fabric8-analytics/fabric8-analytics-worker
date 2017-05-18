@@ -1,10 +1,10 @@
 import pytest
 from flexmock import flexmock
-from cucoslib.object_cache import EPVCache
-from cucoslib.enums import EcosystemBackend
-from cucoslib.models import Ecosystem
-from cucoslib.process import IndianaJones
-from cucoslib.workers.mercator import MercatorTask
+from f8a_worker.object_cache import EPVCache
+from f8a_worker.enums import EcosystemBackend
+from f8a_worker.models import Ecosystem
+from f8a_worker.process import IndianaJones
+from f8a_worker.workers.mercator import MercatorTask
 
 
 def compare_dictionaries(a, b):

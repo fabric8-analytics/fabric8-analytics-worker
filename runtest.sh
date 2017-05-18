@@ -16,7 +16,7 @@ CONTAINER_NAME="lib-tests-${TIMESTAMP}"
 # we don't want to wipe local "database" container, so we create a custom one just for tests
 TESTDB_CONTAINER_NAME="lib-tests-db-${TIMESTAMP}"
 IMAGE_NAME="docker-registry.usersys.redhat.com/bayesian/cucos-worker"
-TEST_IMAGE_NAME="cucos-lib-tests"
+TEST_IMAGE_NAME="f8a-lib-tests"
 POSTGRES_IMAGE_NAME="registry.centos.org/sclo/postgresql-94-centos7:latest"
 
 gc() {
@@ -73,7 +73,7 @@ fi
 
 echo "Starting test suite"
 docker run -t \
-  -v "${here}:/cucoslib:ro,Z" \
+  -v "${here}:/f8a_worker:ro,Z" \
   ${secrets_vol:-} \
   --link=${TESTDB_CONTAINER_NAME} \
   -e PGBOUNCER_SERVICE_HOST=$TESTDB_CONTAINER_NAME \

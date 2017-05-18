@@ -18,7 +18,7 @@ node('docker') {
         dockerCleanup()
         docker.build(image.id, '--pull --no-cache .')
         sh "docker tag ${image.id} docker-registry.usersys.redhat.com/${image.id}"
-        docker.build('cucos-lib-tests', '-f Dockerfile.tests .')
+        docker.build('f8a-lib-tests', '-f Dockerfile.tests .')
     }
 
     stage('Tests') {

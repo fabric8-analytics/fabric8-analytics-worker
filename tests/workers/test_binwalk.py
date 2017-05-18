@@ -3,8 +3,8 @@
 import os
 import pytest
 from flexmock import flexmock
-from cucoslib.object_cache import EPVCache
-from cucoslib.workers import BinwalkTask
+from f8a_worker.object_cache import EPVCache
+from f8a_worker.workers import BinwalkTask
 
 
 def is_executable(fpath):

@@ -13,12 +13,12 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 Base = declarative_base()
 
-from cucoslib.conf import get_configuration, get_postgres_connection_string
-from cucoslib.enums import EcosystemBackend
-from cucoslib.errors import TaskError
-from cucoslib.models import (Analysis, Ecosystem, Package, Version, create_db_scoped_session)
-from cucoslib import utils # so that we can mock functions from here
-from cucoslib.utils import (get_all_files_from,
+from f8a_worker.conf import get_configuration, get_postgres_connection_string
+from f8a_worker.enums import EcosystemBackend
+from f8a_worker.errors import TaskError
+from f8a_worker.models import (Analysis, Ecosystem, Package, Version, create_db_scoped_session)
+from f8a_worker import utils # so that we can mock functions from here
+from f8a_worker.utils import (get_all_files_from,
                             hidden_path_filter,
                             skip_git_files,
                             ThreadPool,

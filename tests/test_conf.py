@@ -1,12 +1,12 @@
 import os
 
-from cucoslib import defaultconf
-from cucoslib.conf import get_configuration, CucosConfiguration, merge_dicts, ObjectBackend, \
+from f8a_worker import defaultconf
+from f8a_worker.conf import get_configuration, F8aConfiguration, merge_dicts, ObjectBackend, \
     FileBackend
 
 
 def test_get_value_with_override():
-    c = CucosConfiguration(configuration_override={"asd": "qwe"})
+    c = F8aConfiguration(configuration_override={"asd": "qwe"})
     assert c.get(["asd"]) == "qwe"
 
 
@@ -24,15 +24,15 @@ def test_configuration_is_a_singleton():
 
 
 def test_get_postgres_conn():
-    c = CucosConfiguration(backends=[
+    c = F8aConfiguration(backends=[
         ObjectBackend(defaultconf.data),
-        FileBackend(path="/etc/cucos.json", graceful=True),
+        FileBackend(path="/etc/f8a.json", graceful=True),
     ])
     assert c.postgres_connection == "postgres://coreapi:coreapi@localhost:5432/coreapi"
 
 
 def test_npm_changes_url():
-    c = CucosConfiguration()
+    c = F8aConfiguration()
     assert c.npmjs_changes_url == \
         "https://skimdb.npmjs.com/registry/_changes?descending=true&include_docs=true&feed=continuous"
 
@@ -40,13 +40,13 @@ def test_npm_changes_url():
 def test_get_postgres_conn_with_environ_override():
     backup = os.environ["CCS_POSTGRES"]
     os.environ["CCS_POSTGRES"] = "something"
-    c = CucosConfiguration()
+    c = F8aConfiguration()
     assert c.postgres_connection == "something"
     os.environ["CCS_POSTGRES"] = backup
 
 
 def test_worker_data_dir_is_unset():
-    c = CucosConfiguration(backends=[
+    c = F8aConfiguration(backends=[
         ObjectBackend(defaultconf.data),
     ])
     assert c.worker_data_dir is None
@@ -54,7 +54,7 @@ def test_worker_data_dir_is_unset():
 
 def test_file_config():
     config_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "data", "config.yaml"))
-    c = CucosConfiguration(backends=[
+    c = F8aConfiguration(backends=[
         ObjectBackend({"test": "value2"}),
         FileBackend(config_path),
         ObjectBackend(defaultconf.data),
