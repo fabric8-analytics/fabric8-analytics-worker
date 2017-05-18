@@ -15,7 +15,7 @@ TIMESTAMP="$(date +%F-%H-%M-%S)"
 CONTAINER_NAME="lib-tests-${TIMESTAMP}"
 # we don't want to wipe local "database" container, so we create a custom one just for tests
 TESTDB_CONTAINER_NAME="lib-tests-db-${TIMESTAMP}"
-IMAGE_NAME="docker-registry.usersys.redhat.com/bayesian/f8a-worker"
+IMAGE_NAME="docker-registry.usersys.redhat.com/bayesian/cucos-worker"
 TEST_IMAGE_NAME="f8a-lib-tests"
 POSTGRES_IMAGE_NAME="registry.centos.org/sclo/postgresql-94-centos7:latest"
 
@@ -34,7 +34,7 @@ trap gc EXIT SIGINT
 if [ "$REBUILD" == "1" ] || \
      !(docker inspect $IMAGE_NAME > /dev/null 2>&1); then
   echo "Building $IMAGE_NAME for testing"
-  docker build -t docker-registry.usersys.redhat.com/bayesian/f8a-worker .
+  docker build -t docker-registry.usersys.redhat.com/bayesian/cucos-worker .
 fi
 
 if [ "$REBUILD" == "1" ] || \

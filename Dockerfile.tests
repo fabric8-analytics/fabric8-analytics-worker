@@ -1,4 +1,4 @@
-FROM docker-registry.usersys.redhat.com/bayesian/f8a-worker
+FROM docker-registry.usersys.redhat.com/bayesian/cucos-worker
 MAINTAINER Tomas Tomecek <ttomecek@redhat.com>
 
 ENV PYTHONDONTWRITEBYTECODE 1

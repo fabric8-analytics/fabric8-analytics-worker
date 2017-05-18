@@ -4,7 +4,7 @@
 def commitId
 node('docker') {
 
-    def image = docker.image('bayesian/f8a-worker')
+    def image = docker.image('bayesian/cucos-worker')
 
     stage('Checkout') {
         checkout scm
