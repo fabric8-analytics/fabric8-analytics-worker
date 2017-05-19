@@ -145,7 +145,7 @@ class PypiReleasesFetcher(ReleasesFetcher):
             # if nothing was found then do case-insensitive search
             return self.fetch_releases(self._search_package_name(package))
 
-        return package, releases
+        return package.lower(), releases
 
 
 class NpmReleasesFetcher(ReleasesFetcher):
