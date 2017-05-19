@@ -44,7 +44,7 @@ COPY hack/pip-requirements.txt /tmp/install_deps/
 # Fixes: http://stackoverflow.com/questions/14296531
 RUN pip3 install --upgrade pip && pip install --upgrade wheel && \
     pip3 install -r /tmp/install_deps/pip-requirements.txt && \
-    pip3 install alembic psycopg2
+    pip3 install alembic psycopg2 git+git://github.com/msrb/kombu@sqs-conn#egg=kombu
 
 # Install github-linguist rubygem
 RUN gem install --no-document github-linguist -v 5.0.2
