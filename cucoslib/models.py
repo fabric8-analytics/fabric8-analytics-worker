@@ -71,7 +71,7 @@ class Ecosystem(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(255), unique=True)
-    url = Column(String(255))
+    url = Column(String(255), index=True)
     fetch_url = Column(String(255))
     _backend = Column(Enum(*[b.name for b in EcosystemBackend], name='ecosystem_backend_enum'))
 
@@ -100,7 +100,7 @@ class Package(Base):
 
     id = Column(Integer, primary_key=True)
     ecosystem_id = Column(Integer, ForeignKey(Ecosystem.id))
-    name = Column(String(255))
+    name = Column(String(255), index=True)
 
     ecosystem = relationship(Ecosystem, back_populates='packages', lazy='joined')
     versions = relationship('Version', back_populates='package')
@@ -117,7 +117,7 @@ class Version(Base):
 
     id = Column(Integer, primary_key=True)
     package_id = Column(Integer, ForeignKey(Package.id))
-    identifier = Column(String(255))
+    identifier = Column(String(255), index=True)
 
     package = relationship(Package, back_populates='versions', lazy='joined')
     analyses = relationship('Analysis', back_populates='version')
@@ -213,7 +213,7 @@ class WorkerResult(Base):
     __tablename__ = 'worker_results'
 
     id = Column(Integer, primary_key=True)
-    worker = Column(String(255))
+    worker = Column(String(255), index=True)
     worker_id = Column(String(64), unique=True)
     # `external_request_id` provides mapping of particular `worker_result`
     # to externally defined identifier, when `external_request_id` is provided
