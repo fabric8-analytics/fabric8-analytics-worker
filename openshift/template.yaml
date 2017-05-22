@@ -160,7 +160,7 @@ objects:
           livenessProbe:
             exec:
               command: ["worker-liveness.sh"]
-            initialDelaySeconds: 20
+            initialDelaySeconds: 60
             periodSeconds: 60
             timeoutSeconds: 30
           resources:
@@ -172,7 +172,7 @@ objects:
     test: false
     triggers:
     - type: ConfigChange
-    replicas: 9
+    replicas: $REPLICAS
 
 parameters:
 - description: Worker region for serving tasks - api or ingestion
@@ -204,3 +204,9 @@ parameters:
   required: true
   name: IMAGE_TAG
   value: "latest"  # image-tag
+
+- description: Number of deployment replicas
+  displayName: Number of deployment replicas
+  required: true
+  name: REPLICAS
+  value: 1
