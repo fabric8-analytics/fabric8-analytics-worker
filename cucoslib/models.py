@@ -63,7 +63,6 @@ class BayesianModelMixin(object):
 
 
 Base = declarative_base(cls=BayesianModelMixin)
-# TODO: figure out where to create indexes throughout all models
 
 
 class Ecosystem(Base):
@@ -71,7 +70,7 @@ class Ecosystem(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(255), unique=True)
-    url = Column(String(255), index=True)
+    url = Column(String(255))
     fetch_url = Column(String(255))
     _backend = Column(Enum(*[b.name for b in EcosystemBackend], name='ecosystem_backend_enum'))
 
