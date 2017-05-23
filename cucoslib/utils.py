@@ -643,5 +643,18 @@ def mvn_pkg_to_repo_path(pkg):
     gid, aid = pkg.split(':')
     return "{g}/{a}".format(g=gid.replace('.', '/'), a=aid)
 
+
+def case_sensitivity_transform(ecosystem, name):
+    """Transform package name to lowercase for ecosystem that are not case sensitive.
+    
+    :param ecosystem: name of ecocsystem in which the package is sits
+    :param name: name of ecosystem
+    :return: transformed package name base on ecosystem package case sensitivity
+    """
+    if ecosystem == 'pypi':
+        return name.lower()
+
+    return name
+
 # get not hidden files from current directory
 # print(list(get_all_files_from('.', file_filter=lambda a: not startswith(a, ['.']))))

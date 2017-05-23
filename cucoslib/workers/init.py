@@ -6,7 +6,7 @@ from cucoslib.object_cache import ObjectCache
 from cucoslib.base import BaseTask
 from cucoslib.process import IndianaJones, MavenCoordinates
 from cucoslib.models import Analysis, EcosystemBackend, Ecosystem, Version, Package
-from cucoslib.utils import get_latest_analysis
+from cucoslib.utils import case_sensitivity_transform
 
 
 class InitAnalysisFlow(BaseTask):
@@ -14,6 +14,9 @@ class InitAnalysisFlow(BaseTask):
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))
         self._strict_assert(arguments.get('ecosystem'))
+
+        # make sure we store package name based on ecosystem package naming case sensitivity
+        arguments['name'] = case_sensitivity_transform(arguments['ecosystem'], arguments['name'])
 
         db = self.storage.session
         e = Ecosystem.by_name(db, arguments['ecosystem'])
