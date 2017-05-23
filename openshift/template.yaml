@@ -172,7 +172,7 @@ objects:
     test: false
     triggers:
     - type: ConfigChange
-    replicas: $REPLICAS
+    replicas: ${REPLICAS}
 
 parameters:
 - description: Worker region for serving tasks - api or ingestion
