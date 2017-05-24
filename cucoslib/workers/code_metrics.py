@@ -268,12 +268,9 @@ class CodeMetricsTask(BaseTask):
         :param source_path: path to source codes
         :return: normalized output
         """
-        acc = 'average_cyclomatic_complexity'
-        result = {'files': [], acc: 0}
+        result = {'files': []}
         # we'll compute total average cyclomatic complexity manually based as
         #  <total complexity>/<total number of functions>
-        acc_functions = 0
-        acc_complexity = 0
         command = ['python3', '-m', 'mccabe']
 
         # mccabe has to be run on individual files, doesn't work recursively on directories
@@ -296,14 +293,12 @@ class CodeMetricsTask(BaseTask):
                     f_complexity = functools.reduce(lambda x, y: x + y['complexity'], normalized, 0)
                     f_functions = len(normalized)
                     f_acc = round(f_complexity / f_functions, 1) if f_functions > 0 else 0
-                    acc_complexity += f_complexity
-                    acc_functions += f_functions
-                    result['files'].append(
-                        {'name': os.path.join(root, f)[len(source_path):].strip('/'),
-                         'functions': normalized,
-                         acc: f_acc})
+                    result['files'].append({
+                        'name': os.path.join(root, f)[len(source_path):].strip('/'),
+                        'functions': normalized,
+                        'average_cyclomatic_complexity': f_acc}
+                    )
 
-        result[acc] = round(acc_complexity / acc_functions, 1) if acc_functions > 0 else 0
         return result
 
     # A table that carries functions that should be called based on language that was found by cloc, keys has to match
