@@ -130,7 +130,7 @@ class Analysis(Base):
     __tablename__ = 'analyses'
 
     id = Column(Integer, primary_key=True)
-    version_id = Column(Integer, ForeignKey(Version.id))
+    version_id = Column(Integer, ForeignKey(Version.id), index=True)
     access_count = Column(Integer, default=0)
     started_at = Column(DateTime)
     finished_at = Column(DateTime)
@@ -218,7 +218,7 @@ class WorkerResult(Base):
     # to externally defined identifier, when `external_request_id` is provided
     # the value of `analysis_id` should be `NULL`
     external_request_id = Column(String(64))
-    analysis_id = Column(ForeignKey(Analysis.id))
+    analysis_id = Column(ForeignKey(Analysis.id), index=True)
     task_result = Column(JSONB)
     error = Column(Boolean, nullable=False, default=False)
 
