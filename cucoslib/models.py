@@ -106,6 +106,7 @@ class Package(Base):
 
     @classmethod
     def by_name(cls, session, name):
+        # TODO: this is dangerous at is does not consider Ecosystem
         return cls._by_attrs(session, name=name)
 
 
@@ -235,6 +236,69 @@ class WorkerResult(Base):
     @property
     def version(self):
         return self.analysis.version
+
+
+class Upstream(Base):
+    __tablename__ = "monitored_upstreams"
+
+    id = Column(Integer, primary_key=True)
+    package_id = Column(Integer, ForeignKey(Package.id), index=True)
+    url = Column(String(255), nullable=False)
+    updated_at = Column(DateTime, default=None)
+    added_at = Column(DateTime, nullable=False)
+    deactivated_at = Column(DateTime, nullable=True)
+    active = Column(Boolean, nullable=False, default=True)
+
+    package = relationship(Package)
+
+    @property
+    def ecosystem(self):
+        return self.package.ecosystem
+
+
+class PackageAnalysis(Base):
+    __tablename__ = "package_analyses"
+
+    id = Column(Integer, primary_key=True)
+    package_id = Column(Integer, ForeignKey(Package.id), index=True)
+    started_at = Column(DateTime)
+    finished_at = Column(DateTime)
+
+    package = relationship(Package)
+
+    @property
+    def ecosystem(self):
+        return self.package.ecosystem
+
+    @property
+    def raw_analyses(self):
+        s = Session.object_session(self)
+        if s:
+            return s.query(PackageWorkerResult).filter(PackageWorkerResult.package_analysis_id == self.id)
+        return []
+
+
+class PackageWorkerResult(Base):
+    __tablename__ = "package_worker_results"
+
+    id = Column(Integer, primary_key=True)
+    package_analysis_id = Column(Integer, ForeignKey(PackageAnalysis.id), index=True)
+    # Semantics are same as for WorkerResult
+    worker = Column(String(255), index=True)
+    worker_id = Column(String(64), unique=True)
+    external_request_id = Column(String(64))
+    task_result = Column(JSONB)
+    error = Column(Boolean, nullable=False, default=False)
+
+    package_analysis = relationship(PackageAnalysis)
+
+    @property
+    def ecosystem(self):
+        return self.diagnosis.package.ecosystem
+
+    @property
+    def package(self):
+        return self.diagnosis.package
 
 
 class StackAnalysisRequest(Base):

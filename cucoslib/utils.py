@@ -29,34 +29,6 @@ logger = logging.getLogger(__name__)
 configuration = get_configuration()
 
 
-def get_analysis_by_id(ecosystem, package, version, analysis_id, db_session=None):
-    """Get result of previously scheduled analysis for given EPV triplet by analysis ID
-
-    :param ecosystem: str, Ecosystem name
-    :param package: str, Package name
-    :param version: str, Package version
-    :param analysis_id: str, ID of analysis
-    :param db_session: obj, Database session to use for querying
-    :return: analysis result
-    """
-    if not db_session:
-        storage = StoragePool.get_connected_storage("BayesianPostgres")
-        db_session = storage.session
-
-    if ecosystem == 'maven':
-        package = MavenCoordinates.normalize_str(package)
-
-    found = db_session.query(Analysis).\
-        join(Version).join(Package).join(Ecosystem).\
-        filter(Ecosystem.name == ecosystem).\
-        filter(Package.name == package).\
-        filter(Version.identifier == version).\
-        filter(Analysis.id == analysis_id).\
-        one()
-
-    return found
-
-
 def get_package_dependents_count(ecosystem_backend, package, db_session=None):
     """Get number of GitHub projects dependent on the `package`.
 

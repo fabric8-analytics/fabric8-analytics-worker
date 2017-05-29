@@ -44,7 +44,7 @@
       classname: 'GithubTask'
       import: 'cucoslib.workers'
       max_retry: 0
-      storage: 'BayesianPostgres'
+      storage: 'PackagePostgres'
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GithubTask_v0'
       ## only 1 task per 5 seconds
       #throttle:
@@ -159,6 +159,20 @@
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_FinalizeTaskError_v0'
       storage: 'BayesianPostgres'
       storage_readonly: true
+    - name: 'PackageFinalizeTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_PackageFinalizeTask_v0'
+      storage: 'PackagePostgres'
+      storage_readonly: true
+    - name: 'PackageFinalizeTaskError'
+      # See 'FinalizeTaskError' notes for more info
+      classname: 'PackageFinalizeTask'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_PackageFinalizeTaskError_v0'
+      storage: 'PackagePostgres'
+      storage_readonly: true
     - name: 'GraphAggregatorTask'
       import: 'cucoslib.workers'
       max_retry: 0
@@ -188,6 +202,10 @@
       import: 'cucoslib.workers'
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_ResultCollector_v0'
+    - name: 'PackageResultCollector'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_PackageResultCollector_v0'
     - name: 'BigQueryTask'
       import: 'cucoslib.workers'
       max_retry: 0
@@ -215,6 +233,11 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GitReadmeCollector_v0'
       storage: 'S3Readme'
+    - name: 'InitPackageFlow'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_InitPackageFlow_v0'
+      storage: 'PackagePostgres'
 
   flows:
     - 'bayesianAnalysisFlow'
@@ -227,17 +250,24 @@
     - 'cveCheckFlow'
     - 'graphImportFlow'
     - 'graphApiImportFlow'
+    - 'bayesianPackageFlow'
+    - 'bayesianPackageAnalysisFlow'
 
   storages:
     - name: 'BayesianPostgres'
       import: 'cucoslib.storages'
-      configuration:
+      configuration: &postgresConfiguration
         # take configuration from environment variables
-        connection_string: 'postgres://{POSTGRESQL_USER}:{POSTGRESQL_PASSWORD}@{PGBOUNCER_SERVICE_HOST}:5432/{POSTGRESQL_DATABASE}?sslmode=disable'
+        connection_string: 'postgresql://{POSTGRESQL_USER}:{POSTGRESQL_PASSWORD}@{PGBOUNCER_SERVICE_HOST}:5432/{POSTGRESQL_DATABASE}?sslmode=disable'
+
+    - name: 'PackagePostgres'
+      import: 'cucoslib.storages'
+      configuration:
+        <<: *postgresConfiguration
 
     - name: 'AmazonS3'
       import: 'cucoslib.storages'
-      configuration:
+      configuration: &configurationS3
         aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
         aws_secret_access_key: 'ZmvMwngonaDK5ymlCd6ptaalDdJsCn3aSSxASPaZ'
         bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-unknown'
@@ -248,8 +278,7 @@
     - name: 'S3Artifacts'
       import: 'cucoslib.storages'
       configuration:
-        aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
-        aws_secret_access_key: 'ZmvMwngonaDK5ymlCd6ptaalDdJsCn3aSSxASPaZ'
+        <<: *configurationS3
         bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-artifacts'
         region_name: 'us-east-1'
         encryption: false
@@ -258,8 +287,7 @@
     - name: 'S3BigQuery'
       import: 'cucoslib.storages'
       configuration:
-        aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
-        aws_secret_access_key: 'ZmvMwngonaDK5ymlCd6ptaalDdJsCn3aSSxASPaZ'
+        <<: *configurationS3
         bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-big-query'
         region_name: 'us-east-1'
         encryption: false
@@ -268,9 +296,17 @@
     - name: 'S3Data'
       import: 'cucoslib.storages'
       configuration:
-        aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
-        aws_secret_access_key: 'ZmvMwngonaDK5ymlCd6ptaalDdJsCn3aSSxASPaZ'
+        <<: *configurationS3
         bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-data'
+        region_name: 'us-east-1'
+        encryption: 'aws:kms'
+        versioned: true
+
+    - name: 'S3PackageData'
+      import: 'cucoslib.storages'
+      configuration:
+        <<: *configurationS3
+        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-package-data'
         region_name: 'us-east-1'
         encryption: 'aws:kms'
         versioned: true
@@ -278,8 +314,7 @@
     - name: 'S3Manifests'
       import: 'cucoslib.storages'
       configuration:
-        aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
-        aws_secret_access_key: 'ZmvMwngonaDK5ymlCd6ptaalDdJsCn3aSSxASPaZ'
+        <<: *configurationS3
         bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-manifests'
         region_name: 'us-east-1'
         encryption: 'aws:kms'
@@ -288,8 +323,7 @@
     - name: 'S3MavenIndex'
       import: 'cucoslib.storages'
       configuration:
-        aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
-        aws_secret_access_key: 'ZmvMwngonaDK5ymlCd6ptaalDdJsCn3aSSxASPaZ'
+        <<: *configurationS3
         bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-maven-index'
         region_name: 'us-east-1'
         encryption: false
@@ -298,8 +332,7 @@
     - name: 'S3OWASPDepCheck'
       import: 'cucoslib.storages'
       configuration:
-        aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
-        aws_secret_access_key: 'ZmvMwngonaDK5ymlCd6ptaalDdJsCn3aSSxASPaZ'
+        <<: *configurationS3
         bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-owasp-dep-check'
         region_name: 'us-east-1'
         encryption: false
@@ -308,8 +341,7 @@
     - name: 'S3Readme'
       import: 'cucoslib.storages'
       configuration:
-        aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
-        aws_secret_access_key: 'ZmvMwngonaDK5ymlCd6ptaalDdJsCn3aSSxASPaZ'
+        <<: *configurationS3
         bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-readme'
         region_name: 'us-east-1'
         encryption: false
@@ -318,8 +350,7 @@
     - name: 'S3Snyk'
       import: 'cucoslib.storages'
       configuration:
-        aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
-        aws_secret_access_key: 'ZmvMwngonaDK5ymlCd6ptaalDdJsCn3aSSxASPaZ'
+        <<: *configurationS3
         bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-snyk'
         region_name: 'us-east-1'
         encryption: false
