@@ -22,8 +22,9 @@ sample output:
  'version': '1.6.7.2'}
 """
 
-from json import loads as to_json
 import os
+import tempfile
+import shutil
 
 from cucoslib.enums import EcosystemBackend
 from cucoslib.utils import TimedCommand
@@ -31,6 +32,7 @@ from cucoslib.data_normalizer import DataNormalizer
 from cucoslib.schemas import SchemaRef
 from cucoslib.base import BaseTask
 from cucoslib.object_cache import ObjectCache
+from cucoslib.process import Git
 
 
 # TODO: we need to unify the output from different ecosystems
@@ -145,6 +147,11 @@ class MercatorTask(BaseTask):
     def execute(self, arguments):
         "Execute mercator and convert it's output to JSON object"
         self._strict_assert(arguments.get('ecosystem'))
+
+        if 'git_repo_url' in arguments:
+            # run mercator on a git repo
+            return self.run_mercator_on_git_repo(arguments)
+
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))
 
@@ -156,6 +163,23 @@ class MercatorTask(BaseTask):
         else:
             cache_path = ObjectCache.get_from_dict(arguments).get_extracted_source_tarball()
         return self.run_mercator(arguments, cache_path)
+
+    def run_mercator_on_git_repo(self, arguments):
+        self._strict_assert(arguments.get('git_repo_url'))
+
+        workdir = None
+        try:
+            workdir = tempfile.mkdtemp()
+            repo_url = arguments.get('git_repo_url')
+            Git.clone(repo_url, path=workdir, depth=str(1))
+            metadata = self.run_mercator(arguments, workdir)
+            if metadata.get('status', None) != 'success':
+                self.log.error('Mercator failed on %s', repo_url)
+                return None
+            return metadata
+        finally:
+            if workdir:
+                shutil.rmtree(workdir)
 
     def run_mercator(self, arguments, cache_path):
         result_data = {'status': 'unknown',
