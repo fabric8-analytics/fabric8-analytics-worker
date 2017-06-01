@@ -16,10 +16,6 @@ class S3MavenIndex(AmazonS3):
             Archive.zip_file(central_index_dir, archive_path, junk_paths=True)
             self.store_file(archive_path, self._INDEX_ARCHIVE)
 
-    def store_index_if_not_exists(self, data_dir):
-        if not self.object_exists(self._INDEX_ARCHIVE):
-            self.store_depcheck_db(data_dir)
-
     def retrieve_index_if_exists(self, target_dir):
         """ Retrieve central-index.zip from S3 and extract into target_dir/central-index"""
         if self.object_exists(self._INDEX_ARCHIVE):
