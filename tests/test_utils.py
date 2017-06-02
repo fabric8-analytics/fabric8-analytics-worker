@@ -23,7 +23,6 @@ from cucoslib.utils import (get_all_files_from,
                             skip_git_files,
                             ThreadPool,
                             MavenCoordinates,
-                            mvn_find_latest_version,
                             compute_digest,
                             get_latest_upstream_details,
                             safe_get_latest_version,
@@ -81,12 +80,6 @@ class TestUtilFunctions(object):
             py_files
         assert set(get_all_files_from(test_dir, path_filter=hidden_path_filter)) == \
             set(itertools.chain(py_files, test_files))
-
-    def test_mvn_find_latest_version(self):
-        repo_url = os.path.join(os.path.dirname(__file__), 'data/maven/')
-        a = MavenCoordinates('org.junit', 'junit')
-        latest = mvn_find_latest_version(repo_url, a)
-        assert latest == '4.12'
 
     def test_compute_digest(self):
         assert compute_digest("/etc/os-release")

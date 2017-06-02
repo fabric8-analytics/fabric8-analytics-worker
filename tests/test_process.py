@@ -63,34 +63,6 @@ def test_git_add_and_commit_everything_with_dotgit(tmpdir):
     g.add_and_commit_everything()
 
 
-@pytest.mark.flaky(reruns=5)
-def test_fetch_npm_latest(tmpdir):
-    cache_path = subprocess.check_output(["npm", "config", "get", "cache"], universal_newlines=True).strip()
-    assert ".npm" in cache_path
-    module_cache_path = osp.join(cache_path, NPM_MODULE_NAME)
-
-    # this could go really really bad if npm returns "/"
-    shutil.rmtree(module_cache_path, ignore_errors=True)  # we don't care if it doesn't exist
-
-    npm_url = "https://registry.npmjs.org/{}".format(NPM_MODULE_NAME)
-    response = requests.get(npm_url, json=True)
-    try:
-        assert response.status_code == 200, response.text
-    except AssertionError:
-        # Let's try again, but give the remote service some time to catch a breath
-        time.sleep(1)
-        raise
-    module_json = response.json()
-    latest_version = sorted(module_json["versions"].keys()).pop()
-    IndianaJones.fetch_artifact(npm,
-                                artifact=NPM_MODULE_NAME, target_dir=str(tmpdir))
-    assert len(glob.glob(osp.join(cache_path, NPM_MODULE_NAME, "*"))) == 1,\
-        "there should be just one version of the artifact in the NPM cache"
-
-    assert osp.exists(osp.join(module_cache_path, latest_version))
-    assert osp.exists(osp.join(str(tmpdir), "package.tgz"))
-
-
 @pytest.mark.parametrize("package,version,digest", [
     ("abbrev", "1.0.7", "30f6880e415743312a0021a458dd6d26a7211f803a42f1e4a30ebff44d26b7de"),
     ("abbrev", "1.0.4", "8dc0f480571a4a19e74f1abd4f31f6a70f94953d1ccafa16ed1a544a19a6f3a8")
@@ -112,22 +84,6 @@ def test_fetch_npm_specific(tmpdir, package, version, digest):
     assert osp.exists(osp.join(tmpdir, "package.tgz"))
 
 
-def test_fetch_pypi_latest(tmpdir):
-    # stolen from internets
-    # http://code.activestate.com/recipes/577708-check-for-package-updates-on-pypi-works-best-in-pi/
-
-    pypi_rpc = ServerProxy('https://pypi.python.org/pypi')
-    latest_version = pypi_rpc.package_releases(PYPI_MODULE_NAME)[0]
-
-    IndianaJones.fetch_artifact(pypi,
-                                artifact=PYPI_MODULE_NAME, target_dir=str(tmpdir))
-
-    assert len(os.listdir(str(tmpdir))) > 1
-    glob_whl_path = glob.glob(osp.join(str(tmpdir),
-                                       "{}-{}*".format(PYPI_MODULE_NAME, latest_version))).pop()
-    assert osp.exists(glob_whl_path)
-
-
 def test_fetch_pypi_specific(tmpdir):
     digest, path = IndianaJones.fetch_artifact(
         pypi, artifact=PYPI_MODULE_NAME,
@@ -138,24 +94,6 @@ def test_fetch_pypi_specific(tmpdir):
     glob_whl_path = glob.glob(osp.join(str(tmpdir), "{}-{}*".format(PYPI_MODULE_NAME,
                                                                     PYPI_MODULE_VERSION))).pop()
     assert osp.exists(glob_whl_path)
-
-
-@pytest.mark.flaky(reruns=5)
-def test_fetch_rubygems_latest(tmpdir):
-    rubygems_url = "https://rubygems.org/api/v1/versions/{}/latest.json".format(RUBYGEMS_MODULE_NAME)
-    response = requests.get(rubygems_url, json=True)
-    try:
-        assert response.status_code == 200, response.text
-    except AssertionError:
-        # Let's try again, but give the remote service some time to catch a breath
-        time.sleep(1)
-        raise
-    latest_version = response.json()["version"]
-    IndianaJones.fetch_artifact(rubygems,
-                                artifact=RUBYGEMS_MODULE_NAME, target_dir=str(tmpdir))
-
-    assert osp.exists(osp.join(str(tmpdir), "{}-{}.gem".format(RUBYGEMS_MODULE_NAME,
-                                                               latest_version)))
 
 
 def test_fetch_rubygems_specific(tmpdir):
@@ -179,24 +117,3 @@ def test_fetch_maven_specific(tmpdir):
     assert digest == MAVEN_MODULE_DIGEST
     assert osp.exists(osp.join(str(tmpdir), '{}-{}.jar'.format(artifactId, MAVEN_MODULE_VERSION)))
 
-
-def test_fetch_maven_latest(tmpdir):
-    maven_central_url = 'http://repo1.maven.org/maven2'
-
-    groupId, artifactId = MAVEN_MODULE_NAME.split(':', 1)
-    groupId = groupId.replace('.', '/')
-
-    # get maven-metadata.xml from the repository
-    url_template = '{base}/{group}/{artifact}/maven-metadata.xml'.format(base=maven_central_url,
-                                                                         group=groupId,
-                                                                         artifact=artifactId)
-    meta = etree.parse(url_template)
-
-    # get latest version
-    version = meta.xpath('/metadata/versioning/latest')[0].text
-
-    IndianaJones.fetch_artifact(maven,
-                                artifact=MAVEN_MODULE_NAME,
-                                version=None, target_dir=str(tmpdir))
-
-    assert osp.exists(osp.join(str(tmpdir), '{}-{}.jar'.format(artifactId, version)))

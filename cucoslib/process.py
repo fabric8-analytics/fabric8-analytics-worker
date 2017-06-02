@@ -12,8 +12,7 @@ from urllib.parse import urljoin, urlparse
 
 from cucoslib.conf import get_configuration
 from cucoslib.enums import EcosystemBackend
-from cucoslib.utils import (cwd, TimedCommand, compute_digest,
-                            MavenCoordinates, mvn_find_latest_version)
+from cucoslib.utils import cwd, TimedCommand, compute_digest, MavenCoordinates
 
 logger = logging.getLogger(__name__)
 configuration = get_configuration()
@@ -317,12 +316,12 @@ class IndianaJones(object):
             Archive.extract(artifact_path, target_dir)
             git.add_and_commit_everything()
         elif ecosystem.is_backed_by(EcosystemBackend.maven):
-            git = Git.create_git(target_dir)
             artifact_coords = MavenCoordinates.from_str(artifact)
+            if not version:
+                raise ValueError("No version provided for '%s'" % artifact_coords.to_str())
+            git = Git.create_git(target_dir)
             # lxml can't handle HTTPS URLs
             maven_url = "http://repo1.maven.org/maven2/"
-            if not version:
-                version = mvn_find_latest_version(maven_url, artifact_coords)
             artifact_coords.version = version
             logger.info("downloading maven package %s", artifact_coords.to_str())
 

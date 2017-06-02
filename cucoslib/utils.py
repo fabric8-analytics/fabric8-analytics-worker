@@ -488,26 +488,6 @@ class MavenCoordinates(object):
         return cls(**coordinates)
 
 
-def mvn_find_latest_version(repo_url, coordinates):
-    """
-    Find latest version of given artifact in Maven repository.
-
-    Returns None if the latest version couldn't be determined.
-    """
-    metadata_url = os_path.join(repo_url,
-                                coordinates.groupId.replace('.', '/'),
-                                coordinates.artifactId,
-                                "maven-metadata.xml")
-    try:
-        tree = etree.parse(metadata_url)
-        version = tree.findtext('versioning/release')
-        if version:
-            return version
-    except IOError:
-        pass
-    raise ValueError("Unable to determine artifact version: {a}".format(a=coordinates))
-
-
 def get_latest_upstream_details(ecosystem, package):
     """Returns dict representation of Anitya project"""
     url = configuration.anitya_url + '/api/by_ecosystem/{e}/{p}'.\
