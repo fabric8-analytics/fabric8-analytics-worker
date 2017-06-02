@@ -27,32 +27,32 @@ node('docker') {
         }
     }
 
-    stage('Integration Tests') {
-        ws {
-            docker.withRegistry('https://docker-registry.usersys.redhat.com/') {
-                docker.image('bayesian/bayesian-api').pull()
-                docker.image('bayesian/coreapi-jobs').pull()
-                docker.image('bayesian/coreapi-pgbouncer').pull()
-                docker.image('bayesian/coreapi-downstream-data-import').pull()
-            }
+    //stage('Integration Tests') {
+    //    ws {
+    //        docker.withRegistry('https://docker-registry.usersys.redhat.com/') {
+    //            docker.image('bayesian/bayesian-api').pull()
+    //            docker.image('bayesian/coreapi-jobs').pull()
+    //            docker.image('bayesian/coreapi-pgbouncer').pull()
+    //            docker.image('bayesian/coreapi-downstream-data-import').pull()
+    //        }
 
-            dir('fabric8-analytics-common') {
-                git url: 'https://github.com/fabric8-analytics/fabric8-analytics-common.git', branch: 'master'
-                dir('integration-tests') {
-                    timeout(30) {
-                        sh './runtest.sh'
-                    }
-                }
-            }
-        }
-    }
+    //        dir('fabric8-analytics-common') {
+    //            git url: 'https://github.com/fabric8-analytics/fabric8-analytics-common.git', branch: 'master'
+    //            dir('integration-tests') {
+    //                timeout(30) {
+    //                    sh './runtest.sh'
+    //                }
+    //            }
+    //        }
+    //    }
+    //}
 
     if (env.BRANCH_NAME == 'master') {
         stage('Push Images') {
-            docker.withRegistry('https://docker-registry.usersys.redhat.com/') {
-                image.push('latest')
-                image.push(commitId)
-            }
+            //docker.withRegistry('https://docker-registry.usersys.redhat.com/') {
+            //    image.push('latest')
+            //    image.push(commitId)
+            //}
             docker.withRegistry('https://registry.devshift.net/') {
                 image.push('latest')
                 image.push(commitId)
