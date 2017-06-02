@@ -242,10 +242,10 @@
       import: 'cucoslib.workers'
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GitHubManifestMetadataResultCollector_v0'
-    - name: 'GitHubManifestMetadataInit'
+    - name: 'InitGitHubManifestMetadata'
       import: 'cucoslib.workers'
       max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GitHubManifestMetadataInit_v0'
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_InitGitHubManifestMetadata_v0'
       storage: 'BayesianPostgres'
 
   flows:
@@ -369,6 +369,7 @@
     - name: 'S3GitHubManifestMetadata'
       import: 'cucoslib.storages'
       configuration:
+        #<<: *configurationS3
         aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
         aws_secret_access_key: 'ZmvMwngonaDK5ymlCd6ptaalDdJsCn3aSSxASPaZ'
         bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-github-manifest-metadata'

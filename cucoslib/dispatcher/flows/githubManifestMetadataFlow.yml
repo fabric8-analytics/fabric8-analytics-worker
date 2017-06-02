@@ -5,8 +5,8 @@
       queue: '{DEPLOYMENT_PREFIX}_githubManifestMetadataFlow_v0'
       edges:
         - from:
-          to: 'GitHubManifestMetadataInit'
-        - from: 'GitHubManifestMetadataInit'
+          to: 'InitGitHubManifestMetadata'
+        - from: 'InitGitHubManifestMetadata'
           to: 'metadata'
         - from: 'metadata'
           to: 'dependency_snapshot'

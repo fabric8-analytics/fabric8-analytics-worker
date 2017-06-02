@@ -148,7 +148,7 @@ class MercatorTask(BaseTask):
         "Execute mercator and convert it's output to JSON object"
         self._strict_assert(arguments.get('ecosystem'))
 
-        if 'git_repo_url' in arguments:
+        if 'url' in arguments:
             # run mercator on a git repo
             return self.run_mercator_on_git_repo(arguments)
 
@@ -165,12 +165,12 @@ class MercatorTask(BaseTask):
         return self.run_mercator(arguments, cache_path)
 
     def run_mercator_on_git_repo(self, arguments):
-        self._strict_assert(arguments.get('git_repo_url'))
+        self._strict_assert(arguments.get('url'))
 
         workdir = None
         try:
             workdir = tempfile.mkdtemp()
-            repo_url = arguments.get('git_repo_url')
+            repo_url = arguments.get('url')
             Git.clone(repo_url, path=workdir, depth=str(1))
             metadata = self.run_mercator(arguments, workdir)
             if metadata.get('status', None) != 'success':

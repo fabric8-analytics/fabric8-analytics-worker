@@ -29,4 +29,4 @@ from cucoslib.workers.init_package_flow import InitPackageFlow
 from cucoslib.workers.result_collector import ResultCollector
 from cucoslib.workers.result_collector import PackageResultCollector
 from cucoslib.workers.gh_metadata_result_collector import GitHubManifestMetadataResultCollector
-from cucoslib.workers.gh_metadata_init import GitHubManifestMetadataInit
+from cucoslib.workers.gh_metadata_init import InitGitHubManifestMetadata

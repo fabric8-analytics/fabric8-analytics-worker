@@ -3,9 +3,9 @@ from cucoslib.base import BaseTask
 from cucoslib.models import Analysis
 
 
-class GitHubManifestMetadataInit(BaseTask):
+class InitGitHubManifestMetadata(BaseTask):
     def execute(self, arguments):
-        self._strict_assert(arguments.get('git_repo_url'))
+        self._strict_assert(arguments.get('url'))
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('repo_name'))
 
