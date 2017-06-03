@@ -59,15 +59,26 @@ class GraphDB:
             result = pattern_n2_remove.sub('', temp_str)
         return result
 
+    def execute_dsl(self, payload):
+        max_retry = int (os.getenv('MAX_GREMLIN_RETRY_COUNT', '3'))
+        for i in range(max_retry):
+            ret = execute_gremlin_dsl(payload)
+            if ret != None
+                return ret
+        return None
+
     def execute_gremlin_dsl(self, payload):
         """Execute the gremlin query and return the response."""
-        response = requests.post(
-            self._bayesian_graph_url, data=json.dumps(payload))
-        json_response = response.json()
-        if response.status_code != 200:
+        try:
+            response = requests.post(
+                self._bayesian_graph_url, data=json.dumps(payload))
+            if response.status_code != 200:
+                return None
+            else:
+                json_response = response.json()
+                return json_response
+        except:
             return None
-        else:
-            return json_response
 
     def get_response_data(self, json_response, data_default):
         """Data default parameters takes what should data to be returned."""
@@ -86,7 +97,7 @@ class GraphDB:
                 'str_packages': str_packages
             }
         }
-        json_response = self.execute_gremlin_dsl(payload)
+        json_response = self.execute_dsl(payload)
         if json_response is not None:
             full_ref_stacks = self.get_response_data(json_response,
                                                      data_default=[])
@@ -116,7 +127,7 @@ class GraphDB:
                 'str_packages': str_packages
             }
         }
-        json_response = self.execute_gremlin_dsl(payload)
+        json_response = self.execute_dsl(payload)
         if json_response is not None:
             ref_stack_matching_components = self.get_response_data(json_response, data_default=[])
 
@@ -134,7 +145,7 @@ class GraphDB:
                 'list_stack_names': list_stack_names
             }
         }
-        json_response = self.execute_gremlin_dsl(payload)
+        json_response = self.execute_dsl(payload)
         if len(json_response.get("result",[{}]).get("data",[{}])[0].items()) > 0:
             if json_response is not None:
                 ref_stack_full_components = self.get_response_data(json_response, data_default=[])
@@ -157,7 +168,7 @@ class GraphDB:
                     'sname': sname
                 }
             }
-            json_response = self.execute_gremlin_dsl(payload)
+            json_response = self.execute_dsl(payload)
             if json_response is not None:
                 return self.get_response_data(json_response, data_default=[])
 
@@ -185,7 +196,7 @@ class GraphDB:
                 str(GraphDB.id_value_checker(refstackid))
             }
         }
-        json_response = self.execute_gremlin_dsl(payload)
+        json_response = self.execute_dsl(payload)
         if json_response is not None:
             components = self.get_response_data(json_response,
                                                 data_default=[])
@@ -261,7 +272,7 @@ class GraphDB:
                         "version": GraphDB.str_value_cleaner(version)
                     }
                 }
-                json_response = self.execute_gremlin_dsl(payload)
+                json_response = self.execute_dsl(payload)
                 if json_response is None:
                     return []
                 response = self.get_response_data(json_response, [{0: 0}])
@@ -434,17 +445,22 @@ class RecommendationTask(BaseTask):
         input_stack_vectors = GraphDB().get_input_stacks_vectors_from_graph(input_stack, ecosystem)
         # Fetch all reference stacks if any one component from input is present
         ref_stacks = GraphDB().get_reference_stacks_from_graph(input_stack.keys())
-        # Apply jaccard similarity to consider only stacks having 30% interection of component names
-        # We only get one top matching reference stack based on components now
-        # filtered_ref_stacks = rs.filter_package(input_stack, ref_stacks)
-        # Calculate similarity of the filtered stacks
-        similar_stacks_list = rs.find_relative_similarity(input_stack, input_stack_vectors, ref_stacks)
-        similarity_list = self._get_stack_values(similar_stacks_list)
-        result = {"recommendations": {
-            "similar_stacks": similarity_list,
-            "component_level": None,
+
+        if len(ref_stacks) > 0:
+            # Apply jaccard similarity to consider only stacks having 30% interection of component names
+            # We only get one top matching reference stack based on components now
+            # filtered_ref_stacks = rs.filter_package(input_stack, ref_stacks)
+            # Calculate similarity of the filtered stacks
+            similar_stacks_list = rs.find_relative_similarity(input_stack, input_stack_vectors, ref_stacks)
+            similarity_list = self._get_stack_values(similar_stacks_list)
+            result = {"recommendations": {
+                "similar_stacks": similarity_list,
+                "component_level": None,
+                }
             }
-        }
+        else:
+            result = {"recommendations": {"similar_stacks": [], "component_level": None,}}
+
         return result
 
     def _get_stack_values(self, similar_stacks_list):

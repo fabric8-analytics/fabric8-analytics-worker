@@ -144,10 +144,19 @@ class StackAggregatorTask(BaseTask):
             qstring += "as('version').in('has_version').as('package').select('version','package').by(valueMap());"
             payload = {'gremlin': qstring}
 
-            graph_req = requests.post(GREMLIN_SERVER_URL_REST, data=json.dumps(payload))
-            graph_resp = graph_req.json()
+            try:
+                graph_req = requests.post(GREMLIN_SERVER_URL_REST, data=json.dumps(payload))
+                if graph_req.status_code == 200:
+                    graph_resp = graph_req.json()
 
-            result.append(graph_resp["result"])
+                    if 'result' not in graph_resp:
+                        return None
+                    if len(graph_resp['result']['data']) == 0:
+                        return None
+
+                    result.append(graph_resp["result"])
+            except:
+                return None
 
         return {"result": result}
 
@@ -160,8 +169,13 @@ class StackAggregatorTask(BaseTask):
             ecosystem = result['details'][0]['ecosystem']
             manifest = result['details'][0]['manifest_file']
 
-            finished = self._get_dependency_data(resolved,ecosystem)
-            stack_data = aggregate_stack_data(finished, manifest, ecosystem.lower())
+            max_retry = int (os.getenv('MAX_GREMLIN_RETRY_COUNT', '3'))
 
-        return stack_data
+            for i in range(max_retry):
+                finished = self._get_dependency_data(resolved,ecosystem)
+                if finished != None:
+                    stack_data = aggregate_stack_data(finished, manifest, ecosystem.lower())
+                    return stack_data
+
+        return {}
 
