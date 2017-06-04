@@ -62,8 +62,8 @@ class GraphDB:
     def execute_dsl(self, payload):
         max_retry = int (os.getenv('MAX_GREMLIN_RETRY_COUNT', '3'))
         for i in range(max_retry):
-            ret = execute_gremlin_dsl(payload)
-            if ret != None
+            ret = self.execute_gremlin_dsl(payload)
+            if ret != None:
                 return ret
         return None
 

@@ -155,6 +155,8 @@ class StackAggregatorTask(BaseTask):
                         return None
 
                     result.append(graph_resp["result"])
+                else:
+                    return None
             except:
                 return None
 
@@ -176,6 +178,7 @@ class StackAggregatorTask(BaseTask):
                 if finished != None:
                     stack_data = aggregate_stack_data(finished, manifest, ecosystem.lower())
                     return stack_data
+                self.log.error("Attemp {} failed to invoke Gremlin endpoint.".format(i))
 
         return {}
 
