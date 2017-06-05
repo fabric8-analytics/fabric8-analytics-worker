@@ -40,7 +40,7 @@ class MercatorTask(BaseTask):
     _analysis_name = 'metadata'
     _dependency_tree_lock = '_dependency_tree_lock'
     description = 'Collects `Release` specific information from Mercator'
-    schema_ref = SchemaRef(_analysis_name, '3-1-0')
+    schema_ref = SchemaRef(_analysis_name, '3-1-1')
     _data_normalizer = DataNormalizer()
 
     def _parse_requires_txt(self, path):
@@ -171,17 +171,26 @@ class MercatorTask(BaseTask):
         try:
             workdir = tempfile.mkdtemp()
             repo_url = arguments.get('url')
-            Git.clone(repo_url, path=workdir, depth=str(1))
-            metadata = self.run_mercator(arguments, workdir)
+            repo = Git.clone(repo_url, path=workdir, depth=str(1))
+            metadata = self.run_mercator(arguments, workdir, keep_path=True)
             if metadata.get('status', None) != 'success':
                 self.log.error('Mercator failed on %s', repo_url)
                 return None
+
+            # add some auxiliary information so we can later find the manifest file
+            head = repo.rev_parse(['HEAD'])[0]
+            for detail in metadata['details']:
+                path = detail['path'][len(workdir):]
+                # path should look like this:
+                # <git-sha1>/path/to/manifest.file
+                detail['path'] = head + path
+
             return metadata
         finally:
             if workdir:
                 shutil.rmtree(workdir)
 
-    def run_mercator(self, arguments, cache_path):
+    def run_mercator(self, arguments, cache_path, keep_path=False):
         result_data = {'status': 'unknown',
                        'summary': [],
                        'details': []}
@@ -209,7 +218,7 @@ class MercatorTask(BaseTask):
                 #  source of information and don't want to duplicate info by including
                 #  data from pom included in artifact (assuming it's included)
                 items = [data for data in items if data['ecosystem'].lower() == 'java-pom']
-        result_data['details'] = [self._data_normalizer.handle_data(data) for data in items]
+        result_data['details'] = [self._data_normalizer.handle_data(data, keep_path=keep_path) for data in items]
 
         result_data['status'] = 'success'
         return result_data

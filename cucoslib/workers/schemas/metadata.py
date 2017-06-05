@@ -12,6 +12,7 @@ ROLE_v2_1_1 = "v2-1-1"
 ROLE_v3_0_0 = "v3-0-0"
 ROLE_v3_0_1 = "v3-0-1"
 ROLE_v3_1_0 = "v3-1-0"
+ROLE_v3_1_1 = "v3-1-1"
 ROLE_TITLE = jsl.roles.Var({
     ROLE_v1_0_0: "Package Metadata v1-0-0",
     ROLE_v1_0_1: "Package Metadata v1-0-1",
@@ -25,6 +26,8 @@ ROLE_TITLE = jsl.roles.Var({
     ROLE_v3_0_1: "Package Metadata v3-0-1",
     # Add 'status' and 'summary'
     ROLE_v3_1_0: "Package Metadata v3-1-0",
+    # Add 'path', optional
+    ROLE_v3_1_1: "Package Metadata v3-1-0",
 })
 
 _type_field_required = jsl.Var(
@@ -163,6 +166,11 @@ class MetadataDict(jsl.Document):
         since_v3_0_0._dependency_tree_lock = jsl.OneOfField([
             jsl.DocumentField(LockFile, as_ref=True), jsl.NullField()
         ])
+    with jsl.Scope(lambda v: v >= ROLE_v3_1_1) as since_v3_1_1:
+        since_v3_1_1.path = jsl.OneOfField(
+            [jsl.StringField(), jsl.NullField()],
+            required=False
+        )
 
 
 class MercatorResult(JSLSchemaBaseWithRelease):

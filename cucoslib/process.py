@@ -82,6 +82,20 @@ class Git(object):
         with cwd(self.repo_path):
             TimedCommand.get_command_output(["git", "commit", "-m", message], graceful=False)
 
+    def rev_parse(self, args=None):
+        """
+        :param args: arguments to pass to `git rev-parse`
+
+        :return: [str], output from `git rev-parse`
+        """
+
+        cmd = ["git", "rev-parse"]
+        if args:
+            cmd.extend(args)
+
+        with cwd(self.repo_path):
+            return TimedCommand.get_command_output(cmd, graceful=False)
+
     def add(self, path):
         """
         add path to index

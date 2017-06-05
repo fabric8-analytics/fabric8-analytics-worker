@@ -1,5 +1,6 @@
 import datetime
 from re import compile as regexp
+import urllib.parse
 
 from cucoslib.base import BaseTask
 from cucoslib.enums import EcosystemBackend
@@ -39,14 +40,22 @@ class DependencySnapshotTask(BaseTask):
 
         # first, if this is a Github dependency, return it right away (we don't resolve these yet)
         if ' ' in dep:
+            # we have both package name and version (version can be an URL)
             name, spec = dep.split(' ', 1)
             if gh_dep.match(spec):
                 ret['name'] = name
                 ret['version'] = 'https://github.com/' + spec
+            elif urllib.parse.urlparse(spec).scheme is not '':
+                ret['name'] = name
+                ret['version'] = spec
         else:
             if gh_dep.match(dep):
                 ret['name'] = 'https://github.com/' + dep
                 ret['version'] = None
+            elif urllib.parse.urlparse(dep).scheme is not '':
+                ret['name'] = dep
+                ret['version'] = None
+
         if 'name' in ret:
             return ret
 
