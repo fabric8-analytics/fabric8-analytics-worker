@@ -1,0 +1,22 @@
+---
+  flow-definitions:
+    - name: 'bayesianPackageAnalysisFlow'
+      queue: '{DEPLOYMENT_PREFIX}_ingestion_bayesianPackageAnalysisFlow_v0'
+      sampling:
+        name: 'constant'
+        args:
+          retry: 10
+      edges:
+        - from:
+          to: 'github_details'
+          condition:
+            name: 'isGhRepo'
+            args:
+              key: 'url'
+
+        - from:
+          to: 'GitReadmeCollectorTask'
+          condition:
+            name: 'argsFieldExist'
+            args:
+              key: 'url'

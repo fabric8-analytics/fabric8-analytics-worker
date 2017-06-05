@@ -20,8 +20,11 @@ from cucoslib.workers.blackduck import BlackDuckLatentCollector
 from cucoslib.workers.blackduck import BlackDuckTask
 from cucoslib.workers.downstream import DownstreamUsageTask
 from cucoslib.workers.finalize import FinalizeTask
+from cucoslib.workers.finalize import PackageFinalizeTask
 from cucoslib.workers.graphaggregator import GraphAggregatorTask
 from cucoslib.workers.stackaggregator import StackAggregatorTask
 from cucoslib.workers.recommender import RecommendationTask
-from cucoslib.workers.init import InitAnalysisFlow
+from cucoslib.workers.init_analysis_flow import InitAnalysisFlow
+from cucoslib.workers.init_package_flow import InitPackageFlow
 from cucoslib.workers.result_collector import ResultCollector
+from cucoslib.workers.result_collector import PackageResultCollector

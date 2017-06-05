@@ -4,9 +4,10 @@ from selinonlib.predicates import *
 
 from cucoslib.utils import parse_gh_repo
 
-def isGhRepo(message, key):
+
+def isGhRepo(node_args, key):
     try:
-        val = reduce(lambda m, k: m[k], key if isinstance(key, list) else [key], message)
+        val = reduce(lambda m, k: m[k], key if isinstance(key, list) else [key], node_args)
         if parse_gh_repo(val):
             return True
         else:

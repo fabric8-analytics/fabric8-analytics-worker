@@ -233,3 +233,4 @@ class AmazonS3(DataStorage):
             return int(os.environ.get('BAYESIAN_SYNC_S3', 0)) == 1
         except ValueError:
             return False
+

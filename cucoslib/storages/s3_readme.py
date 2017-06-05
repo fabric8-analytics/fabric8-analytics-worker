@@ -12,7 +12,6 @@ class S3Readme(AmazonS3):
     def store(self, node_args, flow_name, task_name, task_id, result):
         assert 'ecosystem' in node_args
         assert 'name' in node_args
-        assert 'version' in node_args
 
         object_key = self._construct_object_key(node_args)
         self.store_dict(result, object_key)

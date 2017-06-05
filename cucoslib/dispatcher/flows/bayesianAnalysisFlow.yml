@@ -1,4 +1,3 @@
-
 ---
   flow-definitions:
     - &bayesianAnalysisFlow
@@ -7,6 +6,8 @@
       # we will not wait for recursive analyses
       nowait:
        - 'bayesianFlow'
+      propagate_parent: 'bayesianPackageFlow'
+      propagate_node_args: 'bayesianPackageFlow'
       #sampling:
       #  name: 'biexponential_decrease'
       #  args:
@@ -49,18 +50,7 @@
           condition:
             name: 'alwaysFalse'
         - from: 'metadata'
-          to:
-            - 'github_details'
-            - 'GitReadmeCollectorTask'
-          condition:
-            name: 'isGhRepo'
-            node: 'metadata'
-            args:
-              key:
-                - 'details'
-                - 0
-                - 'code_repository'
-                - 'url'
+          to: 'bayesianPackageFlow'
         - from: 'metadata'
           to: 'dependency_snapshot'
         - from: 'dependency_snapshot'

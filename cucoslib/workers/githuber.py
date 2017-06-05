@@ -116,26 +116,11 @@ class GithubTask(BaseTask):
             d[prop] = repo.raw_data.get(prop, -1)
         return d
 
-    def _query_repo_name(self):
+    def _get_repo_name(self, url):
         """Retrieve GitHub repo from a preceding Mercator scan"""
-        # Fridolin: most of the checks can be removed since Dispatcher schedules this task iff we have github.com
-        wr = self.parent_task_result('metadata')
-        if wr is None:
-            self.log.error("No repo_name provided, and no Mercator scan result")
-            return None
-        code_repos =\
-            [m.get("code_repository") for m in wr.get('details', []) if m.get("code_repository")]
-        repo_details = code_repos[0] if code_repos else None
-        if repo_details is None:
-            self.log.debug("No repo_name provided, and no repo metadata found")
-            return None
-        repo_name = repo_details.get("url")
-        if repo_name is None:
-            self.log.debug('No repo name extracted, nothing to do')
-            return None
-        parsed = parse_gh_repo(repo_name)
+        parsed = parse_gh_repo(url)
         if not parsed:
-            self.log.debug('Could not parse Github repo URL %s', repo_name)
+            self.log.debug('Could not parse Github repo URL %s', url)
         else:
             self._repo_url = 'https://github.com/' + parsed
         return parsed
@@ -160,7 +145,7 @@ class GithubTask(BaseTask):
         # For testing purposes, a repo may be specified at task creation time
         if self._repo_name is None:
             # Otherwise, get the repo name from earlier Mercator scan results
-            self._repo_name = self._query_repo_name()
+            self._repo_name = self._get_repo_name(arguments['url'])
             if self._repo_name is None:
                 # Not a GitHub hosted project
                 return result_data
@@ -247,13 +232,9 @@ class GitReadmeCollectorTask(BaseTask):
         ('Unknown', ('')),
     ))
 
-    def _get_github_repo_tuple(self):
-        repo_url = self.parent_task_result('metadata')['details'][0]['code_repository']['url']
-        repo_tuple = parse_gh_repo(repo_url)
-        return repo_tuple.split('/')
-
-    def _get_github_readme(self):
-        project, repo = self._get_github_repo_tuple()
+    def _get_github_readme(self, url):
+        repo_tuple = parse_gh_repo(url)
+        project, repo = repo_tuple.split('/')
 
         for readme_type, extensions in self.README_TYPES.items():
             for extension in extensions:
@@ -271,8 +252,9 @@ class GitReadmeCollectorTask(BaseTask):
     def run(self, arguments):
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('ecosystem'))
+        self._strict_assert(arguments.get('url'))
 
-        readme = self._get_github_readme()
+        readme = self._get_github_readme(arguments['url'])
         if not readme:
             self.log.warning("No README file found for '%s/%s'", arguments['ecosystem'], arguments['name'])
 

@@ -1,0 +1,28 @@
+---
+  flow-definitions:
+    - name: 'bayesianPackageFlow'
+      queue: '{DEPLOYMENT_PREFIX}_ingestion_bayesianPackageFlow_v0'
+      propagate_node_args: 'bayesianPackageAnalysisFlow'
+      node_args_from_first: true
+      sampling:
+        name: 'constant'
+        args:
+          retry: 10
+      edges:
+        - from:
+          to: 'InitPackageFlow'
+        - from: 'InitPackageFlow'
+          to: 'bayesianPackageAnalysisFlow'
+          condition: &shouldSchedulePackageAnalysisCheck
+            name: 'fieldExist'
+            args:
+              key: 'document_id'
+        - from: 'bayesianPackageAnalysisFlow'
+          to: 'PackageFinalizeTask'
+        - from: 'PackageFinalizeTask'
+          to: 'PackageResultCollector'
+        - from: 'PackageFinalizeTaskError'
+          to: 'PackageResultCollector'
+      failures:
+        - nodes: 'bayesianPackageAnalysisFlow'
+          fallback: 'PackageFinalizeTaskError'
