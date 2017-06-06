@@ -238,6 +238,15 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_InitPackageFlow_v0'
       storage: 'PackagePostgres'
+    - name: 'GitHubManifestMetadataResultCollector'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GitHubManifestMetadataResultCollector_v0'
+    - name: 'InitGitHubManifestMetadata'
+      import: 'cucoslib.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_InitGitHubManifestMetadata_v0'
+      storage: 'BayesianPostgres'
 
   flows:
     - 'bayesianAnalysisFlow'
@@ -252,6 +261,7 @@
     - 'graphApiImportFlow'
     - 'bayesianPackageFlow'
     - 'bayesianPackageAnalysisFlow'
+    - 'githubManifestMetadataFlow'
 
   storages:
     - name: 'BayesianPostgres'
@@ -352,6 +362,15 @@
       configuration:
         <<: *configurationS3
         bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-snyk'
+        region_name: 'us-east-1'
+        encryption: false
+        versioned: true
+
+    - name: 'S3GitHubManifestMetadata'
+      import: 'cucoslib.storages'
+      configuration:
+        <<: *configurationS3
+        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-github-manifest-metadata'
         region_name: 'us-east-1'
         encryption: false
         versioned: true

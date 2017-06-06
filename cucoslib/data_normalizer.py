@@ -389,7 +389,7 @@ class DataNormalizer(object):
             transformed['devel_dependencies'] = dev_deps  # development dependencies
         return transformed
 
-    def handle_data(self, data):
+    def handle_data(self, data, keep_path=False):
         def _passthrough(unused):
             #log.debug('ecosystem %s not handled', data['ecosystem'])
             pass
@@ -406,6 +406,9 @@ class DataNormalizer(object):
         result = switch.get(data['ecosystem'].lower(), _passthrough)(data.get('result', {}))
         if result is None:
             result = {}
+
+        if keep_path:
+            result['path'] = data.get('path', None)
         result['ecosystem'] = data['ecosystem'].lower()
         return result
 

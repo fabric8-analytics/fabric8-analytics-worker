@@ -43,16 +43,20 @@ class Git(object):
             TimedCommand.get_command_output(["git", "config", "--global", "user.email", user_email])
 
     @classmethod
-    def clone(cls, url, path):
+    def clone(cls, url, path, depth=None):
         """
         clone repository provided as url to specific path
 
         :param url: str
         :param path: str
+        :param depth: str
         :return: instance of Git()
         """
         cls.config()
-        TimedCommand.get_command_output(["git", "clone", url, path], graceful=False)
+        cmd = ["git", "clone", url, path]
+        if depth is not None:
+            cmd.extend(["--depth", depth])
+        TimedCommand.get_command_output(cmd, graceful=False)
         return cls(path=path)
 
     @classmethod
@@ -77,6 +81,20 @@ class Git(object):
         # http://stackoverflow.com/questions/1386291/git-git-dir-not-working-as-expected
         with cwd(self.repo_path):
             TimedCommand.get_command_output(["git", "commit", "-m", message], graceful=False)
+
+    def rev_parse(self, args=None):
+        """
+        :param args: arguments to pass to `git rev-parse`
+
+        :return: [str], output from `git rev-parse`
+        """
+
+        cmd = ["git", "rev-parse"]
+        if args:
+            cmd.extend(args)
+
+        with cwd(self.repo_path):
+            return TimedCommand.get_command_output(cmd, graceful=False)
 
     def add(self, path):
         """

@@ -88,23 +88,14 @@ class BayesianPostgres(PostgresBase):
         """
         return PostgresBase.session.query(WorkerResult).filter(WorkerResult.worker_id == worker_id).count()
 
-    def get_analysis_by_id(self, ecosystem, package, version, analysis_id):
-        """Get result of previously scheduled analysis for given EPV triplet by analysis ID
-    
-        :param ecosystem: str, Ecosystem name
-        :param package: str, Package name
-        :param version: str, Package version
+    def get_analysis_by_id(self, analysis_id):
+        """Get result of previously scheduled analysis
+
         :param analysis_id: str, ID of analysis
         :return: analysis result
         """
-        if ecosystem == 'maven':
-            package = MavenCoordinates.normalize_str(package)
 
         found = self.session.query(Analysis).\
-            join(Version).join(Package).join(Ecosystem).\
-            filter(Ecosystem.name == ecosystem).\
-            filter(Package.name == package).\
-            filter(Version.identifier == version).\
             filter(Analysis.id == analysis_id).\
             one()
 

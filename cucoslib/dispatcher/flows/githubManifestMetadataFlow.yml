@@ -1,0 +1,30 @@
+---
+  flow-definitions:
+    - name: 'githubManifestMetadataFlow'
+      node_args_from_first: true
+      queue: '{DEPLOYMENT_PREFIX}_githubManifestMetadataFlow_v0'
+      edges:
+        - from:
+          to: 'InitGitHubManifestMetadata'
+        - from: 'InitGitHubManifestMetadata'
+          to: 'metadata'
+        - from: 'metadata'
+          to: 'dependency_snapshot'
+        - from: 'dependency_snapshot'
+          to: 'bayesianFlow'
+          foreach:
+            import: 'cucoslib.dispatcher.foreach'
+            function: 'iter_dependencies_analysis'
+            propagate_result: true
+          condition:
+            or:
+              - not:
+                 name: 'argsFieldExist'
+                 args:
+                   key: 'recursive_limit'
+              - name: 'argsFieldGreater'
+                args:
+                   key: 'recursive_limit'
+                   value: 0
+        - from: 'dependency_snapshot'
+          to: 'GitHubManifestMetadataResultCollector'
