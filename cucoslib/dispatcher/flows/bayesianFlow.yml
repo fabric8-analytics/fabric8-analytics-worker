@@ -48,6 +48,8 @@
                 args:
                   key: 'force_graph_sync'
                   value: true
+              # Disable due to Graph bottleneck for now
+              - name: 'alwaysFalse'
         - from: 'bayesianAnalysisFlow'
           to: 'FinalizeTask'
         - from: 'FinalizeTask'
@@ -69,6 +71,9 @@
           to: 'FinalizeTask'
         - from: 'ResultCollector'
           to: 'GraphImporterTask'
+          condition:
+            # Disable due to Graph bottleneck for now
+            name: 'alwaysFalse'
       failures:
         - nodes:
             - 'bayesianAnalysisFlow'
