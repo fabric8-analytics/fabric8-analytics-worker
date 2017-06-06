@@ -370,3 +370,23 @@ def get_configuration(configuration_override=None):
         configuration = CucosConfiguration(configuration_override=configuration_override)
         logger.debug("creating new instance of CucosConfiguration: %s", id(configuration))
     return configuration
+
+
+def is_local_deployment():
+    """
+    :return: True if we are running locally
+    """
+    aws_access_key_id_provided = os.environ.get('AWS_S3_ACCESS_KEY_ID') is not None
+    aws_secret_access_key_provided = os.environ.get('AWS_S3_SECRET_ACCESS_KEY') is not None
+
+    if aws_access_key_id_provided != aws_secret_access_key_provided:
+        raise ValueError("Misleading configuration, you have to provide both 'AWS_S3_ACCESS_KEY_ID' "
+                         "and 'AWS_S3_SECRET_ACCESS_KEY' for connection to AWS")
+
+    if "AWS_ACCESS_KEY_ID" in os.environ:
+        raise RuntimeError("Do not use AWS_ACCESS_KEY_ID in order to access S3, use 'AWS_S3_ACCESS_KEY_ID'")
+
+    if "AWS_SECRET_ACCESS_KEY" in os.environ:
+        raise RuntimeError("Do not use AWS_SECRET_ACCESS_KEY in order to access S3, use 'AWS_S3_SECRET_ACCESS_KEY'")
+
+    return not (aws_access_key_id_provided or aws_secret_access_key_provided)

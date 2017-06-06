@@ -376,7 +376,7 @@
         versioned: true
 
   global:
-    # trace using Python's logging for now
-    trace: true
-    # you can configure tracing to a database, see https://fridex.github.io/selinon/yaml.conf.html#trace
+    trace:
+      import: 'cucoslib.dispatcher.trace'
+      function: 'trace_func'
     predicates_module: 'cucoslib.dispatcher.predicates'
