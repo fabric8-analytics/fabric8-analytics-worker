@@ -369,9 +369,7 @@
     - name: 'S3GitHubManifestMetadata'
       import: 'cucoslib.storages'
       configuration:
-        #<<: *configurationS3
-        aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
-        aws_secret_access_key: 'ZmvMwngonaDK5ymlCd6ptaalDdJsCn3aSSxASPaZ'
+        <<: *configurationS3
         bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-github-manifest-metadata'
         region_name: 'us-east-1'
         encryption: false
