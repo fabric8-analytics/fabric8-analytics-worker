@@ -21,7 +21,7 @@ class GitHubManifestMetadataResultCollector(BaseTask):
         s3 = StoragePool.get_connected_storage('S3GitHubManifestMetadata')
         postgres = StoragePool.get_connected_storage('BayesianPostgres')
 
-        results = postgres.get_analysis_by_id(arguments['document_id'], db_session=postgres.session)
+        results = postgres.get_analysis_by_id(arguments['document_id'])
         for worker_result in results.raw_analyses:
 
             # Skip auxiliary tasks (e.g. InitGitHubManifestMetadata)

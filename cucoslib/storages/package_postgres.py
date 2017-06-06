@@ -33,20 +33,14 @@ class PackagePostgres(PostgresBase):
             external_request_id=node_args.get('external_request_id') if isinstance(node_args, dict) else None
         )
 
-    def get_analysis_by_id(self, ecosystem, package, analysis_id):
-        """Get result of previously scheduled analysis for given ecosystem-package triplet by analysis ID
-    
-        :param ecosystem: str, Ecosystem name
-        :param package: str, Package name
+    def get_analysis_by_id(self, analysis_id):
+        """Get result of previously scheduled analysis
+
         :param analysis_id: str, ID of analysis
         :return: analysis result
         """
-        if ecosystem == 'maven':
-            package = MavenCoordinates.normalize_str(package)
 
         found = self.session.query(PackageAnalysis).\
-            filter(Ecosystem.name == ecosystem).\
-            filter(Package.name == package).\
             filter(PackageAnalysis.id == analysis_id).\
             one()
 
