@@ -16,6 +16,7 @@ except ImportError:
     # Near-enough-for-our-purposes equivalent in Python 2.x
     from distutils.spawn import find_executable as which
 
+
 @pytest.mark.offline
 @pytest.mark.usefixtures("dispatcher_setup")
 class TestLicenseCheck(object):
