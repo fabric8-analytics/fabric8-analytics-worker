@@ -116,8 +116,8 @@ class PypiReleasesFetcher(ReleasesFetcher):
             packages = self._rpc.search({'name': package})
             if packages:
                 exact_match = [p['name']
-                            for p in packages
-                            if p['name'].lower() == package.lower()]
+                               for p in packages
+                               if p['name'].lower() == package.lower()]
                 if exact_match:
                     return exact_match.pop()
         res = find_pypi_pkg(package)
