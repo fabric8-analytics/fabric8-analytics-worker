@@ -45,3 +45,21 @@ class PackagePostgres(PostgresBase):
             one()
 
         return found
+
+    def get_analysis_count(self, ecosystem, package):
+        """Get count of previously scheduled analyses for given ecosystem-package.
+
+        :param ecosystem: str, Ecosystem name
+        :param package: str, Package name
+        :return: analysis count
+        """
+        if ecosystem == 'maven':
+            package = MavenCoordinates.normalize_str(package)
+
+        count = self.session.query(PackageAnalysis).\
+            join(Package).join(Ecosystem).\
+            filter(Ecosystem.name == ecosystem).\
+            filter(Package.name == package).\
+            count()
+
+        return count
