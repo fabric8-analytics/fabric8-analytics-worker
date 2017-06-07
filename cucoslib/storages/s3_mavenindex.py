@@ -1,4 +1,5 @@
 import os
+from cucoslib.errors import TaskError
 from cucoslib.process import Archive
 from cucoslib.utils import tempdir
 from . import AmazonS3
@@ -13,8 +14,12 @@ class S3MavenIndex(AmazonS3):
         with tempdir() as temp_dir:
             central_index_dir = os.path.join(target_dir, self._INDEX_DIRNAME)
             archive_path = os.path.join(temp_dir, self._INDEX_ARCHIVE)
-            Archive.zip_file(central_index_dir, archive_path, junk_paths=True)
-            self.store_file(archive_path, self._INDEX_ARCHIVE)
+            try:
+                Archive.zip_file(central_index_dir, archive_path, junk_paths=True)
+            except TaskError:
+                pass
+            else:
+                self.store_file(archive_path, self._INDEX_ARCHIVE)
 
     def retrieve_index_if_exists(self, target_dir):
         """ Retrieve central-index.zip from S3 and extract into target_dir/central-index"""

@@ -155,7 +155,7 @@ class Archive(object):
             # Store just the name of a saved file (junk the path), not directory names.
             # By default, zip will store the full path (relative to the current directory).
             command.extend(['--junk-paths'])
-        TimedCommand.get_command_output(command)
+        TimedCommand.get_command_output(command, graceful=False)
 
     @staticmethod
     def extract_zip(target, dest, mkdest=False):

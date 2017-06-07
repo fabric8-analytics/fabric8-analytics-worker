@@ -1,4 +1,5 @@
 import os
+from cucoslib.errors import TaskError
 from cucoslib.process import Archive
 from cucoslib.utils import tempdir
 from . import AmazonS3
@@ -13,8 +14,12 @@ class S3OWASPDepCheck(AmazonS3):
         with tempdir() as archive_dir:
             archive_path = os.path.join(archive_dir, self._DB_ARCHIVE)
             db_file_path = os.path.join(data_dir, self._DB_FILENAME)
-            Archive.zip_file(db_file_path, archive_path, junk_paths=True)
-            self.store_file(archive_path, self._DB_ARCHIVE)
+            try:
+                Archive.zip_file(db_file_path, archive_path, junk_paths=True)
+            except TaskError:
+                pass
+            else:
+                self.store_file(archive_path, self._DB_ARCHIVE)
 
     def store_depcheck_db_if_not_exists(self, data_dir):
         if not self.object_exists(self._DB_ARCHIVE):
