@@ -48,9 +48,7 @@ class PackageResultCollector(_ResultCollectorBase):
         self._strict_assert(arguments.get('document_id'))
 
         postgres = StoragePool.get_connected_storage('PackagePostgres')
-        results = postgres.get_analysis_by_id(arguments['ecosystem'],
-                                              arguments['name'],
-                                              arguments['document_id'])
+        results = postgres.get_analysis_by_id(arguments['document_id'])
 
         return self.do_run(arguments,
                            StoragePool.get_connected_storage('S3PackageData'),
