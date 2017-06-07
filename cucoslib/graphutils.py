@@ -4,8 +4,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 GREMLIN_SERVER_URL_REST = "http://{host}:{port}".format\
-                            (host=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_HOST", "localhost"),\
+                           (host=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_HOST", "localhost"),
                             port=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_PORT", "8182"))
+
 
 def get_stack_usage_data_graph(components):
     components_with_usage_data = 0
@@ -83,6 +84,7 @@ def get_stack_popularity_data_graph(components):
 
     return result
 
+
 def extract_component_details(component):
     component_summary = []
     github_details = {
@@ -111,7 +113,7 @@ def extract_component_details(component):
         "average_cyclomatic_complexity": component.get("version", {}).get("cm_avg_cyclomatic_complexity", [-1])[0],
         "total_files": component.get("version", {}).get("cm_num_files", [-1])[0]
     }
-    
+
     redhat_usage = {
         "all_rhn_channels": [],
         "all_rhsm_content_sets": [],
@@ -140,7 +142,7 @@ def extract_component_details(component):
     name = component.get("version", {}).get("pname", [""])[0]
     version = component.get("version", {}).get("version", [""])[0]
     ecosystem = component.get("version", {}).get("pecosystem", [""])[0]
-    latest_version = component.get("package", {}).get ("latest_version",[""])[0]
+    latest_version = component.get("package", {}).get("latest_version", [""])[0]
     component_summary = {
         "name": name,
         "version": version,
@@ -153,7 +155,8 @@ def extract_component_details(component):
         "code_metrics": code_metrics,
         "security": security
     }
-    return component_summary,licenses
+    return component_summary, licenses
+
 
 def aggregate_stack_data(stack, manifest_file, ecosystem):
     components = []
@@ -161,7 +164,7 @@ def aggregate_stack_data(stack, manifest_file, ecosystem):
     for component in stack.get('result', []):
         data = component.get("data", None)
         if data:
-            component_data,component_licenses = extract_component_details(data[0])
+            component_data, component_licenses = extract_component_details(data[0])
             components.append(component_data)
             licenses.extend(component_licenses)
 

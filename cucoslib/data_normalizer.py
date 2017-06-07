@@ -29,6 +29,7 @@ from itertools import zip_longest
 
 from cucoslib.utils import parse_gh_repo
 
+
 # TODO: we need to unify the output from different ecosystems
 class DataNormalizer(object):
     description = 'Collects `Release` specific information from Mercator'

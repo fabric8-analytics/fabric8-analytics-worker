@@ -122,15 +122,17 @@ def get_component_percentile_rank(ecosystem_backend, package, version, db_sessio
 
     return rank[0]
 
+
 @contextmanager
 def cwd(target):
     "Manage cwd in a pushd/popd fashion"
-    curdir= getcwd()
+    curdir = getcwd()
     chdir(target)
     try:
         yield
     finally:
         chdir(curdir)
+
 
 @contextmanager
 def tempdir():
@@ -598,7 +600,7 @@ def mvn_pkg_to_repo_path(pkg):
 
 def case_sensitivity_transform(ecosystem, name):
     """Transform package name to lowercase for ecosystem that are not case sensitive.
-    
+
     :param ecosystem: name of ecocsystem in which the package is sits
     :param name: name of ecosystem
     :return: transformed package name base on ecosystem package case sensitivity
