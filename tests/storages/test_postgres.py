@@ -13,6 +13,7 @@ from cucoslib.storages.postgres import BayesianPostgres
 
 from ..conftest import rdb
 
+
 class TestBayesianPostgres:
     def setup_method(self, method):
         rdb()

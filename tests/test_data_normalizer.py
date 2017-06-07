@@ -213,7 +213,7 @@ class TestDataNormalizer(object):
         result = self.sort_by_path(self._dataNormalizer.get_outermost_items(d))
         assert len(result) == len(expected)
         for i in range(len(expected)):
-            assert compare_dictionaries(result[i], expected[i]) == True
+            assert compare_dictionaries(result[i], expected[i])
 
     @pytest.mark.parametrize('data, expected', [
         ({'pom.xml': {'dependencies': {'compile': {'g:a::': '1.0'}}}},

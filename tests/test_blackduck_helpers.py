@@ -19,12 +19,14 @@ _PROJECT_DEF = {
     'yetAnotherKeyWithUrl': 'baz',
 }
 
+
 def test_blackduck_project():
     project = BlackDuckProject(_PROJECT_DEF)
     assert project.name == 'foobar'
     assert project.id == 'aaaaa11111'
     assert project.canonical_release_id == 'abcdef123456'
     assert project.urls == {'keyWithUrl': 'foo', 'anotherKeyWithUrl': 'bar', 'yetAnotherKeyWithUrl': 'baz'}
+
 
 def test_blackduck_release():
     release = BlackDuckRelease(_RELEASE_DEF, 'phonyId')

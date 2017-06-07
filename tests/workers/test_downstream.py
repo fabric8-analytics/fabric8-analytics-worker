@@ -62,6 +62,7 @@ def _make_brew_command(srpms_to_report):
             return 0, stdout, ""
     return MockBrewCommand
 
+
 def _make_pulp_client(usage_to_report):
     class MockPulpClient(object):
         def get_cdn_metadata_for_srpm(self, srpm_filename):

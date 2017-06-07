@@ -9,8 +9,10 @@ import requests
 
 from cucoslib.pulp import Pulp
 
+
 def _pulp_client():
     return Pulp(pulp_url="http://dummy.invalid", pulp_auth=(None, None))
+
 
 @pytest.mark.offline
 class TestPulp(object):
@@ -78,7 +80,6 @@ class TestPulp(object):
         assert metadata["eng_product"] == [product_id]
         assert metadata["content_set"] == [content_set]
         assert metadata["rhn_channels"] == rhn_channels
-
 
     def test_get_cdn_metadata_for_srpm(self):
         # This just tests the response unpacking, the metadata health checks

@@ -17,7 +17,7 @@ from cucoslib.conf import get_configuration, get_postgres_connection_string
 from cucoslib.enums import EcosystemBackend
 from cucoslib.errors import TaskError
 from cucoslib.models import (Analysis, Ecosystem, Package, Version, create_db_scoped_session)
-from cucoslib import utils # so that we can mock functions from here
+from cucoslib import utils  # so that we can mock functions from here
 from cucoslib.utils import (get_all_files_from,
                             hidden_path_filter,
                             skip_git_files,
