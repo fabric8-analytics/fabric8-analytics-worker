@@ -95,7 +95,7 @@ class BayesianPostgres(PostgresBase):
         :return: analysis result
         """
 
-        found = self.session.query(Analysis).\
+        found = PostgresBase.session.query(Analysis).\
             filter(Analysis.id == analysis_id).\
             one()
 

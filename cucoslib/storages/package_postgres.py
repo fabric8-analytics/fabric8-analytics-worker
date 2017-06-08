@@ -40,7 +40,7 @@ class PackagePostgres(PostgresBase):
         :return: analysis result
         """
 
-        found = self.session.query(PackageAnalysis).\
+        found = PostgresBase.session.query(PackageAnalysis).\
             filter(PackageAnalysis.id == analysis_id).\
             one()
 
@@ -56,7 +56,7 @@ class PackagePostgres(PostgresBase):
         if ecosystem == 'maven':
             package = MavenCoordinates.normalize_str(package)
 
-        count = self.session.query(PackageAnalysis).\
+        count = PostgresBase.session.query(PackageAnalysis).\
             join(Package).join(Ecosystem).\
             filter(Ecosystem.name == ecosystem).\
             filter(Package.name == package).\
