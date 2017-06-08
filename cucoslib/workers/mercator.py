@@ -172,7 +172,7 @@ class MercatorTask(BaseTask):
             workdir = tempfile.mkdtemp()
             repo_url = arguments.get('url')
             repo = Git.clone(repo_url, path=workdir, depth=str(1))
-            metadata = self.run_mercator(arguments, workdir, keep_path=True)
+            metadata = self.run_mercator(arguments, workdir, keep_path=True, outermost_only=False, timeout=900)
             if metadata.get('status', None) != 'success':
                 self.log.error('Mercator failed on %s', repo_url)
                 return None
@@ -190,14 +190,14 @@ class MercatorTask(BaseTask):
             if workdir:
                 shutil.rmtree(workdir)
 
-    def run_mercator(self, arguments, cache_path, keep_path=False):
+    def run_mercator(self, arguments, cache_path, keep_path=False, outermost_only=True, timeout=300):
         result_data = {'status': 'unknown',
                        'summary': [],
                        'details': []}
 
         mercator_target = arguments.get('cache_sources_path', cache_path)
         tc = TimedCommand(['mercator', mercator_target])
-        status, data, err = tc.run(timeout=300,
+        status, data, err = tc.run(timeout=timeout,
                                    is_json=True,
                                    update_env={'MERCATOR_JAVA_RESOLVE_POMS': 'true'})
         if status != 0:
@@ -209,7 +209,11 @@ class MercatorTask(BaseTask):
             # TODO: attempt static setup.py parsing with mercator
             items = [self._merge_python_items(mercator_target, data)]
         else:
-            items = self._data_normalizer.get_outermost_items(data.get('items') or [])
+            if outermost_only:
+                # process only root level manifests (or the ones closest to the root level)
+                items = self._data_normalizer.get_outermost_items(data.get('items') or [])
+            else:
+                items = data.get('items') or []
             self.log.debug('mercator found %i projects, outermost %i',
                            len(data), len(items))
 
