@@ -143,7 +143,8 @@ class GraphDB:
             # Calculate similarity score of all reference stacks vs. input stack
             for key, val in ref_stack_matching_components[0].items():
                 if key in ref_stack_full_components[0]:
-                    ref_stk[key] = float(val) / float(ref_stack_full_components[0].get(key))
+                    denominator = float(max(ref_stack_full_components[0].get(key), len(list_packages)))
+                    ref_stk[key] = float(val) / denominator
 
             # Get the name of reference stack with topmost similarity score
             sname = max(ref_stk.keys(), key=(lambda key: ref_stk[key]))
