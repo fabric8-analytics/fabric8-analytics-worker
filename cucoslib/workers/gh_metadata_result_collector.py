@@ -31,16 +31,16 @@ class GitHubManifestMetadataResultCollector(BaseTask):
             # Retrieve raw manifest file and store it in S3
             if worker_result.worker == 'metadata':
                 task_result = worker_result.task_result
-                for index, detail in enumerate(task_result.get('details', [])):
+                for detail in task_result.get('details', []):
                     if detail.get('path', None):
                         manifest_url = urllib.parse.urljoin(self.GITHUB_CONTENT_URL,
                                                             arguments['repo_name'] + '/' + detail['path'])
-                        manifest_name = os.path.basename(detail['path'])
+                        manifest_name = detail['path'].split('/', 1)[1]
                         response = requests.get(manifest_url)
                         if response.status_code == 200:
                             s3.store_raw_manifest(arguments['ecosystem'],
                                                   arguments['repo_name'],
-                                                  str(index) + '-' + manifest_name,
+                                                  manifest_name,
                                                   response.content)
                         else:
                             self.log.error('Unable to retrieve manifest file from %s', manifest_url)
