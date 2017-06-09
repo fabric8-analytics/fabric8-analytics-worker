@@ -4,10 +4,12 @@ import requests
 import os
 from collections import Counter
 import re
+import logging
 
 from cucoslib.graphutils import GREMLIN_SERVER_URL_REST
 from cucoslib.base import BaseTask
 from cucoslib.conf import get_configuration
+
 
 config = get_configuration()
 
@@ -17,6 +19,7 @@ pattern = re.compile(r'(' + remove + ')', re.IGNORECASE)
 pattern_to_save = '[^\w\*\.Xx\-\>\=\<\~\^\|\/\:]'
 pattern_n2_remove = re.compile(pattern_to_save)
 
+_logger = logging.getLogger(__name__)
 
 class SimilarStack(object):
     def __init__(self, stack_id, usage_score=None, source=None,
@@ -59,25 +62,22 @@ class GraphDB:
             result = pattern_n2_remove.sub('', temp_str)
         return result
 
-    def execute_dsl(self, payload):
-        max_retry = int (os.getenv('MAX_GREMLIN_RETRY_COUNT', '3'))
-        for i in range(max_retry):
-            ret = self.execute_gremlin_dsl(payload)
-            if ret != None:
-                return ret
-        return None
-
     def execute_gremlin_dsl(self, payload):
         """Execute the gremlin query and return the response."""
         try:
-            response = requests.post(
+            s = requests.Session()
+            a = requests.adapters.HTTPAdapter(max_retries=int(os.getenv('MAX_GREMLIN_RETRY_COUNT', '3')))
+            s.mount('http://', a)
+            response = s.post(
                 self._bayesian_graph_url, data=json.dumps(payload))
             if response.status_code != 200:
+                _logger.error ("HTTP error {}. Error retrieving Gremlin data.".format(response.status_code))
                 return None
             else:
                 json_response = response.json()
                 return json_response
         except:
+            _logger.error ("Failed retrieving Gremlin data.")
             return None
 
     def get_response_data(self, json_response, data_default):
@@ -97,7 +97,7 @@ class GraphDB:
                 'str_packages': str_packages
             }
         }
-        json_response = self.execute_dsl(payload)
+        json_response = self.execute_gremlin_dsl(payload)
         if json_response is not None:
             full_ref_stacks = self.get_response_data(json_response,
                                                      data_default=[])
@@ -127,7 +127,7 @@ class GraphDB:
                 'str_packages': str_packages
             }
         }
-        json_response = self.execute_dsl(payload)
+        json_response = self.execute_gremlin_dsl(payload)
         if json_response is not None:
             ref_stack_matching_components = self.get_response_data(json_response, data_default=[])
 
@@ -145,7 +145,7 @@ class GraphDB:
                 'list_stack_names': list_stack_names
             }
         }
-        json_response = self.execute_dsl(payload)
+        json_response = self.execute_gremlin_dsl(payload)
         if len(json_response.get("result",[{}]).get("data",[{}])[0].items()) > 0:
             if json_response is not None:
                 ref_stack_full_components = self.get_response_data(json_response, data_default=[])
@@ -168,7 +168,7 @@ class GraphDB:
                     'sname': sname
                 }
             }
-            json_response = self.execute_dsl(payload)
+            json_response = self.execute_gremlin_dsl(payload)
             if json_response is not None:
                 return self.get_response_data(json_response, data_default=[])
 
@@ -196,7 +196,7 @@ class GraphDB:
                 str(GraphDB.id_value_checker(refstackid))
             }
         }
-        json_response = self.execute_dsl(payload)
+        json_response = self.execute_gremlin_dsl(payload)
         if json_response is not None:
             components = self.get_response_data(json_response,
                                                 data_default=[])
@@ -272,7 +272,7 @@ class GraphDB:
                         "version": GraphDB.str_value_cleaner(version)
                     }
                 }
-                json_response = self.execute_dsl(payload)
+                json_response = self.execute_gremlin_dsl(payload)
                 if json_response is None:
                     return []
                 response = self.get_response_data(json_response, [{0: 0}])
