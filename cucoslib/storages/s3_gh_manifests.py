@@ -6,11 +6,11 @@ from . import AmazonS3
 class S3GitHubManifestMetadata(AmazonS3):
 
     def _construct_object_key(self, arguments, result_name='metadata'):
-        path = self._get_object_key_path(arguments['ecosystem'], arguments['repo_name'])
+        path = self.get_object_key_path(arguments['ecosystem'], arguments['repo_name'])
         return "{path}/{name}.json".format(path=path, name=result_name)
 
     @staticmethod
-    def _get_object_key_path(ecosystem, repo_name):
+    def get_object_key_path(ecosystem, repo_name):
         return "{ecosystem}/{repo_name}".format(ecosystem=ecosystem, repo_name=repo_name.replace('/', ':'))
 
     def store(self, node_args, flow_name, task_name, task_id, result):
@@ -22,5 +22,5 @@ class S3GitHubManifestMetadata(AmazonS3):
         return version_id
 
     def store_raw_manifest(self, ecosystem, repo_path, filename, manifest):
-        path = self._get_object_key_path(ecosystem, repo_path)
+        path = self.get_object_key_path(ecosystem, repo_path)
         self.store_blob(manifest, "{path}/{filename}".format(path=path, filename=filename))
