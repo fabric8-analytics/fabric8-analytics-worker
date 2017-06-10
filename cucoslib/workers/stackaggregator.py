@@ -15,6 +15,7 @@ from cucoslib.solver import get_ecosystem_parser
 from cucoslib.base import BaseTask
 from cucoslib.graphutils import (get_stack_usage_data_graph, get_stack_popularity_data_graph,aggregate_stack_data,GREMLIN_SERVER_URL_REST)
 from cucoslib.workers.mercator import MercatorTask
+from cucoslib.utils import get_session_retry
 
 config = get_configuration()
 
@@ -145,10 +146,7 @@ class StackAggregatorTask(BaseTask):
             payload = {'gremlin': qstring}
 
             try:
-                s = requests.Session()
-                a = requests.adapters.HTTPAdapter(max_retries=int(os.getenv('MAX_GREMLIN_RETRY_COUNT', '3')))
-                s.mount('http://', a)
-                graph_req = s.post(GREMLIN_SERVER_URL_REST, data=json.dumps(payload))
+                graph_req = get_session_retry().post(GREMLIN_SERVER_URL_REST, data=json.dumps(payload))
 
                 if graph_req.status_code == 200:
                     graph_resp = graph_req.json()

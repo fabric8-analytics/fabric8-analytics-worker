@@ -14,6 +14,8 @@ from queue import Queue, Empty
 from contextlib import contextmanager
 from lxml import etree
 import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import desc
@@ -607,6 +609,14 @@ def case_sensitivity_transform(ecosystem, name):
         return name.lower()
 
     return name
+
+def get_session_retry(retries=3, backoff_factor=0.2, status_forcelist=(404, 500, 502, 504), session=None):
+    session = session or requests.Session()
+    retry = Retry(total=retries, read=retries, connect=retries,
+                backoff_factor=backoff_factor, status_forcelist=status_forcelist)
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('http://', adapter)
+    return session
 
 # get not hidden files from current directory
 # print(list(get_all_files_from('.', file_filter=lambda a: not startswith(a, ['.']))))
