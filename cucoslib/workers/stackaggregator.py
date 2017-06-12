@@ -15,6 +15,7 @@ from cucoslib.solver import get_ecosystem_parser
 from cucoslib.base import BaseTask
 from cucoslib.graphutils import (get_stack_usage_data_graph, get_stack_popularity_data_graph,aggregate_stack_data,GREMLIN_SERVER_URL_REST)
 from cucoslib.workers.mercator import MercatorTask
+from cucoslib.utils import get_session_retry
 
 config = get_configuration()
 
@@ -144,10 +145,22 @@ class StackAggregatorTask(BaseTask):
             qstring += "as('version').in('has_version').as('package').select('version','package').by(valueMap());"
             payload = {'gremlin': qstring}
 
-            graph_req = requests.post(GREMLIN_SERVER_URL_REST, data=json.dumps(payload))
-            graph_resp = graph_req.json()
+            try:
+                graph_req = get_session_retry().post(GREMLIN_SERVER_URL_REST, data=json.dumps(payload))
 
-            result.append(graph_resp["result"])
+                if graph_req.status_code == 200:
+                    graph_resp = graph_req.json()
+                    if 'result' not in graph_resp:
+                        return None
+                    if len(graph_resp['result']['data']) == 0:
+                        return None
+                    result.append(graph_resp["result"])
+                else:
+                    self.log.error("Failed retrieving dependency data.")
+                    return None
+            except:
+                self.log.error("Error retrieving dependency data.")
+                return None
 
         return {"result": result}
 
@@ -161,7 +174,9 @@ class StackAggregatorTask(BaseTask):
             manifest = result['details'][0]['manifest_file']
 
             finished = self._get_dependency_data(resolved,ecosystem)
-            stack_data = aggregate_stack_data(finished, manifest, ecosystem.lower())
+            if finished != None:
+                stack_data = aggregate_stack_data(finished, manifest, ecosystem.lower())
+                return stack_data
 
-        return stack_data
+        return {}
 

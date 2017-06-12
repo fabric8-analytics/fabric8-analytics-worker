@@ -4,10 +4,13 @@ import requests
 import os
 from collections import Counter
 import re
+import logging
 
 from cucoslib.graphutils import GREMLIN_SERVER_URL_REST
 from cucoslib.base import BaseTask
 from cucoslib.conf import get_configuration
+from cucoslib.utils import get_session_retry
+
 
 config = get_configuration()
 
@@ -17,6 +20,7 @@ pattern = re.compile(r'(' + remove + ')', re.IGNORECASE)
 pattern_to_save = '[^\w\*\.Xx\-\>\=\<\~\^\|\/\:]'
 pattern_n2_remove = re.compile(pattern_to_save)
 
+_logger = logging.getLogger(__name__)
 
 class SimilarStack(object):
     def __init__(self, stack_id, usage_score=None, source=None,
@@ -61,13 +65,17 @@ class GraphDB:
 
     def execute_gremlin_dsl(self, payload):
         """Execute the gremlin query and return the response."""
-        response = requests.post(
-            self._bayesian_graph_url, data=json.dumps(payload))
-        json_response = response.json()
-        if response.status_code != 200:
+        try:
+            response = get_session_retry().post(self._bayesian_graph_url, data=json.dumps(payload))
+            if response.status_code != 200:
+                _logger.error ("HTTP error {}. Error retrieving Gremlin data.".format(response.status_code))
+                return None
+            else:
+                json_response = response.json()
+                return json_response
+        except:
+            _logger.error ("Failed retrieving Gremlin data.")
             return None
-        else:
-            return json_response
 
     def get_response_data(self, json_response, data_default):
         """Data default parameters takes what should data to be returned."""
@@ -435,17 +443,22 @@ class RecommendationTask(BaseTask):
         input_stack_vectors = GraphDB().get_input_stacks_vectors_from_graph(input_stack, ecosystem)
         # Fetch all reference stacks if any one component from input is present
         ref_stacks = GraphDB().get_reference_stacks_from_graph(input_stack.keys())
-        # Apply jaccard similarity to consider only stacks having 30% interection of component names
-        # We only get one top matching reference stack based on components now
-        # filtered_ref_stacks = rs.filter_package(input_stack, ref_stacks)
-        # Calculate similarity of the filtered stacks
-        similar_stacks_list = rs.find_relative_similarity(input_stack, input_stack_vectors, ref_stacks)
-        similarity_list = self._get_stack_values(similar_stacks_list)
-        result = {"recommendations": {
-            "similar_stacks": similarity_list,
-            "component_level": None,
+
+        if len(ref_stacks) > 0:
+            # Apply jaccard similarity to consider only stacks having 30% interection of component names
+            # We only get one top matching reference stack based on components now
+            # filtered_ref_stacks = rs.filter_package(input_stack, ref_stacks)
+            # Calculate similarity of the filtered stacks
+            similar_stacks_list = rs.find_relative_similarity(input_stack, input_stack_vectors, ref_stacks)
+            similarity_list = self._get_stack_values(similar_stacks_list)
+            result = {"recommendations": {
+                "similar_stacks": similarity_list,
+                "component_level": None,
+                }
             }
-        }
+        else:
+            result = {"recommendations": {"similar_stacks": [], "component_level": None,}}
+
         return result
 
     def _get_stack_values(self, similar_stacks_list):
