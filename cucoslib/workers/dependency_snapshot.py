@@ -27,10 +27,11 @@ class DependencySnapshotTask(BaseTask):
         if not isinstance(wr, dict):
             raise TaskError('metadata task result has unexpected type: {}; expected dict'.
                             format(type(wr)))
-        dependencies = []
-        collected = [m.get('dependencies') for m in wr.get('details', []) if m.get('dependencies')]
-        if collected:
-            dependencies = collected[0]
+
+        # there can be details about multiple manifests in the metadata, therefore we will collect dependency
+        # specifications from all of them and exclude obvious duplicates along the way
+        dependencies = list({dep for m in wr.get('details', []) if m.get('dependencies')
+                             for dep in m.get('dependencies', [])})
         return dependencies
 
     def _resolve_dependency(self, ecosystem, dep):
