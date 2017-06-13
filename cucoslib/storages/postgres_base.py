@@ -45,7 +45,6 @@ class PostgresBase(DataStorage):
         elif PostgresBase.echo != echo:
             raise ValueError(self._CONF_ERROR_MESSAGE)
 
-        # TODO(Fridolin): make connection shared across all derived adapters to save number of connections
         # Assign what S3 storage should be used in derived classes
         self._s3 = None
 
