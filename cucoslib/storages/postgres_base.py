@@ -53,12 +53,14 @@ class PostgresBase(DataStorage):
         return PostgresBase.session is not None
 
     def connect(self):
+        # Keep one connection alive and keep overflow unlimited so we can add more connections in our jobs service
         engine = create_engine(
             self.connection_string,
             encoding=self.encoding,
             echo=self.echo,
-            poolclass=NullPool,
-            isolation_level="AUTOCOMMIT"
+            isolation_level="AUTOCOMMIT",
+            pool_size=1,
+            max_overflow=-1
         )
         PostgresBase.session = sessionmaker(bind=engine)()
         Base.metadata.create_all(engine)
