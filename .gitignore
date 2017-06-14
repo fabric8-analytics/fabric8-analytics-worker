@@ -75,7 +75,3 @@ target/
 *.swo
 *.swp
 .idea/*
-
-# Misc
-cucos-license-check-unreleased.rpm
-
