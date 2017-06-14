@@ -66,7 +66,8 @@ class LicenseCheckTask(BaseTask):
                        'summary': {},
                        'details': {}}
         try:
-            command = [os.path.join(os.environ['SCANCODE_PATH'], 'scancode'),
+            command = [os.path.join(os.getenv('SCANCODE_PATH', '/opt/scancode-toolkit/'),
+                                    'scancode'),
                        # Scan for licenses
                        '--license',
                        # Do not return license matches with scores lower than this score

@@ -21,5 +21,6 @@ cd scancode-toolkit
 ./scancode --quiet CHANGELOG.rst
 # ScanCode running as non-root fails on deleting this directory
 rm -rf .cache/scan_results_caches/
-# Some files (e.g. in bin/) are not group readable
-chmod -R u+rwX,g+rwX .
+# Make sure that group & others can execute in bin/ and write to .cache/
+# Can be set more fine grained, but it's OK for now
+chmod -R a+rwX .
