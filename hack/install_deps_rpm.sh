@@ -12,8 +12,6 @@ REQUIRES_TASK='ssdeep'
 # LinguistTask
 # github-linguist gem is installed using "gem install" in Dockerfile since no epel package is available for this gem.
 # LINGUIST='rubygem-github-linguist'
-# license check requires oslc, both are in copr
-LICENSE_CHECK='license-check'
 # oscryptocatcher check from copr repo
 # OSCRYPTOCATCHER='oscryptocatcher'
 # covscan
@@ -31,6 +29,6 @@ MERCATOR_DEPS="maven"
 CODE_METRICS="cloc python-pip"
 # Install all RPM deps
 yum install -y --setopt=tsflags=nodocs ${REQUIREMENTS_TXT} ${REQUIRES} \
-                ${REQUIRES_TASK} ${LINGUIST} ${LICENSE_CHECK} \
+                ${REQUIRES_TASK} ${LINGUIST} \
                 ${OSCRYPTOCATCHER} ${CSMOCK_TASK_DEPS} ${GOFEDLIB_DEPS} \
                 ${BD_DEPS} ${BREWUTILS} "${MERCATOR}" ${MERCATOR_DEPS} ${CODE_METRICS}
