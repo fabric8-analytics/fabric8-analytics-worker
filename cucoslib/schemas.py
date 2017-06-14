@@ -31,6 +31,7 @@ def removed_in(role):
     """
     return jsl.Scope(lambda v: v < role)
 
+
 class JSLWithSchemaAttribute(jsl.Document):
     name = jsl.StringField(required=True, description='Name of the schema',
                            pattern=r'^[a-zA-Z0-9_]+$')
@@ -64,6 +65,7 @@ class JSLSchemaBase(jsl.Document):
 
     schema = jsl.DocumentField(JSLWithSchemaAttribute,
                                description='Information about schema of this document')
+
 
 class JSLSchemaBaseWithRelease(JSLSchemaBase):
     _release = jsl.StringField(

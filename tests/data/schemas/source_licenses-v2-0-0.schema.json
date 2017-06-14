@@ -94,7 +94,7 @@
             ],
             "additionalProperties": false
         },
-        "license_details": {
+        "license_details_pre_3_0": {
             "type": "object",
             "properties": {
                 "count": {
@@ -129,7 +129,7 @@
                 "license_stats": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/license_details"
+                        "$ref": "#/definitions/license_details_pre_3_0"
                     }
                 },
                 "oslc_stats": {
@@ -157,15 +157,15 @@
                         "$ref": "#/definitions/license_count"
                     }
                 },
+                "licensed_files": {
+                    "type": "number"
+                },
                 "sure_licenses": {
                     "type": "array",
                     "description": "Licenses detected with high match confidence",
                     "items": {
                         "type": "string"
                     }
-                },
-                "licensed_files": {
-                    "type": "number"
                 }
             },
             "required": [

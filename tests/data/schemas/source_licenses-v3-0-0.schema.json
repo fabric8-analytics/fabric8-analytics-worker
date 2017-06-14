@@ -56,110 +56,33 @@
             ],
             "additionalProperties": false
         },
-        "file_details": {
-            "type": "object",
-            "properties": {
-                "path": {
-                    "type": "string"
-                },
-                "result": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "additionalProperties": true
-                    }
-                }
-            },
-            "required": [
-                "path"
-            ],
-            "additionalProperties": false
-        },
-        "license_count": {
-            "type": "object",
-            "description": "Detected license with occurrence count",
-            "properties": {
-                "count": {
-                    "type": "number",
-                    "description": "Combined count of detected variants"
-                },
-                "license_name": {
-                    "type": "string",
-                    "description": "Common name of the detected license"
-                }
-            },
-            "required": [
-                "count",
-                "license_name"
-            ],
-            "additionalProperties": false
-        },
-        "license_details_pre_3_0": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "string",
-                    "description": "Number of occurrences of this variant"
-                },
-                "license_name": {
-                    "type": "string",
-                    "description": "Common name of the detected license"
-                },
-                "variant_id": {
-                    "type": "string",
-                    "description": "Specific license variant detected"
-                }
-            },
-            "required": [
-                "count",
-                "license_name",
-                "variant_id"
-            ],
-            "additionalProperties": false
-        },
         "license_scan_details": {
             "type": "object",
             "properties": {
-                "files": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/file_details"
-                    }
+                "files_count": {
+                    "type": "integer"
                 },
-                "license_stats": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/license_details_pre_3_0"
-                    }
+                "licenses": {
+                    "type": "object"
                 },
-                "oslc_stats": {
-                    "$ref": "#/definitions/oslc_stats"
+                "scancode_notice": {
+                    "type": "string"
+                },
+                "scancode_version": {
+                    "type": "string"
                 }
             },
+            "required": [
+                "files_count",
+                "licenses",
+                "scancode_notice",
+                "scancode_version"
+            ],
             "additionalProperties": true
         },
         "license_scan_summary": {
             "type": "object",
             "properties": {
-                "all_files": {
-                    "type": "number",
-                    "description": "Total number of files analysed"
-                },
-                "license_files": {
-                    "type": "number"
-                },
-                "source_files": {
-                    "type": "number"
-                },
-                "distinct_licenses": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/license_count"
-                    }
-                },
-                "licensed_files": {
-                    "type": "number"
-                },
                 "sure_licenses": {
                     "type": "array",
                     "description": "Licenses detected with high match confidence",
@@ -169,15 +92,9 @@
                 }
             },
             "required": [
-                "distinct_licenses",
                 "sure_licenses"
             ],
             "additionalProperties": false
-        },
-        "oslc_stats": {
-            "type": "object",
-            "properties": {},
-            "additionalProperties": true
         },
         "successful_license_scan": {
             "type": "object",
@@ -247,5 +164,5 @@
             "additionalProperties": false
         }
     ],
-    "title": "source_licenses-v1-0-0"
+    "title": "source_licenses-v3-0-0"
 }

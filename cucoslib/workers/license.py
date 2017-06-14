@@ -16,12 +16,12 @@ SCANCODE_PROCESSES = '1'
 class LicenseCheckTask(BaseTask):
     _analysis_name = 'source_licenses'
     description = "Check licences of all files of a package"
-    #schema_ref = SchemaRef(_analysis_name, '3-0-0')
+    schema_ref = SchemaRef(_analysis_name, '3-0-0')
 
     @staticmethod
     def process_output(data):
-        # not interested in these
-        keys_to_remove = ['start_line', 'end_line', 'matched_rule', 'score', 'key']
+        # not interested in these ('short_name' becomes a key)
+        keys_to_remove = ['start_line', 'end_line', 'matched_rule', 'score', 'key', 'short_name']
         # 'files' is a list of file paths along with info about detected licenses.
         # If there's the same license text in most files, then almost the same license info
         # accompanies each file path.
@@ -89,8 +89,7 @@ class LicenseCheckTask(BaseTask):
             details = self.process_output(output)
             result_data['details'] = details
             result_data['status'] = 'success'
-            result_data['summary'] = {'sure_licenses': list(details['licenses'].keys()),
-                                      'files_count': details['files_count']}
+            result_data['summary'] = {'sure_licenses': list(details['licenses'].keys())}
         except:
             self.log.exception("License scan failed")
             result_data['status'] = 'error'
