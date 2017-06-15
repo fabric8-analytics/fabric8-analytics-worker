@@ -27,7 +27,8 @@ class CVEDBSyncTask(BaseTask):
         with tempdir() as vulndb_dir:
             # clone vulndb git repo
             self.log.debug("Cloning snyk/vulndb repo")
-            Git.clone(self._VULNDB_GIT_REPO, vulndb_dir)
+            # 'develop' branch seems to be a bit more stable than master
+            Git.clone(self._VULNDB_GIT_REPO, vulndb_dir, depth="1", branch="develop")
             with cwd(vulndb_dir):
                 # install dependencies
                 self.log.debug("Installing snyk/vulndb dependencies")
@@ -35,8 +36,8 @@ class CVEDBSyncTask(BaseTask):
                 # generate database (json in file)
                 self.log.debug("Generating snyk/vulndb")
                 TimedCommand.get_command_output([os.path.join('cli', 'shrink.js'),
-                                                'data',
-                                                self._VULNDB_FILENAME])
+                                                 'data',
+                                                 self._VULNDB_FILENAME])
                 # parse the JSON so we are sure that we have a valid JSON
                 with open(self._VULNDB_FILENAME) as f:
                     return json.load(f)
