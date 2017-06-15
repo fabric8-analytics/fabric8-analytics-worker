@@ -78,11 +78,3 @@ about mismatched locations in compiled files. Those can be deleted using:
 ```shell
 (cucos-worker) $ sudo find -name *.pyc -delete
 ```
-
-# Testing against not-yet-released worker dependencies
-
-The `Dockerfile.tests` file is set up to install any
-`cucos-license-check-unreleased.rpm` file stored locally in this directory.
-In combination with the `license-check-worker/make_rpm.sh` script in the
-data-mining-tools repo, this feature can be used to run the worker tests
-against a version of `cucos-license-check` that is not yet released.

@@ -7,11 +7,6 @@ COPY . /cucoslib
 WORKDIR /cucoslib
 RUN cd tests && pip3 install -r ./requirements.txt
 
-# Install cucos-license-check prerelease if present in lib dir
-RUN ls cucos-license-check-unreleased.rpm && \
-    dnf install -y cucos-license-check-unreleased.rpm; \
-    exit 0 # We expect the initial `ls` may fail
-
 RUN useradd -o -u 1000 -G mock cucos
 USER cucos
 
