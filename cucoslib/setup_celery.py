@@ -38,9 +38,20 @@ def get_dispatcher_config_files():
     return nodes_yml, flows
 
 
-def init_celery(app=None, result_backend=True):
+def init_selinon(app=None):
+    """Init Selinon configuration.
+    
+    :param app: celery application, if omitted Selinon flow handling tasks will not be registered
     """
-    Init Celery configuration
+    if app is not None:
+        Config.set_celery_app(app)
+
+    nodes_config, flows_config = get_dispatcher_config_files()
+    Config.set_config_yaml(nodes_config, flows_config)
+
+
+def init_celery(app=None, result_backend=True):
+    """Init Celery configuration.
 
     :param app: celery configuration, if omitted, application will be instantiated
     :param result_backend: True if Celery should connect to result backend
@@ -58,7 +69,3 @@ def init_celery(app=None, result_backend=True):
         app.config_from_object(CelerySettings)
     else:
         app.config_from_object(CelerySettings)
-
-    Config.set_celery_app(app)
-    nodes_config, flows_config = get_dispatcher_config_files()
-    Config.set_config_yaml(nodes_config, flows_config)

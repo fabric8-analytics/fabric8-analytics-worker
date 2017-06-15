@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-import logging
 from celery import Celery
-from cucoslib.setup_celery import init_celery
+from cucoslib.setup_celery import init_celery, init_selinon
 
 
 app = Celery('tasks')
 init_celery(app)
+init_selinon(app)
