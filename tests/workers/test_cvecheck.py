@@ -1,9 +1,8 @@
+from flexmock import flexmock
 import os
 import pytest
-from flexmock import flexmock
 from cucoslib.object_cache import EPVCache
 from cucoslib.workers import CVEcheckerTask
-
 
 
 @pytest.mark.usefixtures("dispatcher_setup")
@@ -39,9 +38,47 @@ class TestCVEchecker(object):
         assert results['status'] == 'success'
         assert results['summary'] == ['CVE-2015-5688']
 
-    def test_maven_scan(self):
-        # TODO: We'd need to download some jar to run the scan
-        assert True
+    def test_maven_commons_collections(self):
+        jar_path = os.path.join(
+                    os.path.dirname(
+                     os.path.abspath(__file__)), '..', 'data', 'maven',
+                                                 'commons-collections-3.2.1.jar')
+        args = {'ecosystem': 'maven', 'name': 'mako', 'version': '0.3.3'}
+        flexmock(EPVCache).should_receive('get_source_tarball').and_return(jar_path)
+        task = CVEcheckerTask.create_test_instance(task_name='source_licenses')
+        results = task.execute(arguments=args)
+
+        assert isinstance(results, dict)
+        assert set(results.keys()) == {'details', 'status', 'summary'}
+        details = results.get('details')
+        #   "details": [
+        #        {
+        #            "cvss": {
+        #                "score": 7.5,
+        #                "vector": "AV:N/AC:L/Au:?/C:P/I:P/A:P"
+        #            },
+        #        "description": "...",
+        #        "id": "CVE-2015-6420",
+        #        "references": [
+        #            "http://www.securityfocus.com/bid/78872",
+        #            "http://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-20151209-java-deserialization",
+        #            "https://h20566.www2.hpe.com/portal/site/hpsc/public/kb/docDisplay?docId=emr_na-c05376917",
+        #            "https://h20566.www2.hpe.com/portal/site/hpsc/public/kb/docDisplay?docId=emr_na-c05390722"
+        #            ],
+        #        "severity": "High"
+        #        }
+        #    ],
+        assert isinstance(details, list) and len(details) == 1
+        detail = details[0]
+        assert set(detail.keys()) == {'cvss', 'description', 'id', 'references', 'severity'}
+        cvss = detail['cvss']
+        assert cvss['score'] == 7.5
+        assert cvss['vector'] == 'AV:N/AC:L/Au:?/C:P/I:P/A:P'
+        assert detail['id'] == 'CVE-2015-6420'
+        assert 'http://www.securityfocus.com/bid/78872' in detail['references']
+        assert detail['severity'] == 'High'
+        assert results['status'] == 'success'
+        assert results['summary'] == ['CVE-2015-6420']
 
     def test_python_mako(self):
         egg_info_dir = os.path.join(
