@@ -43,19 +43,22 @@ class Git(object):
             TimedCommand.get_command_output(["git", "config", "--global", "user.email", user_email])
 
     @classmethod
-    def clone(cls, url, path, depth=None):
+    def clone(cls, url, path, depth=None, branch=None):
         """
         clone repository provided as url to specific path
 
         :param url: str
         :param path: str
         :param depth: str
+        :param branch: str
         :return: instance of Git()
         """
         cls.config()
         cmd = ["git", "clone", url, path]
         if depth is not None:
             cmd.extend(["--depth", depth])
+        if branch is not None:
+            cmd.extend(["--branch", branch])
         TimedCommand.get_command_output(cmd, graceful=False)
         return cls(path=path)
 
