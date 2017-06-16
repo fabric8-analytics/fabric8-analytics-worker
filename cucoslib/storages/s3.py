@@ -25,11 +25,11 @@ class AmazonS3(DataStorage):
         super().__init__()
         self._s3 = None
 
-        self.region_name = os.environ.get('AWS_S3_REGION', region_name) or self._DEFAULT_REGION_NAME
+        self.region_name = os.getenv('AWS_S3_REGION', region_name) or self._DEFAULT_REGION_NAME
         self.bucket_name = bucket_name or self._DEFAULT_BUCKET_NAME
         self.bucket_name = self.bucket_name.format(**os.environ)
-        self._aws_access_key_id = os.environ.get('AWS_S3_ACCESS_KEY_ID', aws_access_key_id)
-        self._aws_secret_access_key = os.environ.get('AWS_S3_SECRET_ACCESS_KEY', aws_secret_access_key)
+        self._aws_access_key_id = os.getenv('AWS_S3_ACCESS_KEY_ID', aws_access_key_id)
+        self._aws_secret_access_key = os.getenv('AWS_S3_SECRET_ACCESS_KEY', aws_secret_access_key)
 
         # let boto3 decide if we don't have local development proper values
         self._endpoint_url = None
@@ -40,7 +40,9 @@ class AmazonS3(DataStorage):
 
         # if we run locally, make connection properties configurable
         if is_local_deployment():
-            self._endpoint_url = endpoint_url or self._DEFAULT_LOCAL_ENDPOINT
+            self._endpoint_url = os.getenv('S3_ENDPOINT_URL') or \
+                                 endpoint_url or \
+                                 self._DEFAULT_LOCAL_ENDPOINT
             self._use_ssl = use_ssl
             self.encryption = False
 
