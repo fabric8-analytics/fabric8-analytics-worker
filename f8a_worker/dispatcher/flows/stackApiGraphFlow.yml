@@ -2,6 +2,7 @@
   flow-definitions:
     - name: 'stackApiGraphFlow'
       queue: '{DEPLOYMENT_PREFIX}_api_stackApiGraphFlow_v0'
+      nowait: 'bayesianFlow'
       edges:
         - from:
           to:
@@ -12,3 +13,12 @@
           to:
             - 'recommendation'
             - 'stack_aggregator'
+        - from:
+            - 'stack_aggregator'
+          to: 'bayesianFlow'
+          foreach:
+            import: 'cucoslib.dispatcher.foreach'
+            function: 'iter_dependencies'
+            # result of the function is used as sub-flow arguments
+            propagate_result: true
+
