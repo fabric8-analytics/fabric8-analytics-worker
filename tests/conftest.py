@@ -1,7 +1,8 @@
 import pytest
 from flexmock import flexmock
 
-from cucoslib.models import Base, create_db_scoped_session
+from cucoslib.enums import EcosystemBackend
+from cucoslib.models import Base, Ecosystem, create_db_scoped_session
 from cucoslib.setup_celery import get_dispatcher_config_files
 from cucoslib.storages import AmazonS3
 from selinon import Config
@@ -24,6 +25,42 @@ def rdb():
         session.commit()
     Base.metadata.create_all(bind=session.bind)
     return session
+
+
+@pytest.fixture
+def maven(rdb):
+    maven = Ecosystem(name='maven', backend=EcosystemBackend.maven,
+                      fetch_url='')
+    rdb.add(maven)
+    rdb.commit()
+    return maven
+
+
+@pytest.fixture
+def npm(rdb):
+    npm = Ecosystem(name='npm', backend=EcosystemBackend.npm,
+                    fetch_url='https://registry.npmjs.org/')
+    rdb.add(npm)
+    rdb.commit()
+    return npm
+
+
+@pytest.fixture
+def pypi(rdb):
+    pypi = Ecosystem(name='pypi', backend=EcosystemBackend.pypi,
+                     fetch_url='https://pypi.python.org/pypi')
+    rdb.add(pypi)
+    rdb.commit()
+    return pypi
+
+
+@pytest.fixture
+def rubygems(rdb):
+    rubygems = Ecosystem(name='rubygems', backend=EcosystemBackend.rubygems,
+                         fetch_url='https://rubygems.org/api/v1')
+    rdb.add(rubygems)
+    rdb.commit()
+    return rubygems
 
 
 @pytest.fixture()

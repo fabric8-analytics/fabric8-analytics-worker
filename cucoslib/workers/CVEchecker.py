@@ -35,7 +35,7 @@ class CVEcheckerTask(BaseTask):
             # "CVSSv2": "7.5 (HIGH) (AV:N/AC:L/Au:N/C:P/I:P/A:P)"
             try:
                 score, severity, vector = entry.get('CVSSv2').split(' ')
-                score = int(score)
+                score = float(score)
                 vector = vector.strip('()')
             except ValueError:
                 pass

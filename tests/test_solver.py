@@ -2,46 +2,9 @@ import pytest
 
 import datetime
 import flexmock
-from cucoslib.enums import EcosystemBackend
-from cucoslib.models import Analysis, Ecosystem, Package, Version
+from cucoslib.models import Analysis, Package, Version
 from cucoslib.solver import Dependency, NpmDependencyParser,\
     get_ecosystem_solver, CucosReleasesFetcher, NpmReleasesFetcher
-
-
-@pytest.fixture
-def maven(rdb):
-    maven = Ecosystem(name='maven', backend=EcosystemBackend.maven,
-                      fetch_url='')
-    rdb.add(maven)
-    rdb.commit()
-    return maven
-
-
-@pytest.fixture
-def npm(rdb):
-    npm = Ecosystem(name='npm', backend=EcosystemBackend.npm,
-                    fetch_url='https://registry.npmjs.org/')
-    rdb.add(npm)
-    rdb.commit()
-    return npm
-
-
-@pytest.fixture
-def pypi(rdb):
-    pypi = Ecosystem(name='pypi', backend=EcosystemBackend.pypi,
-                     fetch_url='https://pypi.python.org/pypi')
-    rdb.add(pypi)
-    rdb.commit()
-    return pypi
-
-
-@pytest.fixture
-def rubygems(rdb):
-    rubygems = Ecosystem(name='rubygems', backend=EcosystemBackend.rubygems,
-                         fetch_url='https://rubygems.org/api/v1')
-    rdb.add(rubygems)
-    rdb.commit()
-    return rubygems
 
 
 class TestSolver(object):
