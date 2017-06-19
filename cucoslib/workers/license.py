@@ -34,10 +34,12 @@ class LicenseCheckTask(BaseTask):
                 if short_name not in licenses.keys():
                     for key in keys_to_remove:
                         del _license[key]
-                    _license['paths'] = [file['path']]
+                    _license['paths'] = {file['path']}
                     licenses[short_name] = _license
                 else:
-                    licenses[short_name]['paths'].append(file['path'])
+                    licenses[short_name]['paths'].add(file['path'])
+        for l in licenses.values():
+            l['paths'] = list(l['paths'])  # set -> list
         data['licenses'] = licenses
 
         del data['scancode_options']
