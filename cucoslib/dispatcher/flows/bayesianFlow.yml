@@ -7,6 +7,8 @@
       propagate_node_args: true
       # propagate arguments from InitAnalysisFlow to bayesianAnalysisFlow
       node_args_from_first: true
+      nowait:
+        - 'GraphImporterTask'
       sampling:
         name: 'constant'
         args:
