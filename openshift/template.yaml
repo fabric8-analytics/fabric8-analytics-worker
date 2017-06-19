@@ -11,11 +11,11 @@ objects:
   kind: DeploymentConfig
   metadata:
     labels:
-      service: bayesian-worker-${WORKER_ADMINISTRATION_REGION}
-    name: bayesian-worker-${WORKER_ADMINISTRATION_REGION}
+      service: bayesian-worker-${WORKER_ADMINISTRATION_REGION}${WORKER_NAME_SUFFIX}
+    name: bayesian-worker-${WORKER_ADMINISTRATION_REGION}${WORKER_NAME_SUFFIX}
   spec:
     selector:
-      service: bayesian-worker-${WORKER_ADMINISTRATION_REGION}
+      service: bayesian-worker-${WORKER_ADMINISTRATION_REGION}${WORKER_NAME_SUFFIX}
     strategy:
       type: Rolling
       rollingParams:
@@ -27,7 +27,7 @@ objects:
     template:
       metadata:
         labels:
-          service: bayesian-worker-${WORKER_ADMINISTRATION_REGION}
+          service: bayesian-worker-${WORKER_ADMINISTRATION_REGION}${WORKER_NAME_SUFFIX}
       spec:
         containers:
         - env:
@@ -40,6 +40,10 @@ objects:
                 key: deployment-prefix
           - name: WORKER_ADMINISTRATION_REGION
             value: "${WORKER_ADMINISTRATION_REGION}"
+          - name: WORKER_EXCLUDE_QUEUES
+            value: "${WORKER_EXCLUDE_QUEUES}"
+          - name: WORKER_INCLUDE_QUEUES
+            value: "${WORKER_INCLUDE_QUEUES}"
           - name: POSTGRESQL_DATABASE
             valueFrom:
               secretKeyRef:
@@ -176,12 +180,31 @@ objects:
     - type: ConfigChange
     replicas: ${REPLICAS}
 
+
 parameters:
 - description: Worker region for serving tasks - api or ingestion
   displayName: Worker administration region
   required: true
   name: WORKER_ADMINISTRATION_REGION
   value: "api"
+
+- description: Exclude queues so worker does not serve particular tasks
+  displayName: Exclude queues
+  required: false
+  name: WORKER_EXCLUDE_QUEUES
+  value: ""
+
+- description: Let a worker listen on listed queues so worker serves only listed tasks
+  displayName: Include queues
+  required: false
+  name: WORKER_INCLUDE_QUEUES
+  value: ""
+
+- description: A suffix for worker to distinguish different worker types based on configuration
+  displayName: Worker name suffix
+  required: false
+  name: WORKER_NAME_SUFFIX
+  value: ""
 
 - description: Turn off tasks that are run on OpenShift instance and require internal services
   displayName: Openshift deployment
