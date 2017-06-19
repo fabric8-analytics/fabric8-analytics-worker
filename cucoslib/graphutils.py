@@ -7,6 +7,8 @@ GREMLIN_SERVER_URL_REST = "http://{host}:{port}".format\
                            (host=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_HOST", "localhost"),
                             port=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_PORT", "8182"))
 
+PGM_REST_URL = os.getenv('PGM_REST_URL', 'http://kronos-kattappa-0237.dev.rdu2c.fabric8.io/api/v1/kronos_score')
+JANUS_MODEL_REST_URL = os.getenv('JANUS_MODEL_REST_URL', 'http://janus-demo-janus.dev.rdu2c.fabric8.io/api/v1/janus')
 
 def get_stack_usage_data_graph(components):
     components_with_usage_data = 0

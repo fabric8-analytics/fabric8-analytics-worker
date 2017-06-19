@@ -6,7 +6,7 @@ from collections import Counter
 import re
 import logging
 
-from cucoslib.graphutils import GREMLIN_SERVER_URL_REST
+from cucoslib.graphutils import GREMLIN_SERVER_URL_REST, PGM_REST_URL, JANUS_MODEL_REST_URL
 from cucoslib.base import BaseTask
 from cucoslib.conf import get_configuration
 from cucoslib.utils import get_session_retry
@@ -43,6 +43,7 @@ class GraphDB:
 
     def __init__(self):
         self._bayesian_graph_url = GREMLIN_SERVER_URL_REST
+        self._bayesian_graph_url = "http://gremlin-http-thread-pool.dev.rdu2c.fabric8.io"
 
     @staticmethod
     def id_value_checker(id_value):
@@ -257,6 +258,25 @@ class GraphDB:
 
         return list_ref_stacks
 
+    def get_version_information(self, input_list, ecosystem):
+        """Fetch the version information for each of the packages"""
+        input_packages = [package for package in input_list]
+        str_query = "g.V().has('ecosystem',ecosystem).has('name',within(input_packages)).as('pkg').out('has_version').hasNot('cve_ids').as('ver').select('pkg','ver').by(valueMap()).dedup()"
+        payload = {
+            'gremlin': str_query,
+            'bindings': {
+                'ecosystem': ecosystem,
+                'input_packages': input_packages
+            }
+        }
+        
+        #Query Gremlin with packages list to get their version information
+        gremlin_response = self.execute_gremlin_dsl(payload)
+        if gremlin_response is None:
+            return []
+        response = self.get_response_data(gremlin_response, [{0: 0}])
+        return response
+
     def get_input_stacks_vectors_from_graph(self, input_list, ecosystem):
         """Fetches EPV properties of all the components provided as part of input stack"""
         input_stack_list = []
@@ -285,7 +305,6 @@ class GraphDB:
                         }
                     )
         return input_stack_list
-
 
 class RelativeSimilarity:
 
@@ -431,35 +450,124 @@ class RelativeSimilarity:
 class RecommendationTask(BaseTask):
     _analysis_name = 'recommendation'
     description = 'Get Recommendation'
+    
+    def call_janus_model(self, user_profile):
+        """Calls the Janus model with the user profile information
+            to get the user_persona"""
+        try:
+            if user_profile is not None:
+                response = get_session_retry().post(JANUS_MODEL_REST_URL, json=user_profile)
+                if response.status_code != 200:
+                    self.log.error ("HTTP error {}. Error retrieving Janus data.".format(response.status_code))
+                    return None
+                else:
+                    json_response = response.json()
+                    return json_response
+            else:
+               self.log.debug('User Profile information is not passed in the call, Quitting! Janus model\'s call')
+        except:
+            self.log.error ("Failed retrieving Janus data.")
+            return None
+
+    def call_pgm(self, payload):
+        """Calls the PGM model with the normalized manifest information to get the relevant packages"""
+        try:
+            if payload is not None:
+                response = get_session_retry().post(PGM_REST_URL, json=payload)
+                if response.status_code != 200:
+                    self.log.error ("HTTP error {}. Error retrieving PGM data.".format(response.status_code))
+                    return None
+                else:
+                    json_response = response.json()
+                    return json_response
+            else:
+                self.log.debug('Payload information is not passed in the call, Quitting! PGM\'s call')
+        except:
+            self.log.error ("Failed retrieving PGM data.")
+            return None
+        
 
     def execute(self, arguments=None):
+        self._strict_assert(arguments.get('user_profile'))
         arguments = self.parent_task_result('GraphAggregatorTask')
-        rs = RelativeSimilarity()
 
-        input_stack = {d["package"]: d["version"] for d in arguments.get("result", [])[0].get("details", [])[0].get("_resolved")}
-        ecosystem = arguments.get("result", [])[0].get("details", [])[0].get("ecosystem")
+        results = arguments['result']
+        user_profile = arguments['user_profile']
 
-        # Get Input Stack data
-        input_stack_vectors = GraphDB().get_input_stacks_vectors_from_graph(input_stack, ecosystem)
-        # Fetch all reference stacks if any one component from input is present
-        ref_stacks = GraphDB().get_reference_stacks_from_graph(input_stack.keys())
+        # Send the user_profile information to Janus model to get back the user_persona
+        # Which is then used as an input along with a few others to hit PGM 
+        # Which gives us the response with list of packages and that is later on passed to Gremlin to get the version information for those packages
+        
+        janus_response = self.call_janus_model(user_profile)
+        input_task_for_pgm = []
 
-        if len(ref_stacks) > 0:
-            # Apply jaccard similarity to consider only stacks having 30% interection of component names
-            # We only get one top matching reference stack based on components now
-            # filtered_ref_stacks = rs.filter_package(input_stack, ref_stacks)
-            # Calculate similarity of the filtered stacks
-            similar_stacks_list = rs.find_relative_similarity(input_stack, input_stack_vectors, ref_stacks)
-            similarity_list = self._get_stack_values(similar_stacks_list)
-            result = {"recommendations": {
-                "similar_stacks": similarity_list,
-                "component_level": None,
+        for result in results:
+            details = result['details'][0]
+            resolved = details['_resolved']
+            self.log.info(result)
+            newArr = [r['package'] for r in resolved]
+            jsonObject = {
+                'ecosystem': details['ecosystem'],
+                'user_persona': janus_response['user_group'],
+                'package_list': newArr
+            }
+            self.log.info(jsonObject)
+            input_task_for_pgm.append(jsonObject)
+
+            # Call PGM and get the response
+            pgm_response = self.call_pgm(input_task_for_pgm)
+
+            # Iterate and call Gremlin query
+            recommendation = {
+                'recommendations': {
+                    'analysis': {
+                        'companion_packages': [],
+                        'alternate_packages': []
+                    }
                 }
             }
-        else:
-            result = {"recommendations": {"similar_stacks": [], "component_level": None,}}
 
-        return result
+            for result in pgm_response:
+                ecosystem = result['ecosystem']
+                companion_packages = result['companion_packages']
+
+                companion_out_arr = recommendation['recommendations']['analysis']['companion_packages']
+
+                get_response = GraphDB().get_version_information(companion_packages, ecosystem)
+
+                reco_hash = self.get_recommendations_hash(get_response)
+
+                for pkg, ver in reco_hash.items():
+                    companion_out_arr.append(ecosystem + ':' + pkg + ':' + ver)
+            return recommendation
+
+
+    def get_recommendations_hash(self, results):
+        dictionary = {}
+        recommendations = {}
+
+        for result in results:
+            package = result['pkg']
+            version_object = result['ver']
+            package_name = package['name'][0]
+            version = version_object['version'][0]
+            dep_count = version_object['dependents_count'][0]
+
+            if package_name not in dictionary:
+                dictionary[package_name] = {
+                    'version': version,
+                    'dependents_count': dep_count
+                }
+                recommendations[package_name] = version
+            
+            else:
+                if dictionary[package_name]['dependents_count'] < dep_count:
+                    dictionary[package_name]['version'] = version
+                    dictionary[package_name]['dependents_count'] = dep_count
+                    recommendations[package_name] = version
+        
+        return recommendations
+
 
     def _get_stack_values(self, similar_stacks_list):
         """Converts the similarity score list to JSON based on the needs"""
