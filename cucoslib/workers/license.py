@@ -20,8 +20,8 @@ class LicenseCheckTask(BaseTask):
 
     @staticmethod
     def process_output(data):
-        # not interested in these ('short_name' becomes a key)
-        keys_to_remove = ['start_line', 'end_line', 'matched_rule', 'score', 'key', 'short_name']
+        # not interested in these
+        keys_to_remove = ['start_line', 'end_line', 'matched_rule', 'score', 'key']
         # 'files' is a list of file paths along with info about detected licenses.
         # If there's the same license text in most files, then almost the same license info
         # accompanies each file path.
@@ -30,14 +30,17 @@ class LicenseCheckTask(BaseTask):
         licenses = {}
         for file in data.pop('files'):
             for _license in file['licenses']:
-                short_name = _license['short_name']
+                # short_name becomes key
+                short_name = _license.pop('short_name')
                 if short_name not in licenses.keys():
                     for key in keys_to_remove:
                         del _license[key]
-                    _license['paths'] = [file['path']]
+                    _license['paths'] = {file['path']}
                     licenses[short_name] = _license
                 else:
-                    licenses[short_name]['paths'].append(file['path'])
+                    licenses[short_name]['paths'].add(file['path'])
+        for l in licenses.values():
+            l['paths'] = list(l['paths'])  # set -> list
         data['licenses'] = licenses
 
         del data['scancode_options']
