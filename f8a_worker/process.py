@@ -140,9 +140,9 @@ class Archive(object):
 
     @staticmethod
     def extract(target, dest):
-        "Detects archive type and extracts it"
+        """ Detects archive type and extracts it """
         tar = Archive.TarMatcher.search(target)
-        if target.endswith(('.zip', '.whl', '.jar')):
+        if target.endswith(('.zip', '.whl', '.jar', '.nupkg')):
             return Archive.extract_zip(target, dest)
         elif target.endswith('.gem'):
             return Archive.extract_gem(target, dest)
@@ -249,6 +249,7 @@ class IndianaJones(object):
             if not version:
                 version = res.json()['info']['version']
             release_files = res.json()['releases'][version]
+
             # sort releases by order in which we'd like to download:
             #  1) sdist
             #  2) wheels
@@ -363,6 +364,16 @@ class IndianaJones(object):
             git = Git.clone(artifact, target_dir)
             digest = IndianaJones.get_revision(target_dir)
             artifact_path = git.archive(artifact)
+        elif ecosystem.is_backed_by(EcosystemBackend.nuget):
+            git = Git.create_git(target_dir)
+            file_url = '{url}{artifact}.{version}.nupkg'.format(url=ecosystem.fetch_url,
+                                                                artifact=artifact.lower(),
+                                                                version=version)
+            local_filename = IndianaJones.download_file(file_url, target_dir)
+            artifact_path = os.path.join(target_dir, local_filename)
+            digest = compute_digest(artifact_path)
+            Archive.extract(artifact_path, target_dir)
+            git.add_and_commit_everything()
         elif parsed:
             if parsed[0] == 'git' or parsed[2].endswith('.git'):
                 git = Git.clone(artifact, target_dir)

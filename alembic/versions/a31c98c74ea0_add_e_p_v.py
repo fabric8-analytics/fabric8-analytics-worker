@@ -21,7 +21,7 @@ def upgrade():
     ecosystems = op.create_table('ecosystems',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=255), nullable=True),
-    sa.Column('_backend', sa.Enum('none', 'npm', 'maven', 'pypi', 'rubygems', 'scm', 'crates', name='ecosystem_backend_enum'), nullable=True),
+    sa.Column('_backend', sa.Enum('none', 'npm', 'maven', 'pypi', 'rubygems', 'scm', 'crates', 'nuget', name='ecosystem_backend_enum'), nullable=True),
     sa.Column('url', sa.String(length=255), nullable=True),
     sa.Column('fetch_url', sa.String(length=255), nullable=True),
     sa.PrimaryKeyConstraint('id')
@@ -34,6 +34,7 @@ def upgrade():
             {'id': 4, 'name': 'pypi', '_backend': 'pypi', 'url': 'https://pypi.python.org/', 'fetch_url': 'https://pypi.python.org/pypi'},
             {'id': 5, 'name': 'go', '_backend': 'scm', 'url': None, 'fetch_url': None},
             {'id': 6, 'name': 'crates', '_backend': 'crates', 'url': 'https://crates.io/', 'fetch_url': None},
+            {'id': 7, 'name': 'nuget', '_backend': 'nuget', 'url': 'https://nuget.org/', 'fetch_url': 'https://api.nuget.org/packages/'},
         ]
     )
     op.create_table('packages',

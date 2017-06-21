@@ -63,6 +63,15 @@ def rubygems(rdb):
     return rubygems
 
 
+@pytest.fixture
+def nugets(rdb):
+    nugets = Ecosystem(name='nuget', backend=EcosystemBackend.nuget,
+                       fetch_url='https://api.nuget.org/packages/')
+    rdb.add(nugets)
+    rdb.commit()
+    return nugets
+
+
 @pytest.fixture()
 def dispatcher_setup():
     """ Setup environment for Dispatcher if needed """
