@@ -32,7 +32,9 @@ def iter_dependencies(storage_pool, node_args):
         if 'unknown_deps' in deps:
             ecosystem = deps['ecosystem']
             for dep in deps['unknown_deps']:
-                args.append(_create_analysis_arguments(ecosystem, dep['package'], dep['version']))
+                arg = _create_analysis_arguments(ecosystem, dep['package'], dep['version'])
+                arg['recursive_limit'] = 0
+                args.append(arg)
     except:
         logger.exception("Failed to collect analysis dependencies")
         return []
