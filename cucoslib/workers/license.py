@@ -3,7 +3,7 @@ Uses ScanCode toolkit to detect licences in source code.
 """
 
 import os
-from cucoslib.utils import TimedCommand
+from cucoslib.utils import TimedCommand, username
 from cucoslib.base import BaseTask
 from cucoslib.schemas import SchemaRef
 from cucoslib.object_cache import ObjectCache
@@ -86,10 +86,11 @@ class LicenseCheckTask(BaseTask):
                        # Stop scanning a file if scanning takes longer than a timeout in seconds
                        '--timeout', SCANCODE_TIMEOUT,
                        cache_path]
-            output = TimedCommand.get_command_output(command,
-                                                     graceful=False,
-                                                     is_json=True,
-                                                     timeout=1200)
+            with username():
+                output = TimedCommand.get_command_output(command,
+                                                         graceful=False,
+                                                         is_json=True,
+                                                         timeout=1200)
             details = self.process_output(output)
             result_data['details'] = details
             result_data['status'] = 'success'

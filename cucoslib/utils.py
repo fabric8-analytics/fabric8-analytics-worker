@@ -1,3 +1,4 @@
+import getpass
 import json
 import logging
 import datetime
@@ -143,6 +144,24 @@ def tempdir():
         yield dirpath
     finally:
         shutil.rmtree(dirpath)
+
+
+@contextmanager
+def username():
+    """ workaround for failing getpass.getuser()
+        http://blog.dscpl.com.au/2015/12/unknown-user-when-running-docker.html
+    """
+    user = ''
+    try:
+        user = getpass.getuser()
+    except KeyError:
+        os_environ['LOGNAME'] = 'f8aworker'
+
+    try:
+        yield
+    finally:
+        if not user:
+            del os_environ['LOGNAME']
 
 
 def assert_not_none(name, value):
