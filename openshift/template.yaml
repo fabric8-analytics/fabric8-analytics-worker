@@ -44,6 +44,8 @@ objects:
             value: "${WORKER_EXCLUDE_QUEUES}"
           - name: WORKER_INCLUDE_QUEUES
             value: "${WORKER_INCLUDE_QUEUES}"
+          - name: WORKER_RUN_DB_MIGRATIONS
+            value: "${WORKER_RUN_DB_MIGRATIONS}"
           - name: POSTGRESQL_DATABASE
             valueFrom:
               secretKeyRef:
@@ -204,6 +206,12 @@ parameters:
   displayName: Worker name suffix
   required: false
   name: WORKER_NAME_SUFFIX
+  value: ""
+
+- description: Run database migrations on worker start up
+  displayName: Run database migrations
+  required: false
+  name: WORKER_RUN_DB_MIGRATIONS
   value: ""
 
 - description: Turn off tasks that are run on OpenShift instance and require internal services
