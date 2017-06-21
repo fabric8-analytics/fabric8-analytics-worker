@@ -8,9 +8,9 @@ from cucoslib.base import BaseTask
 from cucoslib.schemas import SchemaRef
 from cucoslib.object_cache import ObjectCache
 
-SCANCODE_LICENSE_SCORE = '20'
-SCANCODE_TIMEOUT = '10'
-SCANCODE_PROCESSES = '1'
+SCANCODE_LICENSE_SCORE = '20'  # scancode's default is 0
+SCANCODE_TIMEOUT = '120'  # scancode's default is 120
+SCANCODE_PROCESSES = '1'  # scancode's default is 1
 
 
 class LicenseCheckTask(BaseTask):
@@ -89,7 +89,7 @@ class LicenseCheckTask(BaseTask):
             output = TimedCommand.get_command_output(command,
                                                      graceful=False,
                                                      is_json=True,
-                                                     timeout=600)
+                                                     timeout=1200)
             details = self.process_output(output)
             result_data['details'] = details
             result_data['status'] = 'success'
