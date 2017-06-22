@@ -67,7 +67,7 @@ if (env.BRANCH_NAME == 'master') {
             unstash 'template'
             sh "oc --context=dev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=ingestion -v WORKER_EXCLUDE_QUEUES=GraphImporterTask -f template.yaml | oc --context=dev apply -f -"
             sh "oc --context=dev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=ingestion -v WORKER_INCLUDE_QUEUES=GraphImporterTask -v WORKER_NAME_SUFFIX=-graph-import -f template.yaml | oc --context=dev apply -f -"
-            sh "oc --context=dev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=api -v WORKER_EXCLUDE_QUEUES=GraphImporterTask -f template.yaml | oc --context=dev apply -f -"
+            sh "oc --context=dev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=api -v WORKER_RUN_DB_MIGRATIONS=1 -v WORKER_EXCLUDE_QUEUES=GraphImporterTask -f template.yaml | oc --context=dev apply -f -"
             sh "oc --context=dev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=api -v WORKER_INCLUDE_QUEUES=GraphImporterTask -v WORKER_NAME_SUFFIX=-graph-import -f template.yaml | oc --context=dev apply -f -"
         }
 
@@ -75,7 +75,7 @@ if (env.BRANCH_NAME == 'master') {
             unstash 'template'
             sh "oc --context=rh-idev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=ingestion -v WORKER_EXCLUDE_QUEUES=GraphImporterTask -f template.yaml | oc --context=rh-idev apply -f -"
             sh "oc --context=rh-idev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=ingestion -v WORKER_INCLUDE_QUEUES=GraphImporterTask -v WORKER_NAME_SUFFIX=-graph-import -f template.yaml | oc --context=rh-idev apply -f -"
-            sh "oc --context=rh-idev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=api -v WORKER_EXCLUDE_QUEUES=GraphImporterTask -f template.yaml | oc --context=rh-idev apply -f -"
+            sh "oc --context=rh-idev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=api -v WORKER_RUN_DB_MIGRATIONS=1 -v WORKER_EXCLUDE_QUEUES=GraphImporterTask -f template.yaml | oc --context=rh-idev apply -f -"
             sh "oc --context=rh-idev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=api -v WORKER_INCLUDE_QUEUES=GraphImporterTask -v WORKER_NAME_SUFFIX=-graph-import -f template.yaml | oc --context=rh-idev apply -f -"
         }
     }
