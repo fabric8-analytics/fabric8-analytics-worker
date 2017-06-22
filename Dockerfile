@@ -7,7 +7,7 @@ ENV LANG=en_US.UTF-8 \
     OWASP_DEP_CHECK_PATH='/opt/dependency-check/' \
     SCANCODE_PATH='/opt/scancode-toolkit/' \
     # place where to download & unpack artifacts
-    WORKER_DATA_DIR='/var/lib/cucos-lib/worker_data' \
+    WORKER_DATA_DIR='/var/lib/f8a-lib/worker_data' \
     # home directory
     HOME='/workdir' \
     # place for alembic migrations
@@ -89,18 +89,18 @@ WORKDIR ${HOME}
 
 # You don't want to repeat all the above when changing something in repo
 # while it's okay to rerun this \/
-RUN mkdir -p /tmp/cucoslib
+RUN mkdir -p /tmp/f8a_worker
 
-COPY requirements.txt /tmp/cucoslib
-RUN cd /tmp/cucoslib && \
+COPY requirements.txt /tmp/f8a_worker
+RUN cd /tmp/f8a_worker && \
     pip3 install -r requirements.txt
 
 COPY alembic.ini hack/run-db-migrations.sh ${ALEMBIC_DIR}/
 COPY alembic/ ${ALEMBIC_DIR}/alembic
 
-# Install cucoslib
-COPY ./ /tmp/cucoslib
-RUN cd /tmp/cucoslib && pip3 install .
+# Install f8a_worker
+COPY ./ /tmp/f8a_worker
+RUN cd /tmp/f8a_worker && pip3 install .
 
 # Make sure there are no root-owned files and directories in the home directory,
 # as this directory can be used by non-root user at runtime.

@@ -15,7 +15,7 @@ if 'CCS_POSTGRES' in os.environ:
     target_metadata = MetaData()
     config.set_main_option('sqlalchemy.url', os.environ['CCS_POSTGRES'])
     if 'MIGRATE_ONLY' not in os.environ:
-        from cucoslib.models import Base
+        from f8a_worker.models import Base
         for t in Base.metadata.tables.values():
             t.tometadata(target_metadata)
 else:

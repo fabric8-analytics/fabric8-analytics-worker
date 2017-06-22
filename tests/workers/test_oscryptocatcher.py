@@ -4,8 +4,8 @@ import os
 import sys
 import pytest
 from flexmock import flexmock
-from cucoslib.workers import OSCryptoCatcherTask
-from cucoslib.object_cache import EPVCache
+from f8a_worker.workers import OSCryptoCatcherTask
+from f8a_worker.object_cache import EPVCache
 
 
 @pytest.mark.skip(reason="we don't have oscryptocatcher installed in the image")

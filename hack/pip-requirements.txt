@@ -1,4 +1,4 @@
-# Non-RPM cucos-lib requirements (from setup.py & cucoslib/process.py)
+# Non-RPM f8a-lib requirements (from setup.py & f8a_worker/process.py)
 # Mercator has its own requirements.txt
 # TODO: remove this once we move to mercator-go as this will be handled by RPM
 # we leave it here not to install go ecosystem on all images as it is

@@ -92,7 +92,7 @@ fi
 
 echo "Starting test suite"
 docker run -t \
-  -v "${here}:/cucoslib:ro,Z" \
+  -v "${here}:/f8a_worker:ro,Z" \
   ${secrets_vol:-} \
   --link=${TESTDB_CONTAINER_NAME} \
   --link=${TESTS3_CONTAINER_NAME} \

@@ -1,8 +1,6 @@
 Fabric8-Analytics Core library and services
 -------------------------------------------
 
-*Note on naming: The Fabric8-Analytics project has evolved from 2 different projects called "cucos" and "bayesian". We're currently in process of renaming the modules and updating documentation. Until that is completed, please consider "cucos" and "bayesian" to be synonyms of "Fabric8-Analytics".*
-
 This library provides basic infrastructure for development of services and concrete implemementation of services. 
 
 The following libraries are provided:
@@ -14,7 +12,7 @@ The following libraries are provided:
   * One-to-many dictionary
   * Shell command wrapper with timeout support
 
-See ./cucoslib/workers/README.md for a listing of the concrete services.  
+See ./f8a_worker/workers/README.md for a listing of the concrete services.  
 
 ## Contributing
 
@@ -61,20 +59,20 @@ spurious test failures.
 Test cases marked with `pytest.mark.offline` may be executed without having a
 Docker daemon running locally.
 
-To configure a virtualenv (called `cucos-worker` in the example) to run these
+To configure a virtualenv (called `f8a-worker` in the example) to run these
 tests:
 ```shell
-(cucos-worker) $ python -m pip install -r requirements.txt
-(cucos-worker) $ python -m pip install -r tests/requirements.txt
+(f8a-worker) $ python -m pip install -r requirements.txt
+(f8a-worker) $ python -m pip install -r tests/requirements.txt
 ```
 
 The marked offline tests can then be run as:
 ```shell
-(cucos-worker) $ py.test -m offline tests/
+(f8a-worker) $ py.test -m offline tests/
 ```
 
 If the Docker container based tests have been run, then this may complain
 about mismatched locations in compiled files. Those can be deleted using:
 ```shell
-(cucos-worker) $ sudo find -name *.pyc -delete
+(f8a-worker) $ sudo find -name *.pyc -delete
 ```

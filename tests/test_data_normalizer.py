@@ -4,7 +4,7 @@ import os
 import pytest
 from os import path
 
-from cucoslib.data_normalizer import DataNormalizer
+from f8a_worker.data_normalizer import DataNormalizer
 
 
 def compare_dictionaries(a, b):

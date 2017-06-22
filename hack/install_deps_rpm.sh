@@ -1,9 +1,9 @@
 #!/usr/bin/sh -e
-# We need postgresql-devel and python3-devel for psycopg2 listed in cucoslib/requirements.txt
+# We need postgresql-devel and python3-devel for psycopg2 listed in f8a_worker/requirements.txt
 # We cannot use requests from PyPI since it does not allow us to use own certificates
 # python3-pycurl is needed for Amazon SQS (boto lib), we need Fedora's rpm - installing it from pip results in NSS errors
 REQUIREMENTS_TXT='postgresql-devel python34-devel libxml2-devel libxslt-devel python34-requests python34-pycurl'
-# cucoslib/process.py requirements
+# f8a_worker/process.py requirements
 REQUIRES='git /usr/bin/npm rubygems unzip tar file findutils koji rpmdevtools nodejs-packaging wget'
 # BinwalkTask DigesterTask
 # binwalk is installed from the latest release from https://github.com/devttys0/binwalk, since the package on pip is broken, and project documentation recommends `python setup.py install` as the recommended way.
