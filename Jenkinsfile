@@ -17,7 +17,7 @@ node('docker') {
     stage('Build') {
         dockerCleanup()
         docker.build(image.id, '--pull --no-cache .')
-        sh "docker tag ${image.id} docker-registry.usersys.redhat.com/${image.id}"
+        sh "docker tag ${image.id} https://registry.devshift.net/${image.id}"
         docker.build('cucos-lib-tests', '-f Dockerfile.tests .')
     }
 
@@ -29,7 +29,7 @@ node('docker') {
 
     stage('Integration Tests') {
         ws {
-            docker.withRegistry('https://docker-registry.usersys.redhat.com/') {
+            docker.withRegistry('https://registry.devshift.net/') {
                 docker.image('bayesian/bayesian-api').pull()
                 docker.image('bayesian/coreapi-jobs').pull()
                 docker.image('bayesian/coreapi-pgbouncer').pull()
@@ -49,10 +49,6 @@ node('docker') {
 
     if (env.BRANCH_NAME == 'master') {
         stage('Push Images') {
-            docker.withRegistry('https://docker-registry.usersys.redhat.com/') {
-                image.push('latest')
-                image.push(commitId)
-            }
             docker.withRegistry('https://registry.devshift.net/') {
                 image.push('latest')
                 image.push(commitId)
