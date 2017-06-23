@@ -348,6 +348,15 @@
         encryption: false
         versioned: false
 
+    - name: 'S3UserProfileStore'
+      import: 'cucoslib.storages'
+      configuration:
+        <<: *configurationS3
+        bucket_name: 'janus-json-data'
+        region_name: 'us-east-1'
+        encryption: false
+        versioned: false
+
     - name: 'S3Readme'
       import: 'cucoslib.storages'
       configuration:

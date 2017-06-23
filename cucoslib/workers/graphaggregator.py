@@ -8,6 +8,7 @@ from cucoslib.base import BaseTask
 from cucoslib.manifests import get_manifest_descriptor_by_filename
 
 from cucoslib.workers.mercator import MercatorTask
+from selinon import StoragePool
 
 class GraphAggregatorTask(BaseTask):
     _analysis_name = 'graph_aggregator'
@@ -21,8 +22,16 @@ class GraphAggregatorTask(BaseTask):
         versions = solver.solve(deps)
         return [{"package": k, "version": v} for k, v in versions.items()]
 
+    def store_in_bucket(self, content):
+        s3 = StoragePool.get_connected_storage('S3UserProfileStore')
+        s3.store_in_bucket(content)
+
     def execute(self, arguments):
         self._strict_assert(arguments.get('manifest'))
+        self._strict_assert(arguments.get('user_profile'))
+
+        user_profile = arguments['user_profile']
+        self.store_in_bucket(user_profile)
 
         # If we receive a manifest file we need to save it first
         result = []
@@ -80,4 +89,5 @@ class GraphAggregatorTask(BaseTask):
                 out["details"][0]['_resolved'] = resolved_deps
             result.append(out)
 
-        return {'result': result}
+        return {'result': result, 'user_profile': user_profile}
+

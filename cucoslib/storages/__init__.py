@@ -10,6 +10,7 @@ from .s3_package_data import S3PackageData
 from .s3_manifests import S3Manifests
 from .s3_mavenindex import S3MavenIndex
 from .s3_owaspdepcheck import S3OWASPDepCheck
+from .s3_userprofilestore import S3UserProfileStore
 from .s3_readme import S3Readme
 from .s3_snyk import S3Snyk
 from .s3_gh_manifests import S3GitHubManifestMetadata
