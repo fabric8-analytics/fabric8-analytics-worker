@@ -50,13 +50,13 @@ class LicenseCheckTask(BaseTask):
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))
+        eco = arguments['ecosystem']
+        pkg = arguments['name']
+        ver = arguments['version']
 
         try:
             cache_path = ObjectCache.get_from_dict(arguments).get_sources()
         except Exception:
-            eco = arguments.get('ecosystem')
-            pkg = arguments.get('name')
-            ver = arguments.get('version')
             if arguments['ecosystem'] != 'maven':
                 self.log.error('Could not get sources for package {e}/{p}/{v}'.
                                format(e=eco, p=pkg, v=ver))
@@ -86,6 +86,8 @@ class LicenseCheckTask(BaseTask):
                        # Stop scanning a file if scanning takes longer than a timeout in seconds
                        '--timeout', SCANCODE_TIMEOUT,
                        cache_path]
+            if eco == 'nuget':
+                command += ['--ignore', '*.dll']
             with username():
                 output = TimedCommand.get_command_output(command,
                                                          graceful=False,

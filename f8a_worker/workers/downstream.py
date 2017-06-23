@@ -41,7 +41,8 @@ class DownstreamUsageTask(BaseTask):
         EcosystemBackend.npm: 'npm',
         EcosystemBackend.maven: 'maven',
         EcosystemBackend.pypi: 'pypi',
-        EcosystemBackend.rubygems: 'rubygems'
+        EcosystemBackend.rubygems: 'rubygems',
+        EcosystemBackend.nuget: 'nuget'
     }
 
     _ecosystem_to_prefix = {

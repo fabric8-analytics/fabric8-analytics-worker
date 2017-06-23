@@ -1,0 +1,175 @@
+{
+   "versions": {
+      "DotNetSolution": "345b8f48229b9bb1fedb72b0167ca97feddba21c"
+   },
+   "items": [
+      {
+         "time": "2017-06-23T14:06:18.554236048+02:00",
+         "path": "nuget/nunit/3.7.1/NUnit.nuspec",
+         "ecosystem": "DotNetSolution",
+         "result": {
+            "Files": null,
+            "Metadata": {
+               "Authors": "Charlie Poole",
+               "ContentFiles": [],
+               "ContentFilesSerialize": null,
+               "Copyright": "Copyright (c) 2017 Charlie Poole",
+               "DependencySets": [
+                  {
+                     "Dependencies": [],
+                     "TargetFramework": ".NETFramework2.0"
+                  },
+                  {
+                     "Dependencies": [],
+                     "TargetFramework": ".NETFramework3.5"
+                  },
+                  {
+                     "Dependencies": [],
+                     "TargetFramework": ".NETFramework4.0"
+                  },
+                  {
+                     "Dependencies": [],
+                     "TargetFramework": ".NETFramework4.5"
+                  },
+                  {
+                     "Dependencies": [
+                        {
+                           "Exclude": null,
+                           "Id": "NETStandard.Library",
+                           "Include": null,
+                           "Version": "1.6.0"
+                        },
+                        {
+                           "Exclude": null,
+                           "Id": "System.Threading.Thread",
+                           "Include": null,
+                           "Version": "4.3.0"
+                        }
+                     ],
+                     "TargetFramework": ".NETStandard1.3"
+                  },
+                  {
+                     "Dependencies": [
+                        {
+                           "Exclude": null,
+                           "Id": "NETStandard.Library",
+                           "Include": null,
+                           "Version": "1.6.0"
+                        },
+                        {
+                           "Exclude": null,
+                           "Id": "System.Runtime.Loader",
+                           "Include": null,
+                           "Version": "4.3.0"
+                        },
+                        {
+                           "Exclude": null,
+                           "Id": "System.Threading.Thread",
+                           "Include": null,
+                           "Version": "4.3.0"
+                        }
+                     ],
+                     "TargetFramework": ".NETStandard1.6"
+                  }
+               ],
+               "DependencySetsSerialize": [
+                  {
+                     "Dependencies": [],
+                     "TargetFramework": ".NETFramework2.0"
+                  },
+                  {
+                     "Dependencies": [],
+                     "TargetFramework": ".NETFramework3.5"
+                  },
+                  {
+                     "Dependencies": [],
+                     "TargetFramework": ".NETFramework4.0"
+                  },
+                  {
+                     "Dependencies": [],
+                     "TargetFramework": ".NETFramework4.5"
+                  },
+                  {
+                     "Dependencies": [
+                        {
+                           "Exclude": null,
+                           "Id": "NETStandard.Library",
+                           "Include": null,
+                           "Version": "1.6.0"
+                        },
+                        {
+                           "Exclude": null,
+                           "Id": "System.Threading.Thread",
+                           "Include": null,
+                           "Version": "4.3.0"
+                        }
+                     ],
+                     "TargetFramework": ".NETStandard1.3"
+                  },
+                  {
+                     "Dependencies": [
+                        {
+                           "Exclude": null,
+                           "Id": "NETStandard.Library",
+                           "Include": null,
+                           "Version": "1.6.0"
+                        },
+                        {
+                           "Exclude": null,
+                           "Id": "System.Runtime.Loader",
+                           "Include": null,
+                           "Version": "4.3.0"
+                        },
+                        {
+                           "Exclude": null,
+                           "Id": "System.Threading.Thread",
+                           "Include": null,
+                           "Version": "4.3.0"
+                        }
+                     ],
+                     "TargetFramework": ".NETStandard1.6"
+                  }
+               ],
+               "Description": "NUnit features a fluent assert syntax, parameterized, generic and theory tests and is user-extensible.\n\nThis package includes the NUnit 3 framework assembly, which is referenced by your tests. You will need to install version 3 of the nunit3-console program or a third-party runner that supports NUnit 3 in order to execute tests. Runners intended for use with NUnit 2.x will not run NUnit 3 tests correctly.\n\nSupported platforms:\n- .NET 2.0+\n- .NET Standard 1.3 and 1.6\n- .NET Core",
+               "DevelopmentDependency": false,
+               "FrameworkAssemblies": null,
+               "IconUrl": "https://cdn.rawgit.com/nunit/resources/master/images/icon/nunit_256.png",
+               "Id": "NUnit",
+               "Language": "en-US",
+               "LicenseUrl": "http://nunit.org/nuget/nunit3-license.txt",
+               "MinClientVersion": null,
+               "MinClientVersionString": null,
+               "Owners": "Charlie Poole",
+               "ProjectUrl": "http://nunit.org/",
+               "ReferenceSets": [],
+               "ReferenceSetsSerialize": null,
+               "ReleaseNotes": "This package includes the NUnit 3 framework assembly, which is referenced by your tests. You will need to install version 3 of the nunit3-console program or a third-party runner that supports NUnit 3 in order to execute tests. Runners intended for use with NUnit 2.x will not run NUnit 3 tests correctly.",
+               "RequireLicenseAcceptance": false,
+               "Summary": "NUnit is a unit-testing framework for all .NET languages with a strong TDD focus.",
+               "Tags": "nunit test testing tdd framework fluent assert theory plugin addin",
+               "Title": "NUnit",
+               "Version": "3.7.1"
+            }
+         },
+         "digests": {
+            "manifest": "e455287ccf4b00581d723bb332b196d545fe60e8"
+         }
+      },
+      {
+         "time": "2017-06-23T14:06:18.558026253+02:00",
+         "path": "/nuget/nunit/3.7.1/lib/net20/NUnit.System.Linq.dll",
+         "ecosystem": "DotNetSolution",
+         "result": {
+            "copyright": "Copyright ©  2016",
+            "file_version": "0.6.0.0",
+            "guid": "d7ed9849-5dde-4e23-8390-76a80acde2f8",
+            "name": "NUnit.System.Linq",
+            "product": "NUnit.System.Linq",
+            "version": "0.6.0.0"
+         },
+         "digests": {
+            "manifest": "9355334984710a65daa63dd67dff47ddb555f43d"
+         }
+      }
+   ]
+}

@@ -36,7 +36,8 @@ class AnityaTask(BaseTask):
         EcosystemBackend.npm: 'npm',
         EcosystemBackend.maven: 'maven',
         EcosystemBackend.pypi: 'pypi',
-        EcosystemBackend.rubygems: 'rubygems'
+        EcosystemBackend.rubygems: 'rubygems',
+        EcosystemBackend.nuget: 'nuget'
     }
 
     def _get_project_homepage(self, ecosystem, package):

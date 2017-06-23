@@ -182,6 +182,11 @@ class TestDataNormalizer(object):
         expected = self._load_json('npm-with-shrinkwrap-json-expected')
         assert compare_dictionaries(self._dataNormalizer.handle_data(data), expected)
 
+    def test_transforming_nuspec(self):
+        data = self._load_json('nuspec-from-mercator')
+        expected = self._load_json('nuspec-expected')
+        assert compare_dictionaries(self._dataNormalizer.handle_data(data['items'][0]), expected)
+
     @pytest.mark.parametrize('transformed_data, expected', [
         ({'dependencies': ["escape-html 1.0.1"]},
          {'dependencies': ["escape-html 1.0.1"]}),

@@ -223,6 +223,5 @@ class MercatorTask(BaseTask):
                 #  data from pom included in artifact (assuming it's included)
                 items = [data for data in items if data['ecosystem'].lower() == 'java-pom']
         result_data['details'] = [self._data_normalizer.handle_data(data, keep_path=keep_path) for data in items]
-
         result_data['status'] = 'success'
         return result_data
