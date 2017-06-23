@@ -5,7 +5,7 @@ set -xe
 THISDIR=`dirname $0`
 
 TIMESTAMP="$(date +%F-%H-%M-%S)"
-IMAGE_NAME="docker-registry.usersys.redhat.com/bayesian/cucos-worker"
+IMAGE_NAME="registry.devshift.net/bayesian/cucos-worker"
 MIGRATIONS_IMAGE_NAME="coreapi-worker-migrations"
 POSTGRES_CONTAINER_NAME="coreapi-migrations-postgres-${TIMESTAMP}"
 MIGRATIONS_CONTAINER_NAME="coreapi-worker-migrations-${TIMESTAMP}"

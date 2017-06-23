@@ -12,11 +12,11 @@ here=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)
 
 TIMESTAMP="$(date +%F-%H-%M-%S)"
 
-IMAGE_NAME="docker-registry.usersys.redhat.com/bayesian/cucos-worker"
+IMAGE_NAME="registry.devshift.net/bayesian/cucos-worker"
 TEST_IMAGE_NAME="worker-tests"
 POSTGRES_IMAGE_NAME="registry.centos.org/sclo/postgresql-94-centos7:latest"
 S3_IMAGE_NAME="minio/minio"
-CVEDB_S3_DUMP_IMAGE_NAME="docker-registry.usersys.redhat.com/bayesian/cvedb-s3-dump"
+CVEDB_S3_DUMP_IMAGE_NAME="registry.devshift.net/bayesian/cvedb-s3-dump"
 
 CONTAINER_NAME="worker-tests-${TIMESTAMP}"
 # we don't want to wipe local "database" container, so we create a custom one just for tests
