@@ -1,8 +1,8 @@
 from flexmock import flexmock
 import os
 import pytest
-from cucoslib.object_cache import EPVCache
-from cucoslib.workers import CVEcheckerTask
+from f8a_worker.object_cache import EPVCache
+from f8a_worker.workers import CVEcheckerTask
 
 
 @pytest.mark.usefixtures("dispatcher_setup")

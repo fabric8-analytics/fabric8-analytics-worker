@@ -3,7 +3,7 @@
 from github.GithubException import RateLimitExceededException
 import pytest
 
-from cucoslib.workers import GithubTask
+from f8a_worker.workers import GithubTask
 
 
 @pytest.mark.xfail(raises=RateLimitExceededException)

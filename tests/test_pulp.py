@@ -7,7 +7,7 @@ import pytest
 import json
 import requests
 
-from cucoslib.pulp import Pulp
+from f8a_worker.pulp import Pulp
 
 
 def _pulp_client():

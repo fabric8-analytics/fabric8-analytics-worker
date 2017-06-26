@@ -4,9 +4,9 @@ import pytest
 import os
 import jsonschema
 from flexmock import flexmock
-from cucoslib.workers import LicenseCheckTask
-from cucoslib.schemas import load_worker_schema, pop_schema_ref
-from cucoslib.object_cache import EPVCache
+from f8a_worker.workers import LicenseCheckTask
+from f8a_worker.schemas import load_worker_schema, pop_schema_ref
+from f8a_worker.object_cache import EPVCache
 
 
 # TODO: drop the try/except after switching to Python 3

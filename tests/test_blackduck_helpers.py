@@ -1,4 +1,4 @@
-from cucoslib.blackduck_helpers import BlackDuckProject, BlackDuckRelease
+from f8a_worker.blackduck_helpers import BlackDuckProject, BlackDuckRelease
 
 from datetime import datetime
 

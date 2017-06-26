@@ -1,8 +1,8 @@
 import os
 from flexmock import flexmock
 import pytest
-import cucoslib
-from cucoslib.workers.bigquery_gh import BigQueryProject, BigQueryTask, compute_percentile_ranks
+import f8a_worker
+from f8a_worker.workers.bigquery_gh import BigQueryProject, BigQueryTask, compute_percentile_ranks
 
 
 @pytest.mark.usefixtures("dispatcher_setup")
@@ -11,7 +11,7 @@ class TestBigQueryGH(object):
     json_key = os.path.join(os.path.dirname(__file__), '../data/bigquery.json')
 
     def test_project_id(self):
-        flexmock(cucoslib.workers.bigquery_gh).should_receive('get_client').once()
+        flexmock(f8a_worker.workers.bigquery_gh).should_receive('get_client').once()
         bq = BigQueryProject(json_key=TestBigQueryGH.json_key)
         assert bq.project_id == 'test-project-000001'
 

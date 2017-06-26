@@ -8,7 +8,7 @@ def get_requirements():
 
 
 setup(
-    name='cucoslib',
+    name='f8a_worker',
     version='0.2',
     scripts=[
         'hack/env.sh',

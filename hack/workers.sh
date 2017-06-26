@@ -12,7 +12,7 @@
 
 set -e
 
-DISPATCHER_YAML_FILES_DIR="/usr/lib/python3.4/site-packages/cucoslib/dispatcher"
+DISPATCHER_YAML_FILES_DIR="/usr/lib/python3.4/site-packages/f8a_worker/dispatcher"
 WORKER_NAME="${WORKER_NAME:-bayesian}"
 
 DIR=$(dirname "${BASH_SOURCE[0]}")
@@ -54,4 +54,4 @@ WORKER_QUEUES="${WORKER_QUEUES:0:-1}"  # remove trailing ','
 
 # Keep celery worker as minimal as possible to avoid sending messages that we don't really care about
 # Also keep prefetch equal to 0 as boto library hangs in an infinite loop when prefetch is set to non-zero
-exec celery worker -P solo -A cucoslib.start -Q "${WORKER_QUEUES}" --concurrency=1 --prefetch-multiplier=0 -Ofair --without-gossip --without-mingle --without-heartbeat
+exec celery worker -P solo -A f8a_worker.start -Q "${WORKER_QUEUES}" --concurrency=1 --prefetch-multiplier=0 -Ofair --without-gossip --without-mingle --without-heartbeat

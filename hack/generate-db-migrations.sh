@@ -38,10 +38,10 @@ done
 . tests/postgres.env
 
 #for MAC docker run -t -v `pwd`:/bayesian \
-docker run -t -v `readlink -f ${THISDIR}/..`:/cucoslib:z \
+docker run -t -v `readlink -f ${THISDIR}/..`:/f8a_worker:z \
   --link ${POSTGRES_CONTAINER_NAME} \
   --net=${NETWORK} \
   --name=${MIGRATIONS_CONTAINER_NAME} \
-  --env=CCS_POSTGRES=postgresql://${POSTGRESQL_USER}:${POSTGRESQL_PASSWORD}@${POSTGRES_CONTAINER_NAME}:5432/${POSTGRESQL_DATABASE} \
-  --env=PYTHONPATH=/cucoslib \
+  --env=F8A_POSTGRES=postgresql://${POSTGRESQL_USER}:${POSTGRESQL_PASSWORD}@${POSTGRES_CONTAINER_NAME}:5432/${POSTGRESQL_DATABASE} \
+  --env=PYTHONPATH=/f8a_worker \
   ${MIGRATIONS_IMAGE_NAME} "$cmd"

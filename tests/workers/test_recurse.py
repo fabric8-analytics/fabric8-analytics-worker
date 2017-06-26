@@ -1,4 +1,4 @@
-from cucoslib.dispatcher.foreach import _is_url_dependency
+from f8a_worker.dispatcher.foreach import _is_url_dependency
 
 
 def test__is_url_dependency():

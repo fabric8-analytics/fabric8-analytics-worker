@@ -5,7 +5,7 @@ import pytest
 import flexmock
 import requests
 
-from cucoslib.workers import csmock_worker
+from f8a_worker.workers import csmock_worker
 
 
 dummy_package_dir = os.path.abspath(os.path.join(

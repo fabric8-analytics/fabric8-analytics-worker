@@ -10,9 +10,9 @@ import time
 import tempfile
 from lxml import etree
 
-from cucoslib.enums import EcosystemBackend
-from cucoslib.models import Ecosystem
-from cucoslib.process import Git, IndianaJones
+from f8a_worker.enums import EcosystemBackend
+from f8a_worker.models import Ecosystem
+from f8a_worker.process import Git, IndianaJones
 
 NPM_MODULE_NAME = "dezalgo"
 NPM_MODULE_VERSION = "1.0.2"
