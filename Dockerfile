@@ -7,7 +7,7 @@ ENV LANG=en_US.UTF-8 \
     OWASP_DEP_CHECK_PATH='/opt/dependency-check/' \
     SCANCODE_PATH='/opt/scancode-toolkit/' \
     # place where to download & unpack artifacts
-    WORKER_DATA_DIR='/var/lib/f8a-lib/worker_data' \
+    WORKER_DATA_DIR='/var/lib/f8a_worker/worker_data' \
     # home directory
     HOME='/workdir' \
     # place for alembic migrations

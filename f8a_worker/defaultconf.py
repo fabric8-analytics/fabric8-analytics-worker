@@ -10,7 +10,7 @@ data = {
     "npmjs_changes_url": "https://skimdb.npmjs.com/registry/_changes?descending=true&include_docs=true&feed=continuous",
     "git": {
         "user_name": "f8a",             # git config user.name
-        "user_email": "f8a@f8a.ccs"   # git config user.email
+        "user_email": "f8a@f8a"   # git config user.email
     },
     "broker": {
         "connection_string": "amqp://localhost:5672"

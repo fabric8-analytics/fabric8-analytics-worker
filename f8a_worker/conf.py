@@ -252,14 +252,14 @@ class EnvVarBackend(ObjectBackend):
 
 
 def get_postgres_connection_string(url_encoded_password=True):
-    ccs_postgres = os.environ.get('CCS_POSTGRES')
-    if ccs_postgres:
+    f8a_postgres = os.environ.get('F8A_POSTGRES')
+    if f8a_postgres:
         if url_encoded_password:
-            ccs_postgres = re.sub(r'(postgresql://.+:)([^@]+)(@.+)',
+            f8a_postgres = re.sub(r'(postgresql://.+:)([^@]+)(@.+)',
                                   lambda x: '{}{}{}'.format(x.group(1), quote(x.group(2), safe=''), x.group(3)),
-                                  ccs_postgres,
+                                  f8a_postgres,
                                   count=1)
-        return ccs_postgres
+        return f8a_postgres
 
     password = os.environ.get('POSTGRESQL_PASSWORD', '')
     postgres_env = {'POSTGRESQL_USER': os.environ.get('POSTGRESQL_USER'),
@@ -291,7 +291,7 @@ class F8aConfiguration(Configuration):
         super(F8aConfiguration, self).__init__(self.backends)
 
         self.add_configuration_entry(
-            "postgres_connection", ["postgres", "connection_string"], env_var_name="CCS_POSTGRES")
+            "postgres_connection", ["postgres", "connection_string"], env_var_name="F8A_POSTGRES")
         self.add_configuration_entry(
             "worker_data_dir", ["worker", "data_dir"], env_var_name="WORKER_DATA_DIR")
         self.add_configuration_entry(
@@ -301,8 +301,8 @@ class F8aConfiguration(Configuration):
         self.add_configuration_entry("git_user_name", ["git", "user_name"])
         self.add_configuration_entry("git_user_email", ["git", "user_email"])
         self.add_configuration_entry(
-            "broker_connection", ["broker", "connection_string"], env_var_name="CCS_CELERY_BROKER")
-        self.add_configuration_entry("anitya_url", ["anitya", "url"], env_var_name="CCS_ANITYA")
+            "broker_connection", ["broker", "connection_string"], env_var_name="F8A_CELERY_BROKER")
+        self.add_configuration_entry("anitya_url", ["anitya", "url"], env_var_name="F8A_ANITYA")
 
         self.add_configuration_entry(
             "blackduck_host", ["blackduck", "host"], env_var_name="BLACKDUCK_HOST"
@@ -343,8 +343,8 @@ class F8aConfiguration(Configuration):
         :param configuration_override: dict, overrides configuration of all backends
         :return: list of ConfigurationBackend instances
         """
-        config_path = os.getenv("CCS_CONFIG_PATH", "/etc/f8a.yaml")
-        secrets_path = os.getenv("CCS_SECRETS_PATH", "/var/lib/secrets/secrets.yaml")
+        config_path = os.getenv("F8A_CONFIG_PATH", "/etc/f8a.yaml")
+        secrets_path = os.getenv("F8A_SECRETS_PATH", "/var/lib/secrets/secrets.yaml")
         return [
             ObjectBackend(defaultconf.data),
             FileBackend(path=config_path, graceful=True),

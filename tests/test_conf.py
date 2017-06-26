@@ -38,11 +38,11 @@ def test_npm_changes_url():
 
 
 def test_get_postgres_conn_with_environ_override():
-    backup = os.environ["CCS_POSTGRES"]
-    os.environ["CCS_POSTGRES"] = "something"
+    backup = os.environ["F8A_POSTGRES"]
+    os.environ["F8A_POSTGRES"] = "something"
     c = F8aConfiguration()
     assert c.postgres_connection == "something"
-    os.environ["CCS_POSTGRES"] = backup
+    os.environ["F8A_POSTGRES"] = backup
 
 
 def test_worker_data_dir_is_unset():
