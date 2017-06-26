@@ -14,9 +14,7 @@ from sqlalchemy.orm import sessionmaker
 Base = declarative_base()
 
 from f8a_worker.conf import get_configuration, get_postgres_connection_string
-from f8a_worker.enums import EcosystemBackend
 from f8a_worker.errors import TaskError
-from f8a_worker.models import (Analysis, Ecosystem, Package, Version, create_db_scoped_session)
 from f8a_worker import utils  # so that we can mock functions from here
 from f8a_worker.utils import (get_all_files_from,
                             hidden_path_filter,
@@ -28,8 +26,6 @@ from f8a_worker.utils import (get_all_files_from,
                             safe_get_latest_version,
                             DownstreamMapCache,
                             parse_gh_repo)
-
-from .conftest import rdb
 
 configuration = get_configuration()
 

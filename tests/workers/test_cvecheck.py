@@ -7,7 +7,8 @@ from f8a_worker.workers import CVEcheckerTask
 
 @pytest.mark.usefixtures("dispatcher_setup")
 class TestCVEchecker(object):
-    def test_npm_geddy(self, npm):
+    @pytest.mark.usefixtures('npm')
+    def test_npm_geddy(self):
         args = {'ecosystem': 'npm', 'name': 'geddy', 'version': '13.0.7'}
         task = CVEcheckerTask.create_test_instance(task_name='security_issues')
         results = task.execute(args)

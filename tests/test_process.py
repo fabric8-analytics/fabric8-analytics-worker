@@ -2,16 +2,10 @@ import glob
 import os
 import os.path as osp
 import pytest
-import requests
 import shutil
 import subprocess
-from xmlrpc.client import ServerProxy
-import time
 import tempfile
-from lxml import etree
 
-from f8a_worker.enums import EcosystemBackend
-from f8a_worker.models import Ecosystem
 from f8a_worker.process import Git, IndianaJones
 
 NPM_MODULE_NAME = "dezalgo"
@@ -34,12 +28,9 @@ RUBYGEMS_MODULE_DIGEST = 'e715cccaccb8e2d1450fbdda85bbe84963a32e9bf612db278cbb3d
 MAVEN_MODULE_NAME = "com.rabbitmq:amqp-client"
 MAVEN_MODULE_VERSION = "3.6.1"
 MAVEN_MODULE_DIGEST = 'cb6cdb7de8d37cb1b15b23867435c7dbbeaa1ca4b766f434138a8b9ef131994f'
-
-
-npm = Ecosystem(name='npm', backend=EcosystemBackend.npm)
-pypi = Ecosystem(name='pypi', backend=EcosystemBackend.pypi)
-rubygems = Ecosystem(name='rubygems', backend=EcosystemBackend.rubygems)
-maven = Ecosystem(name='maven', backend=EcosystemBackend.maven)
+NUGET_PACKAGE_NAME = 'NUnit'
+NUGET_PACKAGE_VERSION = '3.7.1'
+NUGET_PACKAGE_DIGEST = 'db714c0a01d8a172e6c378144b1192290263f8c308e8e2baba9c11d9fe165db4'
 
 
 @pytest.fixture
@@ -49,71 +40,77 @@ def tmpdir():
     shutil.rmtree(tmp)
 
 
-def test_git_add_and_commit_everything_with_dotgit(tmpdir):
-    # if there's a .git file somewhere in the archive, we don't want it to fail adding
-    subprocess.check_output(['git', 'init', str(tmpdir)], universal_newlines=True)
-    d = os.path.join(str(tmpdir), 'foo')
-    os.makedirs(d)
-    with open(os.path.join(d, '.git'), 'w') as f:
-        f.write('gitdir: /this/doesnt/exist/hehehe')
-    # we need at least one normal file for git to commit
-    with open(os.path.join(d, 'foo'), 'w') as f:
-        pass
-    g = Git.create_git(str(tmpdir))
-    g.add_and_commit_everything()
+class TestGit(object):
+    def test_git_add_and_commit_everything_with_dotgit(self, tmpdir):
+        # if there's a .git file somewhere in the archive, we don't want it to fail adding
+        subprocess.check_output(['git', 'init', str(tmpdir)], universal_newlines=True)
+        d = os.path.join(str(tmpdir), 'foo')
+        os.makedirs(d)
+        with open(os.path.join(d, '.git'), 'w') as f:
+            f.write('gitdir: /this/doesnt/exist/hehehe')
+        # we need at least one normal file for git to commit
+        with open(os.path.join(d, 'foo'), 'w'):
+            pass
+        g = Git.create_git(str(tmpdir))
+        g.add_and_commit_everything()
 
 
-@pytest.mark.parametrize("package,version,digest", [
-    ("abbrev", "1.0.7", "30f6880e415743312a0021a458dd6d26a7211f803a42f1e4a30ebff44d26b7de"),
-    ("abbrev", "1.0.4", "8dc0f480571a4a19e74f1abd4f31f6a70f94953d1ccafa16ed1a544a19a6f3a8")
-])
-def test_fetch_npm_specific(tmpdir, package, version, digest):
-    cache_path = subprocess.check_output(["npm", "config", "get", "cache"], universal_newlines=True).strip()
-    assert ".npm" in cache_path
+class TestIndianaJones(object):
+    @pytest.mark.parametrize("package,version,digest", [
+        ("abbrev", "1.0.7", "30f6880e415743312a0021a458dd6d26a7211f803a42f1e4a30ebff44d26b7de"),
+        ("abbrev", "1.0.4", "8dc0f480571a4a19e74f1abd4f31f6a70f94953d1ccafa16ed1a544a19a6f3a8")
+    ])
+    def test_fetch_npm_specific(self, tmpdir, npm, package, version, digest):
+        cache_path = subprocess.check_output(["npm", "config", "get", "cache"],
+                                             universal_newlines=True).strip()
+        assert ".npm" in cache_path
+        package_digest, path = IndianaJones.fetch_artifact(npm,
+                                                           artifact=package,
+                                                           version=version,
+                                                           target_dir=tmpdir)
+        assert len(glob.glob(osp.join(cache_path, package, "*"))) == 1,\
+            "there should be just one version of the artifact in the NPM cache"
+        assert package_digest == digest
+        assert osp.exists(path)
+        assert osp.exists(osp.join(osp.join(cache_path, package), version))
+        assert osp.exists(osp.join(tmpdir, "package.tgz"))
 
-    package_digest, path = IndianaJones.fetch_artifact(
-        npm, artifact=package,
-        version=version, target_dir=tmpdir)
+    def test_fetch_pypi_specific(self, tmpdir, pypi):
+        digest, path = IndianaJones.fetch_artifact(pypi,
+                                                   artifact=PYPI_MODULE_NAME,
+                                                   version=PYPI_MODULE_VERSION,
+                                                   target_dir=str(tmpdir))
+        assert digest == PYPI_MODULE_DIGEST
+        assert len(os.listdir(str(tmpdir))) > 1
+        glob_whl_path = glob.glob(osp.join(str(tmpdir), "{}-{}*".format(PYPI_MODULE_NAME,
+                                                                        PYPI_MODULE_VERSION))).pop()
+        assert osp.exists(glob_whl_path)
 
-    assert len(glob.glob(osp.join(cache_path, package, "*"))) == 1,\
-        "there should be just one version of the artifact in the NPM cache"
+    def test_fetch_rubygems_specific(self, tmpdir, rubygems):
+        digest, path = IndianaJones.fetch_artifact(rubygems,
+                                                   artifact=RUBYGEMS_MODULE_NAME,
+                                                   version=RUBYGEMS_MODULE_VERSION,
+                                                   target_dir=str(tmpdir))
+        assert digest == RUBYGEMS_MODULE_DIGEST
+        assert osp.exists(osp.join(str(tmpdir), "{}-{}.gem".format(RUBYGEMS_MODULE_NAME,
+                                                                   RUBYGEMS_MODULE_VERSION)))
 
-    assert package_digest == digest
-    assert osp.exists(path)
-    assert osp.exists(osp.join(osp.join(cache_path, package), version))
-    assert osp.exists(osp.join(tmpdir, "package.tgz"))
+    def test_fetch_maven_specific(self, tmpdir, maven):
+        digest, path = IndianaJones.fetch_artifact(maven,
+                                                   artifact=MAVEN_MODULE_NAME,
+                                                   version=MAVEN_MODULE_VERSION,
+                                                   target_dir=str(tmpdir))
+        _, artifactId = MAVEN_MODULE_NAME.split(':', 1)
+        assert digest == MAVEN_MODULE_DIGEST
+        assert osp.exists(osp.join(str(tmpdir), '{}-{}.jar'.format(artifactId,
+                                                                   MAVEN_MODULE_VERSION)))
 
-
-def test_fetch_pypi_specific(tmpdir):
-    digest, path = IndianaJones.fetch_artifact(
-        pypi, artifact=PYPI_MODULE_NAME,
-        version=PYPI_MODULE_VERSION, target_dir=str(tmpdir))
-
-    assert digest == PYPI_MODULE_DIGEST
-    assert len(os.listdir(str(tmpdir))) > 1
-    glob_whl_path = glob.glob(osp.join(str(tmpdir), "{}-{}*".format(PYPI_MODULE_NAME,
-                                                                    PYPI_MODULE_VERSION))).pop()
-    assert osp.exists(glob_whl_path)
-
-
-def test_fetch_rubygems_specific(tmpdir):
-    digest, path = IndianaJones.fetch_artifact(
-        rubygems,
-        artifact=RUBYGEMS_MODULE_NAME,
-        version=RUBYGEMS_MODULE_VERSION, target_dir=str(tmpdir))
-
-    assert digest == RUBYGEMS_MODULE_DIGEST
-    assert osp.exists(osp.join(str(tmpdir), "{}-{}.gem".format(RUBYGEMS_MODULE_NAME,
-                                                               RUBYGEMS_MODULE_VERSION)))
-
-
-def test_fetch_maven_specific(tmpdir):
-    digest, path = IndianaJones.fetch_artifact(maven,
-                                               artifact=MAVEN_MODULE_NAME,
-                                               version=MAVEN_MODULE_VERSION, target_dir=str(tmpdir))
-
-    _, artifactId = MAVEN_MODULE_NAME.split(':', 1)
-
-    assert digest == MAVEN_MODULE_DIGEST
-    assert osp.exists(osp.join(str(tmpdir), '{}-{}.jar'.format(artifactId, MAVEN_MODULE_VERSION)))
-
+    @pytest.mark.usefixtures('nuget')
+    def test_fetch_nuget_specific(self, tmpdir, nuget):
+        digest, path = IndianaJones.fetch_artifact(nuget,
+                                                   artifact=NUGET_PACKAGE_NAME,
+                                                   version=NUGET_PACKAGE_VERSION,
+                                                   target_dir=str(tmpdir))
+        assert digest == NUGET_PACKAGE_DIGEST
+        assert osp.exists(osp.join(str(tmpdir), '{}.{}.nupkg'.format(NUGET_PACKAGE_NAME.lower(),
+                                                                     NUGET_PACKAGE_VERSION)))
