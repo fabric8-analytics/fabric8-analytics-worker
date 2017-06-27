@@ -23,6 +23,22 @@ def _is_url_dependency(dep):
 
     return False
 
+def iter_dependencies(storage_pool, node_args):
+    postgres = storage_pool.get_connected_storage('BayesianPostgres')
+    deps = storage_pool.get('stack_aggregator')
+    # Be safe here as fatal errors will cause errors in Dispatcher
+    args = []
+    try:
+        if 'unknown_deps' in deps:
+            ecosystem = deps['ecosystem']
+            for dep in deps['unknown_deps']:
+                arg = _create_analysis_arguments(ecosystem, dep['package'], dep['version'])
+                arg['recursive_limit'] = 0
+                args.append(arg)
+    except:
+        logger.exception("Failed to collect analysis dependencies")
+        return []
+    return args
 
 def iter_dependencies_analysis(storage_pool, node_args):
     # Be safe here as fatal errors will cause errors in Dispatcher
