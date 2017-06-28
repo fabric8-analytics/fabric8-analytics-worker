@@ -128,17 +128,17 @@ class DataNormalizer(object):
 
         # {'url': 'https://github.com/o/p/issues',
         #  'email': 'project@name.com'} -> 'https://github.com/o/p/issues <project@name.com>'
-        if 'bug_reporting' in base and isinstance(base['bug_reporting'], dict):
+        if isinstance(base.get('bug_reporting'), dict):
             base['bug_reporting'] = self._join_name_email(base['bug_reporting'], 'url')
-        if 'author' in base and isinstance(base['author'], dict):
+        if isinstance(base.get('author'), dict):
             base['author'] = self._join_name_email(base['author'])
-        if 'contributors' in base and isinstance(base['contributors'], list):
+        if isinstance(base.get('contributors'), list):
             base['contributors'] = [self._join_name_email(m) for m in base['contributors']]
-        if 'maintainers' in base and isinstance(base['maintainers'], list):
+        if isinstance(base.get('maintainers'), list):
             base['maintainers'] = [self._join_name_email(m) for m in base['maintainers']]
 
         # 'a/b' -> {'type': 'git', 'url': 'https://github.com/a/b.git'}
-        if 'code_repository' in base and isinstance(base['code_repository'], str):
+        if isinstance(base.get('code_repository'), str):
             k = 'code_repository'
             url = base[k]
             if url.count('/') == 1:  # e.g. 'expressjs/express'
@@ -367,7 +367,7 @@ class DataNormalizer(object):
             transformed['description'] = data['summary']
 
         # 'version': {'version': '4.8.4'}  ->  'version': '4.8.4'
-        if 'version' in transformed and isinstance(transformed['version'], dict):
+        if isinstance(transformed.get('version'), dict):
             transformed['version'] = transformed['version'].get('version', '')
 
         # transform
@@ -398,27 +398,47 @@ class DataNormalizer(object):
     def _handle_dotnet_solution(self, data):
         if not data.get('Metadata'):
             return {}
-        key_map = (('Id', 'name'), ('Version',), ('Authors', 'author'), ('Description',),
+        data = data['Metadata']
+        key_map = (('Id', 'name'), ('Description',),
                    ('ProjectUrl', 'homepage'), ('LicenseUrl', 'declared_license'),
                    # ('Summary',), ('Copyright',),
                    # ('RequireLicenseAcceptance', 'require_license_acceptance'),
                    )
-        transformed = self.transform_keys(data['Metadata'], key_map)
+        transformed = self.transform_keys(data, key_map)
+
+        if data.get('Authors'):
+            transformed['author'] = ','.join(data['Authors'])
 
         # transform
-        # [{"Dependencies": [{"Id":      "NETStandard.Library",
-        #                     "Version": "1.6.0",
-        #                     "Include": null,
-        #                     "Exclude": null}],
-        #   "TargetFramework": ".NETStandard1.3"}]
+        # "DependencyGroups": [
+        #    {
+        #        "Packages": [
+        #            {
+        #                "Id": "NETStandard.Library",
+        #                "VersionRange": {"OriginalString": "1.6.0"}
+        #            }
+        #        ]
+        #    }
+        # ]
         # to ["NETStandard.Library 1.6.0"]
         deps = set()
-        for dep_set in data['Metadata'].get('DependencySets', []):
-            for dep in dep_set.get('Dependencies', []):
-                deps.add('{} {}'.format(dep['Id'], dep['Version']))
+        for dep_group in data.get('DependencyGroups', []):
+            for package in dep_group.get('Packages', []):
+                deps.add('{} {}'.format(package.get('Id', ''),
+                                        package.get('VersionRange', {}).get('OriginalString', '')))
         transformed['dependencies'] = list(deps)
 
-        transformed['keywords'] = self._split_keywords(data['Metadata'].get('Tags', []),
+        if isinstance(data.get('Repository'), dict):
+            transformed['code_repository'] = {'type': data['Repository'].get('Type'),
+                                              'url': data['Repository'].get('Url')}
+
+        version = data.get('Version')
+        if isinstance(version, dict):
+            transformed['version'] = '{}.{}.{}'.format(version.get('Major', ''),
+                                                       version.get('Minor', ''),
+                                                       version.get('Patch', ''))
+
+        transformed['keywords'] = self._split_keywords(data.get('Tags', []),
                                                        separator=' ')
 
         return transformed

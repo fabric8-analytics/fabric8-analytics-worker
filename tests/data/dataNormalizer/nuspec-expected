@@ -1,15 +1,24 @@
 {
-    "author": "Charlie Poole",
-    "declared_license": "http://nunit.org/nuget/nunit3-license.txt",
-    "dependencies": [
-          "System.Threading.Thread 4.3.0",
-          "System.Runtime.Loader 4.3.0",
-          "NETStandard.Library 1.6.0"
+        "author": "James Newton-King",
+        "code_repository": {
+          "type": "git",
+          "url": "https://github.com/JamesNK/Newtonsoft.Json"
+        },
+        "declared_license": "https://raw.github.com/JamesNK/Newtonsoft.Json/master/LICENSE.md",
+        "dependencies": [
+          "System.Xml.XmlDocument 4.3.0",
+          "System.Runtime.Serialization.Primitives 4.3.0",
+          "System.ComponentModel.TypeConverter 4.3.0",
+          "System.Runtime.Serialization.Formatters 4.3.0",
+          "NETStandard.Library 1.6.1",
+          "Microsoft.CSharp 4.3.0"
         ],
-    "description": "NUnit features a fluent assert syntax, parameterized, generic and theory tests and is user-extensible.\n\nThis package includes the NUnit 3 framework assembly, which is referenced by your tests. You will need to install version 3 of the nunit3-console program or a third-party runner that supports NUnit 3 in order to execute tests. Runners intended for use with NUnit 2.x will not run NUnit 3 tests correctly.\n\nSupported platforms:\n- .NET 2.0+\n- .NET Standard 1.3 and 1.6\n- .NET Core",
-    "ecosystem": "dotnetsolution",
-    "homepage": "http://nunit.org/",
-    "keywords": ["nunit", "test", "testing", "tdd", "framework", "fluent", "assert", "theory", "plugin", "addin"],
-    "name": "NUnit",
-    "version": "3.7.1"
+        "description": "Json.NET is a popular high-performance JSON framework for .NET",
+        "ecosystem": "dotnetsolution",
+        "homepage": "http://www.newtonsoft.com/json",
+        "keywords": [
+          "json"
+        ],
+        "name": "Newtonsoft.Json",
+        "version": "10.0.3"
 }
