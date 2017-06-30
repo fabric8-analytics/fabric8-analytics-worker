@@ -438,8 +438,9 @@ class DataNormalizer(object):
                                                        version.get('Minor', ''),
                                                        version.get('Patch', ''))
 
-        transformed['keywords'] = self._split_keywords(data.get('Tags', []),
-                                                       separator=' ')
+        tags = data.get('Tags', '')
+        separator = ',' if ',' in tags else ' '
+        transformed['keywords'] = self._split_keywords(tags, separator)
 
         return transformed
 
