@@ -19,3 +19,4 @@ requests
 boto
 # We are using boto3 for S3
 boto3
+semver

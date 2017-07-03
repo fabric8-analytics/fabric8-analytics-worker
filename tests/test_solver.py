@@ -3,11 +3,39 @@ import pytest
 import datetime
 import flexmock
 from f8a_worker.models import Analysis, Package, Version
-from f8a_worker.solver import Dependency, NpmDependencyParser,\
-    get_ecosystem_solver, F8aReleasesFetcher, NpmReleasesFetcher
+from f8a_worker.solver import (Dependency, NpmDependencyParser, NugetDependencyParser,
+    get_ecosystem_solver, F8aReleasesFetcher, NpmReleasesFetcher, NugetReleasesFetcher)
 
 
-class TestSolver(object):
+class TestDependencyParser(object):
+    @pytest.mark.parametrize('args, expected', [
+        (["name 1.0"],
+         [Dependency("name", [('>=', '1.0')])]),
+        (["name (1.0,)"],
+         [Dependency("name", [('>', '1.0')])]),
+        (["name [1.0]"],
+         [Dependency("name", [('==', '1.0')])]),
+        (["name (,1.0]"],
+         [Dependency("name", [('<=', '1.0')])]),
+        (["name (,1.0)"],
+         [Dependency("name", [('<', '1.0')])]),
+        (["name [1.0,2.0]"],
+         [Dependency("name", [[('>=', '1.0'), ('<=', '2.0')]])]),
+        (["name (1.0,2.0)"],
+         [Dependency("name", [[('>', '1.0'), ('<', '2.0')]])]),
+        (["name [1.0,2.0)"],
+         [Dependency("name", [[('>=', '1.0'), ('<', '2.0')]])]),
+        (["name (1.0)"],
+         []),
+    ])
+    def test_nuget_dependency_parser_parse(self, args, expected):
+        dep_parser = NugetDependencyParser()
+        if not expected:
+            with pytest.raises(ValueError):
+                dep_parser.parse(args)
+        else:
+            assert dep_parser.parse(args) == expected
+
     @pytest.mark.parametrize('args, expected', [
         (["name >0.6"],
          [Dependency("name", [('>=', '0.7.0')])]),
@@ -49,6 +77,8 @@ class TestSolver(object):
         dep_parser = NpmDependencyParser()
         assert dep_parser.restrict_versions(args) == expected
 
+
+class TestSolver(object):
     SERVE_STATIC_VER = ["1.0.0", "1.0.1", "1.0.2", "1.0.3", "1.0.4",
                         "1.1.0",
                         "1.2.0", "1.2.1", "1.2.2", "1.2.3",
@@ -107,20 +137,47 @@ class TestSolver(object):
         for name, version in solver_result.items():
             assert expected.get(name, '') == version
 
-    def test_pypi(self, pypi):
+    def test_pypi_solver(self, pypi):
         solver = get_ecosystem_solver(pypi)
         deps = ["pymongo>=3.0,<3.2.2", "celery>3.1.11", "six==1.10.0"]
         out = solver.solve(deps)
-
         assert len(out) == len(deps)
 
-    def test_rubygems(self, rubygems):
+    def test_rubygems_solver(self, rubygems):
         solver = get_ecosystem_solver(rubygems)
         deps = ["Hoe ~>3.14", "rexicaL >=1.0.5", "raKe-compiler-dock ~>0.4.2",
                 "rake-comPiler ~>0.9.2"]
         out = solver.solve(deps)
-
         assert len(out) == len(deps)
+
+    def test_nuget_solver(self, nuget):
+        solver = get_ecosystem_solver(nuget)
+        deps = ['jQuery [1.4.4, 1.6)',
+                'NUnit 3.2.1']
+        out = solver.solve(deps)
+        # nuget resolves to lowest version by default, see
+        # https://docs.microsoft.com/en-us/nuget/release-notes/nuget-2.8#-dependencyversion-switch
+        assert out == {'jQuery': '1.4.4',
+                       'NUnit': '3.2.1'}
+
+
+class TestFetcher(object):
+    @pytest.mark.parametrize('package, expected', [
+        ('AjaxControlToolkit',
+         {'4.1.60919', '7.1005.0', '17.1.1'}),
+        ('Bootstrap',
+         {'2.3.2', '3.3.6', '4.0.0-alpha6'}),
+        ('log4net',
+         {'1.2.10', '2.0.3', '2.0.8'}),
+        ('Microsoft.AspNet.Mvc',
+         {'5.0.0', '5.2.0', '5.2.3'}),
+        ('NUnit',
+         {'2.6.4', '3.0.0', '3.7.1'}),
+    ])
+    def test_nuget_fetcher(self, nuget, package, expected):
+        f = NugetReleasesFetcher(nuget)
+        _, releases = f.fetch_releases(package)
+        assert expected.issubset(set(releases))
 
     def test_f8a_fetcher(self, rdb, npm):
         # create initial dataset
