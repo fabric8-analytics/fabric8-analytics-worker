@@ -4,8 +4,12 @@
 # But we can stabilize to final 2.0.0 once it's released - see the commented code below.
 
 cd /opt
-git clone --depth 1 https://github.com/nexB/scancode-toolkit.git
+git clone https://github.com/nexB/scancode-toolkit.git
 cd scancode-toolkit
+
+# scancode-toolkit has broken dependencies. This commit it working
+# Workaround until upstream is fixed
+git checkout 1fea769
 
 #RELEASE='2.0.0'
 #RC="rc2"
