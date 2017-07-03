@@ -7,6 +7,10 @@ cd /opt
 git clone --depth 1 https://github.com/nexB/scancode-toolkit.git
 cd scancode-toolkit
 
+# scancode-toolkit has broken dependencies. This commit it working
+# Workaround until upstream is fixed
+git checkout 1fea769
+
 #RELEASE='2.0.0'
 #RC="rc2"
 #mkdir -p $SCANCODE_PATH
