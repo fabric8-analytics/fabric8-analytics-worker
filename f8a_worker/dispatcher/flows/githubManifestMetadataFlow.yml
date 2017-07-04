@@ -2,7 +2,7 @@
   flow-definitions:
     - name: 'githubManifestMetadataFlow'
       node_args_from_first: true
-      queue: '{DEPLOYMENT_PREFIX}_githubManifestMetadataFlow_v0'
+      queue: '{DEPLOYMENT_PREFIX}_ingestion_githubManifestMetadataFlow_v0'
       edges:
         - from:
           to: 'InitGitHubManifestMetadata'
@@ -10,6 +10,12 @@
           to: 'metadata'
         - from: 'metadata'
           to: 'dependency_snapshot'
+        - from: 'metadata'
+          to: 'gh_most_starred_github_details'
+          condition:
+            name: 'isGhRepo'
+            args:
+              key: 'url'
         - from: 'dependency_snapshot'
           to: 'bayesianFlow'
           foreach:

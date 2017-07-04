@@ -46,7 +46,10 @@ class GitHubManifestMetadataResultCollector(BaseTask):
                             self.log.error('Unable to retrieve manifest file from %s', manifest_url)
                             continue
 
+            result_name = worker_result.worker
+            if result_name.startswith('gh_most_starred_'):
+                result_name = result_name[len('gh_most_starred_'):]
             version_id = s3.store(arguments, self.flow_name, self.task_name, self.task_id,
-                                  (worker_result.worker, worker_result.task_result))
+                                  (result_name, worker_result.task_result))
             worker_result.task_result = {'version_id': version_id}
         postgres.session.commit()
