@@ -311,6 +311,16 @@ class StackAnalysisRequest(Base):
     team = Column(String(64), nullable=True)
 
 
+class APIRequests(Base):
+    __tablename__ = "api_requests"
+    id = Column(String(64), primary_key=True)
+    submit_time = Column(DateTime, nullable=False)
+    user_email = Column(String(256), nullable=True)
+    origin = Column(String(64), nullable=True)
+    team = Column(String(64), nullable=True)
+    request = Column(JSON, nullable=False)
+    recommendation = Column(JSON, nullable=False)
+
 class PackageGHUsage(Base):
     """Table for storing package results from BigQuery."""
     __tablename__ = 'package_gh_usage'
