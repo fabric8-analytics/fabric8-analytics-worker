@@ -230,7 +230,7 @@ parameters:
   displayName: Docker image
   required: true
   name: DOCKER_IMAGE
-  value: "bayesian/f8a-worker"
+  value: "bayesian/cucos-worker"
 
 - description: Image tag
   displayName: Image tag
