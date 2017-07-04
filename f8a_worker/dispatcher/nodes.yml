@@ -247,6 +247,12 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_InitGitHubManifestMetadata_v0'
       storage: 'BayesianPostgres'
+    - name: 'gh_most_starred_github_details'
+      classname: 'GithubTask'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      storage: 'BayesianPostgres'
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GitHubManifestMetadataGithubTask_v0'
 
   flows:
     - 'bayesianAnalysisFlow'
