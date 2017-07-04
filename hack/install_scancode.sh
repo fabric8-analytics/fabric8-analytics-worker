@@ -1,21 +1,24 @@
 #!/usr/bin/sh -ex
 
-# We use development (master) from git repo because 2.0.0rc2 doesn't have fixes we need.
-# But we can stabilize to final 2.0.0 once it's released - see the commented code below.
+# sanity check
+if [ ! $SCANCODE_PATH ]; then
+    echo "SCANCODE_PATH not set"
+    exit 1
+fi
 
-cd /opt
-git clone --depth 1 https://github.com/nexB/scancode-toolkit.git
-cd scancode-toolkit
+# Uncomment if you want to use develop branch of upstream repo instead of $RELEASE
+#cd /opt
+#git clone --depth 1 https://github.com/nexB/scancode-toolkit.git
+#cd scancode-toolkit
 
-#RELEASE='2.0.0'
-#RC="rc2"
-#mkdir -p $SCANCODE_PATH
-#cd ${SCANCODE_PATH}
-#wget -q "https://github.com/nexB/scancode-toolkit/releases/download/v${RELEASE}.${RC}/scancode-toolkit-${RELEASE}${RC}.zip" -O "scancode-toolkit.zip"
-#unzip -q "scancode-toolkit.zip"
-#rm -f "scancode-toolkit.zip"
-#mv "scancode-toolkit-${RELEASE}${RC}"/* .
-#rm -rf "scancode-toolkit-${RELEASE}${RC}/"
+RELEASE='2.0.1'
+mkdir -p $SCANCODE_PATH
+cd ${SCANCODE_PATH}
+wget -q "https://github.com/nexB/scancode-toolkit/releases/download/v${RELEASE}/scancode-toolkit-${RELEASE}.zip" -O "scancode-toolkit.zip"
+unzip -q "scancode-toolkit.zip"
+rm -f "scancode-toolkit.zip"
+mv "scancode-toolkit-${RELEASE}"/* .
+rm -rf "scancode-toolkit-${RELEASE}/"
 
 # Build license detection index (.cache/)
 ./scancode --quiet CHANGELOG.rst
