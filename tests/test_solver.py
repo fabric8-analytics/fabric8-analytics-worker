@@ -139,16 +139,19 @@ class TestSolver(object):
 
     def test_pypi_solver(self, pypi):
         solver = get_ecosystem_solver(pypi)
-        deps = ["pymongo>=3.0,<3.2.2", "celery>3.1.11", "six==1.10.0"]
+        deps = ['six == 1.9.0',
+                'pymongo >=3.0, <3.2.2']
         out = solver.solve(deps)
-        assert len(out) == len(deps)
+        assert out == {'six': '1.9.0',
+                       'pymongo': '3.2.1'}
 
     def test_rubygems_solver(self, rubygems):
         solver = get_ecosystem_solver(rubygems)
-        deps = ["Hoe ~>3.14", "rexicaL >=1.0.5", "raKe-compiler-dock ~>0.4.2",
-                "rake-comPiler ~>0.9.2"]
+        deps = ['hoe <3.4.0',
+                'rake-compiler ~>0.9.2']
         out = solver.solve(deps)
-        assert len(out) == len(deps)
+        assert out == {'hoe': '3.3.1',
+                       'rake-compiler': '0.9.9'}
 
     def test_nuget_solver(self, nuget):
         solver = get_ecosystem_solver(nuget)
