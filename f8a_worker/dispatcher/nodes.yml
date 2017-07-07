@@ -265,6 +265,12 @@
       max_retry: 0
       storage: 'BayesianPostgres'
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GitHubManifestMetadataGithubTask_v0'
+    - name: 'git_stats'
+      classname: 'GitStats'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_git_stats_v0'
+      storage: 'PackagePostgres'
 
   flows:
     - 'bayesianAnalysisFlow'

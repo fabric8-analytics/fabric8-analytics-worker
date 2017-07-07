@@ -14,6 +14,10 @@ jsonschema
 BigQuery-Python
 unidiff
 requests
+git2json
+numpy
+scikit-learn
+scipy
 # Amazon AWS SQS
 # Celery transparently uses boto
 boto

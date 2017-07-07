@@ -20,3 +20,10 @@
             name: 'argsFieldExist'
             args:
               key: 'url'
+
+        - from:
+          to: 'git_stats'
+          condition:
+            name: 'argsFieldExist'
+            args:
+              key: 'url'
