@@ -6,7 +6,7 @@ from collections import Counter
 import re
 import logging
 
-from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST
+from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST, PGM_REST_URL, create_package_dict
 from f8a_worker.base import BaseTask
 from f8a_worker.conf import get_configuration
 from f8a_worker.utils import get_session_retry
@@ -74,7 +74,7 @@ class GraphDB:
                 json_response = response.json()
                 return json_response
         except:
-            _logger.error ("Failed retrieving Gremlin data.")
+            _logger.error("Failed retrieving Gremlin data.")
             return None
 
     def get_response_data(self, json_response, data_default):
@@ -256,6 +256,26 @@ class GraphDB:
             list_ref_stacks.append(ref_stack_map)
 
         return list_ref_stacks
+
+    def get_version_information(self, input_list, ecosystem):
+        """Fetch the version information for each of the packages"""
+        input_packages = [package for package in input_list]
+        str_query = "g.V().has('ecosystem',ecosystem).has('name',within(input_packages)).as('pkg').out('has_version')" \
+                    ".hasNot('cve_ids').as('ver').select('pkg','ver').by(valueMap()).dedup()"
+        payload = {
+            'gremlin': str_query,
+            'bindings': {
+                'ecosystem': ecosystem,
+                'input_packages': input_packages
+            }
+        }
+
+        # Query Gremlin with packages list to get their version information
+        gremlin_response = self.execute_gremlin_dsl(payload)
+        if gremlin_response is None:
+            return []
+        response = self.get_response_data(gremlin_response, [{0: 0}])
+        return response
 
     def get_input_stacks_vectors_from_graph(self, input_list, ecosystem):
         """Fetches EPV properties of all the components provided as part of input stack"""
@@ -478,3 +498,110 @@ class RecommendationTask(BaseTask):
             }
             similarity_list.append(s_stack)
         return similarity_list
+
+
+class RecommendationV2Task(BaseTask):
+    _analysis_name = 'recommendation_v2'
+    description = 'Get Recommendation'
+
+    def call_pgm(self, payload):
+        """Calls the PGM model with the normalized manifest information to get the relevant packages"""
+        PGM_REST_URL = "http://kronos-kattappa-0239.dev.rdu2c.fabric8.io/api/v1/kronos_score"
+        try:
+            if payload is not None:
+                response = get_session_retry().post(PGM_REST_URL, json=payload)
+                if response.status_code != 200:
+                    self.log.error("HTTP error {}. Error retrieving PGM data.".format(response.status_code))
+                    return None
+                else:
+                    json_response = response.json()
+                    return json_response
+            else:
+                self.log.debug('Payload information is not passed in the call, Quitting! PGM\'s call')
+        except:
+            self.log.error("Failed retrieving PGM data.")
+            return None
+
+    def execute(self, arguments=None):
+        arguments = self.parent_task_result('GraphAggregatorTask')
+        results = arguments['result']
+        input_stack = {d["package"]: d["version"] for d in
+                       arguments.get("result", [])[0].get("details", [])[0].get("_resolved")}
+
+        input_task_for_pgm = []
+
+        for result in results:
+            details = result['details'][0]
+            resolved = details['_resolved']
+            self.log.debug(result)
+            new_arr = [r['package'] for r in resolved]
+            json_object = {
+                'ecosystem': details['ecosystem'],
+                'user_persona': "1",  #TODO - remove janus hardcoded value completely and assing a cateogory here
+                'package_list': new_arr
+            }
+            self.log.debug(json_object)
+            input_task_for_pgm.append(json_object)
+
+            # Call PGM and get the response
+            pgm_response = self.call_pgm(input_task_for_pgm)
+
+            # From PGM response process companion and alternate packages and then get Data from Graph
+            recommendation = {
+                'recommendations': {
+                        'companion': [],
+                        'alternate': [],
+                        'usage_outliers': []
+                }
+            }
+
+            # TODO - implement multiple manifest file support for below loop
+            for pgm_result in pgm_response:
+                companion_packages = []
+                ecosystem = pgm_result['ecosystem']
+
+                # Get usage based outliers
+                recommendation['recommendations']['usage_outliers'] = \
+                    pgm_result['outlier_package_list']
+
+                for pkg in pgm_result['companion_packages']:
+                    companion_packages.append(pkg['package_name'])
+
+                # Get Companion Packages from Graph
+                comp_packages_graph = GraphDB().get_version_information(companion_packages, ecosystem)
+
+                # Create Companion Block
+                comp_packages = create_package_dict(comp_packages_graph)
+                recommendation['recommendations']['companion'] = comp_packages
+
+                # Get the topmost alternate package for each input package
+
+                # Create intermediate dict to Only Get Top 1 companion packages for the time being.
+                temp_dict = {}
+                for pkg_name, contents in pgm_result['alternate_packages'].items():
+                    pkg = {}
+                    for ind in contents:
+                        pkg[ind['package_name']] = ind['similarity_score']
+                    temp_dict[pkg_name] = pkg
+
+                final_dict = {}
+                alternate_packages = []
+                for pkg_name, contents in temp_dict.items():
+                    # For each input package
+                    # Get only the topmost alternate package from a set of packages based on similarity score
+                    top_dict = dict(Counter(contents).most_common(1))
+                    for alt_pkg, sim_score in top_dict.items():
+                        final_dict[alt_pkg] = {
+                            'version': input_stack[pkg_name],
+                            'replaces': pkg_name,
+                            'similarity_score': sim_score
+                        }
+                        alternate_packages.append(alt_pkg)
+
+                # Get Alternate Packages from Graph
+                alt_packages_graph = GraphDB().get_version_information(alternate_packages, ecosystem)
+                # Create Companion Dict
+                alt_packages = create_package_dict(alt_packages_graph, final_dict)
+                recommendation['recommendations']['alternate'] = alt_packages
+
+            return recommendation

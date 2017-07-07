@@ -7,6 +7,7 @@ GREMLIN_SERVER_URL_REST = "http://{host}:{port}".format\
                            (host=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_HOST", "localhost"),
                             port=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_PORT", "8182"))
 
+PGM_REST_URL = os.getenv('PGM_REST_URL', 'http://kronos-kattappa-0237.dev.rdu2c.fabric8.io/api/v1/kronos_score')
 
 def get_stack_usage_data_graph(components):
     components_with_usage_data = 0
@@ -157,7 +158,6 @@ def extract_component_details(component):
     }
     return component_summary, licenses
 
-
 def aggregate_stack_data(stack, manifest_file, ecosystem):
     components = []
     licenses = []
@@ -180,4 +180,74 @@ def aggregate_stack_data(stack, manifest_file, ecosystem):
             "components": components
     }
     return data
+
+
+def create_package_dict(graph_results, alt_dict=None):
+    """Converts Graph Results into the Recommendation Dict"""
+    pkg_list = []
+
+    for epv in graph_results:
+        name = epv['ver']['pname'][0]
+        pkg_dict = {
+            'ecosystem': epv['ver']['pecosystem'][0],
+            'name': name,
+            'version': epv['ver']['version'][0],
+            'licenses': epv['ver'].get('licenses', []),
+            'sentiment': {"overall_score": 0.65, 'latest_comment': 'N/A'},
+            'latest_version': epv['pkg']['latest_version'][0],
+            'security': [],
+            'osio_user_count': 0}
+        github_dict = {
+            'dependent_projects': 10,
+            'dependent_repos': 200,
+            'used_by': [{
+                "name": "hardcoded",
+                "stars": 100
+            }],
+            'total_releases': 21,
+            'latest_release_duration': '2 Months',
+            'first_release_date': 'Apr 16,2010',
+            'forks_count': epv['pkg']['gh_forks'][0],
+            'stargazers_count': epv['pkg']['gh_stargazers'][0],
+            'watchers': 100,
+            'contributors': 12,
+            'size': '4MB',
+            'issues': {
+                'month': {
+                    'closed': epv['pkg']['gh_issues_last_month_closed'][0],
+                    'opened': epv['pkg']['gh_issues_last_month_opened'][0]
+                },
+                'year': {
+                    'closed': epv['pkg']['gh_issues_last_year_closed'][0],
+                    'opened': epv['pkg']['gh_issues_last_year_opened'][0]
+                }
+            },
+            'pull_requests': {
+                'month': {
+                    'closed': epv['pkg']['gh_prs_last_month_closed'][0],
+                    'opened': epv['pkg']['gh_prs_last_month_opened'][0]
+                },
+                'year': {
+                    'closed': epv['pkg']['gh_prs_last_year_closed'][0],
+                    'opened': epv['pkg']['gh_prs_last_year_opened'][0]
+                }
+            }
+        }
+        pkg_dict['github'] = github_dict
+        pkg_dict['code_metrics'] = {
+            "average_cyclomatic_complexity": epv['ver']['cm_avg_cyclomatic_complexity'][0],
+            "code_lines": epv['ver']['cm_loc'][0],
+            "total_files": epv['ver']['cm_num_files'][0]
+        }
+
+        if alt_dict is not None and name in alt_dict:
+            pkg_dict['replaces'] = [{
+                'name': alt_dict[name]['replaces'],
+                'version': alt_dict[name]['version']
+            }]
+
+        pkg_list.append(pkg_dict)
+    return pkg_list
+
+
 

@@ -1,0 +1,14 @@
+---
+  flow-definitions:
+    - name: 'stackApiGraphV2Flow'
+      queue: '{DEPLOYMENT_PREFIX}_api_stackApiGraphFlow_v0'
+      edges:
+        - from:
+          to:
+            - 'GraphAggregatorTask'
+            - 'ManifestKeeperTask'
+        - from:
+            - 'GraphAggregatorTask'
+          to:
+            - 'recommendation_v2'
+            - 'stack_aggregator_v2'

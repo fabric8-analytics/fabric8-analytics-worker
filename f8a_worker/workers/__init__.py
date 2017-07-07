@@ -23,7 +23,8 @@ from f8a_worker.workers.finalize import FinalizeTask
 from f8a_worker.workers.finalize import PackageFinalizeTask
 from f8a_worker.workers.graphaggregator import GraphAggregatorTask
 from f8a_worker.workers.stackaggregator import StackAggregatorTask
-from f8a_worker.workers.recommender import RecommendationTask
+from f8a_worker.workers.stackaggregator_v2 import StackAggregatorV2Task
+from f8a_worker.workers.recommender import RecommendationTask, RecommendationV2Task
 from f8a_worker.workers.init_analysis_flow import InitAnalysisFlow
 from f8a_worker.workers.init_package_flow import InitPackageFlow
 from f8a_worker.workers.result_collector import ResultCollector
