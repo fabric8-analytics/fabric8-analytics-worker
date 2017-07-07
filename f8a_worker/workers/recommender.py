@@ -66,7 +66,7 @@ class GraphDB:
     def execute_gremlin_dsl(self, payload):
         """Execute the gremlin query and return the response."""
         try:
-            response = requests.post(self._bayesian_graph_url, data=json.dumps(payload))
+            response = get_session_retry().post(self._bayesian_graph_url, data=json.dumps(payload))
             if response.status_code != 200:
                 _logger.error ("HTTP error {}. Error retrieving Gremlin data.".format(response.status_code))
                 return None
