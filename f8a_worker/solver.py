@@ -1,4 +1,5 @@
 import anymarkup
+import bs4
 from collections import defaultdict
 from functools import cmp_to_key
 import logging
@@ -7,6 +8,7 @@ from pip.req.req_file import parse_requirements
 import re
 from requests import get
 from xmlrpc.client import ServerProxy
+from semver import parse
 from subprocess import check_output
 from tempfile import NamedTemporaryFile
 
@@ -223,6 +225,29 @@ class RubyGemsReleasesFetcher(ReleasesFetcher):
             return self.fetch_releases(self._search_package_name(package))
 
         return package, [ver['number'] for ver in r.json()]
+
+
+class NugetReleasesFetcher(ReleasesFetcher):
+    def __init__(self, ecosystem):
+        super(NugetReleasesFetcher, self).__init__(ecosystem)
+
+    def fetch_releases(self, package):
+        """
+        Scrape 'Version History' from https://www.nuget.org/packages/<package>
+        """
+        releases = []
+        pop = get('https://www.nuget.org/packages/' + package)
+        poppage = bs4.BeautifulSoup(pop.text, 'html.parser')
+        for link in poppage.find_all(href=re.compile(r'^/packages/')):
+            version = link['href'].split('/')[-1].strip()
+            try:
+                parse(version)
+            except ValueError:
+                # not a version string
+                pass
+            else:
+                releases.append(version)
+        return package, list(reversed(releases))
 
 
 class F8aReleasesFetcher(ReleasesFetcher):
@@ -461,6 +486,52 @@ class NpmDependencyParser(DependencyParser):
 RubyGemsDependencyParser = NpmDependencyParser
 
 
+class NugetDependencyParser(object):
+    # https://docs.microsoft.com/en-us/nuget/create-packages/dependency-versions#version-ranges
+    def parse(self, specs):
+        deps = []
+        for spec in specs:
+            name, version_range = spec.split(' ', 1)
+
+            # 1.0 -> 1.0 ≤ x
+            if re.search('[,()\[\]]', version_range) is None:
+                dep = Dependency(name, [('>=', version_range)])
+            # [1.0,2.0] -> 1.0≤x≤2.0
+            elif re.fullmatch(r'\[(.+),(.+)\]', version_range):
+                m = re.fullmatch(r'\[(.+),(.+)\]', version_range)
+                dep = Dependency(name, [[('>=', m.group(1)), ('<=', m.group(2))]])
+            # (1.0,2.0) -> 1.0<x<2.0
+            elif re.fullmatch(r'\((.+),(.+)\)', version_range):
+                m = re.fullmatch(r'\((.+),(.+)\)', version_range)
+                dep = Dependency(name, [[('>', m.group(1)), ('<', m.group(2))]])
+            # [1.0,2.0) -> 1.0≤x<2.0
+            elif re.fullmatch(r'\[(.+),(.+)\)', version_range):
+                m = re.fullmatch(r'\[(.+),(.+)\)', version_range)
+                dep = Dependency(name, [[('>=', m.group(1)), ('<', m.group(2))]])
+            # (1.0,) -> 1.0<x
+            elif re.fullmatch(r'\((.+),\)', version_range):
+                m = re.fullmatch(r'\((.+),\)', version_range)
+                dep = Dependency(name, [('>', m.group(1))])
+            # [1.0] -> x==1.0
+            elif re.fullmatch(r'\[(.+)\]', version_range):
+                m = re.fullmatch(r'\[(.+)\]', version_range)
+                dep = Dependency(name, [('==', m.group(1))])
+            # (,1.0] -> x≤1.0
+            elif re.fullmatch(r'\(,(.+)\]', version_range):
+                m = re.fullmatch(r'\(,(.+)\]', version_range)
+                dep = Dependency(name, [('<=', m.group(1))])
+            # (,1.0) -> x<1.0
+            elif re.fullmatch(r'\(,(.+)\)', version_range):
+                m = re.fullmatch(r'\(,(.+)\)', version_range)
+                dep = Dependency(name, [('<', m.group(1))])
+            elif re.fullmatch(r'\((.+)\)', version_range):
+                raise ValueError("invalid version range %r" % version_range)
+
+            deps.append(dep)
+
+        return deps
+
+
 class NoOpDependencyParser(DependencyParser):
     """
     Dummy dependency parser for ecosystems that don't support version ranges.
@@ -478,10 +549,11 @@ class NoOpDependencyParser(DependencyParser):
 
 
 class Solver(object):
-    def __init__(self, ecosystem, dep_parser=None, fetcher=None):
+    def __init__(self, ecosystem, dep_parser=None, fetcher=None, highest_dependency_version=True):
         self.ecosystem = ecosystem
         self._dependency_parser = dep_parser
         self._release_fetcher = fetcher
+        self._highest_dependency_version = highest_dependency_version
 
     @property
     def dependency_parser(self):
@@ -525,7 +597,13 @@ class Solver(object):
             if all_versions:
                 solved[name] = matching
             else:
-                solved[name] = matching.pop() if matching else None
+                if not matching:
+                    solved[name] = None
+                else:
+                    if self._highest_dependency_version:
+                        solved[name] = matching[-1]
+                    else:
+                        solved[name] = matching[0]
 
         return solved
 
@@ -549,6 +627,15 @@ class RubyGemsSolver(Solver):
         super(RubyGemsSolver, self).__init__(ecosystem,
                                              RubyGemsDependencyParser(),
                                              fetcher or RubyGemsReleasesFetcher(ecosystem))
+
+
+class NugetSolver(Solver):
+    # https://docs.microsoft.com/en-us/nuget/release-notes/nuget-2.8#-dependencyversion-switch
+    def __init__(self, ecosystem, fetcher=None):
+        super(NugetSolver, self).__init__(ecosystem,
+                                          NugetDependencyParser(),
+                                          fetcher or NugetReleasesFetcher(ecosystem),
+                                          highest_dependency_version=False)
 
 
 class MavenSolver(object):
@@ -646,6 +733,8 @@ def get_ecosystem_solver(ecosystem, with_fetcher=None):
         return PypiSolver(ecosystem, with_fetcher)
     elif ecosystem.is_backed_by(EcosystemBackend.rubygems):
         return RubyGemsSolver(ecosystem, with_fetcher)
+    elif ecosystem.is_backed_by(EcosystemBackend.nuget):
+        return NugetSolver(ecosystem, with_fetcher)
 
     raise ValueError('Unknown ecosystem: {}'.format(ecosystem.name))
 
@@ -659,5 +748,7 @@ def get_ecosystem_parser(ecosystem):
         return PypiDependencyParser()
     elif ecosystem.is_backed_by(EcosystemBackend.rubygems):
         return RubyGemsDependencyParser()
+    elif ecosystem.is_backed_by(EcosystemBackend.nuget):
+        return NugetDependencyParser()
 
     raise ValueError('Unknown ecosystem: {}'.format(ecosystem.name))

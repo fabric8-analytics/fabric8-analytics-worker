@@ -1,0 +1,675 @@
+{
+   "versions": {
+      "DotNetSolution": "91a8bc65208bde20f88d30a8c1815b47e741921d"
+   },
+   "items": [
+      {
+         "time": "2017-06-28T17:20:42.26429629+02:00",
+         "path": "Newtonsoft.Json.nuspec",
+         "ecosystem": "DotNetSolution",
+         "result": {
+            "Files": [],
+            "HasFilesNode": false,
+            "Metadata": {
+               "Authors": [
+                  "James Newton-King"
+               ],
+               "ContentFiles": [],
+               "Copyright": "Copyright © James Newton-King 2008",
+               "DependencyGroups": [
+                  {
+                     "Packages": [],
+                     "TargetFramework": {
+                        "AllFrameworkVersions": false,
+                        "DotNetFrameworkName": ".NETFramework,Version=v2.0",
+                        "Framework": ".NETFramework",
+                        "HasProfile": false,
+                        "IsAgnostic": false,
+                        "IsAny": false,
+                        "IsPCL": false,
+                        "IsPackageBased": false,
+                        "IsSpecificFramework": true,
+                        "IsUnsupported": false,
+                        "Profile": "",
+                        "Version": {
+                           "Build": 0,
+                           "Major": 2,
+                           "MajorRevision": 0,
+                           "Minor": 0,
+                           "MinorRevision": 0,
+                           "Revision": 0
+                        }
+                     }
+                  },
+                  {
+                     "Packages": [],
+                     "TargetFramework": {
+                        "AllFrameworkVersions": false,
+                        "DotNetFrameworkName": ".NETFramework,Version=v3.5",
+                        "Framework": ".NETFramework",
+                        "HasProfile": false,
+                        "IsAgnostic": false,
+                        "IsAny": false,
+                        "IsPCL": false,
+                        "IsPackageBased": false,
+                        "IsSpecificFramework": true,
+                        "IsUnsupported": false,
+                        "Profile": "",
+                        "Version": {
+                           "Build": 0,
+                           "Major": 3,
+                           "MajorRevision": 0,
+                           "Minor": 5,
+                           "MinorRevision": 0,
+                           "Revision": 0
+                        }
+                     }
+                  },
+                  {
+                     "Packages": [],
+                     "TargetFramework": {
+                        "AllFrameworkVersions": false,
+                        "DotNetFrameworkName": ".NETFramework,Version=v4.0",
+                        "Framework": ".NETFramework",
+                        "HasProfile": false,
+                        "IsAgnostic": false,
+                        "IsAny": false,
+                        "IsPCL": false,
+                        "IsPackageBased": false,
+                        "IsSpecificFramework": true,
+                        "IsUnsupported": false,
+                        "Profile": "",
+                        "Version": {
+                           "Build": 0,
+                           "Major": 4,
+                           "MajorRevision": 0,
+                           "Minor": 0,
+                           "MinorRevision": 0,
+                           "Revision": 0
+                        }
+                     }
+                  },
+                  {
+                     "Packages": [],
+                     "TargetFramework": {
+                        "AllFrameworkVersions": false,
+                        "DotNetFrameworkName": ".NETFramework,Version=v4.5",
+                        "Framework": ".NETFramework",
+                        "HasProfile": false,
+                        "IsAgnostic": false,
+                        "IsAny": false,
+                        "IsPCL": false,
+                        "IsPackageBased": false,
+                        "IsSpecificFramework": true,
+                        "IsUnsupported": false,
+                        "Profile": "",
+                        "Version": {
+                           "Build": 0,
+                           "Major": 4,
+                           "MajorRevision": 0,
+                           "Minor": 5,
+                           "MinorRevision": 0,
+                           "Revision": 0
+                        }
+                     }
+                  },
+                  {
+                     "Packages": [
+                        {
+                           "Exclude": [
+                              "Build",
+                              "Analyzers"
+                           ],
+                           "Id": "NETStandard.Library",
+                           "Include": [],
+                           "VersionRange": {
+                              "Float": null,
+                              "HasLowerAndUpperBounds": false,
+                              "HasLowerBound": true,
+                              "HasUpperBound": false,
+                              "IsFloating": false,
+                              "IsMaxInclusive": false,
+                              "IsMinInclusive": true,
+                              "MaxVersion": null,
+                              "MinVersion": {
+                                 "HasMetadata": false,
+                                 "IsLegacyVersion": false,
+                                 "IsPrerelease": false,
+                                 "IsSemVer2": false,
+                                 "Major": 1,
+                                 "Metadata": "",
+                                 "Minor": 6,
+                                 "Patch": 1,
+                                 "Release": "",
+                                 "ReleaseLabels": [],
+                                 "Revision": 0,
+                                 "Version": {
+                                    "Build": 1,
+                                    "Major": 1,
+                                    "MajorRevision": 0,
+                                    "Minor": 6,
+                                    "MinorRevision": 0,
+                                    "Revision": 0
+                                 }
+                              },
+                              "OriginalString": "1.6.1"
+                           }
+                        },
+                        {
+                           "Exclude": [
+                              "Build",
+                              "Analyzers"
+                           ],
+                           "Id": "Microsoft.CSharp",
+                           "Include": [],
+                           "VersionRange": {
+                              "Float": null,
+                              "HasLowerAndUpperBounds": false,
+                              "HasLowerBound": true,
+                              "HasUpperBound": false,
+                              "IsFloating": false,
+                              "IsMaxInclusive": false,
+                              "IsMinInclusive": true,
+                              "MaxVersion": null,
+                              "MinVersion": {
+                                 "HasMetadata": false,
+                                 "IsLegacyVersion": false,
+                                 "IsPrerelease": false,
+                                 "IsSemVer2": false,
+                                 "Major": 4,
+                                 "Metadata": "",
+                                 "Minor": 3,
+                                 "Patch": 0,
+                                 "Release": "",
+                                 "ReleaseLabels": [],
+                                 "Revision": 0,
+                                 "Version": {
+                                    "Build": 0,
+                                    "Major": 4,
+                                    "MajorRevision": 0,
+                                    "Minor": 3,
+                                    "MinorRevision": 0,
+                                    "Revision": 0
+                                 }
+                              },
+                              "OriginalString": "4.3.0"
+                           }
+                        },
+                        {
+                           "Exclude": [
+                              "Build",
+                              "Analyzers"
+                           ],
+                           "Id": "System.ComponentModel.TypeConverter",
+                           "Include": [],
+                           "VersionRange": {
+                              "Float": null,
+                              "HasLowerAndUpperBounds": false,
+                              "HasLowerBound": true,
+                              "HasUpperBound": false,
+                              "IsFloating": false,
+                              "IsMaxInclusive": false,
+                              "IsMinInclusive": true,
+                              "MaxVersion": null,
+                              "MinVersion": {
+                                 "HasMetadata": false,
+                                 "IsLegacyVersion": false,
+                                 "IsPrerelease": false,
+                                 "IsSemVer2": false,
+                                 "Major": 4,
+                                 "Metadata": "",
+                                 "Minor": 3,
+                                 "Patch": 0,
+                                 "Release": "",
+                                 "ReleaseLabels": [],
+                                 "Revision": 0,
+                                 "Version": {
+                                    "Build": 0,
+                                    "Major": 4,
+                                    "MajorRevision": 0,
+                                    "Minor": 3,
+                                    "MinorRevision": 0,
+                                    "Revision": 0
+                                 }
+                              },
+                              "OriginalString": "4.3.0"
+                           }
+                        },
+                        {
+                           "Exclude": [
+                              "Build",
+                              "Analyzers"
+                           ],
+                           "Id": "System.Runtime.Serialization.Primitives",
+                           "Include": [],
+                           "VersionRange": {
+                              "Float": null,
+                              "HasLowerAndUpperBounds": false,
+                              "HasLowerBound": true,
+                              "HasUpperBound": false,
+                              "IsFloating": false,
+                              "IsMaxInclusive": false,
+                              "IsMinInclusive": true,
+                              "MaxVersion": null,
+                              "MinVersion": {
+                                 "HasMetadata": false,
+                                 "IsLegacyVersion": false,
+                                 "IsPrerelease": false,
+                                 "IsSemVer2": false,
+                                 "Major": 4,
+                                 "Metadata": "",
+                                 "Minor": 3,
+                                 "Patch": 0,
+                                 "Release": "",
+                                 "ReleaseLabels": [],
+                                 "Revision": 0,
+                                 "Version": {
+                                    "Build": 0,
+                                    "Major": 4,
+                                    "MajorRevision": 0,
+                                    "Minor": 3,
+                                    "MinorRevision": 0,
+                                    "Revision": 0
+                                 }
+                              },
+                              "OriginalString": "4.3.0"
+                           }
+                        }
+                     ],
+                     "TargetFramework": {
+                        "AllFrameworkVersions": false,
+                        "DotNetFrameworkName": ".NETStandard,Version=v1.0",
+                        "Framework": ".NETStandard",
+                        "HasProfile": false,
+                        "IsAgnostic": false,
+                        "IsAny": false,
+                        "IsPCL": false,
+                        "IsPackageBased": true,
+                        "IsSpecificFramework": true,
+                        "IsUnsupported": false,
+                        "Profile": "",
+                        "Version": {
+                           "Build": 0,
+                           "Major": 1,
+                           "MajorRevision": 0,
+                           "Minor": 0,
+                           "MinorRevision": 0,
+                           "Revision": 0
+                        }
+                     }
+                  },
+                  {
+                     "Packages": [
+                        {
+                           "Exclude": [
+                              "Build",
+                              "Analyzers"
+                           ],
+                           "Id": "NETStandard.Library",
+                           "Include": [],
+                           "VersionRange": {
+                              "Float": null,
+                              "HasLowerAndUpperBounds": false,
+                              "HasLowerBound": true,
+                              "HasUpperBound": false,
+                              "IsFloating": false,
+                              "IsMaxInclusive": false,
+                              "IsMinInclusive": true,
+                              "MaxVersion": null,
+                              "MinVersion": {
+                                 "HasMetadata": false,
+                                 "IsLegacyVersion": false,
+                                 "IsPrerelease": false,
+                                 "IsSemVer2": false,
+                                 "Major": 1,
+                                 "Metadata": "",
+                                 "Minor": 6,
+                                 "Patch": 1,
+                                 "Release": "",
+                                 "ReleaseLabels": [],
+                                 "Revision": 0,
+                                 "Version": {
+                                    "Build": 1,
+                                    "Major": 1,
+                                    "MajorRevision": 0,
+                                    "Minor": 6,
+                                    "MinorRevision": 0,
+                                    "Revision": 0
+                                 }
+                              },
+                              "OriginalString": "1.6.1"
+                           }
+                        },
+                        {
+                           "Exclude": [
+                              "Build",
+                              "Analyzers"
+                           ],
+                           "Id": "Microsoft.CSharp",
+                           "Include": [],
+                           "VersionRange": {
+                              "Float": null,
+                              "HasLowerAndUpperBounds": false,
+                              "HasLowerBound": true,
+                              "HasUpperBound": false,
+                              "IsFloating": false,
+                              "IsMaxInclusive": false,
+                              "IsMinInclusive": true,
+                              "MaxVersion": null,
+                              "MinVersion": {
+                                 "HasMetadata": false,
+                                 "IsLegacyVersion": false,
+                                 "IsPrerelease": false,
+                                 "IsSemVer2": false,
+                                 "Major": 4,
+                                 "Metadata": "",
+                                 "Minor": 3,
+                                 "Patch": 0,
+                                 "Release": "",
+                                 "ReleaseLabels": [],
+                                 "Revision": 0,
+                                 "Version": {
+                                    "Build": 0,
+                                    "Major": 4,
+                                    "MajorRevision": 0,
+                                    "Minor": 3,
+                                    "MinorRevision": 0,
+                                    "Revision": 0
+                                 }
+                              },
+                              "OriginalString": "4.3.0"
+                           }
+                        },
+                        {
+                           "Exclude": [
+                              "Build",
+                              "Analyzers"
+                           ],
+                           "Id": "System.ComponentModel.TypeConverter",
+                           "Include": [],
+                           "VersionRange": {
+                              "Float": null,
+                              "HasLowerAndUpperBounds": false,
+                              "HasLowerBound": true,
+                              "HasUpperBound": false,
+                              "IsFloating": false,
+                              "IsMaxInclusive": false,
+                              "IsMinInclusive": true,
+                              "MaxVersion": null,
+                              "MinVersion": {
+                                 "HasMetadata": false,
+                                 "IsLegacyVersion": false,
+                                 "IsPrerelease": false,
+                                 "IsSemVer2": false,
+                                 "Major": 4,
+                                 "Metadata": "",
+                                 "Minor": 3,
+                                 "Patch": 0,
+                                 "Release": "",
+                                 "ReleaseLabels": [],
+                                 "Revision": 0,
+                                 "Version": {
+                                    "Build": 0,
+                                    "Major": 4,
+                                    "MajorRevision": 0,
+                                    "Minor": 3,
+                                    "MinorRevision": 0,
+                                    "Revision": 0
+                                 }
+                              },
+                              "OriginalString": "4.3.0"
+                           }
+                        },
+                        {
+                           "Exclude": [
+                              "Build",
+                              "Analyzers"
+                           ],
+                           "Id": "System.Runtime.Serialization.Primitives",
+                           "Include": [],
+                           "VersionRange": {
+                              "Float": null,
+                              "HasLowerAndUpperBounds": false,
+                              "HasLowerBound": true,
+                              "HasUpperBound": false,
+                              "IsFloating": false,
+                              "IsMaxInclusive": false,
+                              "IsMinInclusive": true,
+                              "MaxVersion": null,
+                              "MinVersion": {
+                                 "HasMetadata": false,
+                                 "IsLegacyVersion": false,
+                                 "IsPrerelease": false,
+                                 "IsSemVer2": false,
+                                 "Major": 4,
+                                 "Metadata": "",
+                                 "Minor": 3,
+                                 "Patch": 0,
+                                 "Release": "",
+                                 "ReleaseLabels": [],
+                                 "Revision": 0,
+                                 "Version": {
+                                    "Build": 0,
+                                    "Major": 4,
+                                    "MajorRevision": 0,
+                                    "Minor": 3,
+                                    "MinorRevision": 0,
+                                    "Revision": 0
+                                 }
+                              },
+                              "OriginalString": "4.3.0"
+                           }
+                        },
+                        {
+                           "Exclude": [
+                              "Build",
+                              "Analyzers"
+                           ],
+                           "Id": "System.Runtime.Serialization.Formatters",
+                           "Include": [],
+                           "VersionRange": {
+                              "Float": null,
+                              "HasLowerAndUpperBounds": false,
+                              "HasLowerBound": true,
+                              "HasUpperBound": false,
+                              "IsFloating": false,
+                              "IsMaxInclusive": false,
+                              "IsMinInclusive": true,
+                              "MaxVersion": null,
+                              "MinVersion": {
+                                 "HasMetadata": false,
+                                 "IsLegacyVersion": false,
+                                 "IsPrerelease": false,
+                                 "IsSemVer2": false,
+                                 "Major": 4,
+                                 "Metadata": "",
+                                 "Minor": 3,
+                                 "Patch": 0,
+                                 "Release": "",
+                                 "ReleaseLabels": [],
+                                 "Revision": 0,
+                                 "Version": {
+                                    "Build": 0,
+                                    "Major": 4,
+                                    "MajorRevision": 0,
+                                    "Minor": 3,
+                                    "MinorRevision": 0,
+                                    "Revision": 0
+                                 }
+                              },
+                              "OriginalString": "4.3.0"
+                           }
+                        },
+                        {
+                           "Exclude": [
+                              "Build",
+                              "Analyzers"
+                           ],
+                           "Id": "System.Xml.XmlDocument",
+                           "Include": [],
+                           "VersionRange": {
+                              "Float": null,
+                              "HasLowerAndUpperBounds": false,
+                              "HasLowerBound": true,
+                              "HasUpperBound": false,
+                              "IsFloating": false,
+                              "IsMaxInclusive": false,
+                              "IsMinInclusive": true,
+                              "MaxVersion": null,
+                              "MinVersion": {
+                                 "HasMetadata": false,
+                                 "IsLegacyVersion": false,
+                                 "IsPrerelease": false,
+                                 "IsSemVer2": false,
+                                 "Major": 4,
+                                 "Metadata": "",
+                                 "Minor": 3,
+                                 "Patch": 0,
+                                 "Release": "",
+                                 "ReleaseLabels": [],
+                                 "Revision": 0,
+                                 "Version": {
+                                    "Build": 0,
+                                    "Major": 4,
+                                    "MajorRevision": 0,
+                                    "Minor": 3,
+                                    "MinorRevision": 0,
+                                    "Revision": 0
+                                 }
+                              },
+                              "OriginalString": "4.3.0"
+                           }
+                        }
+                     ],
+                     "TargetFramework": {
+                        "AllFrameworkVersions": false,
+                        "DotNetFrameworkName": ".NETStandard,Version=v1.3",
+                        "Framework": ".NETStandard",
+                        "HasProfile": false,
+                        "IsAgnostic": false,
+                        "IsAny": false,
+                        "IsPCL": false,
+                        "IsPackageBased": true,
+                        "IsSpecificFramework": true,
+                        "IsUnsupported": false,
+                        "Profile": "",
+                        "Version": {
+                           "Build": 0,
+                           "Major": 1,
+                           "MajorRevision": 0,
+                           "Minor": 3,
+                           "MinorRevision": 0,
+                           "Revision": 0
+                        }
+                     }
+                  },
+                  {
+                     "Packages": [],
+                     "TargetFramework": {
+                        "AllFrameworkVersions": true,
+                        "DotNetFrameworkName": ".NETPortable,Version=v0.0,Profile=Profile328",
+                        "Framework": ".NETPortable",
+                        "HasProfile": true,
+                        "IsAgnostic": false,
+                        "IsAny": false,
+                        "IsPCL": true,
+                        "IsPackageBased": false,
+                        "IsSpecificFramework": true,
+                        "IsUnsupported": false,
+                        "Profile": "Profile328",
+                        "Version": {
+                           "Build": 0,
+                           "Major": 0,
+                           "MajorRevision": 0,
+                           "Minor": 0,
+                           "MinorRevision": 0,
+                           "Revision": 0
+                        }
+                     }
+                  },
+                  {
+                     "Packages": [],
+                     "TargetFramework": {
+                        "AllFrameworkVersions": true,
+                        "DotNetFrameworkName": ".NETPortable,Version=v0.0,Profile=Profile259",
+                        "Framework": ".NETPortable",
+                        "HasProfile": true,
+                        "IsAgnostic": false,
+                        "IsAny": false,
+                        "IsPCL": true,
+                        "IsPackageBased": false,
+                        "IsSpecificFramework": true,
+                        "IsUnsupported": false,
+                        "Profile": "Profile259",
+                        "Version": {
+                           "Build": 0,
+                           "Major": 0,
+                           "MajorRevision": 0,
+                           "Minor": 0,
+                           "MinorRevision": 0,
+                           "Revision": 0
+                        }
+                     }
+                  }
+               ],
+               "Description": "Json.NET is a popular high-performance JSON framework for .NET",
+               "DevelopmentDependency": false,
+               "FrameworkReferences": [],
+               "IconUrl": "http://www.newtonsoft.com/content/images/nugeticon.png",
+               "Id": "Newtonsoft.Json",
+               "Language": null,
+               "LicenseUrl": "https://raw.github.com/JamesNK/Newtonsoft.Json/master/LICENSE.md",
+               "MinClientVersion": {
+                  "Build": -1,
+                  "Major": 2,
+                  "MajorRevision": -1,
+                  "Minor": 12,
+                  "MinorRevision": -1,
+                  "Revision": -1
+               },
+               "MinClientVersionString": "2.12",
+               "Owners": [
+                  "James Newton-King"
+               ],
+               "PackageAssemblyReferences": [],
+               "PackageTypes": [],
+               "ProjectUrl": "http://www.newtonsoft.com/json",
+               "ReleaseNotes": null,
+               "Repository": {
+                  "Type": "git",
+                  "Url": "https://github.com/JamesNK/Newtonsoft.Json"
+               },
+               "RequireLicenseAcceptance": false,
+               "Serviceable": false,
+               "Summary": null,
+               "Tags": "json",
+               "Title": "Json.NET",
+               "Version": {
+                  "HasMetadata": false,
+                  "IsLegacyVersion": false,
+                  "IsPrerelease": false,
+                  "IsSemVer2": false,
+                  "Major": 10,
+                  "Metadata": "",
+                  "Minor": 0,
+                  "Patch": 3,
+                  "Release": "",
+                  "ReleaseLabels": [],
+                  "Revision": 0,
+                  "Version": {
+                     "Build": 3,
+                     "Major": 10,
+                     "MajorRevision": 0,
+                     "Minor": 0,
+                     "MinorRevision": 0,
+                     "Revision": 0
+                  }
+               }
+            }
+         },
+         "digests": {
+            "manifest": "6f323463e48a45905d7dfcd20e34fac61a94d374"
+         }
+      }
+   ]
+}

@@ -155,7 +155,7 @@ class MetadataDict(jsl.Document):
                     [jsl.ArrayField(jsl.StringField()), jsl.NullField()])
     with jsl.Scope(ROLE_v2_0_0) as v2_0_0:
         v2_0_0._system = jsl.StringField()
-    with jsl.Scope(lambda v: v >= ROLE_v2_1_0 and v < ROLE_v3_0_0) as since_v2_1_0:
+    with jsl.Scope(lambda v: ROLE_v2_1_0 <= v < ROLE_v3_0_0) as since_v2_1_0:
         since_v2_1_0._bayesian_dependency_tree_lock = jsl.OneOfField([
             jsl.DocumentField(LockFile, as_ref=True), jsl.NullField()
         ])

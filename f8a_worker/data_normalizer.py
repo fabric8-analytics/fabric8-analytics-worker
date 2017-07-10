@@ -35,7 +35,7 @@ class DataNormalizer(object):
     description = 'Collects `Release` specific information from Mercator'
 
     @staticmethod
-    def transform_keys(data, keymap):
+    def transform_keys(data, keymap, lower=True):
         """
          Collect known keys and/or rename existing keys
         :param data: dictionary, mercator output
@@ -45,6 +45,7 @@ class DataNormalizer(object):
             ('b', 'c',) - get 'b' and rename it to 'c'
             (('d', 'e',),) - get 'd' or 'e'
             (('f', 'g',), 'h') - get 'f' or 'g' and rename it to 'h'
+        :param lower: bool, convert keys to lowercase
         :return: dictionary with keys from keymap only
         """
         out = {}
@@ -60,6 +61,8 @@ class DataNormalizer(object):
                         break
                 in_key = in_k
             key = in_key if len(pair) == 1 else pair[1]
+            if lower:
+                key = key.lower()
             out[key] = value
 
         return out
@@ -125,17 +128,17 @@ class DataNormalizer(object):
 
         # {'url': 'https://github.com/o/p/issues',
         #  'email': 'project@name.com'} -> 'https://github.com/o/p/issues <project@name.com>'
-        if 'bug_reporting' in base and isinstance(base['bug_reporting'], dict):
+        if isinstance(base.get('bug_reporting'), dict):
             base['bug_reporting'] = self._join_name_email(base['bug_reporting'], 'url')
-        if 'author' in base and isinstance(base['author'], dict):
+        if isinstance(base.get('author'), dict):
             base['author'] = self._join_name_email(base['author'])
-        if 'contributors' in base and isinstance(base['contributors'], list):
+        if isinstance(base.get('contributors'), list):
             base['contributors'] = [self._join_name_email(m) for m in base['contributors']]
-        if 'maintainers' in base and isinstance(base['maintainers'], list):
+        if isinstance(base.get('maintainers'), list):
             base['maintainers'] = [self._join_name_email(m) for m in base['maintainers']]
 
         # 'a/b' -> {'type': 'git', 'url': 'https://github.com/a/b.git'}
-        if 'code_repository' in base and isinstance(base['code_repository'], str):
+        if isinstance(base.get('code_repository'), str):
             k = 'code_repository'
             url = base[k]
             if url.count('/') == 1:  # e.g. 'expressjs/express'
@@ -221,7 +224,8 @@ class DataNormalizer(object):
         base['_tests_implemented'] = self._are_tests_implemented(base)
         return base
 
-    def _python_identify_repo(self, homepage):
+    @staticmethod
+    def _python_identify_repo(homepage):
         """Returns code repository dict filled with homepage, if homepage is GH repo
         (None otherwise)
         """
@@ -229,10 +233,11 @@ class DataNormalizer(object):
             return {'url': homepage, 'type': 'git'}
         return None
 
-    def _python_split_keywords(self, keywords):
+    @staticmethod
+    def _split_keywords(keywords, separator=','):
         if isinstance(keywords, list):
             return keywords
-        keywords = keywords.split(',')
+        keywords = keywords.split(separator)
         keywords = [kw.strip() for kw in keywords]
         return keywords
 
@@ -245,7 +250,7 @@ class DataNormalizer(object):
         transformed = self.transform_keys(data, key_map)
         transformed['author'] = self._join_name_email(data, 'author', 'author_email')
         transformed['code_repository'] = self._python_identify_repo(transformed.get('homepage', ''))
-        transformed['keywords'] = self._python_split_keywords(data.get('keywords', []))
+        transformed['keywords'] = self._split_keywords(data.get('keywords', []))
         return transformed
 
     def _handle_python_dist(self, data):
@@ -281,7 +286,7 @@ class DataNormalizer(object):
             result = self.transform_keys(data, key_map)
             result['author'] = self._join_name_email(data, 'author', 'author-email')
         result['code_repository'] = self._python_identify_repo(result.get('homepage') or '')
-        result['keywords'] = self._python_split_keywords(data.get('keywords', []))
+        result['keywords'] = self._split_keywords(data.get('keywords', []))
         return result
 
     def _handle_java(self, data):
@@ -362,7 +367,7 @@ class DataNormalizer(object):
             transformed['description'] = data['summary']
 
         # 'version': {'version': '4.8.4'}  ->  'version': '4.8.4'
-        if 'version' in transformed and isinstance(transformed['version'], dict):
+        if isinstance(transformed.get('version'), dict):
             transformed['version'] = transformed['version'].get('version', '')
 
         # transform
@@ -390,9 +395,58 @@ class DataNormalizer(object):
             transformed['devel_dependencies'] = dev_deps  # development dependencies
         return transformed
 
+    def _handle_dotnet_solution(self, data):
+        if not data.get('Metadata'):
+            return {}
+        data = data['Metadata']
+        key_map = (('Id', 'name'), ('Description',),
+                   ('ProjectUrl', 'homepage'), ('LicenseUrl', 'declared_license'),
+                   # ('Summary',), ('Copyright',),
+                   # ('RequireLicenseAcceptance', 'require_license_acceptance'),
+                   )
+        transformed = self.transform_keys(data, key_map)
+
+        if data.get('Authors'):
+            transformed['author'] = ','.join(data['Authors'])
+
+        # transform
+        # "DependencyGroups": [
+        #    {
+        #        "Packages": [
+        #            {
+        #                "Id": "NETStandard.Library",
+        #                "VersionRange": {"OriginalString": "1.6.0"}
+        #            }
+        #        ]
+        #    }
+        # ]
+        # to ["NETStandard.Library 1.6.0"]
+        deps = set()
+        for dep_group in data.get('DependencyGroups', []):
+            for package in dep_group.get('Packages', []):
+                deps.add('{} {}'.format(package.get('Id', ''),
+                                        package.get('VersionRange', {}).get('OriginalString', '')))
+        transformed['dependencies'] = list(deps)
+
+        if isinstance(data.get('Repository'), dict):
+            transformed['code_repository'] = {'type': data['Repository'].get('Type'),
+                                              'url': data['Repository'].get('Url')}
+
+        version = data.get('Version')
+        if isinstance(version, dict):
+            transformed['version'] = '{}.{}.{}'.format(version.get('Major', ''),
+                                                       version.get('Minor', ''),
+                                                       version.get('Patch', ''))
+
+        tags = data.get('Tags', '')
+        separator = ',' if ',' in tags else ' '
+        transformed['keywords'] = self._split_keywords(tags, separator)
+
+        return transformed
+
     def handle_data(self, data, keep_path=False):
         def _passthrough(unused):
-            #log.debug('ecosystem %s not handled', data['ecosystem'])
+            # log.debug('ecosystem %s not handled', data['ecosystem'])
             pass
 
         "Arbitrate between various build/packaging systems"
@@ -402,7 +456,8 @@ class DataNormalizer(object):
                   'python-requirementstxt': self._handle_python_dist,
                   'npm': self._handle_javascript,
                   'java-pom': self._handle_java,
-                  'ruby': self._handle_rubygems}
+                  'ruby': self._handle_rubygems,
+                  'dotnetsolution': self._handle_dotnet_solution}
 
         result = switch.get(data['ecosystem'].lower(), _passthrough)(data.get('result', {}))
         if result is None:

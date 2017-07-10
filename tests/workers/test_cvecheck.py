@@ -7,7 +7,8 @@ from f8a_worker.workers import CVEcheckerTask
 
 @pytest.mark.usefixtures("dispatcher_setup")
 class TestCVEchecker(object):
-    def test_npm_geddy(self, npm):
+    @pytest.mark.usefixtures('npm')
+    def test_npm_geddy(self):
         args = {'ecosystem': 'npm', 'name': 'geddy', 'version': '13.0.7'}
         task = CVEcheckerTask.create_test_instance(task_name='security_issues')
         results = task.execute(args)
@@ -120,3 +121,27 @@ class TestCVEchecker(object):
         assert detail['severity'] == 'Medium'
         assert results['status'] == 'success'
         assert results['summary'] == ['CVE-2010-2480']
+
+    def test_nuget_jquery_ui(self):
+        nuspec_dir = os.path.join(
+                    os.path.dirname(
+                     os.path.abspath(__file__)), '..', 'data', 'nuget', 'nuspec')
+        args = {'ecosystem': 'nuget', 'name': 'jQuery.UI.Combined', 'version': '1.8.9'}
+        flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(nuspec_dir)
+        task = CVEcheckerTask.create_test_instance(task_name='source_licenses')
+        results = task.execute(arguments=args)
+
+        assert isinstance(results, dict)
+        assert set(results.keys()) == {'details', 'status', 'summary'}
+        details = results.get('details')
+        # dependency-check finds
+        # https://nvd.nist.gov/vuln/detail/CVE-2007-2379
+        # but according to NIST, there should be also
+        # https://nvd.nist.gov/vuln/detail/CVE-2010-5312
+        # https://nvd.nist.gov/vuln/detail/CVE-2012-6662
+        # so don't check exact CVEs for now, just make sure it does *something*
+        assert isinstance(details, list) and len(details) > 0
+        detail = details[0]
+        assert set(detail.keys()) == {'cvss', 'description', 'id', 'references', 'severity'}
+        cvss = detail['cvss']
+        assert set(cvss.keys()) == {'score', 'vector'}

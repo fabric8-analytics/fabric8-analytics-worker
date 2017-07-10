@@ -3,7 +3,6 @@ from re import compile as regexp
 import urllib.parse
 
 from f8a_worker.base import BaseTask
-from f8a_worker.enums import EcosystemBackend
 from f8a_worker.errors import TaskError
 from f8a_worker.schemas import SchemaRef
 from f8a_worker.solver import get_ecosystem_solver

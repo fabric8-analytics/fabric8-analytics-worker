@@ -97,7 +97,7 @@ class CVEcheckerTask(BaseTask):
             command = [depcheck,
                        '--noupdate',
                        '--format', 'XML',
-                       '--project', 'test',
+                       '--project', 'CVEcheckerTask',
                        '--data', temp_data_dir,
                        '--scan', scan_path,
                        '--out', report_path]
@@ -124,7 +124,6 @@ class CVEcheckerTask(BaseTask):
             # Make the life easier for other workers and store it to S3
             s3.store_depcheck_db_if_not_exists(temp_data_dir)
             _clean_dep_check_tmp()
-
 
         results = []
         dependencies = report_dict.get('analysis', {}).get('dependencies', {}).get('dependency', [])
@@ -205,6 +204,14 @@ class CVEcheckerTask(BaseTask):
 
         return self._run_owasp_dep_check(scan_path, experimental=True)
 
+    def _nuget_scan(self, arguments):
+        """
+        https://jeremylong.github.io/DependencyCheck/analyzers/nuspec-analyzer.html
+        """
+        extracted_nupkg = ObjectCache.get_from_dict(arguments).get_extracted_source_tarball()
+        nuspec = os.path.join(extracted_nupkg, '{}.nuspec'.format(arguments['name']))
+        return self._run_owasp_dep_check(nuspec, experimental=False)
+
     def execute(self, arguments):
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
@@ -216,6 +223,8 @@ class CVEcheckerTask(BaseTask):
             return self._npm_scan(arguments)
         elif arguments['ecosystem'] == 'pypi':
             return self._python_scan(arguments)
+        elif arguments['ecosystem'] == 'nuget':
+            return self._nuget_scan(arguments)
         else:
             return {'summary': ['Unsupported ecosystem'],
                     'status': 'error',

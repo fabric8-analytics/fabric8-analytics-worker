@@ -7,6 +7,9 @@ from f8a_worker.setup_celery import get_dispatcher_config_files
 from f8a_worker.storages import AmazonS3
 from selinon import Config
 
+# To use fixtures from this file, either name them as an input argument or use 'usefixtures' marker
+# https://docs.pytest.org/en/latest/fixture.html#using-fixtures-from-classes-modules-or-projects
+
 
 @pytest.fixture
 def rdb():
@@ -61,6 +64,15 @@ def rubygems(rdb):
     rdb.add(rubygems)
     rdb.commit()
     return rubygems
+
+
+@pytest.fixture
+def nuget(rdb):
+    nuget = Ecosystem(name='nuget', backend=EcosystemBackend.nuget,
+                      fetch_url='https://api.nuget.org/packages/')
+    rdb.add(nuget)
+    rdb.commit()
+    return nuget
 
 
 @pytest.fixture()

@@ -1,0 +1,24 @@
+{
+        "author": "James Newton-King",
+        "code_repository": {
+          "type": "git",
+          "url": "https://github.com/JamesNK/Newtonsoft.Json"
+        },
+        "declared_license": "https://raw.github.com/JamesNK/Newtonsoft.Json/master/LICENSE.md",
+        "dependencies": [
+          "System.Xml.XmlDocument 4.3.0",
+          "System.Runtime.Serialization.Primitives 4.3.0",
+          "System.ComponentModel.TypeConverter 4.3.0",
+          "System.Runtime.Serialization.Formatters 4.3.0",
+          "NETStandard.Library 1.6.1",
+          "Microsoft.CSharp 4.3.0"
+        ],
+        "description": "Json.NET is a popular high-performance JSON framework for .NET",
+        "ecosystem": "dotnetsolution",
+        "homepage": "http://www.newtonsoft.com/json",
+        "keywords": [
+          "json"
+        ],
+        "name": "Newtonsoft.Json",
+        "version": "10.0.3"
+}
