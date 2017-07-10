@@ -271,6 +271,9 @@ class F8aReleasesFetcher(ReleasesFetcher):
 class Dependency(object):
     def __init__(self, name, spec):
         self._name = name
+        # spec is a list where each item is either 2-tuple (operator, version) or list of these
+        # example: [[('>=', '0.6.0'), ('<', '0.7.0')], ('>', '1.0.0')] means:
+        # (>=0.6.0 and <0.7.0) or >1.0.0
         self._spec = spec
 
     @property
@@ -352,19 +355,25 @@ class DependencyParser(object):
 
 
 class PypiDependencyParser(DependencyParser):
-    def _parse_python(self, spec):
+    @staticmethod
+    def _parse_python(spec):
         """
         Parse PyPI specification of a single dependency
 
         :param spec: str, for example "Django>=1.5,<1.8"
-        :return:
+        :return: [Django [[('>=', '1.5'), ('<', '1.8')]]]
         """
         def _get_pip_spec(requirements):
             "In Pip 8+ there's no `specs` field and we have to dig the information from the `specifier` field"
             if hasattr(requirements, 'specs'):
                 return requirements.specs
             elif hasattr(requirements, 'specifier'):
-                return [(spec.operator, spec.version) for spec in requirements.specifier]
+                specs = [(spec.operator, spec.version) for spec in requirements.specifier]
+                if len(specs) == 0:
+                    specs = [('>=', '0.0.0')]
+                elif len(specs) > 1:
+                    specs = [specs]
+                return specs
 
         # create a temporary file and store the spec there since
         # `parse_requirements` requires a file
@@ -372,16 +381,12 @@ class PypiDependencyParser(DependencyParser):
             f.write(spec)
             f.flush()
             parsed = parse_requirements(f.name, session=f.name)
-            dependency = [Dependency(x.name, _get_pip_spec(x.req) or [('>=', '0.0.0')]) for x in parsed].pop()
+            dependency = [Dependency(x.name, _get_pip_spec(x.req)) for x in parsed].pop()
 
         return dependency
 
     def parse(self, specs):
-        deps = []
-        for s in specs:
-            deps.append(self._parse_python(s))
-
-        return deps
+        return [self._parse_python(s) for s in specs]
 
     @staticmethod
     def compose(deps):

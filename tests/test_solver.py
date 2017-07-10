@@ -3,8 +3,9 @@ import pytest
 import datetime
 import flexmock
 from f8a_worker.models import Analysis, Package, Version
-from f8a_worker.solver import (Dependency, NpmDependencyParser, NugetDependencyParser,
-    get_ecosystem_solver, F8aReleasesFetcher, NpmReleasesFetcher, NugetReleasesFetcher)
+from f8a_worker.solver import (get_ecosystem_solver, Dependency,
+                               PypiDependencyParser, NpmDependencyParser, NugetDependencyParser,
+                               F8aReleasesFetcher, NpmReleasesFetcher, NugetReleasesFetcher)
 
 
 class TestDependencyParser(object):
@@ -76,6 +77,18 @@ class TestDependencyParser(object):
     def test_npm_dependency_parser_restrict_versions(self, args, expected):
         dep_parser = NpmDependencyParser()
         assert dep_parser.restrict_versions(args) == expected
+
+    @pytest.mark.parametrize('args, expected', [
+        (["name == 1.0"],
+         [Dependency("name", [('==', '1.0')])]),
+        (["name >= 1.0, <2.0"],
+         [Dependency("name", [[('>=', '1.0'), ('<', '2.0')]])]),
+    ])
+    def test_pypi_dependency_parser_parse(self, args, expected):
+        dep_parser = PypiDependencyParser()
+        parsed = dep_parser.parse(args)
+        assert parsed[0].name == expected[0].name
+        assert set(parsed[0].spec[0]) == set(expected[0].spec[0])
 
 
 class TestSolver(object):
