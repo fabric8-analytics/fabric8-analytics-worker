@@ -395,6 +395,15 @@
         encryption: false
         versioned: true
 
+    - name: 'S3UserProfileStore'
+      import: 'f8a_worker.storages'
+      configuration:
+        <<: *configurationS3
+        bucket_name: '{DEPLOYMENT_PREFIX}-janus-json-data'
+        region_name: 'us-east-1'
+        encryption: false
+        versioned: true
+
     - name: 'S3Snyk'
       import: 'f8a_worker.storages'
       configuration:

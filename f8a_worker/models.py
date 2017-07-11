@@ -317,6 +317,7 @@ class APIRequests(Base):
     api_name = Column(String(256), nullable=False)
     submit_time = Column(DateTime, nullable=False)
     user_email = Column(String(256), nullable=True)
+    user_profile_digest = Column(String(128), nullable=True)
     origin = Column(String(64), nullable=True)
     team = Column(String(64), nullable=True)
     request = Column(JSON, nullable=False)

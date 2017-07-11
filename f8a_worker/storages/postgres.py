@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 import datetime
+import hashlib
+import json
 
+from sqlalchemy import Date, cast
 from sqlalchemy.ext.declarative import declarative_base
 from selinon import StoragePool
 from f8a_worker.models import Analysis, Ecosystem, Package, Version, WorkerResult, APIRequests
@@ -102,7 +105,20 @@ class BayesianPostgres(PostgresBase):
 
         return found
 
-    def store_api_requests(self, external_request_id, data):
+    def check_api_user_entry(self, email):
+        """Check if a user entry has already been made in api_requests
+
+        :param email: str, user's email id
+        :return: count of user's entry in api_requests
+        """
+        return PostgresBase.session.query(APIRequests).\
+            filter(APIRequests.user_email == email).first()
+
+    def store_in_bucket(self, content):
+        s3 = StoragePool.get_connected_storage('S3UserProfileStore')
+        s3.store_in_bucket(content)
+
+    def store_api_requests(self, external_request_id, data, user_profile):
         """Get result of previously scheduled analysis5
 
         :param external_request_id: str, ID of analysis
@@ -111,13 +127,22 @@ class BayesianPostgres(PostgresBase):
         """
         if not self.is_connected():
             self.connect()
-        dt = datetime.datetime.now()
 
+        profile_digest = None
+        # Add user_profile to S3 if there is no api_requests entry available for today
+        req = self.check_api_user_entry(data.get('user_email', None))
+        if req:
+            profile_digest = hashlib.sha256(json.dumps(user_profile).encode('utf-8')).hexdigest()
+            if profile_digest != req.user_profile_digest:
+                self.store_in_bucket(user_profile)
+        
+        dt = datetime.datetime.now()
         req = APIRequests(
             id = external_request_id,
             api_name = data.get('api_name', None),
             submit_time = str(dt),
             user_email = data.get('user_email', None),
+            user_profile_digest = profile_digest,
             origin = data.get('origin', None),
             request = data.get('request', None),
             team = data.get('team', None),
@@ -126,5 +151,4 @@ class BayesianPostgres(PostgresBase):
 
         PostgresBase.session.add(req)
         PostgresBase.session.commit()
-
         return True
