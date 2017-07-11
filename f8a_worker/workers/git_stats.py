@@ -1,13 +1,11 @@
-import shutil
-
 import numpy as np
-from tempfile import mkdtemp
 from time import time
 from datetime import timedelta
 from sklearn.linear_model import LinearRegression
 
 from f8a_worker.process import Git
 from f8a_worker.base import BaseTask
+from f8a_worker.utils import tempdir
 
 
 class GitStats(BaseTask):
@@ -23,15 +21,11 @@ class GitStats(BaseTask):
   
         :param url: url to the git repo
         """
-        dir = mkdtemp()
-
-        try:
-            git = Git.clone(url, dir)
+        with tempdir as tmp_dir:
+            git = Git.clone(url, tmp_dir)
             # nice notebook to check at:
             #   http://nbviewer.jupyter.org/github/tarmstrong/code-analysis/blob/master/IPythonReviewTime.ipynb
             log = git.log()
-        finally:
-            shutil.rmtree(dir, ignore_errors=True)
 
         return log
 
@@ -154,6 +148,6 @@ class GitStats(BaseTask):
         for key, log, starting_date in records:
             master_stats[key] = self._compute_stats(log, starting_date)
 
-        orgs = self._get_orgs(master_log)
+        master_stats['organizations'] = self._get_orgs(master_log)
 
-        return {'summary': [], 'status': 'success', 'details': {'master': master_stats, 'organizations': orgs}}
+        return {'summary': [], 'status': 'success', 'details': {'master': master_stats}}
