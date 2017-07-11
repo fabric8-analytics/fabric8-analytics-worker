@@ -11,12 +11,8 @@ class BookkeeperTask(BaseTask):
     def execute(self, arguments):
         self._strict_assert(arguments.get('external_request_id'))
         self._strict_assert(arguments.get('data'))
-        self._strict_assert(arguments.get('user_email'))
-        self._strict_assert(arguments.get('user_profile'))
 
         self.log.info("Request id = %s" % arguments.get('external_request_id'))
 
         postgres = StoragePool.get_connected_storage('BayesianPostgres')
-        postgres.store_api_requests(arguments.get('external_request_id'), arguments.get('data'), arguments['user_profile'])
-
-        return True
+        postgres.store_api_requests(arguments.get('external_request_id'), arguments.get('data'))

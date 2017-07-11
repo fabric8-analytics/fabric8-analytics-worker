@@ -118,7 +118,7 @@ class BayesianPostgres(PostgresBase):
         s3 = StoragePool.get_connected_storage('S3UserProfileStore')
         s3.store_in_bucket(content)
 
-    def store_api_requests(self, external_request_id, data, user_profile):
+    def store_api_requests(self, external_request_id, data):
         """Get result of previously scheduled analysis5
 
         :param external_request_id: str, ID of analysis
@@ -132,9 +132,10 @@ class BayesianPostgres(PostgresBase):
         # Add user_profile to S3 if there is no api_requests entry available for today
         req = self.check_api_user_entry(data.get('user_email', None))
         if req:
-            profile_digest = hashlib.sha256(json.dumps(user_profile).encode('utf-8')).hexdigest()
+            profile = json.dumps(data.get('user_profile'))
+            profile_digest = hashlib.sha256(profile.encode('utf-8')).hexdigest()
             if profile_digest != req.user_profile_digest:
-                self.store_in_bucket(user_profile)
+                self.store_in_bucket(profile)
         
         dt = datetime.datetime.now()
         req = APIRequests(
