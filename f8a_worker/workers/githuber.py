@@ -1,43 +1,5 @@
-"""
-sample output:
-{
-  "details": {
-    "open_issues_count": 38,
-    "updated_issues": {
-      "year": {
-        "opened": 2,
-        "closed": 0
-      },
-      "month": {
-        "opened": 1,
-        "closed": 0
-      }
-    },
-    "updated_pull_requests": {
-      "year": {
-        "opened": 2,
-        "closed": 2
-      },
-      "month": {
-        "opened": 1,
-        "closed": 1
-      }
-    },
-    "subscribers_count": 11,
-    "last_year_commits": {
-      "sum": 0,
-      "weekly": [...]
-     },
-     "forks_count": 20,
-     "stargazers_count": 48
-   },
-   "summary": []
-}
-"""
-
 from bs4 import BeautifulSoup
 import requests
-import datetime
 import github
 import random
 import time
@@ -47,11 +9,7 @@ from f8a_worker.schemas import SchemaRef
 from f8a_worker.base import BaseTask
 from f8a_worker.utils import parse_gh_repo
 
-ISSUE_PROPS = ('created_at', 'closed_at', 'updated_at', 'id', 'pull_request', 'state')
 REPO_PROPS = ('forks_count', 'subscribers_count',  'stargazers_count', 'open_issues_count')
-DAYS_BACK = 14  # info about updated issues & PRs max DAYSBACK days old
-MONTH_BACK = 30 # info about updated issues & PRs month old
-YEAR_BACK = 365 # info about updated issues & PRs year old
 
 
 class GithubTask(BaseTask):
@@ -96,15 +54,6 @@ class GithubTask(BaseTask):
     @staticmethod
     def _rate_limit_exceeded(gh):
         return gh.rate_limiting[0] == 0
-
-    def _issues_or_prs_count(self, gh, query):
-        # Check the rate-limit for Github API first. Apply retry if needed
-        if self._rate_limit_exceeded(gh):
-            retrytime = gh.rate_limiting_resettime - int(datetime.datetime.now().timestamp()) + 10
-            self.log.info("Github rate-limit exceeded, retrying in %d seconds", retrytime)
-            self.retry(countdown=retrytime)
-        items = gh.search_issues(query=query)
-        return getattr(items, 'totalCount', -1)
 
     @classmethod
     def _get_repo_stats(cls, repo):
@@ -176,27 +125,7 @@ class GithubTask(BaseTask):
 
         result_data['status'] = 'success'
 
-        # Get Count of Issues and PRs for last year and last month
-        now = datetime.datetime.utcnow()
-        month = (now - datetime.timedelta(days=MONTH_BACK)).strftime('%Y-%m-%dT%H:%M:%SZ')
-        year = (now - datetime.timedelta(days=YEAR_BACK)).strftime('%Y-%m-%dT%H:%M:%SZ')
-        now = now.strftime('%Y-%m-%dT%H:%M:%SZ')
-
-        issues_closed_year = self._issues_or_prs_count(gh, query='repo:' + repo.full_name + ' closed:' + year + '..' + now + ' type:issue')
-        issues_closed_month = self._issues_or_prs_count(gh, query='repo:' + repo.full_name + ' closed:' + month + '..' + now + ' type:issue')
-        prs_closed_year = self._issues_or_prs_count(gh, query='repo:' + repo.full_name + ' closed:' + year + '..' + now + ' type:pr')
-        prs_closed_month = self._issues_or_prs_count(gh, query='repo:' + repo.full_name + ' closed:' + month + '..' + now + ' type:pr')
-
-        issues_opened_year= self._issues_or_prs_count(gh, query='repo:' + repo.full_name + ' created:' + year + '..' + now + ' type:issue')
-        issues_opened_month = self._issues_or_prs_count(gh, query='repo:' + repo.full_name + ' created:' + month + '..' + now + ' type:issue')
-        prs_opened_year = self._issues_or_prs_count(gh, query='repo:' + repo.full_name + ' created:' + year + '..' + now + ' type:pr')
-        prs_opened_month = self._issues_or_prs_count(gh, query='repo:' + repo.full_name + ' created:' + month + '..' + now + ' type:pr')
-
-        issues = {'updated_issues': {'year': {'opened': issues_opened_year, 'closed': issues_closed_year},
-                                    'month': {'opened': issues_opened_month, 'closed': issues_closed_month}},
-                 'updated_pull_requests': {'year': {'opened': prs_opened_year, 'closed': prs_closed_year},
-                                           'month': {'opened': prs_opened_month, 'closed': prs_closed_month}}}
-
+        issues = {}
         # Get Repo Statistics
         notoriety = self._get_repo_stats(repo)
         if notoriety:

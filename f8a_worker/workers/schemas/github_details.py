@@ -1,6 +1,6 @@
 import jsl
 
-from f8a_worker.schemas import JSLSchemaBaseWithRelease, added_in
+from f8a_worker.schemas import JSLSchemaBaseWithRelease, added_in, removed_in
 
 # Describe v1-0-0
 ROLE_v1_0_0 = "v1-0-0"
@@ -8,11 +8,13 @@ ROLE_v1_0_1 = "v1-0-1"
 ROLE_v1_0_2 = "v1-0-2"
 ROLE_v1_0_3 = "v1-0-3"
 ROLE_v1_0_4 = "v1-0-4"
+ROLE_v2_0_0 = "v2-0-0"
 ROLE_TITLE = jsl.roles.Var({
     ROLE_v1_0_0: "Github Results v1-0-0",
     ROLE_v1_0_1: "Github Results v1-0-1",
     ROLE_v1_0_3: "Github Results v1-0-3",
     ROLE_v1_0_4: "Github Results v1-0-4",
+    ROLE_v2_0_0: "Github Results v2-0-0",
 })
 
 
@@ -69,8 +71,9 @@ class GithubDetail(jsl.Document):
     open_issues_count = jsl.IntField()
     stargazers_count = jsl.IntField()
     subscribers_count = jsl.IntField()
-    updated_issues = jsl.DocumentField(GithubUpdatedIssues, as_ref=True)
-    updated_pull_requests = jsl.DocumentField(GithubUpdatedPullRequests, as_ref=True)
+    with removed_in(ROLE_v2_0_0) as until_v2_0_0:
+        until_v2_0_0.updated_issues = jsl.DocumentField(GithubUpdatedIssues, as_ref=True)
+        until_v2_0_0.updated_pull_requests = jsl.DocumentField(GithubUpdatedPullRequests, as_ref=True)
     with added_in(ROLE_v1_0_2) as since_v1_0_2:
         since_v1_0_2.contributors_count = jsl.IntField()
     with jsl.Scope(ROLE_v1_0_3) as v1_0_3:
