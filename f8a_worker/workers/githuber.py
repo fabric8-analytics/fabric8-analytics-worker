@@ -35,7 +35,7 @@ sample output:
 }
 """
 
-import bs4
+from bs4 import BeautifulSoup
 import requests
 import datetime
 import github
@@ -130,7 +130,7 @@ class GithubTask(BaseTask):
             return []
 
         pop = requests.get('{url}'.format(url=self._repo_url))
-        poppage = bs4.BeautifulSoup(pop.text, 'html.parser')
+        poppage = BeautifulSoup(pop.text, 'html.parser')
 
         topics = []
         for link in poppage.find_all("a", class_="topic-tag"):

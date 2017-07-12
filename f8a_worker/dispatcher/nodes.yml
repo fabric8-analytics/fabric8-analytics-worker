@@ -271,6 +271,12 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_git_stats_v0'
       storage: 'PackagePostgres'
+    - name: 'libraries_io'
+      classname: 'LibrariesIoTask'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_libraries_io_v0'
+      storage: 'PackagePostgres'
 
   flows:
     - 'bayesianAnalysisFlow'

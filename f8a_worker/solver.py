@@ -1,5 +1,5 @@
 import anymarkup
-import bs4
+from bs4 import BeautifulSoup
 from collections import defaultdict
 from functools import cmp_to_key
 import logging
@@ -237,7 +237,7 @@ class NugetReleasesFetcher(ReleasesFetcher):
         """
         releases = []
         pop = get('https://www.nuget.org/packages/' + package)
-        poppage = bs4.BeautifulSoup(pop.text, 'html.parser')
+        poppage = BeautifulSoup(pop.text, 'html.parser')
         for link in poppage.find_all(href=re.compile(r'^/packages/')):
             version = link['href'].split('/')[-1].strip()
             try:
