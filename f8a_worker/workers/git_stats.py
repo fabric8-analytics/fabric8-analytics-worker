@@ -22,7 +22,7 @@ class GitStats(BaseTask):
   
         :param url: url to the git repo
         """
-        with tempdir as tmp_dir:
+        with tempdir() as tmp_dir:
             git = Git.clone(url, tmp_dir)
             # nice notebook to check at:
             #   http://nbviewer.jupyter.org/github/tarmstrong/code-analysis/blob/master/IPythonReviewTime.ipynb
