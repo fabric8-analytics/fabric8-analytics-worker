@@ -13,6 +13,7 @@ from f8a_worker.workers.manifest_keeper import ManifestKeeperTask
 from f8a_worker.workers.mercator import MercatorTask
 from f8a_worker.workers.githuber import GithubTask
 from f8a_worker.workers.githuber import GitReadmeCollectorTask
+from f8a_worker.workers.git_stats import GitStats
 from f8a_worker.workers.graph_importer import GraphImporterTask
 from f8a_worker.workers.graph_sync import GraphSyncTask
 from f8a_worker.workers.oscryptocatcher import OSCryptoCatcherTask

@@ -7,6 +7,9 @@ import shutil
 import logging
 import requests
 
+from git2json.parser import parse_commits
+from git2json import run_git_log
+
 from re import compile as re_compile
 from urllib.parse import urljoin, urlparse
 
@@ -84,6 +87,13 @@ class Git(object):
         # http://stackoverflow.com/questions/1386291/git-git-dir-not-working-as-expected
         with cwd(self.repo_path):
             TimedCommand.get_command_output(["git", "commit", "-m", message], graceful=False)
+
+    def log(self):
+        """Parse git log history and return its content in a dictionary
+        
+        :return: a dict representing git log entries
+        """
+        return list(parse_commits(run_git_log(os.path.join(self.repo_path, '.git'))))
 
     def rev_parse(self, args=None):
         """
