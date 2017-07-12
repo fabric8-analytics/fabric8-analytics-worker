@@ -1,5 +1,8 @@
 import os
 import logging
+import json
+import datetime
+from f8a_worker.utils import get_session_retry
 
 logger = logging.getLogger(__name__)
 
@@ -181,31 +184,46 @@ def aggregate_stack_data(stack, manifest_file, ecosystem):
     }
     return data
 
+def get_osio_user_count(ecosystem, name, version):
+    str_gremlin = "g.V().has('pecosystem','" + ecosystem + "').has('pname','" + name + "')." \
+                  "has('version','" + version + "').in('uses').count();"
+    payload = {
+        'gremlin': str_gremlin
+    }
+
+    try:
+        response = get_session_retry().post(GREMLIN_SERVER_URL_REST, data=json.dumps(payload))
+        json_response = response.json()
+        return json_response['result']['data'][0]
+    except:
+        logger.error("Failed retrieving Gremlin data.")
+        return -1
 
 def create_package_dict(graph_results, alt_dict=None):
     """Converts Graph Results into the Recommendation Dict"""
     pkg_list = []
 
     for epv in graph_results:
+        ecosystem = epv['ver']['pecosystem'][0]
         name = epv['ver']['pname'][0]
+        version = epv['ver']['version'][0]
+        # TODO change this logic later to fetch osio_user_count
+        osio_user_count = get_osio_user_count(ecosystem, name, version)
         pkg_dict = {
-            'ecosystem': epv['ver']['pecosystem'][0],
+            'ecosystem': ecosystem,
             'name': name,
-            'version': epv['ver']['version'][0],
+            'version': version,
             'licenses': epv['ver'].get('licenses', []),
             'sentiment': {"overall_score": 0.65, 'latest_comment': 'N/A'},
             'latest_version': epv['pkg']['latest_version'][0],
             'security': [],
-            'osio_user_count': 0}
+            'osio_user_count': osio_user_count}
         github_dict = {
-            'dependent_projects': 10,
-            'dependent_repos': 200,
-            'used_by': [{
-                "name": "hardcoded",
-                "stars": 100
-            }],
-            'total_releases': 21,
-            'latest_release_duration': '2 Months',
+            'dependent_projects': epv['pkg'].get('libio_dependents_projects',[-1])[0],
+            'dependent_repos': epv['pkg'].get('libio_dependents_repos',[-1])[0],
+            'used_by': [],
+            'total_releases': epv['pkg'].get('libio_total_releases',[-1])[0],
+            'latest_release_duration': str(datetime.datetime.fromtimestamp(epv['pkg'].get('libio_latest_release', [1496302486.0])[0])),
             'first_release_date': 'Apr 16,2010',
             'forks_count': epv['pkg']['gh_forks'][0],
             'stargazers_count': epv['pkg']['gh_stargazers'][0],
@@ -233,6 +251,16 @@ def create_package_dict(graph_results, alt_dict=None):
                 }
             }
         }
+        used_by = epv['pkg'].get("libio_usedby", [])
+        used_by_list = []
+        for epvs in used_by:
+            slc = epvs.split(':')
+            used_by_dict = {
+                'name': slc[0],
+                'stars': int(slc[1])
+            }
+            used_by_list.append(used_by_dict)
+        github_dict['used_by'] = used_by_list
         pkg_dict['github'] = github_dict
         pkg_dict['code_metrics'] = {
             "average_cyclomatic_complexity": epv['ver']['cm_avg_cyclomatic_complexity'][0],

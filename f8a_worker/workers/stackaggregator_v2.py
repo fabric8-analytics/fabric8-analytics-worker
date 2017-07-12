@@ -9,6 +9,7 @@ Output: TBD
 import os
 import json
 import requests
+import datetime
 
 from f8a_worker.base import BaseTask
 from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST
@@ -17,32 +18,27 @@ from f8a_worker.utils import get_session_retry
 def extract_component_details(component):
     component_summary = []
     github_details = {
-        "dependent_projects": 10,
-        "dependent_repos": 200,
-        "total_releases": 21,
-        "latest_release_duration": "2 months",
+        "dependent_projects": component.get("package", {}).get("libio_dependents_projects", [-1])[0],
+        "dependent_repos": component.get("package", {}).get("libio_dependents_repos", [-1])[0],
+        "total_releases": component.get("package", {}).get("libio_total_releases", [-1])[0],
+        "latest_release_duration":
+            str(datetime.datetime.fromtimestamp(component.get("package", {}).get("libio_latest_release", [1496302486.0])[0])),
         "first_release_date": "Apr 16, 2010",
-        "used_by": [
-            {"name": "dep5", "stars": 3021},
-            {"name": "dep6", "stars": 523}
-        ],
-        "forks_count": 23000,
-
         "issues": {
             "month": {
-                "opened": component.get("package", {}).get("gh_issues_opened_last_month", [-1])[0],
-                "closed": component.get("package", {}).get("gh_issues_closed_last_month", [-1])[0]
+                "opened": component.get("package", {}).get("gh_issues_last_month_opened", [-1])[0],
+                "closed": component.get("package", {}).get("gh_issues_last_month_closed", [-1])[0]
             }, "year": {
-                "opened": component.get("package", {}).get("gh_issues_opened_last_year", [-1])[0],
-                "closed": component.get("package", {}).get("gh_issues_closed_last_year", [-1])[0]
+                "opened": component.get("package", {}).get("gh_issues_last_year_opened", [-1])[0],
+                "closed": component.get("package", {}).get("gh_issues_last_year_closed", [-1])[0]
             }},
         "pull_requests": {
             "month": {
-                "opened": component.get("package", {}).get("gh_prs_opened_last_month", [-1])[0],
-                "closed": component.get("package", {}).get("gh_prs_closed_last_month", [-1])[0]
+                "opened": component.get("package", {}).get("gh_prs_last_month_opened", [-1])[0],
+                "closed": component.get("package", {}).get("gh_prs_last_month_closed", [-1])[0]
             }, "year": {
-                "opened": component.get("package", {}).get("gh_prs_opened_last_year", [-1])[0],
-                "closed": component.get("package", {}).get("gh_prs_closed_last_year", [-1])[0]
+                "opened": component.get("package", {}).get("gh_prs_last_year_opened", [-1])[0],
+                "closed": component.get("package", {}).get("gh_prs_last_year_closed", [-1])[0]
             }},
         "stargazers_count": component.get("package", {}).get("gh_stargazers", [-1])[0],
         "forks_count": component.get("package", {}).get("gh_forks", [-1])[0],
@@ -50,6 +46,16 @@ def extract_component_details(component):
         "contributors": 132,
         "size": "4MB"
     }
+    used_by = component.get("package", {}).get("libio_usedby", [])
+    used_by_list = []
+    for epvs in used_by:
+        slc = epvs.split(':')
+        used_by_dict = {
+            'name': slc[0],
+            'stars': int(slc[1])
+        }
+        used_by_list.append(used_by_dict)
+    github_details['used_by'] = used_by_list
 
     code_metrics = {
         "code_lines": component.get("version", {}).get("cm_loc", [-1])[0],
@@ -77,7 +83,7 @@ def extract_component_details(component):
         "licenses": licenses,
         "sentiment": { "overall_score": 1, "latest_comment": '' },
         "security": cves,
-        "osio_user_count": 641,
+        "osio_user_count": component.get("osio_user_count", -1),
         "latest_version": latest_version,
         "github": github_details,
         "code_metrics": code_metrics
@@ -120,6 +126,19 @@ class StackAggregatorV2Task(BaseTask):
         # Hardcoded ecosystem
         result = []
         for elem in resolved:
+            str_gremlin = "g.V().has('pecosystem','" + ecosystem + "').has('pname','" + elem["package"] + "')." \
+                          "has('version','" + elem["version"] + "').in('uses').count();"
+            payload = {
+              'gremlin': str_gremlin
+            }
+
+            try:
+                response = get_session_retry().post(GREMLIN_SERVER_URL_REST, data=json.dumps(payload))
+                json_response = response.json()
+                osio_user_count = json_response['result']['data'][0]
+            except:
+                osio_user_count = -1
+
             qstring =  "g.V().has('pecosystem','"+ecosystem+"').has('pname','"+elem["package"]+"').has('version','"+elem["version"]+"')."
             qstring += "as('version').in('has_version').as('package').select('version','package').by(valueMap());"
             payload = {'gremlin': qstring}
@@ -133,6 +152,8 @@ class StackAggregatorV2Task(BaseTask):
                         continue
                     if len(graph_resp['result']['data']) == 0:
                         continue
+
+                    graph_resp["result"]["data"][0]["osio_user_count"] = osio_user_count
                     result.append(graph_resp["result"])
                 else:
                     self.log.error("Failed retrieving dependency data.")
