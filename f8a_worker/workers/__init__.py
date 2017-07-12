@@ -7,6 +7,7 @@ from f8a_worker.workers.CVEchecker import CVEcheckerTask
 from f8a_worker.workers.cvedbsync import CVEDBSyncTask
 from f8a_worker.workers.dependency_snapshot import DependencySnapshotTask
 from f8a_worker.workers.digester import DigesterTask
+from f8a_worker.workers.libraries_io import LibrariesIoTask
 from f8a_worker.workers.license import LicenseCheckTask
 from f8a_worker.workers.linguist import LinguistTask
 from f8a_worker.workers.manifest_keeper import ManifestKeeperTask
