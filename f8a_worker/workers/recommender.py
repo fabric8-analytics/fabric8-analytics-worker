@@ -459,8 +459,8 @@ class RecommendationTask(BaseTask):
 
         for result in arguments['result']:
             input_stack = {d["package"]: d["version"] for d in result.get("details", [])[0].get("_resolved")}
-            ecosystem = result.get("details", [])[0].get("ecosystem")
-            manifest_file_path = result.get("details", [])[0].get('manifest_file_path')
+            ecosystem = result["details"][0].get("ecosystem")
+            manifest_file_path = result["details"][0].get('manifest_file_path')
 
             # Get Input Stack data
             input_stack_vectors = GraphDB().get_input_stacks_vectors_from_graph(input_stack, ecosystem)
