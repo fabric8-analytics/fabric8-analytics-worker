@@ -14,6 +14,7 @@ class GitStats(BaseTask):
     _SECONDS_PER_DAY = 60 * 60 * 24
     _DAYS_PER_MONTH = 30
     _DAYS_PER_YEAR = 365
+    _TREND_TRESHOLD = 0.3
 
     @staticmethod
     def _get_log(url):
@@ -74,19 +75,19 @@ class GitStats(BaseTask):
 
         return lr.coef_[0]
 
-    @staticmethod
-    def _get_trend_str(trend):
+    @classmethod
+    def _get_trend_str(cls, trend):
         """Convert numerical representation of trend to its string representation.
 
         :param trend: numerical representation of thrend
         :return: textual representation of trend
         """
-        if trend > 3:
+        if trend > cls._TREND_TRESHOLD:
             return 'increasing'
-        elif trend > -3:
-            return 'calm'
-        else:
+        elif trend < -cls._TREND_TRESHOLD:
             return 'decreasing'
+        else:
+            return 'calm'
 
     @staticmethod
     def _get_orgs(log):
