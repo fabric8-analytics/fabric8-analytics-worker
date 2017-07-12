@@ -582,6 +582,9 @@ def parse_gh_repo(potential_url):
 
     Fun, eh?
     """
+    if not potential_url:
+        return None
+
     repo_name = None
     # transform 4-6 to a URL-like string, so that we can handle it together with 1-3
     if '@' in potential_url:
