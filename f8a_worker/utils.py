@@ -13,7 +13,6 @@ from urllib.parse import urlparse
 from shlex import split
 from queue import Queue, Empty
 from contextlib import contextmanager
-from lxml import etree
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
