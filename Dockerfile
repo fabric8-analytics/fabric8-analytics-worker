@@ -115,5 +115,6 @@ RUN mkdir -p /tmp/install_deps/patches/
 COPY hack/patches/* /tmp/install_deps/patches/
 COPY hack/patches/* /tmp/install_deps/patches/
 COPY hack/apply_patches.sh /tmp/install_deps/
+COPY connection.py /usr/lib/python3.4/site-packages/amqp/connection.py
 # Apply patches here to be able to patch selinon as well
 RUN /tmp/install_deps/apply_patches.sh
