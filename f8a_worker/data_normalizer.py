@@ -242,20 +242,25 @@ class DataNormalizer(object):
         return keywords
 
     def _handle_python(self, data):
-        "Handle Python package (setup.py) analysis data"
+        """ setup.py """
+        if 'error' in data:
+            # mercator by default (MERCATOR_INTERPRET_SETUP_PY=false) doesn't interpret setup.py
+            return {}
+
         key_map = (('license', 'declared_license'), ('url', 'homepage'),
                    ('install_requires', 'dependencies'), ('name',),
                    ('description',), ('version',))
 
         transformed = self.transform_keys(data, key_map)
         transformed['author'] = self._join_name_email(data, 'author', 'author_email')
-        transformed['code_repository'] = self._python_identify_repo(transformed.get('homepage', ''))
+        transformed['code_repository'] = self._python_identify_repo(data.get('url')) or\
+                                         self._python_identify_repo(data.get('download_url'))
         transformed['keywords'] = self._split_keywords(data.get('keywords', []))
         return transformed
 
     def _handle_python_dist(self, data):
+        """ PKG-INFO """
         details = data.get('extensions', {}).get('python.details', None)
-        result = None
         if details is not None:
             contacts = details.get('contacts', [])
             urls = details.get('project_urls', {})
@@ -285,7 +290,8 @@ class DataNormalizer(object):
 
             result = self.transform_keys(data, key_map)
             result['author'] = self._join_name_email(data, 'author', 'author-email')
-        result['code_repository'] = self._python_identify_repo(result.get('homepage') or '')
+        result['code_repository'] = self._python_identify_repo(data.get('home-page')) or \
+                                    self._python_identify_repo(data.get('download-url'))
         result['keywords'] = self._split_keywords(data.get('keywords', []))
         return result
 
