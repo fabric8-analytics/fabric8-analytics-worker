@@ -8,15 +8,16 @@ from f8a_worker.base import BaseTask
 from f8a_worker.schemas import SchemaRef
 from f8a_worker.object_cache import ObjectCache
 
-SCANCODE_LICENSE_SCORE = '20'  # scancode's default is 0
-SCANCODE_TIMEOUT = '120'  # scancode's default is 120
-SCANCODE_PROCESSES = '1'  # scancode's default is 1
-
 
 class LicenseCheckTask(BaseTask):
     _analysis_name = 'source_licenses'
     description = "Check licences of all files of a package"
     schema_ref = SchemaRef(_analysis_name, '3-0-0')
+
+    SCANCODE_LICENSE_SCORE = '20'  # scancode's default is 0
+    SCANCODE_TIMEOUT = '120'  # scancode's default is 120
+    SCANCODE_PROCESSES = '1'  # scancode's default is 1
+    SCANCODE_IGNORE = ['*.so', '*.dll']  # don't scan binaries
 
     @staticmethod
     def process_output(data):
@@ -74,20 +75,20 @@ class LicenseCheckTask(BaseTask):
                        # Scan for licenses
                        '--license',
                        # Do not return license matches with scores lower than this score
-                       '--license-score', SCANCODE_LICENSE_SCORE,
+                       '--license-score', self.SCANCODE_LICENSE_SCORE,
                        # Files without findings are omitted
                        '--only-findings',
                        # Use n parallel processes
-                       '--processes', SCANCODE_PROCESSES,
+                       '--processes', self.SCANCODE_PROCESSES,
                        # Do not print summary or progress messages
                        '--quiet',
                        # Strip the root directory segment of all paths
                        '--strip-root',
                        # Stop scanning a file if scanning takes longer than a timeout in seconds
-                       '--timeout', SCANCODE_TIMEOUT,
+                       '--timeout', self.SCANCODE_TIMEOUT,
                        cache_path]
-            if eco == 'nuget':
-                command += ['--ignore', '*.dll']
+            for ignore_pattern in self.SCANCODE_IGNORE:
+                command += ['--ignore', '"{}"'.format(ignore_pattern)]
             with username():
                 output = TimedCommand.get_command_output(command,
                                                          graceful=False,
