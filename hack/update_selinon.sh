@@ -9,5 +9,7 @@ SELINON_COMMIT=356cfa6
 SELINONLIB_COMMIT=67d9147
 
 
-pip3 install -U git+https://github.com/selinon/selinon@${SELINON_COMMIT} &&
-  pip3 install -U git+https://github.com/selinon/selinonlib@${SELINONLIB_COMMIT}
+pip3 uninstall --yes selinon selinonlib
+pip3 install git+https://github.com/selinon/selinon@${SELINON_COMMIT}
+pip3 install git+https://github.com/selinon/selinonlib@${SELINONLIB_COMMIT}
+
