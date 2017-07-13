@@ -16,9 +16,15 @@ class LibrariesIoTask(BaseTask):
         text = tag.find_next('dd').text.strip()
         return text
 
+    @staticmethod
+    def _get_list_term_description_time(page, term_name):
+        tag = page.find(string='\n{}\n'.format(term_name))
+        time_tag = tag.find_next('dd').find('time')
+        return time_tag['datetime']
+
     def get_releases(self, page):
         releases = {'count': self._get_list_term_description(page, 'Total releases'),
-                    'latest': {'published_at': self._get_list_term_description(page,
+                    'latest': {'published_at': self._get_list_term_description_time(page,
                                                                                'Latest release')}}
         return releases
 
