@@ -13,30 +13,34 @@ class LibrariesIoTask(BaseTask):
     @staticmethod
     def _get_list_term_description(page, term_name):
         tag = page.find(string='\n{}\n'.format(term_name))
-        text = tag.find_next('dd').text.strip()
-        return text
+        return tag.find_next('dd')
 
-    @staticmethod
-    def _get_list_term_description_time(page, term_name):
-        tag = page.find(string='\n{}\n'.format(term_name))
-        time_tag = tag.find_next('dd').find('time')
-        return time_tag['datetime']
+    def _get_list_term_description_text(self, page, term_name):
+        term_description = self._get_list_term_description(page, term_name)
+        return term_description.text.strip()
+
+    def _get_list_term_description_time(self, page, term_name):
+        term_description = self._get_list_term_description(page, term_name)
+        return term_description.find('time').get('datetime')
 
     def get_releases(self, page):
-        releases = {'count': self._get_list_term_description(page, 'Total releases'),
+        releases = {'count': self._get_list_term_description_text(page, 'Total releases'),
                     'latest': {'published_at': self._get_list_term_description_time(page,
                                                                                'Latest release')}}
         return releases
 
-    def get_dependents(self, page, top_dependent_repos_page):
-        top_stars_sum = sum([int(s.text.strip()) for s in
-                             top_dependent_repos_page.find_all('dd', class_="col-xs-4")])
-        dependents = {'count': self._get_list_term_description(page, 'Dependent projects'),
-                      'stars': {'count': top_stars_sum}}
+    def get_dependents(self, page):
+        dependents = {'count': self._get_list_term_description_text(page, 'Dependent projects')}
         return dependents
 
-    def get_dependent_repositories(self, page):
-        dependent_repos = {'count': self._get_list_term_description(page, 'Dependent repositories')}
+    def get_dependent_repositories(self, page, top_dependent_repos_page):
+        # dict of <repository>: <number of stars> from
+        # https://libraries.io/{ecosystem}/{name}/top_dependent_repos
+        top_dep_repos = {tag.text.strip(): tag.find_next('dd').text.strip()
+                         for tag in top_dependent_repos_page.find_all(['dt'])}
+        dependent_repos = {'count': self._get_list_term_description_text(page,
+                                                                         'Dependent repositories'),
+                           'top': top_dep_repos}
         return dependent_repos
 
     def execute(self, arguments):
@@ -50,8 +54,9 @@ class LibrariesIoTask(BaseTask):
                                                  'html.parser')
 
         details = {'releases': self.get_releases(page),
-                   'dependents': self.get_dependents(page, top_dependent_repos_page),
-                   'dependent_repositories': self.get_dependent_repositories(page)}
+                   'dependents': self.get_dependents(page),
+                   'dependent_repositories': self.get_dependent_repositories(page,
+                                                                        top_dependent_repos_page)}
 
         return {'status': 'success',
                 'summary': [],
