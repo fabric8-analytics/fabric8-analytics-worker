@@ -321,6 +321,7 @@ class APIRequests(Base):
     origin = Column(String(64), nullable=True)
     team = Column(String(64), nullable=True)
     recommendation = Column(JSON, nullable=True)
+    request_digest = Column(String(128), nullable=True)
 
 class PackageGHUsage(Base):
     """Table for storing package results from BigQuery."""
