@@ -289,6 +289,12 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_libraries_io_v0'
       storage: 'PackagePostgres'
+    - name: 'BookkeeperTask'
+      classname: 'BookkeeperTask'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      storage: 'BayesianPostgres'
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_BookkeeperTask_v0'
 
   flows:
     - 'bayesianAnalysisFlow'
@@ -305,6 +311,7 @@
     - 'bayesianPackageFlow'
     - 'bayesianPackageAnalysisFlow'
     - 'githubManifestMetadataFlow'
+    - 'componentApiFlow'
 
   storages:
     - name: 'BayesianPostgres'
@@ -396,6 +403,15 @@
       configuration:
         <<: *configurationS3
         bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-readme'
+        region_name: 'us-east-1'
+        encryption: false
+        versioned: true
+
+    - name: 'S3UserProfileStore'
+      import: 'f8a_worker.storages'
+      configuration:
+        <<: *configurationS3
+        bucket_name: '{DEPLOYMENT_PREFIX}-janus-json-data'
         region_name: 'us-east-1'
         encryption: false
         versioned: true
