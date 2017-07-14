@@ -26,6 +26,6 @@ class TestLibrariesIoTask(object):
         assert releases.get('latest', {}).get('published_at')
         dependents = results['details']['dependents']
         assert dependents.get('count')
-        assert dependents.get('stars').get('count')
         dependent_repos = results['details']['dependent_repositories']
         assert dependent_repos.get('count')
+        assert dependent_repos.get('top')
