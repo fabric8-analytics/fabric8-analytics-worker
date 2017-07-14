@@ -27,6 +27,7 @@ def upgrade():
     sa.Column('origin', sa.String(length=64), nullable=True),
     sa.Column('team', sa.String(length=64), nullable=True),
     sa.Column('recommendation', postgresql.JSON(astext_type=sa.Text()), nullable=True),
+    sa.Column('request_digest', sa.String(length=128), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
