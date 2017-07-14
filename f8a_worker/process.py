@@ -152,7 +152,7 @@ class Archive(object):
     def extract(target, dest):
         """ Detects archive type and extracts it """
         tar = Archive.TarMatcher.search(target)
-        if target.endswith(('.zip', '.whl', '.jar', '.nupkg')):
+        if target.endswith(('.zip', '.whl', '.egg', '.jar', '.nupkg')):
             return Archive.extract_zip(target, dest)
         elif target.endswith('.gem'):
             return Archive.extract_gem(target, dest)
