@@ -1,0 +1,8 @@
+---
+  flow-definitions:
+    - name: 'componentApiFlow'
+      queue: '{DEPLOYMENT_PREFIX}_api_componentApiFlow_v0'
+      edges:
+        - from:
+          to:
+            - 'BookkeeperTask'
