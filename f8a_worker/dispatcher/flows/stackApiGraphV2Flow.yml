@@ -12,3 +12,4 @@
           to:
             - 'recommendation_v2'
             - 'stack_aggregator_v2'
+            - 'BookkeeperTask'
