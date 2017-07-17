@@ -151,32 +151,32 @@ class StackAggregatorTask(BaseTask):
                 if graph_req.status_code == 200:
                     graph_resp = graph_req.json()
                     if 'result' not in graph_resp:
-                        return None
+                        continue
                     if len(graph_resp['result']['data']) == 0:
-                        return None
+                        continue
                     result.append(graph_resp["result"])
                 else:
                     self.log.error("Failed retrieving dependency data.")
-                    return None
+                    continue
             except:
                 self.log.error("Error retrieving dependency data.")
-                return None
+                continue
 
         return {"result": result}
 
     def execute(self, arguments=None):
         finished = []
+        stack_data = []
         aggregated = self.parent_task_result('GraphAggregatorTask')
 
         for result in aggregated['result']:
             resolved = result['details'][0]['_resolved']
             ecosystem = result['details'][0]['ecosystem']
             manifest = result['details'][0]['manifest_file']
+            manifest_file_path = result['details'][0]['manifest_file_path']
 
-            finished = self._get_dependency_data(resolved,ecosystem)
+            finished = self._get_dependency_data(resolved, ecosystem)
             if finished != None:
-                stack_data = aggregate_stack_data(finished, manifest, ecosystem.lower())
-                return stack_data
+                stack_data.append(aggregate_stack_data(finished, manifest, ecosystem.lower(), manifest_file_path))
 
-        return {}
-
+        return {"stack_data": stack_data}

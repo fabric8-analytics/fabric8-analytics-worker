@@ -298,6 +298,9 @@ class DataNormalizer(object):
     def _handle_java(self, data):
         # we expect pom.xml to be there, since it's always downloaded to top level by InitTask
         pom = data.get('pom.xml')
+        if pom is None:
+            return None
+
         key_map = (('name',), ('version', ), ('description', ), ('url', 'homepage'))
         # handle licenses
         transformed = self.transform_keys(pom, key_map)

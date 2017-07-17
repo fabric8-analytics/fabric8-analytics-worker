@@ -194,7 +194,6 @@ class MercatorTask(BaseTask):
         result_data = {'status': 'unknown',
                        'summary': [],
                        'details': []}
-
         mercator_target = arguments.get('cache_sources_path', cache_path)
         tc = TimedCommand(['mercator', mercator_target])
         status, data, err = tc.run(timeout=timeout,

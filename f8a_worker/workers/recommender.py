@@ -454,32 +454,35 @@ class RecommendationTask(BaseTask):
 
     def execute(self, arguments=None):
         arguments = self.parent_task_result('GraphAggregatorTask')
+        recommendations = []
         rs = RelativeSimilarity()
 
-        input_stack = {d["package"]: d["version"] for d in arguments.get("result", [])[0].get("details", [])[0].get("_resolved")}
-        ecosystem = arguments.get("result", [])[0].get("details", [])[0].get("ecosystem")
+        for result in arguments.get('result', []):
+            input_stack = {d["package"]: d["version"] for d in result.get("details", [])[0].get("_resolved")}
+            ecosystem = result["details"][0].get("ecosystem")
+            manifest_file_path = result["details"][0].get('manifest_file_path')
 
-        # Get Input Stack data
-        input_stack_vectors = GraphDB().get_input_stacks_vectors_from_graph(input_stack, ecosystem)
-        # Fetch all reference stacks if any one component from input is present
-        ref_stacks = GraphDB().get_reference_stacks_from_graph(input_stack.keys())
+            # Get Input Stack data
+            input_stack_vectors = GraphDB().get_input_stacks_vectors_from_graph(input_stack, ecosystem)
+            # Fetch all reference stacks if any one component from input is present
+            ref_stacks = GraphDB().get_reference_stacks_from_graph(input_stack.keys())
 
-        if len(ref_stacks) > 0:
-            # Apply jaccard similarity to consider only stacks having 30% interection of component names
-            # We only get one top matching reference stack based on components now
-            # filtered_ref_stacks = rs.filter_package(input_stack, ref_stacks)
-            # Calculate similarity of the filtered stacks
-            similar_stacks_list = rs.find_relative_similarity(input_stack, input_stack_vectors, ref_stacks)
-            similarity_list = self._get_stack_values(similar_stacks_list)
-            result = {"recommendations": {
-                "similar_stacks": similarity_list,
-                "component_level": None,
-                }
-            }
-        else:
-            result = {"recommendations": {"similar_stacks": [], "component_level": None,}}
-
-        return result
+            if len(ref_stacks) > 0:
+                # Apply jaccard similarity to consider only stacks having 30% interection of component names
+                # We only get one top matching reference stack based on components now
+                # filtered_ref_stacks = rs.filter_package(input_stack, ref_stacks)
+                # Calculate similarity of the filtered stacks
+                similar_stacks_list = rs.find_relative_similarity(input_stack, input_stack_vectors, ref_stacks)
+                similarity_list = self._get_stack_values(similar_stacks_list)
+                recommendations.append({
+                    "similar_stacks": similarity_list,
+                    "component_level": None,
+                    "manifest_file_path": manifest_file_path
+                    })
+            else:
+                recommendations.append({"similar_stacks": [], "component_level": None,})
+                
+        return {"recommendations": recommendations}
 
     def _get_stack_values(self, similar_stacks_list):
         """Converts the similarity score list to JSON based on the needs"""
