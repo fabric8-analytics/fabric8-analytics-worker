@@ -121,7 +121,7 @@ class GitStats(BaseTask):
             'newest_commit': log[0]['author']['date'] if log else None,
             'average_changes': cls._get_average_changes(log) if log else None,
             'trend': trend,
-            'trend_status': cls._get_trend_str(trend)
+            'trend_status': cls._get_trend_str(trend) if trend else None
         }
 
     def execute(self, arguments):
