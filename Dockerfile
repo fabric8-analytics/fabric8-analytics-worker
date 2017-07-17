@@ -116,4 +116,6 @@ COPY hack/patches/* /tmp/install_deps/patches/
 COPY hack/patches/* /tmp/install_deps/patches/
 COPY hack/apply_patches.sh /tmp/install_deps/
 # Apply patches here to be able to patch selinon as well
-RUN /tmp/install_deps/apply_patches.sh
+# RUN /tmp/install_deps/apply_patches.sh
+
+RUN pip3 uninstall -y protobuf && pip3 install packaging appdirs && pip3 install --upgrade --no-binary :all: protobuf==3.3.0

@@ -4,52 +4,104 @@
 #
 #    pip-compile --output-file requirements.txt requirements.in
 #
-amqp==2.1.4               # via kombu
-anymarkup-core==0.7.0     # via anymarkup
+amqp==2.2.0               # via kombu
+anymarkup-core==0.7.1     # via anymarkup
 anymarkup==0.7.0
-beautifulsoup4==4.5.3
-BigQuery-Python==1.10.0
+beautifulsoup4==4.6.0
+bigquery-python==1.12.0
 billiard==3.5.0.2         # via celery
 boto3==1.4.4
-boto==2.45.0
-botocore==1.5.0           # via boto3, s3transfer
+boto==2.48.0
+botocore==1.5.81          # via boto3, s3transfer
+cachetools==2.0.0         # via google-auth
 celery==4.0.2             # via selinon
+certifi==2017.4.17        # via requests
+chardet==3.0.4            # via requests
 codegen==1.0              # via selinonlib
 configobj==5.0.6          # via anymarkup
-dill==0.2.5               # via selinonlib
+dill==0.2.7               # via google-gax, selinonlib
 docutils==0.13.1          # via botocore
+future==0.16.0            # via google-gax
+gapic-google-cloud-datastore-v1==0.15.3  # via google-cloud-datastore
+gapic-google-cloud-error-reporting-v1beta1==0.15.3  # via google-cloud-error-reporting
+gapic-google-cloud-logging-v2==0.91.3  # via google-cloud-logging
+gapic-google-cloud-pubsub-v1==0.15.4  # via google-cloud-pubsub
+gapic-google-cloud-spanner-admin-database-v1==0.15.3  # via google-cloud-spanner
+gapic-google-cloud-spanner-admin-instance-v1==0.15.3  # via google-cloud-spanner
+gapic-google-cloud-spanner-v1==0.15.3  # via google-cloud-spanner
+gapic-google-cloud-speech-v1==0.15.3  # via google-cloud-speech
 git2json==0.2.3
-google-api-python-client==1.5.5  # via bigquery-python
-graphviz==0.5.1           # via selinonlib
-httplib2==0.9.2           # via bigquery-python, google-api-python-client, oauth2client
-jmespath==0.9.0           # via boto3, botocore
+google-api-python-client==1.6.2  # via bigquery-python
+google-auth-httplib2==0.0.2  # via google-cloud-core
+google-auth==1.0.1        # via google-auth-httplib2, google-cloud-core, google-cloud-storage, google-gax
+google-cloud-bigquery==0.25.0  # via google-cloud
+google-cloud-bigtable==0.25.0  # via google-cloud
+google-cloud-core==0.25.0  # via google-cloud, google-cloud-bigquery, google-cloud-bigtable, google-cloud-datastore, google-cloud-dns, google-cloud-error-reporting, google-cloud-language, google-cloud-logging, google-cloud-monitoring, google-cloud-pubsub, google-cloud-resource-manager, google-cloud-runtimeconfig, google-cloud-spanner, google-cloud-speech, google-cloud-storage, google-cloud-translate, google-cloud-vision
+google-cloud-datastore==1.1.0  # via google-cloud
+google-cloud-dns==0.25.0  # via google-cloud
+google-cloud-error-reporting==0.25.1  # via google-cloud
+google-cloud-language==0.25.0  # via google-cloud
+google-cloud-logging==1.1.0  # via google-cloud, google-cloud-error-reporting
+google-cloud-monitoring==0.25.0  # via google-cloud
+google-cloud-pubsub==0.26.0  # via google-cloud
+google-cloud-resource-manager==0.25.0  # via google-cloud
+google-cloud-runtimeconfig==0.25.0  # via google-cloud
+google-cloud-spanner==0.25.0  # via google-cloud
+google-cloud-speech==0.26.0  # via google-cloud
+google-cloud-storage==1.2.0  # via google-cloud
+google-cloud-translate==0.25.0  # via google-cloud
+google-cloud-videointelligence==0.25.0  # via google-cloud
+google-cloud-vision==0.25.0  # via google-cloud
+google-cloud==0.26.1
+google-gax==0.15.13       # via gapic-google-cloud-datastore-v1, gapic-google-cloud-error-reporting-v1beta1, gapic-google-cloud-logging-v2, gapic-google-cloud-pubsub-v1, gapic-google-cloud-spanner-admin-database-v1, gapic-google-cloud-spanner-admin-instance-v1, gapic-google-cloud-spanner-v1, gapic-google-cloud-speech-v1, google-cloud-bigtable, google-cloud-datastore, google-cloud-videointelligence, google-cloud-vision
+google-resumable-media==0.1.1  # via google-cloud-storage
+googleapis-common-protos[grpc]==1.5.2  # via gapic-google-cloud-datastore-v1, gapic-google-cloud-error-reporting-v1beta1, gapic-google-cloud-logging-v2, gapic-google-cloud-pubsub-v1, gapic-google-cloud-spanner-admin-database-v1, gapic-google-cloud-spanner-admin-instance-v1, gapic-google-cloud-spanner-v1, gapic-google-cloud-speech-v1, google-cloud-core, google-cloud-videointelligence, google-cloud-vision, google-gax, grpc-google-iam-v1, proto-google-cloud-datastore-v1, proto-google-cloud-error-reporting-v1beta1, proto-google-cloud-logging-v2, proto-google-cloud-pubsub-v1, proto-google-cloud-spanner-admin-database-v1, proto-google-cloud-spanner-admin-instance-v1, proto-google-cloud-spanner-v1, proto-google-cloud-speech-v1
+graphviz==0.8             # via selinonlib
+grpc-google-iam-v1==0.11.1  # via gapic-google-cloud-pubsub-v1, gapic-google-cloud-spanner-admin-database-v1, gapic-google-cloud-spanner-admin-instance-v1
+grpcio==1.4.0             # via google-cloud-logging, google-cloud-pubsub, google-cloud-spanner, google-cloud-speech, google-gax, googleapis-common-protos, grpc-google-iam-v1, proto-google-cloud-datastore-v1, proto-google-cloud-error-reporting-v1beta1, proto-google-cloud-logging-v2, proto-google-cloud-pubsub-v1, proto-google-cloud-spanner-admin-database-v1, proto-google-cloud-spanner-admin-instance-v1, proto-google-cloud-spanner-v1, proto-google-cloud-speech-v1
+httplib2==0.10.3          # via bigquery-python, google-api-python-client, google-cloud-core, oauth2client
+idna==2.5                 # via requests
+jmespath==0.9.3           # via boto3, botocore
 jsl==0.2.4
 json5==0.2.4              # via anymarkup
-jsonschema==2.5.1
+jsonschema==2.6.0
 kombu==4.0.2              # via celery
-lxml==3.6.4
+lxml==3.8.0
 numpy==1.13.1
-oauth2client==4.0.0       # via google-api-python-client
-psycopg2==2.6.2
-pyasn1-modules==0.0.8     # via oauth2client
-pyasn1==0.1.9             # via oauth2client, pyasn1-modules, rsa
-PyGithub==1.29
-python-dateutil==2.5.3    # via bigquery-python, botocore
-pytz==2016.7              # via celery
+oauth2client==3.0.0       # via gapic-google-cloud-datastore-v1, gapic-google-cloud-error-reporting-v1beta1, gapic-google-cloud-logging-v2, gapic-google-cloud-pubsub-v1, gapic-google-cloud-spanner-admin-database-v1, gapic-google-cloud-spanner-admin-instance-v1, gapic-google-cloud-spanner-v1, gapic-google-cloud-speech-v1, google-api-python-client, grpc-google-iam-v1, proto-google-cloud-datastore-v1, proto-google-cloud-error-reporting-v1beta1, proto-google-cloud-logging-v2, proto-google-cloud-pubsub-v1, proto-google-cloud-spanner-admin-database-v1, proto-google-cloud-spanner-admin-instance-v1, proto-google-cloud-spanner-v1, proto-google-cloud-speech-v1
+ply==3.8                  # via google-gax
+proto-google-cloud-datastore-v1[grpc]==0.90.4  # via gapic-google-cloud-datastore-v1
+proto-google-cloud-error-reporting-v1beta1[grpc]==0.15.3  # via gapic-google-cloud-error-reporting-v1beta1
+proto-google-cloud-logging-v2[grpc]==0.91.3  # via gapic-google-cloud-logging-v2
+proto-google-cloud-pubsub-v1[grpc]==0.15.4  # via gapic-google-cloud-pubsub-v1
+proto-google-cloud-spanner-admin-database-v1[grpc]==0.15.3  # via gapic-google-cloud-spanner-admin-database-v1
+proto-google-cloud-spanner-admin-instance-v1[grpc]==0.15.3  # via gapic-google-cloud-spanner-admin-instance-v1
+proto-google-cloud-spanner-v1[grpc]==0.15.3  # via gapic-google-cloud-spanner-v1
+proto-google-cloud-speech-v1[grpc]==0.15.3  # via gapic-google-cloud-speech-v1
+protobuf==3.3.0           # via google-cloud-core, google-gax, googleapis-common-protos, grpcio
+psycopg2==2.7.1
+pyasn1-modules==0.0.9     # via google-auth, google-auth-httplib2, oauth2client
+pyasn1==0.2.3             # via google-auth, google-auth-httplib2, oauth2client, pyasn1-modules, rsa
+pygithub==1.35
+pyjwt==1.5.2              # via pygithub
+python-dateutil==2.6.1    # via bigquery-python, botocore
+pytz==2017.2              # via celery
 pyyaml==3.12              # via anymarkup, selinonlib
 redis==2.10.5             # via selinon
-requests==2.12.4
-rsa==3.4.2                # via oauth2client
+requests==2.18.1
+rsa==3.4.2                # via google-auth, google-auth-httplib2, oauth2client
 s3transfer==0.1.10        # via boto3
 scikit-learn==0.18.2
 scipy==0.19.1
 selinon==0.1.0rc3
 selinonlib==0.1.0rc3
 semver==2.7.7
-six==1.10.0               # via anymarkup-core, configobj, google-api-python-client, oauth2client, python-dateutil
-sqlalchemy==1.1.3
+six==1.10.0               # via anymarkup-core, configobj, google-api-python-client, google-auth, google-auth-httplib2, google-cloud-core, google-cloud-videointelligence, google-resumable-media, grpcio, oauth2client, protobuf, python-dateutil
+sqlalchemy==1.1.11
 toml==0.9.2               # via anymarkup
-unidiff==0.5.3
+unidiff==0.5.4
 uritemplate==3.0.0        # via google-api-python-client
+urllib3==1.21.1           # via requests
 vine==1.1.3               # via amqp
-xmltodict==0.10.2         # via anymarkup
+xmltodict==0.11.0         # via anymarkup
+joblib==0.11

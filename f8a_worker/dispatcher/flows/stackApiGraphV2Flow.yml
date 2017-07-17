@@ -12,3 +12,8 @@
           to:
             - 'recommendation_v2'
             - 'stack_aggregator_v2'
+            - 'user_stack_sentiment_scorer'
+        - from:
+            - 'recommendation_v2'
+          to:
+            - 'reco_pkg_sentiment_scorer'
