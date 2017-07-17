@@ -52,16 +52,20 @@ class GraphAggregatorTask(BaseTask):
                                      .format(manifest['filename']))
             out["details"][0]['manifest_file'] = manifest['filename']
             out["details"][0]['ecosystem'] = manifest['ecosystem']
-
+            out["details"][0]['manifest_file_path'] = manifest['filepath']
+            
             # If we're handling an external request we need to convert dependency specifications to
             # concrete versions that we can query later on in the `AggregatorTask`
             manifest_descriptor = get_manifest_descriptor_by_filename(manifest['filename'])
             if 'external_request_id' in arguments:
+                manifest_dependencies = []
                 if manifest_descriptor.has_resolved_deps:  # npm-shrinkwrap.json, pom.xml, requirements.txt
                     if "_dependency_tree_lock" in out["details"][0]:  # npm-shrinkwrap.json, requirements.txt
-                        manifest_dependencies = out["details"][0]["_dependency_tree_lock"]["dependencies"]
+                        if 'dependencies' in out['details'][0]["_dependency_tree_lock"]:
+                            manifest_dependencies = out["details"][0]["_dependency_tree_lock"].get("dependencies", [])
                     else:  # pom.xml
-                        manifest_dependencies = out["details"][0]["dependencies"]
+                        if 'dependencies' in out['details'][0]:
+                            manifest_dependencies = out["details"][0].get("dependencies", [])
                     if manifest_descriptor.has_recursive_deps:  # npm-shrinkwrap.json
                         def _flatten(deps, collect):
                             for dep in deps:

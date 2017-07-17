@@ -161,7 +161,8 @@ def extract_component_details(component):
     }
     return component_summary, licenses
 
-def aggregate_stack_data(stack, manifest_file, ecosystem):
+
+def aggregate_stack_data(stack, manifest_file, ecosystem, manifest_file_path):
     components = []
     licenses = []
     for component in stack.get('result', []):
@@ -180,7 +181,8 @@ def aggregate_stack_data(stack, manifest_file, ecosystem):
             "total_licenses": len(stack_distinct_licenses),
             "distinct_licenses": list(stack_distinct_licenses),
             "popularity": stack_popularity_data,
-            "components": components
+            "components": components,
+            "manifest_file_path": manifest_file_path
     }
     return data
 
