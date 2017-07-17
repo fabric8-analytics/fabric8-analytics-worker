@@ -2,6 +2,8 @@
   flow-definitions:
     - name: 'bayesianPackageFlow'
       queue: '{DEPLOYMENT_PREFIX}_ingestion_bayesianPackageFlow_v0'
+      nowait:
+        - 'GraphImporterTask'
       propagate_node_args: 'bayesianPackageAnalysisFlow'
       node_args_from_first: true
       sampling:
@@ -23,6 +25,8 @@
           to: 'PackageResultCollector'
         - from: 'PackageFinalizeTaskError'
           to: 'PackageResultCollector'
+        - from: 'PackageResultCollector'
+          to: 'GraphImporterTask'
       failures:
         - nodes: 'bayesianPackageAnalysisFlow'
           fallback: 'PackageFinalizeTaskError'
