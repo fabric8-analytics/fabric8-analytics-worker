@@ -457,7 +457,7 @@ class RecommendationTask(BaseTask):
         recommendations = []
         rs = RelativeSimilarity()
 
-        for result in arguments['result']:
+        for result in arguments.get('result', []):
             input_stack = {d["package"]: d["version"] for d in result.get("details", [])[0].get("_resolved")}
             ecosystem = result["details"][0].get("ecosystem")
             manifest_file_path = result["details"][0].get('manifest_file_path')
