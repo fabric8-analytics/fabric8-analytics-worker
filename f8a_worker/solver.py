@@ -144,6 +144,9 @@ class PypiReleasesFetcher(ReleasesFetcher):
 
         releases = self._rpc.package_releases(package, True)
         if not releases:
+            # try again with swapped case of first character
+            releases = self._rpc.package_releases(package[0].swapcase() + package[1:], True)
+        if not releases:
             # if nothing was found then do case-insensitive search
             return self.fetch_releases(self._search_package_name(package))
 
