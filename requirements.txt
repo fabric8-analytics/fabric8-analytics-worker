@@ -82,7 +82,7 @@ protobuf==3.3.0           # via google-cloud-core, google-gax, googleapis-common
 psycopg2==2.7.1
 pyasn1-modules==0.0.9     # via google-auth, google-auth-httplib2, oauth2client
 pyasn1==0.2.3             # via google-auth, google-auth-httplib2, oauth2client, pyasn1-modules, rsa
-pygithub==1.35
+PyGithub==1.35
 pyjwt==1.5.2              # via pygithub
 python-dateutil==2.6.1    # via bigquery-python, botocore
 pytz==2017.2              # via celery
