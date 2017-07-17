@@ -224,7 +224,7 @@ objects:
               memory: "512Mi"
               cpu: "300m"
             limits:
-              memory: "1024Mi"
+              memory: "1200Mi"
               cpu: "500m"
         restartPolicy: Always
     test: false
