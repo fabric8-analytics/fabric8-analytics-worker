@@ -178,7 +178,7 @@ class Archive(object):
             except FileExistsError:
                 pass
         # -o: overwrite existing files without prompting
-        TimedCommand.get_command_output(['unzip', '-o', '-d', dest, target])
+        TimedCommand.get_command_output(['unzip', '-q', '-o', '-d', dest, target])
         # Fix possibly wrong permissions in zip files that would prevent us from deleting files.
         TimedCommand.get_command_output(['chmod', '-R', 'u+rwX,g+rwX', dest])
 
