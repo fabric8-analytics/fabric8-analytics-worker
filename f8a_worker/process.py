@@ -258,7 +258,9 @@ class IndianaJones(object):
             res.raise_for_status()
             if not version:
                 version = res.json()['info']['version']
-            release_files = res.json()['releases'][version]
+            release_files = res.json().get('releases', {}).get(version, [])
+            if not release_files:
+                raise RuntimeError("No release files for version %s" % version)
 
             # sort releases by order in which we'd like to download:
             #  1) sdist
