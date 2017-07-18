@@ -366,12 +366,27 @@ class PypiDependencyParser(DependencyParser):
         :param spec: str, for example "Django>=1.5,<1.8"
         :return: [Django [[('>=', '1.5'), ('<', '1.8')]]]
         """
+
+        def _extract_op_version(spec):
+            # https://www.python.org/dev/peps/pep-0440/#compatible-release
+            if spec.operator == '~=':
+                version = spec.version.split('.')
+                if len(version) in {2, 3, 4}:
+                    if len(version) in {3, 4}:
+                        del version[-1]  # will increase the last but one in next line
+                    version[-1] = str(int(version[-1]) + 1)
+                else:
+                    raise ValueError('%r must not be used with %r' % (spec.operator, spec.version))
+                return [('>=', spec.version), ('<', '.'.join(version))]
+            else:
+                return spec.operator, spec.version
+
         def _get_pip_spec(requirements):
             "In Pip 8+ there's no `specs` field and we have to dig the information from the `specifier` field"
             if hasattr(requirements, 'specs'):
                 return requirements.specs
             elif hasattr(requirements, 'specifier'):
-                specs = [(spec.operator, spec.version) for spec in requirements.specifier]
+                specs = [_extract_op_version(spec) for spec in requirements.specifier]
                 if len(specs) == 0:
                     specs = [('>=', '0.0.0')]
                 elif len(specs) > 1:
