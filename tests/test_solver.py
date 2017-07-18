@@ -152,10 +152,10 @@ class TestSolver(object):
 
     def test_pypi_solver(self, pypi):
         solver = get_ecosystem_solver(pypi)
-        deps = ['six == 1.9.0',
+        deps = ['django == 1.9.10',
                 'pymongo >=3.0, <3.2.2']
         out = solver.solve(deps)
-        assert out == {'six': '1.9.0',
+        assert out == {'django': '1.9.10',
                        'pymongo': '3.2.1'}
 
     def test_rubygems_solver(self, rubygems):
