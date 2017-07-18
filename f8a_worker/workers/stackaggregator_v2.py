@@ -73,13 +73,6 @@ def extract_component_details(component):
     name = component.get("version", {}).get("pname", [""])[0]
     version = component.get("version", {}).get("version", [""])[0]
     ecosystem = component.get("version", {}).get("pecosystem", [""])[0]
-
-    # create license dict for license scoring
-    license_dict = {
-        'package': name,
-        'version': version,
-        'license': licenses
-    }
     latest_version = component.get("package", {}).get("latest_version", [""])[0]
     component_summary = {
         "ecosystem": ecosystem,
