@@ -114,10 +114,11 @@ class MercatorTask(BaseTask):
             self.log.info('Seems like this is wheel, using metadata.json ...')
             ret = metadata_json
         # figure out if this was packaged as sdist => PKG_INFO would
-        #  have depth of topdir + 2 or topdir + 3
+        #  have depth of topdir + 3 (e.g. requests-2.18.1/requests.egg-info/PKG-INFO)
+        #             or topdir + 4 (e.g. pydocstyle-2.0.0/src/pydocstyle.egg-info/PKG-INFO)
         #  (and perhaps there are requires.txt or requirements.txt that we could use)
         # NOTE: for now, we always treat requirements.txt as requires_dist
-        elif pkg_info and get_depth(pkg_info['path']) <= get_depth(topdir) + 3:
+        elif pkg_info and get_depth(pkg_info['path']) <= get_depth(topdir) + 4:
             self.log.info('Seems like this is sdist or egg, using PKG-INFO ...')
             requires_dist = []
             # in well-made sdists, there are requires.txt next to PKG_INFO
