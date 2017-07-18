@@ -73,6 +73,13 @@ def extract_component_details(component):
     name = component.get("version", {}).get("pname", [""])[0]
     version = component.get("version", {}).get("version", [""])[0]
     ecosystem = component.get("version", {}).get("pecosystem", [""])[0]
+
+    # create license dict for license scoring
+    license_dict = {
+        'package': name,
+        'version': version,
+        'license': licenses
+    }
     latest_version = component.get("package", {}).get("latest_version", [""])[0]
     component_summary = {
         "ecosystem": ecosystem,
@@ -84,8 +91,9 @@ def extract_component_details(component):
         "osio_user_count": component.get("osio_user_count", -1),
         "latest_version": latest_version,
         "github": github_details,
-        "code_metrics": code_metrics
+        "code_metrics": code_metrics,
     }
+
     return component_summary
 
 def aggregate_stack_data(stack, manifest_file, ecosystem, deps):
@@ -108,7 +116,9 @@ def aggregate_stack_data(stack, manifest_file, ecosystem, deps):
 
     stack_distinct_licenses = set(licenses)
     # Call License Scoring to Get Stack License
+
     license_url = LICENSE_SCORING_URL_REST + "/api/v1/stack_license"
+
     payload = {
         "packages": license_score_list
     }
