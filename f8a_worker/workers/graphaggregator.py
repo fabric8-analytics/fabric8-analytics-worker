@@ -52,7 +52,7 @@ class GraphAggregatorTask(BaseTask):
                                      .format(manifest['filename']))
             out["details"][0]['manifest_file'] = manifest['filename']
             out["details"][0]['ecosystem'] = manifest['ecosystem']
-            out["details"][0]['manifest_file_path'] = manifest['filepath']
+            out["details"][0]['manifest_file_path'] = manifest.get('filepath', 'File path not available')
             
             # If we're handling an external request we need to convert dependency specifications to
             # concrete versions that we can query later on in the `AggregatorTask`
