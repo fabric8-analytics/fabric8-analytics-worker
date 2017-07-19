@@ -93,7 +93,7 @@ class BayesianPostgres(PostgresBase):
         return PostgresBase.session.query(WorkerResult).filter(WorkerResult.worker_id == worker_id).count()
 
     def get_analysis_by_id(self, analysis_id):
-        """Get result of previously scheduled analysis5
+        """Get result of previously scheduled analysis
 
         :param analysis_id: str, ID of analysis
         :return: analysis result
@@ -109,7 +109,7 @@ class BayesianPostgres(PostgresBase):
         """Check if a user entry has already been made in api_requests
 
         :param email: str, user's email id
-        :return: count of user's entry in api_requests
+        :return: First entry in api_requests table with matching email id 
         """
         return PostgresBase.session.query(APIRequests).\
             filter(APIRequests.user_email == email).first()
@@ -123,7 +123,7 @@ class BayesianPostgres(PostgresBase):
 
         :param external_request_id: str, ID of analysis
         :param data: bookkeeping data
-        :return: None
+        :return: True/False
         """
         if not self.is_connected():
             self.connect()
@@ -158,3 +158,4 @@ class BayesianPostgres(PostgresBase):
         PostgresBase.session.add(req)
         PostgresBase.session.commit()
         return True
+    

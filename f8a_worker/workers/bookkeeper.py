@@ -43,7 +43,7 @@ class BookkeeperTask(BaseTask):
                     self.log.error("Failed creating book-keeping record in graph")
                     continue
             except:
-                self.log.error("Failed to communicate to Graph Server.")
+                self.log.exception("Failed to communicate to Graph Server.")
                 continue
 
 
@@ -52,7 +52,7 @@ class BookkeeperTask(BaseTask):
         self._strict_assert(arguments.get('data'))
 
         aggregated = ''
-        if arguments.get('data').get('api_name') == 'stack_analyses' and 'email' in arguments.get('data').get('user_profile'):
+        if arguments['data'].get('api_name') == 'stack_analyses' and 'email' in arguments.['data'].get('user_profile', {}):
             aggregated = self.parent_task_result('GraphAggregatorTask')
             self.store_user_node(arguments, aggregated)
 

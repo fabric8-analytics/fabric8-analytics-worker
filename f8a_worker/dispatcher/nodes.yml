@@ -293,7 +293,6 @@
       classname: 'BookkeeperTask'
       import: 'f8a_worker.workers'
       max_retry: 0
-      storage: 'BayesianPostgres'
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_BookkeeperTask_v0'
 
   flows:
@@ -413,7 +412,7 @@
         <<: *configurationS3
         bucket_name: '{DEPLOYMENT_PREFIX}-janus-json-data'
         region_name: 'us-east-1'
-        encryption: false
+        encryption: true
         versioned: true
 
     - name: 'S3Snyk'
