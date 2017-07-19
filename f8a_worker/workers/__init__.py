@@ -29,5 +29,6 @@ from f8a_worker.workers.recommender import RecommendationTask, RecommendationV2T
 from f8a_worker.workers.result_collector import ResultCollector, PackageResultCollector
 from f8a_worker.workers.stackaggregator import StackAggregatorTask
 from f8a_worker.workers.stackaggregator_v2 import StackAggregatorV2Task
+from f8a_worker.workers.bookkeeper import BookkeeperTask
 from f8a_worker.workers.sentiment_scorer import UserStackSentimentScoringTask
 from f8a_worker.workers.sentiment_scorer import RecoPkgSentimentScoringTask

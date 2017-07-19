@@ -4,16 +4,15 @@
       queue: '{DEPLOYMENT_PREFIX}_api_stackApiGraphFlow_v0'
       edges:
         - from:
-          to:
-            - 'GraphAggregatorTask'
-            - 'ManifestKeeperTask'
+          to: 'GraphAggregatorTask'
         - from:
-            - 'GraphAggregatorTask'
-          to:
-            - 'recommendation_v2'
-            - 'stack_aggregator_v2'
-            - 'user_stack_sentiment_scorer'
-        - from:
-            - 'recommendation_v2'
-          to:
-            - 'reco_pkg_sentiment_scorer'
+          to: 'ManifestKeeperTask'
+        - from: 'GraphAggregatorTask'
+          to: 'stack_aggregator_v2'
+        - from: 'GraphAggregatorTask'
+          to: 'BookkeeperTask'
+        - from: 'GraphAggregatorTask'
+          to: 'recommendation_v2'
+        - from: 'recommendation_v2'
+          to: 'reco_pkg_sentiment_scorer'
+
