@@ -52,7 +52,7 @@ class BookkeeperTask(BaseTask):
         self._strict_assert(arguments.get('data'))
 
         aggregated = ''
-        if arguments['data'].get('api_name') == 'stack_analyses' and 'email' in arguments.['data'].get('user_profile', {}):
+        if arguments['data'].get('api_name') == 'stack_analyses' and 'email' in arguments['data'].get('user_profile', {}):
             aggregated = self.parent_task_result('GraphAggregatorTask')
             self.store_user_node(arguments, aggregated)
 
