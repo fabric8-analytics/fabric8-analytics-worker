@@ -412,7 +412,7 @@
         <<: *configurationS3
         bucket_name: '{DEPLOYMENT_PREFIX}-janus-json-data'
         region_name: 'us-east-1'
-        encryption: true
+        encryption: false
         versioned: true
 
     - name: 'S3Snyk'
