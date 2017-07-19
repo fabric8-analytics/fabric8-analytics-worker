@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
+import datetime
+import hashlib
+import json
 
+from sqlalchemy import Date, cast
 from sqlalchemy.ext.declarative import declarative_base
 from selinon import StoragePool
-from f8a_worker.models import Analysis, Ecosystem, Package, Version, WorkerResult
+from f8a_worker.models import Analysis, Ecosystem, Package, Version, WorkerResult, APIRequests
 from f8a_worker.utils import MavenCoordinates
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -100,3 +104,58 @@ class BayesianPostgres(PostgresBase):
             one()
 
         return found
+
+    def check_api_user_entry(self, email):
+        """Check if a user entry has already been made in api_requests
+
+        :param email: str, user's email id
+        :return: First entry in api_requests table with matching email id 
+        """
+        return PostgresBase.session.query(APIRequests).\
+            filter(APIRequests.user_email == email).first()
+
+    def store_in_bucket(self, content):
+        s3 = StoragePool.get_connected_storage('S3UserProfileStore')
+        s3.store_in_bucket(content)
+
+    def store_api_requests(self, external_request_id, data, dep_data):
+        """Get result of previously scheduled analysis5
+
+        :param external_request_id: str, ID of analysis
+        :param data: bookkeeping data
+        :return: True/False
+        """
+        if not self.is_connected():
+            self.connect()
+
+        profile_digest = None
+        # Add user_profile to S3 if there is no api_requests entry available for today
+        req = self.check_api_user_entry(data.get('user_email', None))
+
+        profile = json.dumps(data.get('user_profile'))
+        profile_digest = hashlib.sha256(profile.encode('utf-8')).hexdigest()
+        request_digest = hashlib.sha256(json.dumps(dep_data).encode('utf-8')).hexdigest()
+
+        dt = datetime.datetime.now()
+        if req:
+            if profile_digest != req.user_profile_digest:
+                self.store_in_bucket(data.get('user_profile'))
+        else:
+            self.store_in_bucket(data.get('user_profile'))
+                
+        req = APIRequests(
+            id = external_request_id,
+            api_name = data.get('api_name', None),
+            submit_time = str(dt),
+            user_email = data.get('user_email', None),
+            user_profile_digest = profile_digest,
+            origin = data.get('origin', None),
+            team = data.get('team', None),
+            recommendation = data.get('recommendation', None),
+            request_digest = request_digest
+        )
+
+        PostgresBase.session.add(req)
+        PostgresBase.session.commit()
+        return True
+    
