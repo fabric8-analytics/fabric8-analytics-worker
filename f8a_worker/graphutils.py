@@ -10,7 +10,12 @@ GREMLIN_SERVER_URL_REST = "http://{host}:{port}".format\
                            (host=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_HOST", "localhost"),
                             port=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_PORT", "8182"))
 
-PGM_REST_URL = os.getenv('PGM_REST_URL', 'http://kronos-kattappa-0237.dev.rdu2c.fabric8.io/api/v1/kronos_score')
+PGM_URL_REST = "http://{host}:{port}".format(host=os.environ.get("PGM_SERVICE_HOST"),
+                                             port=os.environ.get("PGM_SERVICE_PORT"))
+
+LICENSE_SCORING_URL_REST = "http://{host}:{port}".format(host=os.environ.get("LICENSE_SERVICE_HOST"),
+                                                         port=os.environ.get("LICENSE_SERVICE_PORT"))
+
 
 def get_stack_usage_data_graph(components):
     components_with_usage_data = 0
@@ -186,6 +191,7 @@ def aggregate_stack_data(stack, manifest_file, ecosystem, manifest_file_path):
     }
     return data
 
+
 def get_osio_user_count(ecosystem, name, version):
     str_gremlin = "g.V().has('pecosystem','" + ecosystem + "').has('pname','" + name + "')." \
                   "has('version','" + version + "').in('uses').count();"
@@ -200,6 +206,7 @@ def get_osio_user_count(ecosystem, name, version):
     except:
         logger.error("Failed retrieving Gremlin data.")
         return -1
+
 
 def create_package_dict(graph_results, alt_dict=None):
     """Converts Graph Results into the Recommendation Dict"""
@@ -278,6 +285,3 @@ def create_package_dict(graph_results, alt_dict=None):
 
         pkg_list.append(pkg_dict)
     return pkg_list
-
-
-

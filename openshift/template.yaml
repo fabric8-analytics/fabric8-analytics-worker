@@ -193,6 +193,22 @@ objects:
                 key: blackduck-path
           - name: PGBOUNCER_SERVICE_HOST
             value: bayesian-pgbouncer
+          - name: PGM_SERVICE_HOST
+            value: kronos-stack-analysis.dev.rdu2c.fabric8.io
+          - name: MAX_COMPANION_PACKAGES
+            value: "5"
+          - name: MAX_ALTERNATE_PACKAGES
+            value: "2"
+          - name: OUTLIER_THRESHOLD
+            value: "0.6"
+          - name: UNKNOWN_PACKAGES_THRESHOLD
+            value: "0.3"
+          - name: LICENSE_SERVICE_HOST
+            value: stack-license-stack-license.dev.rdu2c.fabric8.io
+          - name: PGM_SERVICE_PORT
+            value: "80"
+          - name: LICENSE_SERVICE_PORT
+            value: "80"
           - name: F8A_SERVER_SERVICE_HOST
             value: bayesian-api
           - name: ANITYA_SERVICE_HOST
