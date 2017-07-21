@@ -6,12 +6,13 @@ from collections import Counter
 import re
 import logging
 
-from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST, PGM_REST_URL, create_package_dict
+from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST, create_package_dict, PGM_URL_REST
 from f8a_worker.base import BaseTask
 from f8a_worker.conf import get_configuration
 from f8a_worker.utils import get_session_retry
 
-
+# PGM_URL_REST = "http://{host}:{port}".format(host=os.environ.get("PGM_SERVICE_HOST"),
+#                                             port=os.environ.get("PGM_SERVICE_PORT"))
 config = get_configuration()
 
 danger_word_list = ["drop\(\)", "V\(\)", "count\(\)"]
@@ -509,10 +510,10 @@ class RecommendationV2Task(BaseTask):
 
     def call_pgm(self, payload):
         """Calls the PGM model with the normalized manifest information to get the relevant packages"""
-        PGM_REST_URL = "http://kronos-kattappa-0239.dev.rdu2c.fabric8.io/api/v1/kronos_score"
+        pgm_url = PGM_URL_REST + "/api/v1/schemas/kronos_scoring"
         try:
             if payload is not None:
-                response = get_session_retry().post(PGM_REST_URL, json=payload)
+                response = get_session_retry().post(pgm_url, json=payload)
                 if response.status_code != 200:
                     self.log.error("HTTP error {}. Error retrieving PGM data.".format(response.status_code))
                     return None
@@ -540,24 +541,28 @@ class RecommendationV2Task(BaseTask):
             new_arr = [r['package'] for r in resolved]
             json_object = {
                 'ecosystem': details['ecosystem'],
+                'comp_package_count_threshold': int(os.environ.get('MAX_COMPANION_PACKAGES', 5)),
+                'alt_package_count_threshold': int(os.environ.get('MAX_COMPANION_PACKAGES', 2)),
+                'outlier_probability_threshold': float(os.environ.get('OUTLIER_THRESHOLD', 0.6)),
+                'unknown_packages_ratio_threshold': float(os.environ.get('UNKNOWN_PACKAGES_THRESHOLD', 0.3)),
                 'user_persona': "1",  #TODO - remove janus hardcoded value completely and assing a cateogory here
                 'package_list': new_arr
             }
             self.log.debug(json_object)
             input_task_for_pgm.append(json_object)
 
+            recommendation = {
+                'recommendations': {
+                    'companion': [],
+                    'alternate': [],
+                    'usage_outliers': []
+                }
+            }
+
             # Call PGM and get the response
             pgm_response = self.call_pgm(input_task_for_pgm)
 
             # From PGM response process companion and alternate packages and then get Data from Graph
-            recommendation = {
-                'recommendations': {
-                        'companion': [],
-                        'alternate': [],
-                        'usage_outliers': []
-                }
-            }
-
             # TODO - implement multiple manifest file support for below loop
             for pgm_result in pgm_response:
                 companion_packages = []

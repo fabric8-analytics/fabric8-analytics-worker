@@ -6,13 +6,11 @@ Output: TBD
 
 """
 
-import os
 import json
-import requests
 import datetime
 
 from f8a_worker.base import BaseTask
-from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST
+from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST, LICENSE_SCORING_URL_REST
 from f8a_worker.utils import get_session_retry
 
 def extract_component_details(component):
@@ -86,21 +84,45 @@ def extract_component_details(component):
         "osio_user_count": component.get("osio_user_count", -1),
         "latest_version": latest_version,
         "github": github_details,
-        "code_metrics": code_metrics
+        "code_metrics": code_metrics,
     }
-    return component_summary, licenses
+
+    return component_summary
 
 def aggregate_stack_data(stack, manifest_file, ecosystem, deps):
     dependencies = []
     licenses = []
+    license_score_list = []
     for component in stack.get('result', []):
         data = component.get("data", None)
         if data:
-            component_data, component_licenses = extract_component_details(data[0])
+            component_data = extract_component_details(data[0])
+            # create license dict for license scoring
+            license_scoring_input = {
+                'package': component_data['name'],
+                'version': component_data['version'],
+                'license': component_data['licenses']
+            }
             dependencies.append(component_data)
-            licenses.extend(component_licenses)
+            licenses.extend(component_data['licenses'])
+            license_score_list.append(license_scoring_input)
 
     stack_distinct_licenses = set(licenses)
+    # Call License Scoring to Get Stack License
+
+    license_url = LICENSE_SCORING_URL_REST + "/api/v1/stack_license"
+
+    payload = {
+        "packages": license_score_list
+    }
+
+    try:
+        license_req = get_session_retry().post(license_url, data=json.dumps(payload))
+        resp = license_req.json()
+        stack_license = [resp.get('stack_license')]
+    except:
+        stack_license = [None]
+
     data = {
             "manifest_name": manifest_file,
             "user_stack_info": {
@@ -112,7 +134,8 @@ def aggregate_stack_data(stack, manifest_file, ecosystem, deps):
                 "recommendation_ready": True, #based on the percentage of dependecies analysed
                 "total_licenses": len(stack_distinct_licenses),
                 "distinct_licenses": list(stack_distinct_licenses),
-                "stack_license_conflict": False,
+                "stack_license_conflict": True if stack_license[0] is None else False,
+                "recommended_stack_licenses": stack_license,
                 "dependencies": dependencies
             }
     }
@@ -139,7 +162,7 @@ class StackAggregatorV2Task(BaseTask):
             except:
                 osio_user_count = -1
 
-            qstring =  "g.V().has('pecosystem','"+ecosystem+"').has('pname','"+elem["package"]+"').has('version','"+elem["version"]+"')."
+            qstring = "g.V().has('pecosystem','"+ecosystem+"').has('pname','"+elem["package"]+"').has('version','"+elem["version"]+"')."
             qstring += "as('version').in('has_version').as('package').select('version','package').by(valueMap());"
             payload = {'gremlin': qstring}
 
