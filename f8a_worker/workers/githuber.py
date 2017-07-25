@@ -158,12 +158,15 @@ class GitReadmeCollectorTask(BaseTask):
         ('Creole', ('creole',)),
         ('MediaWiki', ('mediawiki', 'wiki')),
         ('Pod', ('pod',)),
-        ('Unknown', ('')),
+        ('Unknown', ('',)),
     ))
 
     def _get_github_readme(self, url):
         repo_tuple = parse_gh_repo(url)
-        project, repo = repo_tuple.split('/')
+        if repo_tuple:
+            project, repo = repo_tuple.split('/')
+        else:
+            return None
 
         for readme_type, extensions in self.README_TYPES.items():
             for extension in extensions:

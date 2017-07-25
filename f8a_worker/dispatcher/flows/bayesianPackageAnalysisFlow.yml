@@ -17,7 +17,7 @@
         - from:
           to: 'GitReadmeCollectorTask'
           condition:
-            name: 'argsFieldExist'
+            name: 'isGhRepo'
             args:
               key: 'url'
 
