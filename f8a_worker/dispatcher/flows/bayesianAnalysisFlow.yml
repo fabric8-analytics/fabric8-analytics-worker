@@ -33,6 +33,12 @@
         - from:
           to:
             - 'source_licenses'
+          condition:
+            not:
+              name: 'argsFieldEqual'
+              args:
+                key: 'ecosystem'
+                value: 'nuget'
         - from:
           to:
             - 'binary_data'
