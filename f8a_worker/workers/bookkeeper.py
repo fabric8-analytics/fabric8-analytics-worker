@@ -5,6 +5,7 @@ from f8a_worker.base import BaseTask
 from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST
 from f8a_worker.utils import get_session_retry
 
+
 class BookkeeperTask(BaseTask):
     description = 'Keep bookkeeping data on RDS'
     # we don't want to add `_audit` etc into the manifest submitted
@@ -17,24 +18,23 @@ class BookkeeperTask(BaseTask):
             email = arguments.get('data').get('user_profile').get('email')
             company = arguments.get('data').get('user_profile').get('company', 'Not Provided')
 
-            #GREMLIN
             # Create User Node if it does not exist
             qstring = "user = g.V().has('userid','" + email + "').tryNext().orElseGet{graph.addVertex(" \
-                        "'vertex_label','User','userid','" + email + "', 'company','" + company + "')}; "
+                      "'vertex_label','User','userid','" + email + "', 'company','" + company + "')}; g.V(user).as('u')"
 
             for epvs in resolved:
                 # Create Version Node if it does not exist
-                qstring += "ver_" + epvs['package'] + " = g.V().has('pecosystem','" + ecosystem + "')." \
+                qstring += ".coalesce(g.V().has('pecosystem','" + ecosystem + "')." \
                             "has('pname','" + epvs['package'] + "')." \
-                            "has('version','" + epvs['version'] + "').tryNext()." \
-                            "orElseGet{graph.addVertex('vertex_label','Version', " \
+                            "has('version','" + epvs['version'] + "'), addV().property('vertex_label','Version', " \
                             "'pecosystem','" + ecosystem + "','pname', '" + epvs['package'] + "', " \
-                            "'version', '" + epvs['version'] + "')};"
+                            "'version', '" + epvs['version'] + "')).as('ver_" + epvs['package'] + "')"
                 # Check if "user -> uses -> version" edge exists else create one
-                qstring += "edge_" + epvs['package'] + " = g.V().has('userid','" + email + "').out('uses')." \
-                            "has('pecosystem','" + ecosystem + "').has('pname','" + epvs['package'] + "')." \
-                            "has('version','" + epvs['version'] + "').tryNext()." \
-                            "orElseGet{user.addEdge('uses',ver_" + epvs['package'] + ")};"
+                qstring += ".coalesce(inE('uses').where(outV().as('u')), " \
+                           "addE('uses').from('u').to('ver_" + epvs['package'] + "')" \
+                           ".coalesce(inV().has('osio_usage_count').sack(assign).by('osio_usage_count')." \
+                           "sack(sum).by(constant(1)).property('osio_usage_count', sack()), inV()." \
+                           "property('osio_usage_count', 1)))"
 
             payload = {'gremlin': qstring}
             try:
@@ -45,7 +45,6 @@ class BookkeeperTask(BaseTask):
             except:
                 self.log.exception("Failed to communicate to Graph Server.")
                 continue
-
 
     def execute(self, arguments):
         self._strict_assert(arguments.get('external_request_id'))
