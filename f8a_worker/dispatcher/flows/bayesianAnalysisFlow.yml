@@ -30,6 +30,8 @@
         - from:
           to:
             - 'code_metrics'
+          condition:
+            name: 'alwaysFalse'
         - from:
           to:
             - 'source_licenses'
@@ -44,6 +46,8 @@
         - from:
           to:
             - 'digests'
+          condition:
+            name: 'alwaysFalse'
         - from:
           to:
             - 'languages'
