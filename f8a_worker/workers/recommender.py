@@ -542,7 +542,7 @@ class RecommendationV2Task(BaseTask):
             json_object = {
                 'ecosystem': details['ecosystem'],
                 'comp_package_count_threshold': int(os.environ.get('MAX_COMPANION_PACKAGES', 5)),
-                'alt_package_count_threshold': int(os.environ.get('MAX_COMPANION_PACKAGES', 2)),
+                'alt_package_count_threshold': int(os.environ.get('MAX_ALTERNATE_PACKAGES', 2)),
                 'outlier_probability_threshold': float(os.environ.get('OUTLIER_THRESHOLD', 0.6)),
                 'unknown_packages_ratio_threshold': float(os.environ.get('UNKNOWN_PACKAGES_THRESHOLD', 0.3)),
                 'user_persona': "1",  #TODO - remove janus hardcoded value completely and assing a cateogory here
