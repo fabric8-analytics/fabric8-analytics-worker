@@ -320,7 +320,10 @@ class DataNormalizer(object):
         if 'scm_url' in pom:
             # TODO: there's no way we can tell 100 % what the type is, but we could
             #  try to handle at least some cases, e.g. github will always be git etc
-            transformed['code_repository'] = {'url': pom['scm_url'], 'type': 'unknown'}
+            repo_type = 'git' if parse_gh_repo(pom['scm_url']) else 'unknown'
+            transformed['code_repository'] = {'url': pom['scm_url'],
+                                              'type': repo_type}
+
         return transformed
 
     @staticmethod
