@@ -13,8 +13,8 @@ from f8a_worker.base import BaseTask
 from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST, LICENSE_SCORING_URL_REST
 from f8a_worker.utils import get_session_retry
 
+
 def extract_component_details(component):
-    component_summary = []
     github_details = {
         "dependent_projects": component.get("package", {}).get("libio_dependents_projects", [-1])[0],
         "dependent_repos": component.get("package", {}).get("libio_dependents_repos", [-1])[0],
@@ -79,15 +79,16 @@ def extract_component_details(component):
         "name": name,
         "version": version,
         "licenses": licenses,
-        "sentiment": { "overall_score": 1, "latest_comment": '' },
+        "sentiment": {"overall_score": 1, "latest_comment": ''},
         "security": cves,
-        "osio_user_count": component.get("osio_user_count", -1),
+        "osio_user_count": component.get("version", {}).get("osio_usage_count", 0),
         "latest_version": latest_version,
         "github": github_details,
-        "code_metrics": code_metrics,
+        "code_metrics": code_metrics
     }
 
     return component_summary
+
 
 def aggregate_stack_data(stack, manifest_file, ecosystem, deps):
     dependencies = []
@@ -131,7 +132,7 @@ def aggregate_stack_data(stack, manifest_file, ecosystem, deps):
                 "analyzed_dependencies": deps,
                 "unknown_dependencies_count": 0,
                 "unknown_dependencies": [],
-                "recommendation_ready": True, #based on the percentage of dependecies analysed
+                "recommendation_ready": True,  # based on the percentage of dependencies analysed
                 "total_licenses": len(stack_distinct_licenses),
                 "distinct_licenses": list(stack_distinct_licenses),
                 "stack_license_conflict": True if stack_license[0] is None else False,
@@ -141,29 +142,18 @@ def aggregate_stack_data(stack, manifest_file, ecosystem, deps):
     }
     return data
 
+
 class StackAggregatorV2Task(BaseTask):
     description = 'Aggregates stack data from components'
     _analysis_name = 'stack_aggregator_v2'
 
-    def _get_dependency_data (self, resolved, ecosystem):
+    def _get_dependency_data(self, resolved, ecosystem):
         # Hardcoded ecosystem
         result = []
         for elem in resolved:
-            str_gremlin = "g.V().has('pecosystem','" + ecosystem + "').has('pname','" + elem["package"] + "')." \
-                          "has('version','" + elem["version"] + "').in('uses').count();"
-            payload = {
-              'gremlin': str_gremlin
-            }
-
-            try:
-                response = get_session_retry().post(GREMLIN_SERVER_URL_REST, data=json.dumps(payload))
-                json_response = response.json()
-                osio_user_count = json_response['result']['data'][0]
-            except:
-                osio_user_count = -1
-
-            qstring = "g.V().has('pecosystem','"+ecosystem+"').has('pname','"+elem["package"]+"').has('version','"+elem["version"]+"')."
-            qstring += "as('version').in('has_version').as('package').select('version','package').by(valueMap());"
+            qstring = "g.V().has('pecosystem','"+ecosystem+"').has('pname','"+elem["package"]+"')." \
+                      "has('version','"+elem["version"]+"')." \
+                      "as('version').in('has_version').as('package').select('version','package').by(valueMap());"
             payload = {'gremlin': qstring}
 
             try:
@@ -176,7 +166,6 @@ class StackAggregatorV2Task(BaseTask):
                     if len(graph_resp['result']['data']) == 0:
                         continue
 
-                    graph_resp["result"]["data"][0]["osio_user_count"] = osio_user_count
                     result.append(graph_resp["result"])
                 else:
                     self.log.error("Failed retrieving dependency data.")
@@ -188,7 +177,6 @@ class StackAggregatorV2Task(BaseTask):
         return {"result": result}
 
     def execute(self, arguments=None):
-        finished = []
         aggregated = self.parent_task_result('GraphAggregatorTask')
 
         for result in aggregated['result']:
@@ -196,11 +184,9 @@ class StackAggregatorV2Task(BaseTask):
             ecosystem = result['details'][0]['ecosystem']
             manifest = result['details'][0]['manifest_file']
 
-            finished = self._get_dependency_data(resolved,ecosystem)
-            if finished != None:
+            finished = self._get_dependency_data(resolved, ecosystem)
+            if finished is not None:
                 stack_data = aggregate_stack_data(finished, manifest, ecosystem.lower(), resolved)
-                print (json.dumps(stack_data))
                 return stack_data
 
         return {}
-
