@@ -481,7 +481,11 @@ class RecommendationTask(BaseTask):
                     "manifest_file_path": manifest_file_path
                     })
             else:
-                recommendations.append({"similar_stacks": [], "component_level": None,})
+                recommendations.append({
+                    "similar_stacks": [],
+                    "component_level": None,
+                    "manifest_file_path": manifest_file_path
+                    })
                 
         return {"recommendations": recommendations}
 
