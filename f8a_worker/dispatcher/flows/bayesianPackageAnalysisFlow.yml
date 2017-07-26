@@ -17,14 +17,14 @@
         - from:
           to: 'GitReadmeCollectorTask'
           condition:
-            name: 'argsFieldExist'
+            name: 'isGhRepo'
             args:
               key: 'url'
 
         - from:
           to: 'git_stats'
           condition:
-            name: 'argsFieldExist'
+            name: 'isGhRepo'
             args:
               key: 'url'
 
