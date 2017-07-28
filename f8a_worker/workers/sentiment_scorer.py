@@ -41,7 +41,6 @@ class GoogleSentimentAnalyzer(SentimentAnalyzer):
 
     def analyze_sentiment(self, text):
         start_time = time.time()
-        print("Started analyzing sentiment")
 
         document = self.lang_client.document_from_text(text)
         annotations = document.annotate_text(include_sentiment=True,
@@ -50,8 +49,6 @@ class GoogleSentimentAnalyzer(SentimentAnalyzer):
         score = annotations.sentiment.score
         magnitude = annotations.sentiment.magnitude
 
-        print(time.time() - start_time)
-        print("Finished analyzing sentiment")
         return score, magnitude
 
 
@@ -80,7 +77,6 @@ class GooglePublicDataStore(ExternalDataStore):
 
     def get_stack_overflow_data(self, search_keyword, search_tag, num_months, max_len=90000):
         start_time = time.time()
-        print("Started collecting data")
 
         min_date = datetime.date.today() - datetime.timedelta(num_months*365/12)
         min_timestamp = min_date.strftime("%Y-%m-%d %H:%M:%S")
@@ -115,8 +111,6 @@ class GooglePublicDataStore(ExternalDataStore):
 
         # output_data = output[0] + output[1]
         output_data = questions + answers
-        print(time.time()-start_time)
-        print("Finished collecting data")
         return output_data[:max_len] if len(output_data) > max_len else output_data
 
 
