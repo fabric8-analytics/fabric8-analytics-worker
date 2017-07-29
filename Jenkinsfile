@@ -21,32 +21,9 @@ node('docker') {
         docker.build('cucos-lib-tests', '--no-cache -f Dockerfile.tests .')
     }
 
-    stage('Tests') {
-        timeout(30) {
+    stage('Unit Tests') {
+        timeout(10) {
             sh './runtest.sh'
-        }
-    }
-
-    stage('Integration Tests') {
-        ws {
-            docker.withRegistry('https://registry.devshift.net/') {
-                docker.image('bayesian/bayesian-api').pull()
-                docker.image('bayesian/coreapi-jobs').pull()
-                docker.image('bayesian/coreapi-pgbouncer').pull()
-                docker.image('bayesian/data-model-importer').pull()
-                docker.image('bayesian/cvedb-s3-dump').pull()
-                docker.image('slavek/anitya-server').pull()
-                docker.image('bayesian/gremlin').pull()
-            }
-
-            dir('fabric8-analytics-common') {
-                git url: 'https://github.com/fabric8-analytics/fabric8-analytics-common.git', branch: 'master', poll: false
-                dir('integration-tests') {
-                    timeout(30) {
-                        sh './runtest.sh'
-                    }
-                }
-            }
         }
     }
 
@@ -58,24 +35,45 @@ node('docker') {
             }
         }
     }
+
 }
 
 if (env.BRANCH_NAME == 'master') {
     node('oc') {
-        stage('Deploy - dev') {
-            unstash 'template'
-            sh "oc --context=dev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=ingestion -v WORKER_EXCLUDE_QUEUES=GraphImporterTask -f template.yaml | oc --context=dev apply -f -"
-            sh "oc --context=dev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=ingestion -v WORKER_INCLUDE_QUEUES=GraphImporterTask -v WORKER_NAME_SUFFIX=-graph-import -f template.yaml | oc --context=dev apply -f -"
-            sh "oc --context=dev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=api -v WORKER_RUN_DB_MIGRATIONS=1 -v WORKER_EXCLUDE_QUEUES=GraphImporterTask -f template.yaml | oc --context=dev apply -f -"
-            sh "oc --context=dev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=api -v WORKER_INCLUDE_QUEUES=GraphImporterTask -v WORKER_NAME_SUFFIX=-graph-import -f template.yaml | oc --context=dev apply -f -"
-        }
 
-        stage('Deploy - rh-idev') {
-            unstash 'template'
-            sh "oc --context=rh-idev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=ingestion -v WORKER_EXCLUDE_QUEUES=GraphImporterTask -f template.yaml | oc --context=rh-idev apply -f -"
-            sh "oc --context=rh-idev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=ingestion -v WORKER_INCLUDE_QUEUES=GraphImporterTask -v WORKER_NAME_SUFFIX=-graph-import -f template.yaml | oc --context=rh-idev apply -f -"
-            sh "oc --context=rh-idev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=api -v WORKER_RUN_DB_MIGRATIONS=1 -v WORKER_EXCLUDE_QUEUES=GraphImporterTask -f template.yaml | oc --context=rh-idev apply -f -"
-            sh "oc --context=rh-idev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=api -v WORKER_INCLUDE_QUEUES=GraphImporterTask -v WORKER_NAME_SUFFIX=-graph-import -f template.yaml | oc --context=rh-idev apply -f -"
+        def dcs = ['bayesian-worker-api', 'bayesian-worker-ingestion', 'bayesian-worker-api-graph-import', 'bayesian-worker-ingestion-graph-import']
+        lock('f8a_staging') {
+
+            stage('Deploy - Stage') {
+                unstash 'template'
+                sh "oc --context=rh-idev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=api -v WORKER_RUN_DB_MIGRATIONS=1 -v WORKER_EXCLUDE_QUEUES=GraphImporterTask -f template.yaml | oc --context=rh-idev apply -f -"
+                sh "oc --context=rh-idev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=api -v WORKER_INCLUDE_QUEUES=GraphImporterTask -v WORKER_NAME_SUFFIX=-graph-import -f template.yaml | oc --context=rh-idev apply -f -"
+                sh "oc --context=rh-idev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=ingestion -v WORKER_EXCLUDE_QUEUES=GraphImporterTask -f template.yaml | oc --context=rh-idev apply -f -"
+                sh "oc --context=rh-idev process -v IMAGE_TAG=${commitId} -v WORKER_ADMINISTRATION_REGION=ingestion -v WORKER_INCLUDE_QUEUES=GraphImporterTask -v WORKER_NAME_SUFFIX=-graph-import -f template.yaml | oc --context=rh-idev apply -f -"
+            }
+
+            stage('End-to-End Tests') {
+                def result
+                try {
+                    timeout(10) {
+                        sleep 5
+                        sh "oc logs -f dc/${dcs[0]}"
+                        def e2e = build job: 'fabric8-analytics-common-master', wait: true, propagate: false, parameters: [booleanParam(name: 'runOnOpenShift', value: true)]
+                        result = e2e.result
+                    }
+                } catch (err) {
+                    error "Error: ${err}"
+                } finally {
+                    if (!result?.equals('SUCCESS')) {
+                        dcs.each {
+                            sh "oc rollback ${it}"
+                        }
+                        error 'End-to-End tests failed.'
+                    } else {
+                        echo 'End-to-End tests passed.'
+                    }
+                }
+            }
         }
     }
 }
