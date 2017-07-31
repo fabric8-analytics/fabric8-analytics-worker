@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from itertools import chain
 from sqlalchemy.ext.declarative import declarative_base
 from selinon import StoragePool
 from f8a_worker.models import PackageAnalysis, Ecosystem, Package, PackageWorkerResult
@@ -63,3 +64,17 @@ class PackagePostgres(PostgresBase):
             count()
 
         return count
+
+    @staticmethod
+    def get_finished_task_names(analysis_id):
+        """Get name of tasks that finished in Analysis.
+
+        :param analysis_id: analysis id for which task names should retrieved
+        :return: a list of task names
+        """
+        task_names = PostgresBase.session.query(PackageWorkerResult.worker).\
+            join(PackageAnalysis).\
+            filter(PackageAnalysis.id == analysis_id).\
+            filter(PackageWorkerResult.error.is_(False)).\
+            all()
+        return list(chain(*task_names))
