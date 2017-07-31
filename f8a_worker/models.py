@@ -243,7 +243,7 @@ class Upstream(Base):
 
     id = Column(Integer, primary_key=True)
     package_id = Column(Integer, ForeignKey(Package.id), index=True)
-    url = Column(String(255), nullable=False)
+    url = Column(String(255), nullable=True)
     updated_at = Column(DateTime, default=None)
     added_at = Column(DateTime, nullable=False)
     deactivated_at = Column(DateTime, nullable=True)

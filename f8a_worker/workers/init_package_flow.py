@@ -54,9 +54,6 @@ class InitPackageFlow(BaseTask):
                 ret = entry
 
         if ret is None:
-            if url is None:
-                raise ValueError("No upstream URL provided and no previous active upstream records for %s/%s found"
-                                 % (package.ecosystem.name, package.name))
             self.log.info("Creating new upstream record entry for package %s/%s and upstream URL '%s'",
                           package.ecosystem.name, package.name, url)
             ret = Upstream(
