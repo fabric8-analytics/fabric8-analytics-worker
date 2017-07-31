@@ -9,11 +9,6 @@ Output: TBD
 import os
 import json
 import requests
-
-from f8a_worker.base import BaseTask
-from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST
-from f8a_worker.utils import get_session_retry
-
 import abc
 import os
 import datetime
@@ -22,11 +17,19 @@ import time
 
 import requests
 import json
+import logging
+
+from f8a_worker.base import BaseTask
+from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST
+from f8a_worker.utils import get_session_retry
+
+
 from joblib import Parallel, delayed
 
 from google.cloud import language
 from google.cloud import bigquery
 
+logger = logging.getLogger(__name__)
 
 class SentimentAnalyzer(object):
     @abc.abstractmethod
@@ -48,7 +51,7 @@ class GoogleSentimentAnalyzer(SentimentAnalyzer):
                                              include_entities=False)
         score = annotations.sentiment.score
         magnitude = annotations.sentiment.magnitude
-
+        logger.info('Sentiment score and magnitude is computed successfully.')
         return score, magnitude
 
 
@@ -77,7 +80,7 @@ class GooglePublicDataStore(ExternalDataStore):
 
     def get_stack_overflow_data(self, search_keyword, search_tag, num_months, max_len=90000):
         start_time = time.time()
-
+        logger.info('Started to collect data from stackoverflow for package: {}'.format(search_keyword))
         min_date = datetime.date.today() - datetime.timedelta(num_months*365/12)
         min_timestamp = min_date.strftime("%Y-%m-%d %H:%M:%S")
         sql_for_questions = \
@@ -111,6 +114,7 @@ class GooglePublicDataStore(ExternalDataStore):
 
         # output_data = output[0] + output[1]
         output_data = questions + answers
+        logger.info('Successfully collected data from stackoverflow for package: {}'.format(search_keyword))
         return output_data[:max_len] if len(output_data) > max_len else output_data
 
 
@@ -139,6 +143,7 @@ class SentimentGraphStore(SentimentCache):
         if response.status_code == 200:
             return response.json()
         else:
+            logger.info('Graph is not giving response.')
             return {}
 
     def get_sentiment_details(self, key_name):
@@ -162,7 +167,6 @@ class SentimentGraphStore(SentimentCache):
             sentiment_details['last_updated'] = \
                 pkg_properties.get('last_updated_sentiment_score')[0].get('value', 0) \
                 if 'last_updated_sentiment_score' in pkg_properties else None
-
         return sentiment_details
 
     def set_sentiment_details(self, key_name, key_value):
@@ -231,6 +235,7 @@ def sentiment_analysis(arg):
     write_key_file(local_path=key_file)
     ecosystem, pkg_name = arg
 
+    logger.info('Starting the sentiment analysis for package: {}'.format(pkg_name))
     # First, check if package sentiment is available in cache i.e. graph db
     sentiment_cache = SentimentGraphStore(graph_db_url=GREMLIN_SERVER_URL_REST)
     sentiment_output = sentiment_cache.get_sentiment_details(key_name=pkg_name)
