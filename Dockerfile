@@ -41,10 +41,13 @@ RUN mkdir /tmp/binwalk/ && \
 # Install non-Mercator python native deps
 COPY hack/pip-requirements.txt /tmp/install_deps/
 
-# Fixes: http://stackoverflow.com/questions/14296531
+# Fixes:
+# 'pip install --upgrade wheel': http://stackoverflow.com/questions/14296531
+# 'install --no-binary :all: protobuf': https://github.com/google/protobuf/issues/1296
 RUN pip3 install --upgrade pip && pip install --upgrade wheel && \
     pip3 install -r /tmp/install_deps/pip-requirements.txt && \
-    pip3 install alembic psycopg2 git+git://github.com/msrb/kombu@sqs-conn#egg=kombu
+    pip3 install alembic psycopg2 git+git://github.com/msrb/kombu@sqs-conn#egg=kombu && \
+    pip3 install --upgrade --no-binary :all: protobuf
 
 # Install github-linguist rubygem
 RUN gem install --no-document github-linguist -v 5.0.2
@@ -115,5 +118,3 @@ RUN mkdir -p /tmp/install_deps/patches/
 COPY hack/patches/* /tmp/install_deps/patches/
 # Apply patches here to be able to patch selinon as well
 RUN /tmp/install_deps/patches/apply_patches.sh
-
-RUN pip3 uninstall -y protobuf && pip3 install packaging appdirs && pip3 install --upgrade --no-binary :all: protobuf==3.3.0
