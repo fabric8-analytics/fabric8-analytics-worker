@@ -24,9 +24,29 @@ class LibrariesIoTask(BaseTask):
         return term_description.find('time').get('datetime')
 
     def get_releases(self, page):
+        latest_version = ''
+        latest_published_at = ''
+        recent = {}
+
+        releases_tag = page.find_all('div', class_="col-md-4 sidebar")[-1]
+        vers = releases_tag.find_all('dt')
+        if vers:
+            # Releases
+            latest_version = vers[0].find('a').text.strip()
+            latest_published_at = vers[0].find_next('dd').text.strip()
+            recent = {v.find('a').text.strip(): v.find_next('dd').text.strip() for v in vers[1:]}
+        else:
+            # Tagged Releases, e.g. https://libraries.io/pypi/osbs-client/
+            vers = releases_tag.find_all('dl')[1:]
+            if vers:
+                latest_version = vers[0].text.strip()
+                latest_published_at = vers[0].find_next('dd').text.strip()
+                recent = {v.text.strip(): v.find_next('dd').text.strip() for v in vers[1:]}
+
         releases = {'count': self._get_list_term_description_text(page, 'Total releases'),
-                    'latest': {'published_at': self._get_list_term_description_time(page,
-                                                                               'Latest release')}}
+                    'latest': {'version': latest_version,
+                               'published_at': latest_published_at,
+                               'recent': recent}}
         return releases
 
     def get_dependents(self, page):

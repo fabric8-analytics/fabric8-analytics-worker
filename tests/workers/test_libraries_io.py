@@ -23,7 +23,9 @@ class TestLibrariesIoTask(object):
                                                   'dependent_repositories'}
         releases = results['details']['releases']
         assert releases.get('count')
+        assert releases.get('latest', {}).get('version')
         assert releases.get('latest', {}).get('published_at')
+        assert releases.get('latest', {}).get('recent')
         dependents = results['details']['dependents']
         assert dependents.get('count')
         dependent_repos = results['details']['dependent_repositories']
