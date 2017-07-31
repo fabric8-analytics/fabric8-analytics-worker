@@ -248,6 +248,13 @@
       import: 'f8a_worker.workers'
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GraphImporterTask_v0'
+      storage: 'BayesianPostgres'
+    - name: 'PackageGraphImporterTask'
+      classname: 'GraphImporterTask'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GraphImporterTask_v0'
+      storage: 'PackagePostgres'
     - name: 'GraphSyncTask'
       import: 'f8a_worker.workers'
       max_retry: 0

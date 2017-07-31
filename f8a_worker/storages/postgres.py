@@ -2,6 +2,7 @@
 import datetime
 import hashlib
 import json
+from itertools import chain
 
 from sqlalchemy import Date, cast
 from sqlalchemy.ext.declarative import declarative_base
@@ -84,6 +85,20 @@ class BayesianPostgres(PostgresBase):
 
         return count
 
+    @staticmethod
+    def get_finished_task_names(analysis_id):
+        """Get name of tasks that finished in Analysis.
+
+        :param analysis_id: analysis id for which task names should retrieved
+        :return: a list of task names
+        """
+        task_names = PostgresBase.session.query(WorkerResult.worker).\
+            join(Analysis).\
+            filter(Analysis.id == analysis_id).\
+            filter(WorkerResult.error.is_(False)).\
+            all()
+        return list(chain(*task_names))
+
     def get_worker_id_count(self, worker_id):
         """Get number of results that has the given worker_id assigned (should be always 0 or 1).
 
@@ -92,7 +107,8 @@ class BayesianPostgres(PostgresBase):
         """
         return PostgresBase.session.query(WorkerResult).filter(WorkerResult.worker_id == worker_id).count()
 
-    def get_analysis_by_id(self, analysis_id):
+    @staticmethod
+    def get_analysis_by_id(analysis_id):
         """Get result of previously scheduled analysis
 
         :param analysis_id: str, ID of analysis
@@ -105,7 +121,8 @@ class BayesianPostgres(PostgresBase):
 
         return found
 
-    def check_api_user_entry(self, email):
+    @staticmethod
+    def check_api_user_entry(email):
         """Check if a user entry has already been made in api_requests
 
         :param email: str, user's email id
@@ -114,7 +131,9 @@ class BayesianPostgres(PostgresBase):
         return PostgresBase.session.query(APIRequests).\
             filter(APIRequests.user_email == email).first()
 
-    def store_in_bucket(self, content):
+    @staticmethod
+    def store_in_bucket(content):
+        # TODO: move to appropriate S3 storage
         s3 = StoragePool.get_connected_storage('S3UserProfileStore')
         s3.store_in_bucket(content)
 
@@ -128,7 +147,6 @@ class BayesianPostgres(PostgresBase):
         if not self.is_connected():
             self.connect()
 
-        profile_digest = None
         # Add user_profile to S3 if there is no api_requests entry available for today
         req = self.check_api_user_entry(data.get('user_email', None))
 
@@ -144,18 +162,17 @@ class BayesianPostgres(PostgresBase):
             self.store_in_bucket(data.get('user_profile'))
                 
         req = APIRequests(
-            id = external_request_id,
-            api_name = data.get('api_name', None),
-            submit_time = str(dt),
-            user_email = data.get('user_email', None),
-            user_profile_digest = profile_digest,
-            origin = data.get('origin', None),
-            team = data.get('team', None),
-            recommendation = data.get('recommendation', None),
-            request_digest = request_digest
+            id=external_request_id,
+            api_name=data.get('api_name', None),
+            submit_time=str(dt),
+            user_email=data.get('user_email', None),
+            user_profile_digest=profile_digest,
+            origin=data.get('origin', None),
+            team=data.get('team', None),
+            recommendation=data.get('recommendation', None),
+            request_digest=request_digest
         )
 
         PostgresBase.session.add(req)
         PostgresBase.session.commit()
         return True
-    

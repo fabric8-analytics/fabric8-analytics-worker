@@ -4,6 +4,7 @@
       queue: '{DEPLOYMENT_PREFIX}_ingestion_bayesianPackageFlow_v0'
       propagate_node_args: 'bayesianPackageAnalysisFlow'
       node_args_from_first: true
+      nowait: 'PackageGraphImporterTask'
       sampling:
         name: 'constant'
         args:
@@ -23,6 +24,18 @@
           to: 'PackageResultCollector'
         - from: 'PackageFinalizeTaskError'
           to: 'PackageResultCollector'
+        - from: 'PackageResultCollector'
+          to: 'PackageGraphImporterTask'
+        - from: 'InitPackageFlow'
+          to: 'PackageGraphImporterTask'
+          condition:
+            and:
+              - not:
+                  <<: *shouldSchedulePackageAnalysisCheck
+              - name: 'argsFieldEqual'
+                args:
+                  key: 'force_graph_sync'
+                  value: true
       failures:
         - nodes: 'bayesianPackageAnalysisFlow'
           fallback: 'PackageFinalizeTaskError'

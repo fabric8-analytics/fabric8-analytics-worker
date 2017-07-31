@@ -6,6 +6,7 @@
       # we will not wait for recursive analyses
       nowait:
        - 'bayesianFlow'
+       - 'bayesianPackageFlow'
       propagate_parent: 'bayesianPackageFlow'
       propagate_node_args: 'bayesianPackageFlow'
       #sampling:
