@@ -29,7 +29,7 @@ class GraphImporterTask(BaseTask):
         if not arguments.get('force_graph_sync'):
             # Tasks that need sync to graph start lowercase.
             param = {
-                'select_list': [task_name
+                'select_ingest': [task_name
                                 for task_name in self.storage.get_finished_task_names(arguments['document_id'])
                                 if task_name[0].islower()],
                 'package_list': package_list
