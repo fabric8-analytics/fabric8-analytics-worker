@@ -12,7 +12,7 @@ REQUIRES_TASK='ssdeep'
 # oscryptocatcher check from copr repo
 # OSCRYPTOCATCHER='oscryptocatcher'
 # covscan
-CSMOCK_TASK_DEPS="csmock"
+# CSMOCK_TASK_DEPS="csmock"
 # blackduck
 BD_DEPS="which java"
 # there's no python3 version of brew utils yet
