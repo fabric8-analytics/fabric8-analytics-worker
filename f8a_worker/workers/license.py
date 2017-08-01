@@ -2,7 +2,7 @@
 Uses ScanCode toolkit to detect licences in source code.
 """
 
-import os
+from os import getenv, path
 from f8a_worker.utils import TimedCommand, username
 from f8a_worker.base import BaseTask
 from f8a_worker.schemas import SchemaRef
@@ -15,9 +15,9 @@ class LicenseCheckTask(BaseTask):
     description = "Check licences of all files of a package"
     schema_ref = SchemaRef(_analysis_name, '3-0-0')
 
-    SCANCODE_LICENSE_SCORE = '20'  # scancode's default is 0
-    SCANCODE_TIMEOUT = '120'  # scancode's default is 120
-    SCANCODE_PROCESSES = '1'  # scancode's default is 1
+    SCANCODE_LICENSE_SCORE = getenv('SCANCODE_LICENSE_SCORE', '20')  # scancode's default is 0
+    SCANCODE_TIMEOUT = getenv('SCANCODE_TIMEOUT', '120')  # scancode's default is 120
+    SCANCODE_PROCESSES = getenv('SCANCODE_PROCESSES', '1')  # scancode's default is 1
     SCANCODE_IGNORE = ['*.pyc', '*.so', '*.dll', '*.rar', '*.jar',
                        '*.zip', '*.tar', '*.tar.gz', '*.tar.xz']  # don't scan binaries
 
@@ -72,8 +72,8 @@ class LicenseCheckTask(BaseTask):
                        'summary': {},
                        'details': {}}
         try:
-            command = [os.path.join(os.getenv('SCANCODE_PATH', '/opt/scancode-toolkit/'),
-                                    'scancode'),
+            command = [path.join(getenv('SCANCODE_PATH', '/opt/scancode-toolkit/'),
+                                 'scancode'),
                        # Scan for licenses
                        '--license',
                        # Do not return license matches with scores lower than this score
