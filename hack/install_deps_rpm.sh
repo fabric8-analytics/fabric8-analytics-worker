@@ -20,7 +20,7 @@ BREWUTILS="python2-brewutils"
 # mercator-go
 MERCATOR="mercator"
 # CodeMetricsTask - it requires python-pip, since we'll be installing mccabe for both Python 2 and 3
-CODE_METRICS="cloc python-pip"
+# CODE_METRICS="cloc python-pip"
 # Install all RPM deps
 yum install -y --setopt=tsflags=nodocs ${REQUIREMENTS_TXT} ${REQUIRES} \
                 ${REQUIRES_TASK} ${LINGUIST} \
