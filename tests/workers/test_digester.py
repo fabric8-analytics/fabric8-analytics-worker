@@ -24,7 +24,7 @@ class TestDigester(object):
             version=PYPI_MODULE_VERSION, target_dir=str(tmpdir))
 
         args = dict.fromkeys(('ecosystem', 'name', 'version'), 'some-value')
-        flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(str(tmpdir))
+        # flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(str(tmpdir))
         flexmock(EPVCache).should_receive('get_source_tarball').and_return(artifact_path)
         task = DigesterTask.create_test_instance(task_name='digests')
         results = task.execute(arguments=args)

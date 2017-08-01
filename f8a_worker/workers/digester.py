@@ -63,18 +63,15 @@ class DigesterTask(BaseTask):
         self._strict_assert(arguments.get('version'))
 
         epv_cache = ObjectCache.get_from_dict(arguments)
-        cache_path = epv_cache.get_extracted_source_tarball()
+        # cache_path = epv_cache.get_extracted_source_tarball()
 
         results = []
-        for f in get_all_files_from(cache_path, path_filter=skip_git_files):
-            results.append(self.compute_digests(cache_path, f))
+        # We don't compute digests of files in extracted tarball, only the tarball itself
+        # for f in get_all_files_from(cache_path, path_filter=skip_git_files):
+        #    results.append(self.compute_digests(cache_path, f))
 
-        # In case of nodejs, prior to npm-2.x.x (Fedora 24)
-        # npm client was repackaging modules on download.
-        # It modified file permissions inside package.tgz so they matched UID/GID
-        # of a user running npm command. Therefore its digest was different
-        # then of a tarball downloaded directly from registry.npmjs.org.
         source_tarball_path = epv_cache.get_source_tarball()
-        results.append(self.compute_digests(source_tarball_path, source_tarball_path, artifact=True))
+        # Compute digests of tarball and mark it as such
+        results.append(self.compute_digests(None, source_tarball_path, artifact=True))
 
         return {'summary': [], 'status': 'success', 'details': results}
