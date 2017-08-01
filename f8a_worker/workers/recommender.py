@@ -516,7 +516,10 @@ class RecommendationV2Task(BaseTask):
         """Calls the PGM model with the normalized manifest information to get the relevant packages"""
         try:
             if payload is not None and 'ecosystem' in payload:
-                pgm_url = PGM_URL_REST + "-" + payload['ecosystem'] + "/api/v1/schemas/kronos_scoring"
+                PGM_SERVICE_HOST = os.environ.get("PGM_SERVICE_HOST") + "-" + payload['ecosystem']
+                PGM_URL_REST = "http://{host}:{port}".format(host=PGM_SERVICE_HOST,
+                                                             port=os.environ.get("PGM_SERVICE_PORT"))
+                pgm_url = PGM_URL_REST + "/api/v1/schemas/kronos_scoring"
                 response = get_session_retry().post(pgm_url, json=payload)
                 if response.status_code != 200:
                     self.log.error("HTTP error {}. Error retrieving PGM data.".format(response.status_code))
