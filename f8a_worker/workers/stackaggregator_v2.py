@@ -120,9 +120,23 @@ def aggregate_stack_data(stack, manifest_file, ecosystem, deps):
     try:
         license_req = get_session_retry().post(license_url, data=json.dumps(payload))
         resp = license_req.json()
+
         stack_license = [resp.get('stack_license')]
+        stack_license_conflict_packages =  [resp.get('stack_license_conflict_packages')]
+        stack_license_outlier_packages  =  [resp.get('stack_license_outlier_packages')]
+
+        if len(stack_license_conflict_packages[0]) > 0:
+            stack_license_conflict = True
+        else:
+            stack_license_conflict = False
+
     except:
+        # TODO: Better Exception handling. Need to do logging.
+        print("Some error happened in license api call. Investigate")
         stack_license = [None]
+        stack_license_conflict_packages = [None]
+        stack_license_outlier_packages = [None]
+        stack_license_conflict = [None]
 
     data = {
             "manifest_name": manifest_file,
@@ -135,11 +149,14 @@ def aggregate_stack_data(stack, manifest_file, ecosystem, deps):
                 "recommendation_ready": True,  # based on the percentage of dependencies analysed
                 "total_licenses": len(stack_distinct_licenses),
                 "distinct_licenses": list(stack_distinct_licenses),
-                "stack_license_conflict": True if stack_license[0] is None else False,
-                "recommended_stack_licenses": stack_license,
+                "stack_license_conflict": stack_license_conflict,  # Is there a conflict in licenses
+                "recommended_stack_licenses": stack_license,  # License of the stack
+                "stack_license_conflict_packages" : stack_license_conflict_packages, # list of conflicting license packages
+                "stack_license_outlier_packages": stack_license_outlier_packages, # List of outlier packages wrt license
                 "dependencies": dependencies
             }
     }
+
     return data
 
 
