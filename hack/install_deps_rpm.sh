@@ -5,13 +5,8 @@
 REQUIREMENTS_TXT='postgresql-devel python34-devel libxml2-devel libxslt-devel python34-requests python34-pycurl'
 # f8a_worker/process.py requirements
 REQUIRES='git /usr/bin/npm rubygems unzip tar file findutils koji rpmdevtools nodejs-packaging wget'
-# BinwalkTask DigesterTask
-# binwalk is installed from the latest release from https://github.com/devttys0/binwalk, since the package on pip is broken, and project documentation recommends `python setup.py install` as the recommended way.
-# REQUIRES_TASK='binwalk ssdeep'
+# DigesterTask
 REQUIRES_TASK='ssdeep'
-# LinguistTask
-# github-linguist gem is installed using "gem install" in Dockerfile since no epel package is available for this gem.
-# LINGUIST='rubygem-github-linguist'
 # oscryptocatcher check from copr repo
 # OSCRYPTOCATCHER='oscryptocatcher'
 # covscan
