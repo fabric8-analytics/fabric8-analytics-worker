@@ -13,6 +13,7 @@ from f8a_worker.base import BaseTask
 from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST, LICENSE_SCORING_URL_REST
 from f8a_worker.utils import get_session_retry
 
+import logging
 
 def extract_component_details(component):
     github_details = {
@@ -117,12 +118,34 @@ def aggregate_stack_data(stack, manifest_file, ecosystem, deps):
         "packages": license_score_list
     }
 
+    _logger = logging.getLogger(__name__)
+
     try:
         license_req = get_session_retry().post(license_url, data=json.dumps(payload))
         resp = license_req.json()
-        stack_license = [resp.get('stack_license')]
+        
+        stack_license_exists = resp.get("stack_license_exists") 
+        package_with_unknown_license_exists = resp.get("package_with_unknown_license_exists")
+        stack_license_conflict_exists = resp.get("stack_license_conflict_exists")
+        package_license_conflict_exists = resp.get("package_license_conflict_exists")
+        packages_with_license_conflict = resp.get("packages_with_license_conflict")
+        recommended_stack_licenses = resp.get("recommended_stack_licenses")
+        stack_license_conflict_packages = resp.get("stack_license_conflict_packages")
+        stack_license_outlier_packages = resp.get("stack_license_outlier_packages")
+
     except:
-        stack_license = [None]
+        _logger.error("Error getting data from Stack License API")
+
+        #Construct default response if API has issues
+        stack_license_exists = False 
+        package_with_unknown_license_exists = True
+        stack_license_conflict_exists = True
+        package_license_conflict_exists = True
+        packages_with_license_conflict = [None]
+        recommended_stack_licenses = [None]
+        stack_license_conflict_packages = [None]
+        stack_license_outlier_packages = [None]
+
 
     data = {
             "manifest_name": manifest_file,
@@ -135,11 +158,18 @@ def aggregate_stack_data(stack, manifest_file, ecosystem, deps):
                 "recommendation_ready": True,  # based on the percentage of dependencies analysed
                 "total_licenses": len(stack_distinct_licenses),
                 "distinct_licenses": list(stack_distinct_licenses),
-                "stack_license_conflict": True if stack_license[0] is None else False,
-                "recommended_stack_licenses": stack_license,
-                "dependencies": dependencies
+                "dependencies": dependencies,
+                "stack_license_exists":stack_license_exists, # Does stack license exist
+                "package_with_unknown_license_exists": package_with_unknown_license_exists, # Are there unknown licenses
+                "stack_license_conflict_exists": stack_license_conflict_exists, # Is there a license conflict amongst packages
+                "package_license_conflict_exists": package_license_conflict_exists, # Is there a license conflict within a package
+                "packages_with_license_conflict": packages_with_license_conflict, # Packages with license conflict
+                "recommended_stack_licenses": recommended_stack_licenses, # stack license
+                "stack_license_conflict_packages": stack_license_conflict_packages, # packages causing license conflict
+                "stack_license_outlier_packages": stack_license_outlier_packages # Outlier packages for license
             }
     }
+
     return data
 
 
