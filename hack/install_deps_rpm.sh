@@ -14,15 +14,18 @@ REQUIRES_TASK='ssdeep'
 # covscan
 # CSMOCK_TASK_DEPS="csmock"
 # blackduck
-BD_DEPS="which java"
+# BD_DEPS="which java"
 # there's no python3 version of brew utils yet
 BREWUTILS="python2-brewutils"
 # mercator-go
 MERCATOR="mercator"
 # CodeMetricsTask - it requires python-pip, since we'll be installing mccabe for both Python 2 and 3
 # CODE_METRICS="cloc python-pip"
+# OWASP dependency-check used by CVEcheckerTask
+DEPENDENCY_CHECK="which"
 # Install all RPM deps
 yum install -y --setopt=tsflags=nodocs ${REQUIREMENTS_TXT} ${REQUIRES} \
                 ${REQUIRES_TASK} ${LINGUIST} \
                 ${OSCRYPTOCATCHER} ${CSMOCK_TASK_DEPS} \
-                ${BD_DEPS} ${BREWUTILS} ${MERCATOR} ${CODE_METRICS}
+                ${BD_DEPS} ${BREWUTILS} ${MERCATOR} ${CODE_METRICS} \
+                ${DEPENDENCY_CHECK}
