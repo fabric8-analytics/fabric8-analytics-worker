@@ -7,6 +7,7 @@ from f8a_worker.utils import TimedCommand, username
 from f8a_worker.base import BaseTask
 from f8a_worker.schemas import SchemaRef
 from f8a_worker.object_cache import ObjectCache
+from selinon import FatalTaskError
 
 
 class LicenseCheckTask(BaseTask):
@@ -17,7 +18,8 @@ class LicenseCheckTask(BaseTask):
     SCANCODE_LICENSE_SCORE = '20'  # scancode's default is 0
     SCANCODE_TIMEOUT = '120'  # scancode's default is 120
     SCANCODE_PROCESSES = '1'  # scancode's default is 1
-    SCANCODE_IGNORE = ['*.pyc', '*.so', '*.dll']  # don't scan binaries
+    SCANCODE_IGNORE = ['*.pyc', '*.so', '*.dll', '*.rar', '*.jar',
+                       '*.zip', '*.tar', '*.tar.gz', '*.tar.xz']  # don't scan binaries
 
     @staticmethod
     def process_output(data):
@@ -88,12 +90,14 @@ class LicenseCheckTask(BaseTask):
                        '--timeout', self.SCANCODE_TIMEOUT,
                        cache_path]
             for ignore_pattern in self.SCANCODE_IGNORE:
-                command += ['--ignore', '"{}"'.format(ignore_pattern)]
+                command += ['--ignore', '{}'.format(ignore_pattern)]
             with username():
-                output = TimedCommand.get_command_output(command,
-                                                         graceful=False,
-                                                         is_json=True,
-                                                         timeout=1200)
+                tc = TimedCommand(command)
+                status, output, error = tc.run(is_json=True, timeout=1200)
+                if status != 0:
+                    self.log.error(error)
+                    raise FatalTaskError("Error (%s) during running command %s: %r" % (str(status), command, output))
+
             details = self.process_output(output)
             result_data['details'] = details
             result_data['status'] = 'success'
