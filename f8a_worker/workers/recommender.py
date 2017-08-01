@@ -516,7 +516,7 @@ class RecommendationV2Task(BaseTask):
         """Calls the PGM model with the normalized manifest information to get the relevant packages"""
         try:
             # TODO remove hardcodedness for payloads with multiple ecosystems
-            if payload is not None and 'ecosystem' in payload[0]:
+            if payload and 'ecosystem' in payload[0]:
                 PGM_SERVICE_HOST = os.environ.get("PGM_SERVICE_HOST") + "-" + payload[0]['ecosystem']
                 PGM_URL_REST = "http://{host}:{port}".format(host=PGM_SERVICE_HOST,
                                                              port=os.environ.get("PGM_SERVICE_PORT"))
