@@ -33,14 +33,18 @@ class LibrariesIoTask(BaseTask):
         if vers:
             # Releases
             latest_version = vers[0].find('a').text.strip()
-            latest_published_at = vers[0].find_next('dd').text.strip()
+            # latest_published_at = vers[0].find_next('dd').text.strip()
+            # 'Latest release' tag has the time in iso format
+            latest_published_at = self._get_list_term_description_time(page, 'Latest release')
             recent = {v.find('a').text.strip(): v.find_next('dd').text.strip() for v in vers[1:]}
         else:
             # Tagged Releases, e.g. https://libraries.io/pypi/osbs-client/
             vers = releases_tag.find_all('dl')[1:]
             if vers:
                 latest_version = vers[0].text.strip()
-                latest_published_at = vers[0].find_next('dd').text.strip()
+                # latest_published_at = vers[0].find_next('dd').text.strip()
+                # 'Latest release' tag has the time in iso format
+                latest_published_at = self._get_list_term_description_time(page, 'Latest release')
                 recent = {v.text.strip(): v.find_next('dd').text.strip() for v in vers[1:]}
 
         releases = {'count': self._get_list_term_description_text(page, 'Total releases'),
