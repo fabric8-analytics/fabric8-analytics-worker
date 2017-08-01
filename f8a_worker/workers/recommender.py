@@ -6,7 +6,7 @@ from collections import Counter
 import re
 import logging
 
-from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST, create_package_dict, PGM_URL_REST
+from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST, create_package_dict
 from f8a_worker.base import BaseTask
 from f8a_worker.conf import get_configuration
 from f8a_worker.utils import get_session_retry
@@ -514,9 +514,13 @@ class RecommendationV2Task(BaseTask):
 
     def call_pgm(self, payload):
         """Calls the PGM model with the normalized manifest information to get the relevant packages"""
-        pgm_url = PGM_URL_REST + "/api/v1/schemas/kronos_scoring"
         try:
-            if payload is not None:
+            # TODO remove hardcodedness for payloads with multiple ecosystems
+            if payload and 'ecosystem' in payload[0]:
+                PGM_SERVICE_HOST = os.environ.get("PGM_SERVICE_HOST") + "-" + payload[0]['ecosystem']
+                PGM_URL_REST = "http://{host}:{port}".format(host=PGM_SERVICE_HOST,
+                                                             port=os.environ.get("PGM_SERVICE_PORT"))
+                pgm_url = PGM_URL_REST + "/api/v1/schemas/kronos_scoring"
                 response = get_session_retry().post(pgm_url, json=payload)
                 if response.status_code != 200:
                     self.log.error("HTTP error {}. Error retrieving PGM data.".format(response.status_code))
