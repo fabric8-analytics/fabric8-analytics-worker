@@ -32,12 +32,6 @@ RUN yum install -y epel-release && \
     /tmp/install_deps/install_deps_rpm.sh && \
     yum clean all
 
-# Install binwalk, the pip package is broken, following docs from github.com/devttys0/binwalk
-RUN mkdir /tmp/binwalk/ && \
-    curl -L https://github.com/devttys0/binwalk/archive/v2.1.1.tar.gz | tar xz -C /tmp/binwalk/ --strip-components 1 && \
-    python /tmp/binwalk/setup.py install && \
-    rm -rf /tmp/binwalk/
-
 # Fixes:
 # 'pip install --upgrade wheel': http://stackoverflow.com/questions/14296531
 # 'install --no-binary :all: protobuf': https://github.com/google/protobuf/issues/1296
@@ -51,6 +45,12 @@ RUN gem install --no-document github-linguist -v 5.0.2
 # Install javascript deps
 COPY hack/install_deps_npm.sh /tmp/install_deps/
 RUN /tmp/install_deps/install_deps_npm.sh
+
+# Install binwalk, the pip package is broken, following docs from github.com/devttys0/binwalk
+#RUN mkdir /tmp/binwalk/ && \
+#    curl -L https://github.com/devttys0/binwalk/archive/v2.1.1.tar.gz | tar xz -C /tmp/binwalk/ --strip-components 1 && \
+#    python /tmp/binwalk/setup.py install && \
+#    rm -rf /tmp/binwalk/
 
 # Install BlackDuck CLI
 #COPY hack/install_bd.sh /tmp/install_deps/
