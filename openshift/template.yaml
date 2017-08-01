@@ -194,7 +194,7 @@ objects:
           - name: PGBOUNCER_SERVICE_HOST
             value: bayesian-pgbouncer
           - name: PGM_SERVICE_HOST
-            value: kronos-stack-analysis.dev.rdu2c.fabric8.io
+            value: bayesian-kronos
           - name: MAX_COMPANION_PACKAGES
             value: "5"
           - name: MAX_ALTERNATE_PACKAGES
