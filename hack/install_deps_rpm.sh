@@ -11,8 +11,6 @@ REQUIRES_TASK='ssdeep'
 # OSCRYPTOCATCHER='oscryptocatcher'
 # covscan
 CSMOCK_TASK_DEPS="csmock"
-# gofedlib
-GOFEDLIB_DEPS="golang"
 # blackduck
 BD_DEPS="which java"
 # there's no python3 version of brew utils yet
@@ -24,5 +22,5 @@ CODE_METRICS="cloc python-pip"
 # Install all RPM deps
 yum install -y --setopt=tsflags=nodocs ${REQUIREMENTS_TXT} ${REQUIRES} \
                 ${REQUIRES_TASK} ${LINGUIST} \
-                ${OSCRYPTOCATCHER} ${CSMOCK_TASK_DEPS} ${GOFEDLIB_DEPS} \
+                ${OSCRYPTOCATCHER} ${CSMOCK_TASK_DEPS} \
                 ${BD_DEPS} ${BREWUTILS} ${MERCATOR} ${CODE_METRICS}
