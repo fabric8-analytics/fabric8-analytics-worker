@@ -89,7 +89,7 @@ class LicenseCheckTask(BaseTask):
                        '--timeout', self.SCANCODE_TIMEOUT,
                        cache_path]
             for ignore_pattern in self.SCANCODE_IGNORE:
-                command += ['--ignore', '"{}"'.format(ignore_pattern)]
+                command += ['--ignore', '{}'.format(ignore_pattern)]
             with username():
                 tc = TimedCommand(command)
                 status, output, error = tc.run(is_json=True, timeout=1200)
