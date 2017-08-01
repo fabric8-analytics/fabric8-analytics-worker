@@ -6,7 +6,7 @@ from collections import Counter
 import re
 import logging
 
-from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST, create_package_dict, PGM_URL_REST
+from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST, create_package_dict
 from f8a_worker.base import BaseTask
 from f8a_worker.conf import get_configuration
 from f8a_worker.utils import get_session_retry
