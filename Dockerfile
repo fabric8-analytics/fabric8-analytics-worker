@@ -38,14 +38,10 @@ RUN mkdir /tmp/binwalk/ && \
     python /tmp/binwalk/setup.py install && \
     rm -rf /tmp/binwalk/
 
-# Install non-Mercator python native deps
-COPY hack/pip-requirements.txt /tmp/install_deps/
-
 # Fixes:
 # 'pip install --upgrade wheel': http://stackoverflow.com/questions/14296531
 # 'install --no-binary :all: protobuf': https://github.com/google/protobuf/issues/1296
 RUN pip3 install --upgrade pip && pip install --upgrade wheel && \
-    pip3 install -r /tmp/install_deps/pip-requirements.txt && \
     pip3 install alembic psycopg2 git+git://github.com/msrb/kombu@sqs-conn#egg=kombu && \
     pip3 install --upgrade --no-binary :all: protobuf
 
