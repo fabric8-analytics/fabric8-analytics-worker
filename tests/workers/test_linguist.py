@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from os.path import isfile
 import pytest
 from flexmock import flexmock
 from f8a_worker.object_cache import EPVCache
@@ -14,6 +15,8 @@ MODULE_VERSION = '1.10.0'
 
 @pytest.mark.usefixtures("dispatcher_setup")
 class TestLinguist(object):
+    @pytest.mark.skipif(not isfile('/usr/local/bin/linguist'),
+                        reason="requires linguist")
     @pytest.mark.usefixtures("no_s3_connection")
     def test_execute(self, tmpdir):
         IndianaJones.fetch_artifact(
