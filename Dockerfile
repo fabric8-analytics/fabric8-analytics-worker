@@ -28,7 +28,7 @@ COPY hack/_copr_jpopelka-mercator.repo hack/_copr_jpopelka-python-brewutils.repo
 # Install RPM dependencies
 COPY hack/install_deps_rpm.sh /tmp/install_deps/
 RUN yum install -y epel-release && \
-    yum install -y python34-pip python2-pip openssl libicu-devel gcc-c++ cmake postgresql && \
+    yum install -y --setopt=tsflags=nodocs python34-pip python2-pip openssl libicu-devel gcc-c++ cmake postgresql && \
     /tmp/install_deps/install_deps_rpm.sh && \
     yum clean all
 
