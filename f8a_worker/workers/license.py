@@ -18,7 +18,8 @@ class LicenseCheckTask(BaseTask):
     SCANCODE_LICENSE_SCORE = '20'  # scancode's default is 0
     SCANCODE_TIMEOUT = '120'  # scancode's default is 120
     SCANCODE_PROCESSES = '1'  # scancode's default is 1
-    SCANCODE_IGNORE = ['*.pyc', '*.so', '*.dll']  # don't scan binaries
+    SCANCODE_IGNORE = ['*.pyc', '*.so', '*.dll', '*.rar', '*.jar',
+                       '*.zip', '*.tar', '*.tar.gz', '*.tar.xz']  # don't scan binaries
 
     @staticmethod
     def process_output(data):
