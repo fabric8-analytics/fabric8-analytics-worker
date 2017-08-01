@@ -4,9 +4,11 @@
 # python3-pycurl is needed for Amazon SQS (boto lib), we need Fedora's rpm - installing it from pip results in NSS errors
 REQUIREMENTS_TXT='postgresql-devel python34-devel libxml2-devel libxslt-devel python34-requests python34-pycurl'
 # f8a_worker/process.py requirements
-REQUIRES='git /usr/bin/npm rubygems unzip tar file findutils koji rpmdevtools nodejs-packaging wget'
+REQUIRES='git /usr/bin/npm unzip tar file findutils koji rpmdevtools nodejs-packaging wget'
 # DigesterTask
 REQUIRES_TASK='ssdeep'
+# github-linguist (languages)
+# LINGUIST='rubygems ruby-devel'
 # oscryptocatcher check from copr repo
 # OSCRYPTOCATCHER='oscryptocatcher'
 # covscan

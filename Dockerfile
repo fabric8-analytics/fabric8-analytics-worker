@@ -28,7 +28,7 @@ COPY hack/_copr_jpopelka-mercator.repo hack/_copr_jpopelka-python-brewutils.repo
 # Install RPM dependencies
 COPY hack/install_deps_rpm.sh /tmp/install_deps/
 RUN yum install -y epel-release && \
-    yum install -y python34-pip openssl ruby-devel libicu-devel gcc-c++ cmake postgresql && \
+    yum install -y python34-pip openssl libicu-devel gcc-c++ cmake postgresql && \
     /tmp/install_deps/install_deps_rpm.sh && \
     yum clean all
 
@@ -39,9 +39,6 @@ RUN pip3 install --upgrade pip && pip install --upgrade wheel && \
     pip3 install alembic psycopg2 git+git://github.com/msrb/kombu@sqs-conn#egg=kombu && \
     pip3 install --upgrade --no-binary :all: protobuf
 
-# Install github-linguist rubygem
-RUN gem install --no-document github-linguist -v 5.0.2
-
 # Install javascript deps
 COPY hack/install_deps_npm.sh /tmp/install_deps/
 RUN /tmp/install_deps/install_deps_npm.sh
@@ -51,6 +48,9 @@ RUN /tmp/install_deps/install_deps_npm.sh
 #    curl -L https://github.com/devttys0/binwalk/archive/v2.1.1.tar.gz | tar xz -C /tmp/binwalk/ --strip-components 1 && \
 #    python /tmp/binwalk/setup.py install && \
 #    rm -rf /tmp/binwalk/
+
+# Languages scanner
+# RUN gem install --no-document github-linguist
 
 # Install BlackDuck CLI
 #COPY hack/install_bd.sh /tmp/install_deps/
