@@ -206,7 +206,7 @@ objects:
           - name: LICENSE_SERVICE_HOST
             value: stack-license-stack-license.dev.rdu2c.fabric8.io
           - name: PGM_SERVICE_PORT
-            value: "80"
+            value: "6006"
           - name: LICENSE_SERVICE_PORT
             value: "80"
           - name: F8A_SERVER_SERVICE_HOST
