@@ -7,7 +7,8 @@ COPY . /f8a_worker
 WORKDIR /f8a_worker
 RUN cd tests && pip3 install -r ./requirements.txt
 
-RUN useradd -o -u 1000 -G mock f8a
+RUN yum install -y --setopt=tsflags=nodocs mock && yum clean all && \
+    useradd -o -u 1000 -G mock f8a
 USER f8a
 
 CMD ["py.test"]
