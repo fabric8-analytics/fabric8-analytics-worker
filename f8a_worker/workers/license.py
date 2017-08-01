@@ -4,10 +4,10 @@ Uses ScanCode toolkit to detect licences in source code.
 
 import os
 from f8a_worker.utils import TimedCommand, username
-from f8a_worker.errors import TaskError
 from f8a_worker.base import BaseTask
 from f8a_worker.schemas import SchemaRef
 from f8a_worker.object_cache import ObjectCache
+from selinon import FatalTaskError
 
 
 class LicenseCheckTask(BaseTask):
@@ -96,7 +96,7 @@ class LicenseCheckTask(BaseTask):
                 status, output, error = tc.run(is_json=True, timeout=1200)
                 if status != 0:
                     self.log.error(error)
-                    raise TaskError("Error (%s) during running command %s: %r" % (str(status), command, output))
+                    raise FatalTaskError("Error (%s) during running command %s: %r" % (str(status), command, output))
 
             details = self.process_output(output)
             result_data['details'] = details
