@@ -657,7 +657,7 @@ class PostgresSessionWrapper(object):
                 raise
 
         if item in ('query', 'commit', 'add'):
-            return decorated(getattr(self._session, item))
+            return decorated(getattr, self._session, item)
 
         return getattr(self._session, item)
 
