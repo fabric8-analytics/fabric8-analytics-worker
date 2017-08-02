@@ -28,7 +28,6 @@ COPY hack/_copr_jpopelka-mercator.repo hack/_copr_jpopelka-python-brewutils.repo
 # Install RPM dependencies
 COPY hack/install_deps_rpm.sh /tmp/install_deps/
 RUN yum install -y epel-release && \
-    yum install -y --setopt=tsflags=nodocs python34-pip python2-pip openssl libicu-devel gcc-c++ cmake postgresql && \
     /tmp/install_deps/install_deps_rpm.sh && \
     yum clean all
 
@@ -55,6 +54,9 @@ RUN /tmp/install_deps/install_deps_npm.sh
 # Install BlackDuck CLI
 #COPY hack/install_bd.sh /tmp/install_deps/
 #RUN /tmp/install_deps/install_bd.sh
+# Import BlackDuck Hub CA cert
+#COPY hack/import_BD_CA_cert.sh /tmp/install_deps/
+#RUN /tmp/install_deps/import_BD_CA_cert.sh
 
 # Install JavaNCSS for code metrics
 #COPY hack/install_javancss.sh /tmp/install_deps/
@@ -76,10 +78,6 @@ RUN pip3 install -r /tmp/install_deps/py23requirements.txt
 # Import RH CA cert
 COPY hack/import_RH_CA_cert.sh /tmp/install_deps/
 RUN /tmp/install_deps/import_RH_CA_cert.sh
-
-# Import BlackDuck Hub CA cert
-#COPY hack/import_BD_CA_cert.sh /tmp/install_deps/
-#RUN /tmp/install_deps/import_BD_CA_cert.sh
 
 # Make sure random user has place to store files
 RUN mkdir -p ${HOME} ${WORKER_DATA_DIR} ${ALEMBIC_DIR}/alembic/ && \
