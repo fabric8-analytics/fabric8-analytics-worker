@@ -8,9 +8,10 @@ from f8a_worker.workers import OSCryptoCatcherTask
 from f8a_worker.object_cache import EPVCache
 
 
-@pytest.mark.skip(reason="we don't have oscryptocatcher installed in the image")
 @pytest.mark.usefixtures("dispatcher_setup")
 class TestOSCryptoCatcher(object):
+    @pytest.mark.skipif(not os.path.isfile('/usr/bin/oscryptocatcher'),
+                        reason="requires oscryptocatcher")
     @pytest.mark.usefixtures("no_s3_connection")
     def test_ssl_py(self):
         path = sys.modules['ssl'].__file__  # /usr/lib64/python2.7/ssl.pyc

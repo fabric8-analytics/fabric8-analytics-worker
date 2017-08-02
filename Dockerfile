@@ -28,15 +28,8 @@ COPY hack/_copr_jpopelka-mercator.repo hack/_copr_jpopelka-python-brewutils.repo
 # Install RPM dependencies
 COPY hack/install_deps_rpm.sh /tmp/install_deps/
 RUN yum install -y epel-release && \
-    yum install -y python34-pip openssl ruby-devel libicu-devel gcc-c++ cmake postgresql && \
     /tmp/install_deps/install_deps_rpm.sh && \
     yum clean all
-
-# Install binwalk, the pip package is broken, following docs from github.com/devttys0/binwalk
-RUN mkdir /tmp/binwalk/ && \
-    curl -L https://github.com/devttys0/binwalk/archive/v2.1.1.tar.gz | tar xz -C /tmp/binwalk/ --strip-components 1 && \
-    python /tmp/binwalk/setup.py install && \
-    rm -rf /tmp/binwalk/
 
 # Fixes:
 # 'pip install --upgrade wheel': http://stackoverflow.com/questions/14296531
@@ -45,20 +38,29 @@ RUN pip3 install --upgrade pip && pip install --upgrade wheel && \
     pip3 install alembic psycopg2 git+git://github.com/msrb/kombu@sqs-conn#egg=kombu && \
     pip3 install --upgrade --no-binary :all: protobuf
 
-# Install github-linguist rubygem
-RUN gem install --no-document github-linguist -v 5.0.2
-
 # Install javascript deps
 COPY hack/install_deps_npm.sh /tmp/install_deps/
 RUN /tmp/install_deps/install_deps_npm.sh
 
+# Install binwalk, the pip package is broken, following docs from github.com/devttys0/binwalk
+#RUN mkdir /tmp/binwalk/ && \
+#    curl -L https://github.com/devttys0/binwalk/archive/v2.1.1.tar.gz | tar xz -C /tmp/binwalk/ --strip-components 1 && \
+#    python /tmp/binwalk/setup.py install && \
+#    rm -rf /tmp/binwalk/
+
+# Languages scanner
+# RUN gem install --no-document github-linguist
+
 # Install BlackDuck CLI
 #COPY hack/install_bd.sh /tmp/install_deps/
 #RUN /tmp/install_deps/install_bd.sh
+# Import BlackDuck Hub CA cert
+#COPY hack/import_BD_CA_cert.sh /tmp/install_deps/
+#RUN /tmp/install_deps/import_BD_CA_cert.sh
 
 # Install JavaNCSS for code metrics
-COPY hack/install_javancss.sh /tmp/install_deps/
-RUN /tmp/install_deps/install_javancss.sh
+#COPY hack/install_javancss.sh /tmp/install_deps/
+#RUN /tmp/install_deps/install_javancss.sh
 
 # Install OWASP dependency-check cli for security scan of jar files
 COPY hack/install_owasp_dependency-check.sh /tmp/install_deps/
@@ -76,10 +78,6 @@ RUN pip3 install -r /tmp/install_deps/py23requirements.txt
 # Import RH CA cert
 COPY hack/import_RH_CA_cert.sh /tmp/install_deps/
 RUN /tmp/install_deps/import_RH_CA_cert.sh
-
-# Import BlackDuck Hub CA cert
-#COPY hack/import_BD_CA_cert.sh /tmp/install_deps/
-#RUN /tmp/install_deps/import_BD_CA_cert.sh
 
 # Make sure random user has place to store files
 RUN mkdir -p ${HOME} ${WORKER_DATA_DIR} ${ALEMBIC_DIR}/alembic/ && \
