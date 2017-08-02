@@ -7,6 +7,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 from selinon import DataStorage
 from f8a_worker.models import Analysis, Ecosystem, Package, Version, WorkerResult
+from f8a_worker.utils import PostgresSessionWrapper
 
 
 Base = declarative_base()
@@ -61,7 +62,7 @@ class PostgresBase(DataStorage):
             pool_size=1,
             max_overflow=-1
         )
-        PostgresBase.session = sessionmaker(bind=engine)()
+        PostgresBase.session = PostgresSessionWrapper(sessionmaker(bind=engine)())
         Base.metadata.create_all(engine)
 
     def disconnect(self):
