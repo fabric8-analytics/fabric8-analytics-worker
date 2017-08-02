@@ -656,7 +656,7 @@ class PostgresSessionWrapper(object):
                 self._session.rollback()
                 raise
 
-        if item == ('query', 'commit', 'add'):
+        if item in ('query', 'commit', 'add'):
             return decorated(getattr(self._session, item))
 
         return getattr(self._session, item)
