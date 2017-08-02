@@ -641,5 +641,25 @@ def get_session_retry(retries=3, backoff_factor=0.2, status_forcelist=(404, 500,
     session.mount('http://', adapter)
     return session
 
+
+class PostgresSessionWrapper(object):
+    """Wrapper for PostgreSQL session."""
+
+    def __init__(self, session):
+        self._session = session
+
+    def __getattr__(self, item):
+        def decorated(func, *args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except SQLAlchemyError:
+                self._session.rollback()
+                raise
+
+        if item == ('query', 'commit', 'add'):
+            return decorated(getattr(self._session, item))
+
+        return getattr(self._session, item)
+
 # get not hidden files from current directory
 # print(list(get_all_files_from('.', file_filter=lambda a: not startswith(a, ['.']))))
