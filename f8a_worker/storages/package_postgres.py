@@ -2,6 +2,7 @@
 
 from itertools import chain
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm.exc import NoResultFound
 from selinon import StoragePool
 from f8a_worker.models import PackageAnalysis, Ecosystem, Package, PackageWorkerResult
 from f8a_worker.utils import MavenCoordinates
@@ -78,3 +79,29 @@ class PackagePostgres(PostgresBase):
             filter(PackageWorkerResult.error.is_(False)).\
             all()
         return list(chain(*task_names))
+
+    def get_latest_task_result(self, ecosystem, package, task_name, error=False):
+        """Get latest task result based on task name
+
+        :param ecosystem: name of the ecosystem
+        :param package: name of the package
+        :param task_name: name of task for which the latest result should be obtained
+        :param error: if False, avoid returning entries that track errors
+        """
+        # TODO: we should store date timestamps directly in PackageWorkerResult
+        if not self.is_connected():
+            self.connect()
+
+        try:
+            record = PostgresBase.session.query(PackageWorkerResult).\
+                join(PackageAnalysis).\
+                join(Package).join(Ecosystem).\
+                filter(PackageWorkerResult.worker == task_name).\
+                filter(Package.name == package).\
+                filter(Ecosystem.name == ecosystem).\
+                filter(PackageWorkerResult.error.is_(error)).\
+                order_by(PackageAnalysis.finished_at.desc()).first()
+        except NoResultFound:
+            return None
+
+        return record
