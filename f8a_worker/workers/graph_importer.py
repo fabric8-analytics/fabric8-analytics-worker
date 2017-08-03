@@ -42,7 +42,7 @@ class GraphImporterTask(BaseTask):
             param = package_list
             endpoint = self._INGEST_API_URL
 
-        self.log.info("Invoke graph importer at url: '%s' for %s", self._API_URL, param)
+        self.log.info("Invoke graph importer at url: '%s' for %s", endpoint, param)
         response = requests.post(endpoint, json=param)
 
         if response.status_code != 200:
