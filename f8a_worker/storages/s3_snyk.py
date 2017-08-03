@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import json
 from dateutil import parser as datetime_parser
 from datetime import datetime, timezone
 from . import AmazonS3

@@ -4,7 +4,6 @@ import hashlib
 import json
 from itertools import chain
 
-from sqlalchemy import Date, cast
 from sqlalchemy.ext.declarative import declarative_base
 from selinon import StoragePool
 from f8a_worker.models import Analysis, Ecosystem, Package, Version, WorkerResult, APIRequests
