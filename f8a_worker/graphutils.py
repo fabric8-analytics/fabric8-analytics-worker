@@ -210,75 +210,77 @@ def create_package_dict(graph_results, alt_dict=None):
     pkg_list = []
 
     for epv in graph_results:
-        ecosystem = epv['ver']['pecosystem'][0]
-        name = epv['ver']['pname'][0]
-        version = epv['ver']['version'][0]
-        # TODO change this logic later to fetch osio_user_count
-        osio_user_count = get_osio_user_count(ecosystem, name, version)
-        pkg_dict = {
-            'ecosystem': ecosystem,
-            'name': name,
-            'version': version,
-            'licenses': epv['ver'].get('licenses', []),
-            'sentiment': {"overall_score": 0.65, 'latest_comment': 'N/A'},
-            'latest_version': epv['pkg']['latest_version'][0],
-            'security': [],
-            'osio_user_count': osio_user_count}
-        github_dict = {
-            'dependent_projects': epv['pkg'].get('libio_dependents_projects',[-1])[0],
-            'dependent_repos': epv['pkg'].get('libio_dependents_repos',[-1])[0],
-            'used_by': [],
-            'total_releases': epv['pkg'].get('libio_total_releases',[-1])[0],
-            'latest_release_duration': str(datetime.datetime.fromtimestamp(epv['pkg'].get('libio_latest_release', [1496302486.0])[0])),
-            'first_release_date': 'Apr 16,2010',
-            'forks_count': epv['pkg']['gh_forks'][0],
-            'stargazers_count': epv['pkg']['gh_stargazers'][0],
-            'watchers': 100,
-            'contributors': 12,
-            'size': '4MB',
-            'issues': {
-                'month': {
-                    'closed': epv['pkg']['gh_issues_last_month_closed'][0],
-                    'opened': epv['pkg']['gh_issues_last_month_opened'][0]
+        ecosystem = epv.get('ver', {}).get('pecosystem', [''])[0]
+        name = epv.get('ver', {}).get('pname', [''])[0]
+        version = epv.get('ver', {}).get('version', [''])[0]
+        if ecosystem and name and version:
+            # TODO change this logic later to fetch osio_user_count
+            osio_user_count = get_osio_user_count(ecosystem, name, version)
+            pkg_dict = {
+                'ecosystem': ecosystem,
+                'name': name,
+                'version': version,
+                'licenses': epv['ver'].get('licenses', []),
+                'sentiment': {"overall_score": -1, "magnitude": -1, 'latest_comment': 'N/A'},
+                'latest_version': epv['pkg'].get('libio_latest_version', [''])[0],
+                'security': [],
+                'osio_user_count': osio_user_count}
+            github_dict = {
+                'dependent_projects': epv['pkg'].get('libio_dependents_projects', [-1])[0],
+                'dependent_repos': epv['pkg'].get('libio_dependents_repos', [-1])[0],
+                'used_by': [],
+                'total_releases': epv['pkg'].get('libio_total_releases', [-1])[0],
+                'latest_release_duration': str(datetime.datetime.fromtimestamp(
+                                               epv['pkg'].get('libio_latest_release', [1496302486.0])[0])),
+                'first_release_date': 'N/A',
+                'forks_count': epv['pkg'].get('gh_forks', [-1])[0],
+                'stargazers_count': epv['pkg'].get('gh_stargazers', [-1])[0],
+                'watchers': epv['pkg'].get('gh_subscribers_count', [-1])[0],
+                'contributors': -1,
+                'size': 'N/A',
+                'issues': {
+                    'month': {
+                        'closed': epv['pkg'].get('gh_issues_last_month_closed', [-1])[0],
+                        'opened': epv['pkg'].get('gh_issues_last_month_opened', [-1])[0]
+                    },
+                    'year': {
+                        'closed': epv['pkg'].get('gh_issues_last_year_closed', [-1])[0],
+                        'opened': epv['pkg'].get('gh_issues_last_year_opened', [-1])[0]
+                    }
                 },
-                'year': {
-                    'closed': epv['pkg']['gh_issues_last_year_closed'][0],
-                    'opened': epv['pkg']['gh_issues_last_year_opened'][0]
-                }
-            },
-            'pull_requests': {
-                'month': {
-                    'closed': epv['pkg']['gh_prs_last_month_closed'][0],
-                    'opened': epv['pkg']['gh_prs_last_month_opened'][0]
-                },
-                'year': {
-                    'closed': epv['pkg']['gh_prs_last_year_closed'][0],
-                    'opened': epv['pkg']['gh_prs_last_year_opened'][0]
+                'pull_requests': {
+                    'month': {
+                        'closed': epv['pkg'].get('gh_prs_last_month_closed', [-1])[0],
+                        'opened': epv['pkg'].get('gh_prs_last_month_opened', [-1])[0]
+                    },
+                    'year': {
+                        'closed': epv['pkg'].get('gh_prs_last_year_closed', [-1])[0],
+                        'opened': epv['pkg'].get('gh_prs_last_year_opened', [-1])[0]
+                    }
                 }
             }
-        }
-        used_by = epv['pkg'].get("libio_usedby", [])
-        used_by_list = []
-        for epvs in used_by:
-            slc = epvs.split(':')
-            used_by_dict = {
-                'name': slc[0],
-                'stars': int(slc[1])
+            used_by = epv['pkg'].get("libio_usedby", [])
+            used_by_list = []
+            for epvs in used_by:
+                slc = epvs.split(':')
+                used_by_dict = {
+                    'name': slc[0],
+                    'stars': int(slc[1])
+                }
+                used_by_list.append(used_by_dict)
+            github_dict['used_by'] = used_by_list
+            pkg_dict['github'] = github_dict
+            pkg_dict['code_metrics'] = {
+                "average_cyclomatic_complexity": epv['ver'].get('cm_avg_cyclomatic_complexity', [-1])[0],
+                "code_lines": epv['ver'].get('cm_loc', [-1])[0],
+                "total_files": epv['ver'].get('cm_num_files', [-1])[0]
             }
-            used_by_list.append(used_by_dict)
-        github_dict['used_by'] = used_by_list
-        pkg_dict['github'] = github_dict
-        pkg_dict['code_metrics'] = {
-            "average_cyclomatic_complexity": epv['ver']['cm_avg_cyclomatic_complexity'][0],
-            "code_lines": epv['ver']['cm_loc'][0],
-            "total_files": epv['ver']['cm_num_files'][0]
-        }
 
-        if alt_dict is not None and name in alt_dict:
-            pkg_dict['replaces'] = [{
-                'name': alt_dict[name]['replaces'],
-                'version': alt_dict[name]['version']
-            }]
+            if alt_dict is not None and name in alt_dict:
+                pkg_dict['replaces'] = [{
+                    'name': alt_dict[name]['replaces'],
+                    'version': alt_dict[name]['version']
+                }]
 
-        pkg_list.append(pkg_dict)
+            pkg_list.append(pkg_dict)
     return pkg_list
