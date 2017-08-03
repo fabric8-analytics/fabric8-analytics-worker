@@ -1,5 +1,5 @@
-from sqlalchemy import (Column, DateTime, Enum, ForeignKey, Index, Integer, String, UniqueConstraint,
-                        create_engine, func, Text, Boolean, Float)
+from sqlalchemy import (Column, DateTime, Enum, ForeignKey, Integer, String, UniqueConstraint,
+                        create_engine, func, Boolean)
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.dialects.postgresql import JSONB
