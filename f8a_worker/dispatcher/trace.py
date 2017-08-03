@@ -14,7 +14,10 @@ _IGNORED_EVENTS = (
     Trace.TASK_RESULT_CACHE_GET,
     Trace.TASK_RESULT_CACHE_ADD,
     Trace.TASK_RESULT_CACHE_MISS,
-    Trace.TASK_RESULT_CACHE_HIT
+    Trace.TASK_RESULT_CACHE_HIT,
+    # These are not that relevant for prod
+    Trace.NODE_FAILURE,
+    Trace.NODE_SUCCESSFUL
 )
 
 
