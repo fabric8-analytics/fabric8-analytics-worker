@@ -65,8 +65,8 @@ if (env.BRANCH_NAME == 'master') {
                     error "Error: ${err}"
                 } finally {
                     if (!result?.equals('SUCCESS')) {
-                        dcs.each {
-                            sh "oc rollback ${it}"
+                        for (int i=0; i < dcs.size(); i++) {
+                            sh "oc rollback ${dcs[i]}"
                         }
                         error 'End-to-End tests failed.'
                     } else {
