@@ -5,6 +5,7 @@ import os
 from collections import Counter
 import re
 import logging
+import semantic_version as sv
 
 from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST, create_package_dict
 from f8a_worker.base import BaseTask
@@ -259,7 +260,9 @@ class GraphDB:
         return list_ref_stacks
 
     def get_version_information(self, input_list, ecosystem):
-        """Fetch the version information for each of the packages"""
+        """Fetch the version information for each of the packages
+        Also remove EPVs with CVEs and ones not present in Graph
+        """
         input_packages = [package for package in input_list]
         str_query = "g.V().has('ecosystem',ecosystem).has('name',within(input_packages)).as('pkg').out('has_version')" \
                     ".hasNot('cve_ids').as('ver').select('pkg','ver').by(valueMap()).dedup()"
@@ -277,6 +280,86 @@ class GraphDB:
             return []
         response = self.get_response_data(gremlin_response, [{0: 0}])
         return response
+
+    def filter_versions(self, epv_list, input_stack):
+        """First filter fetches only EPVs that has
+        1. No CVEs
+        2. Present in Graph
+        Apply additional filter based on following. That is sorted based on
+        3. Latest Version
+        4. Dependents Count in Github Manifest Data
+        5. Github Release Date"""
+        pkg_dict = {}
+        for epv in epv_list:
+            name = epv.get('pkg', {}).get('name', [''])[0]
+            version = epv.get('ver', {}).get('version', [''])[0]
+            if name and version:
+                # Check libio Latest Version and add to filter_list if latest version is > current version
+                latest_version = epv.get('pkg').get('libio_latest_version', [''])[0]
+                if latest_version and name not in pkg_dict:
+                    try:
+                        if sv.SpecItem('>=' + input_stack.get(name, '0.0.0')).match(sv.Version(version)):
+                            pkg_dict[name] = {"latest_version": latest_version}
+                    except ValueError:
+                        pass
+
+                # Check for Dependency Count Attribute. Add Max deps count version if version > current version
+                deps_count = epv.get('ver').get('dependents_count', [-1])[0]
+                if deps_count > 0:
+                    if 'deps_count' not in pkg_dict.get(name, {}) or \
+                       deps_count > pkg_dict[name].get('deps_count', {}).get('deps_count', 0):
+                        try:
+                            if sv.SpecItem('>=' + input_stack.get(name, '0.0.0')).match(sv.Version(version)):
+                                pkg_dict.get(name, {name: {}})['deps_count'] = {"version": version,
+                                                                                "deps_count": deps_count}
+                        except ValueError:
+                            pass
+
+                # Check for github release date. Add version with most recent github release date
+                gh_release_date = epv.get('ver').get('gh_release_date', [0])[0]
+                if gh_release_date > 0.0:
+                    if 'gh_release_date' not in pkg_dict.get(name, {}) or \
+                       gh_release_date > pkg_dict[name].get('gh_release_date', {}).get('gh_release_date', 0):
+                        try:
+                            if sv.SpecItem('>=' + input_stack.get(name, '0.0.0')).match(sv.Version(version)):
+                                pkg_dict.get(name, {name: {}})['gh_release_date'] = {"version": version,
+                                                                                     "gh_release_date": gh_release_date}
+                        except ValueError:
+                            pass
+
+        # Second Pass to create a dict based on above version properties
+        new_dict = {}
+        for epv in epv_list:
+            name = epv.get('pkg', {}).get('name', [''])[0]
+            version = epv.get('ver', {}).get('version', [''])[0]
+            if name and version:
+                if version == pkg_dict.get(name, {}).get("latest_version"):
+                    if name not in new_dict:
+                        new_dict[name] = {}
+                    new_dict.get(name)['pkg'] = epv['pkg']
+                    new_dict.get(name)['latest_version'] = epv['ver']
+                elif version == pkg_dict.get(name, {}).get("deps_count", {}).get("version"):
+                    if name not in new_dict:
+                        new_dict[name] = {}
+                    new_dict.get(name)['pkg'] = epv['pkg']
+                    new_dict.get(name)['deps_count'] = epv['ver']
+                elif version == pkg_dict.get(name, {}).get("gh_release_date", {}).get("version"):
+                    if name not in new_dict:
+                        new_dict[name] = {}
+                    new_dict.get(name)['pkg'] = epv['pkg']
+                    new_dict.get(name)['gh_release_date'] = epv['ver']
+                else:
+                    continue
+        new_list = []
+        for package, contents in new_dict.items():
+            if 'latest_version' in contents:
+                new_list.append({"pkg": contents['pkg'], "ver": contents['latest_version']})
+            elif 'deps_count' in contents:
+                new_list.append({"pkg": contents['pkg'], "ver": contents['deps_count']})
+            elif 'gh_release_date' in contents:
+                new_list.append({"pkg": contents['pkg'], "ver": contents['gh_release_date']})
+
+        return new_list
 
     def get_input_stacks_vectors_from_graph(self, input_list, ecosystem):
         """Fetches EPV properties of all the components provided as part of input stack"""
@@ -586,8 +669,11 @@ class RecommendationV2Task(BaseTask):
                 # Get Companion Packages from Graph
                 comp_packages_graph = GraphDB().get_version_information(companion_packages, ecosystem)
 
+                # Apply Version Filters
+                filtered_comp_packages_graph = GraphDB().filter_versions(comp_packages_graph, input_stack)
+
                 # Create Companion Block
-                comp_packages = create_package_dict(comp_packages_graph)
+                comp_packages = create_package_dict(filtered_comp_packages_graph)
                 recommendation['recommendations']['companion'] = comp_packages
 
                 # Get the topmost alternate package for each input package
@@ -616,8 +702,12 @@ class RecommendationV2Task(BaseTask):
 
                 # Get Alternate Packages from Graph
                 alt_packages_graph = GraphDB().get_version_information(alternate_packages, ecosystem)
+
+                # Apply Version Filters
+                filtered_alt_packages_graph = GraphDB().filter_versions(alt_packages_graph, input_stack)
+
                 # Create Companion Dict
-                alt_packages = create_package_dict(alt_packages_graph, final_dict)
+                alt_packages = create_package_dict(filtered_alt_packages_graph, final_dict)
                 recommendation['recommendations']['alternate'] = alt_packages
 
             return recommendation
