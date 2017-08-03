@@ -29,3 +29,5 @@ semver
 # sentiment analysis
 google-cloud
 joblib
+#Semantic Version
+semantic_version
