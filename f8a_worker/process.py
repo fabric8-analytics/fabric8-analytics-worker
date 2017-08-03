@@ -15,7 +15,7 @@ from urllib.parse import urljoin, urlparse
 
 from f8a_worker.conf import get_configuration
 from f8a_worker.enums import EcosystemBackend
-from f8a_worker.utils import cwd, TimedCommand, compute_digest, MavenCoordinates
+from f8a_worker.utils import cwd, TimedCommand, compute_digest, MavenCoordinates, url2git_repo
 
 logger = logging.getLogger(__name__)
 configuration = get_configuration()
@@ -58,8 +58,7 @@ class Git(object):
         """
         cls.config()
         # git clone doesn't understand urls starting with: git+ssh, git+http, git+https
-        if url.startswith('git+'):
-            url = url[len('git+'):]
+        url = url2git_repo(url)
         cmd = ["git", "clone", url, path]
         if depth is not None:
             cmd.extend(["--depth", depth])
