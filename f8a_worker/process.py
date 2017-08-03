@@ -272,6 +272,8 @@ class IndianaJones(object):
             release_files = list(sorted(release_files, key=release_key))
             file_url = release_files[0]['url']
             local_filename = IndianaJones.download_file(file_url, target_dir)
+            if local_filename is None:
+                raise RuntimeError("Unable to download: %s" % file_url)
             artifact_path = os.path.join(target_dir, local_filename)
             digest = compute_digest(artifact_path)
             Archive.extract(artifact_path, target_dir)
@@ -382,6 +384,8 @@ class IndianaJones(object):
                                                                 artifact=artifact.lower(),
                                                                 version=version)
             local_filename = IndianaJones.download_file(file_url, target_dir)
+            if local_filename is None:
+                raise RuntimeError("Unable to download: %s" % file_url)
             artifact_path = os.path.join(target_dir, local_filename)
             digest = compute_digest(artifact_path)
             Archive.extract(artifact_path, target_dir)
