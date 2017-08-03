@@ -46,6 +46,6 @@ class GraphImporterTask(BaseTask):
         response = requests.post(endpoint, json=param)
 
         if response.status_code != 200:
-            raise RuntimeError("Failed to invoke graph import at '%s' for %s" % (self._API_URL, param))
+            raise RuntimeError("Failed to invoke graph import at '%s' for %s" % (endpoint, param))
 
         self.log.info("Graph import succeeded with response: %s", response.text)
