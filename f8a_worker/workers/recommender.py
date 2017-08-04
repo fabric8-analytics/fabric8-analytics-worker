@@ -289,67 +289,55 @@ class GraphDB:
         3. Latest Version
         4. Dependents Count in Github Manifest Data
         5. Github Release Date"""
+
         pkg_dict = {}
+        new_dict = {}
         for epv in epv_list:
             name = epv.get('pkg', {}).get('name', [''])[0]
             version = epv.get('ver', {}).get('version', [''])[0]
             if name and version:
+                if name not in pkg_dict:
+                    pkg_dict[name] = {}
+                if name not in new_dict:
+                    new_dict[name] = {}
                 # Check libio Latest Version and add to filter_list if latest version is > current version
                 latest_version = epv.get('pkg').get('libio_latest_version', [''])[0]
-                if latest_version and name not in pkg_dict:
+                if latest_version not in pkg_dict[name]:
                     try:
                         if sv.SpecItem('>=' + input_stack.get(name, '0.0.0')).match(sv.Version(version)):
                             pkg_dict[name] = {"latest_version": latest_version}
+                            new_dict[name]['latest_version'] = epv.get('ver')
+                            new_dict[name]['pkg'] = epv.get('pkg')
                     except ValueError:
                         pass
 
                 # Check for Dependency Count Attribute. Add Max deps count version if version > current version
                 deps_count = epv.get('ver').get('dependents_count', [-1])[0]
                 if deps_count > 0:
-                    if 'deps_count' not in pkg_dict.get(name, {}) or \
+                    if 'deps_count' not in pkg_dict[name] or \
                        deps_count > pkg_dict[name].get('deps_count', {}).get('deps_count', 0):
                         try:
                             if sv.SpecItem('>=' + input_stack.get(name, '0.0.0')).match(sv.Version(version)):
-                                pkg_dict.get(name, {name: {}})['deps_count'] = {"version": version,
-                                                                                "deps_count": deps_count}
+                                pkg_dict[name]['deps_count'] = {"version": version, "deps_count": deps_count}
+                                new_dict[name]['deps_count'] = epv.get('ver')
+                                new_dict[name]['pkg'] = epv.get('pkg')
                         except ValueError:
                             pass
 
                 # Check for github release date. Add version with most recent github release date
                 gh_release_date = epv.get('ver').get('gh_release_date', [0])[0]
                 if gh_release_date > 0.0:
-                    if 'gh_release_date' not in pkg_dict.get(name, {}) or \
+                    if 'gh_release_date' not in pkg_dict[name] or \
                        gh_release_date > pkg_dict[name].get('gh_release_date', {}).get('gh_release_date', 0):
                         try:
                             if sv.SpecItem('>=' + input_stack.get(name, '0.0.0')).match(sv.Version(version)):
-                                pkg_dict.get(name, {name: {}})['gh_release_date'] = {"version": version,
-                                                                                     "gh_release_date": gh_release_date}
+                                pkg_dict[name]['gh_release_date'] = {"version": version,
+                                                                     "gh_release_date": gh_release_date}
+                                new_dict[name]['gh_release_date'] = epv.get('ver')
+                                new_dict[name]['pkg'] = epv.get('pkg')
                         except ValueError:
                             pass
 
-        # Second Pass to create a dict based on above version properties
-        new_dict = {}
-        for epv in epv_list:
-            name = epv.get('pkg', {}).get('name', [''])[0]
-            version = epv.get('ver', {}).get('version', [''])[0]
-            if name and version:
-                if version == pkg_dict.get(name, {}).get("latest_version"):
-                    if name not in new_dict:
-                        new_dict[name] = {}
-                    new_dict.get(name)['pkg'] = epv['pkg']
-                    new_dict.get(name)['latest_version'] = epv['ver']
-                elif version == pkg_dict.get(name, {}).get("deps_count", {}).get("version"):
-                    if name not in new_dict:
-                        new_dict[name] = {}
-                    new_dict.get(name)['pkg'] = epv['pkg']
-                    new_dict.get(name)['deps_count'] = epv['ver']
-                elif version == pkg_dict.get(name, {}).get("gh_release_date", {}).get("version"):
-                    if name not in new_dict:
-                        new_dict[name] = {}
-                    new_dict.get(name)['pkg'] = epv['pkg']
-                    new_dict.get(name)['gh_release_date'] = epv['ver']
-                else:
-                    continue
         new_list = []
         for package, contents in new_dict.items():
             if 'latest_version' in contents:
