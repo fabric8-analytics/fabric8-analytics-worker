@@ -1,6 +1,6 @@
 #!/usr/bin/sh -ex
 
-RELEASE='1.4.5'
+RELEASE='2.1.0'
 NAME='dependency-check'
 
 # sanity check
