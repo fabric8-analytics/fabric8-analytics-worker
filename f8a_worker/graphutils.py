@@ -224,7 +224,9 @@ def create_package_dict(graph_results, alt_dict=None):
                 'sentiment': {"overall_score": 0, "magnitude": 0, 'latest_comment': 'N/A'},
                 'latest_version': epv['pkg'].get('libio_latest_version', [''])[0],
                 'security': [],
-                'osio_user_count': osio_user_count}
+                'osio_user_count': osio_user_count,
+                'topic_list': epv['pkg'].get('pgm_topics', [])
+            }
             github_dict = {
                 'dependent_projects': epv['pkg'].get('libio_dependents_projects', [-1])[0],
                 'dependent_repos': epv['pkg'].get('libio_dependents_repos', [-1])[0],
