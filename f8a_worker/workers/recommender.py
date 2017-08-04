@@ -687,7 +687,7 @@ class RecommendationV2Task(BaseTask):
 
                 # Get Topics Added to Filtered Versions
                 topics_comp_packages_graph = GraphDB().get_topics_for_comp(filtered_comp_packages_graph,
-                                                                  pgm_result['companion_packages'])
+                                                                           pgm_result['companion_packages'])
 
                 # Create Companion Block
                 comp_packages = create_package_dict(topics_comp_packages_graph)
@@ -708,7 +708,7 @@ class RecommendationV2Task(BaseTask):
                 for pkg_name, contents in temp_dict.items():
                     # For each input package
                     # Get only the topmost alternate package from a set of packages based on similarity score
-                    top_dict = dict(Counter(contents).most_common(2))
+                    top_dict = dict(Counter(contents).most_common(1))
                     for alt_pkg, sim_score in top_dict.items():
                         final_dict[alt_pkg] = {
                             'version': input_stack[pkg_name],
