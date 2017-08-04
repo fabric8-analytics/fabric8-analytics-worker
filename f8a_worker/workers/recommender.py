@@ -724,7 +724,7 @@ class RecommendationV2Task(BaseTask):
 
                 # Get Topics Added to Filtered Versions
                 topics_comp_packages_graph = GraphDB().get_topics_for_alt(filtered_alt_packages_graph,
-                                                                  pgm_result['alternate_packages'])
+                                                                          pgm_result['alternate_packages'])
 
                 # Create Companion Dict
                 alt_packages = create_package_dict(topics_comp_packages_graph, final_dict)
