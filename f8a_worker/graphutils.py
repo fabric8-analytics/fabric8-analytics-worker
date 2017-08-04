@@ -221,7 +221,7 @@ def create_package_dict(graph_results, alt_dict=None):
                 'name': name,
                 'version': version,
                 'licenses': epv['ver'].get('licenses', []),
-                'sentiment': {"overall_score": -1, "magnitude": -1, 'latest_comment': 'N/A'},
+                'sentiment': {"overall_score": 0, "magnitude": 0, 'latest_comment': 'N/A'},
                 'latest_version': epv['pkg'].get('libio_latest_version', [''])[0],
                 'security': [],
                 'osio_user_count': osio_user_count}
