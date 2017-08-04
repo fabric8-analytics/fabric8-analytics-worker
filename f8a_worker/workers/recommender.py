@@ -378,6 +378,29 @@ class GraphDB:
                     )
         return input_stack_list
 
+    def get_topics_for_alt(self, comp_list, pgm_dict):
+        """Gets topics from pgm and associate with filtered versions from Graph"""
+        for epv in comp_list:
+            name = epv.get('pkg', {}).get('name', [''])[0]
+            if name:
+                for pgm_pkg_key, pgm_list in pgm_dict.items():
+                    for pgm_epv in pgm_list:
+                        if name == pgm_epv.get('package_name', ''):
+                            epv['pkg']['pgm_topics'] = pgm_epv.get('topic_list', [])
+
+        return comp_list
+
+    def get_topics_for_comp(self, comp_list, pgm_list):
+        """Gets topics from pgm and associate with filtered versions from Graph"""
+        for epv in comp_list:
+            name = epv.get('pkg', {}).get('name', [''])[0]
+            if name:
+                for pgm_epv in pgm_list:
+                    if name == pgm_epv.get('package_name', ''):
+                        epv['pkg']['pgm_topics'] = pgm_epv.get('topic_list', [])
+
+        return comp_list
+
 
 class RelativeSimilarity:
 
@@ -648,8 +671,10 @@ class RecommendationV2Task(BaseTask):
                 ecosystem = pgm_result['ecosystem']
 
                 # Get usage based outliers
-                recommendation['recommendations']['usage_outliers'] = \
-                    pgm_result['outlier_package_list']
+                recommendation['recommendations']['usage_outliers'] = pgm_result.get('outlier_package_list', [])
+
+                # Append Topics for User Stack
+                recommendation['recommendations']['input_stack_topics'] = pgm_result.get('package_to_topic_dict', {})
 
                 for pkg in pgm_result['companion_packages']:
                     companion_packages.append(pkg['package_name'])
@@ -660,8 +685,12 @@ class RecommendationV2Task(BaseTask):
                 # Apply Version Filters
                 filtered_comp_packages_graph = GraphDB().filter_versions(comp_packages_graph, input_stack)
 
+                # Get Topics Added to Filtered Versions
+                topics_comp_packages_graph = GraphDB().get_topics_for_comp(filtered_comp_packages_graph,
+                                                                           pgm_result['companion_packages'])
+
                 # Create Companion Block
-                comp_packages = create_package_dict(filtered_comp_packages_graph)
+                comp_packages = create_package_dict(topics_comp_packages_graph)
                 recommendation['recommendations']['companion'] = comp_packages
 
                 # Get the topmost alternate package for each input package
@@ -687,15 +716,18 @@ class RecommendationV2Task(BaseTask):
                             'similarity_score': sim_score
                         }
                         alternate_packages.append(alt_pkg)
-
                 # Get Alternate Packages from Graph
                 alt_packages_graph = GraphDB().get_version_information(alternate_packages, ecosystem)
 
                 # Apply Version Filters
                 filtered_alt_packages_graph = GraphDB().filter_versions(alt_packages_graph, input_stack)
 
+                # Get Topics Added to Filtered Versions
+                topics_comp_packages_graph = GraphDB().get_topics_for_alt(filtered_alt_packages_graph,
+                                                                          pgm_result['alternate_packages'])
+
                 # Create Companion Dict
-                alt_packages = create_package_dict(filtered_alt_packages_graph, final_dict)
+                alt_packages = create_package_dict(topics_comp_packages_graph, final_dict)
                 recommendation['recommendations']['alternate'] = alt_packages
 
             return recommendation
