@@ -598,7 +598,7 @@ class Solver(object):
 
         solved = {}
         for dep in self.dependency_parser.parse(dependencies):
-            logger.info("Fetching releases for: {}".format(dep))
+            logger.debug("Fetching releases for: {}".format(dep))
 
             name, releases = self.release_fetcher.fetch_releases(dep.name)
 
@@ -615,7 +615,7 @@ class Solver(object):
                                for release in releases
                                if release in dep], key=cmp_to_key(compare_version))
 
-            logger.info("  matching:\n   {}".format(matching))
+            logger.debug("  matching:\n   {}".format(matching))
 
             if all_versions:
                 solved[name] = matching
