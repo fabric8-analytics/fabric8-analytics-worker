@@ -8,7 +8,7 @@ from pip.req.req_file import parse_requirements
 import re
 from requests import get
 from xmlrpc.client import ServerProxy
-from semver import parse
+from semantic_version import validate
 from subprocess import check_output
 from tempfile import NamedTemporaryFile
 
@@ -243,12 +243,7 @@ class NugetReleasesFetcher(ReleasesFetcher):
         poppage = BeautifulSoup(pop.text, 'html.parser')
         for link in poppage.find_all(href=re.compile(r'^/packages/')):
             version = link['href'].split('/')[-1].strip()
-            try:
-                parse(version)
-            except ValueError:
-                # not a version string
-                pass
-            else:
+            if validate(version):
                 releases.append(version)
         return package, list(reversed(releases))
 
