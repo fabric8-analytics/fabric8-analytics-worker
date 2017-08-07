@@ -50,6 +50,11 @@ class GraphAggregatorTask(BaseTask):
             if not out["details"]:
                 raise FatalTaskError("No metadata found processing manifest file '{}'"
                                      .format(manifest['filename']))
+            
+            if not 'dependencies' in out['details'][0] and out.get('status', None) == 'success':
+                raise FatalTaskError("Dependencies could not be resolved from manifest file '{}'"
+                                     .format(manifest['filename']))
+
             out["details"][0]['manifest_file'] = manifest['filename']
             out["details"][0]['ecosystem'] = manifest['ecosystem']
             out["details"][0]['manifest_file_path'] = manifest.get('filepath', 'File path not available')
