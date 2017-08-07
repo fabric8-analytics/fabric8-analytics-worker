@@ -23,7 +23,7 @@ def upgrade():
     sa.Column('name', sa.String(length=255), nullable=False),
     sa.Column('version', sa.String(length=255), nullable=False),
     sa.Column('count', sa.Integer(), nullable=False),
-    sa.Column('ecosystem_backend', postgresql.ENUM('none', 'npm', 'maven', 'pypi', 'rubygems', 'scm', 'crates', 'nuget', name='ecosystem_backend_enum', create_type=False), nullable=True),
+    sa.Column('ecosystem_backend', postgresql.ENUM('none', 'npm', 'maven', 'pypi', 'rubygems', 'scm', 'crates', name='ecosystem_backend_enum', create_type=False), nullable=True),
     sa.Column('timestamp', sa.DateTime(), server_default=sa.text('LOCALTIMESTAMP'), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
