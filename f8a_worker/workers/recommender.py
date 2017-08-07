@@ -12,8 +12,6 @@ from f8a_worker.base import BaseTask
 from f8a_worker.conf import get_configuration
 from f8a_worker.utils import get_session_retry
 
-# PGM_URL_REST = "http://{host}:{port}".format(host=os.environ.get("PGM_SERVICE_HOST"),
-#                                             port=os.environ.get("PGM_SERVICE_PORT"))
 config = get_configuration()
 
 danger_word_list = ["drop\(\)", "V\(\)", "count\(\)"]
@@ -282,9 +280,9 @@ class GraphDB:
         return response
 
     def filter_versions(self, epv_list, input_stack):
-        """First filter fetches only EPVs that has
-        1. No CVEs
-        2. Present in Graph
+        """First filter fetches only EPVs that
+        1. has No CVEs
+        2. are Present in Graph
         Apply additional filter based on following. That is sorted based on
         3. Latest Version
         4. Dependents Count in Github Manifest Data
@@ -292,6 +290,7 @@ class GraphDB:
 
         pkg_dict = {}
         new_dict = {}
+        filtered_comp_list = []
         for epv in epv_list:
             name = epv.get('pkg', {}).get('name', [''])[0]
             version = epv.get('ver', {}).get('version', [''])[0]
@@ -308,6 +307,7 @@ class GraphDB:
                             pkg_dict[name] = {"latest_version": latest_version}
                             new_dict[name]['latest_version'] = epv.get('ver')
                             new_dict[name]['pkg'] = epv.get('pkg')
+                            filtered_comp_list.append(name)
                     except ValueError:
                         pass
 
@@ -321,6 +321,7 @@ class GraphDB:
                                 pkg_dict[name]['deps_count'] = {"version": version, "deps_count": deps_count}
                                 new_dict[name]['deps_count'] = epv.get('ver')
                                 new_dict[name]['pkg'] = epv.get('pkg')
+                                filtered_comp_list.append(name)
                         except ValueError:
                             pass
 
@@ -335,6 +336,7 @@ class GraphDB:
                                                                      "gh_release_date": gh_release_date}
                                 new_dict[name]['gh_release_date'] = epv.get('ver')
                                 new_dict[name]['pkg'] = epv.get('pkg')
+                                filtered_comp_list.append(name)
                         except ValueError:
                             pass
 
@@ -347,7 +349,7 @@ class GraphDB:
             elif 'gh_release_date' in contents:
                 new_list.append({"pkg": contents['pkg'], "ver": contents['gh_release_date']})
 
-        return new_list
+        return new_list, filtered_comp_list
 
     def get_input_stacks_vectors_from_graph(self, input_list, ecosystem):
         """Fetches EPV properties of all the components provided as part of input stack"""
@@ -628,7 +630,7 @@ class RecommendationV2Task(BaseTask):
             self.log.error("Failed retrieving PGM data.")
             return None
 
-    def execute(self, arguments=None):
+    def execute(self, parguments=None):
         arguments = self.parent_task_result('GraphAggregatorTask')
         results = arguments['result']
         input_stack = {d["package"]: d["version"] for d in
@@ -683,7 +685,11 @@ class RecommendationV2Task(BaseTask):
                 comp_packages_graph = GraphDB().get_version_information(companion_packages, ecosystem)
 
                 # Apply Version Filters
-                filtered_comp_packages_graph = GraphDB().filter_versions(comp_packages_graph, input_stack)
+                filtered_comp_packages_graph, filtered_list = GraphDB().filter_versions(comp_packages_graph,
+                                                                                        input_stack)
+                _logger.info("Companion Packages Filtered for external_request_id {} {}"
+                             .format(parguments.get('external_request_id', ''),
+                                     set(companion_packages).difference(set(filtered_list))))
 
                 # Get Topics Added to Filtered Versions
                 topics_comp_packages_graph = GraphDB().get_topics_for_comp(filtered_comp_packages_graph,
@@ -720,7 +726,10 @@ class RecommendationV2Task(BaseTask):
                 alt_packages_graph = GraphDB().get_version_information(alternate_packages, ecosystem)
 
                 # Apply Version Filters
-                filtered_alt_packages_graph = GraphDB().filter_versions(alt_packages_graph, input_stack)
+                filtered_alt_packages_graph, filtered_list = GraphDB().filter_versions(alt_packages_graph, input_stack)
+                _logger.info("Alternate Packages Filtered for external_request_id {} {}"
+                             .format(parguments.get('external_request_id', ''),
+                                     set(alternate_packages).difference(set(filtered_list))))
 
                 # Get Topics Added to Filtered Versions
                 topics_comp_packages_graph = GraphDB().get_topics_for_alt(filtered_alt_packages_graph,
