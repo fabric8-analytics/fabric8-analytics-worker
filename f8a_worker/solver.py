@@ -8,7 +8,7 @@ from pip.req.req_file import parse_requirements
 import re
 from requests import get
 from xmlrpc.client import ServerProxy
-from semantic_version import validate
+from semantic_version import Version as semver_version
 from subprocess import check_output
 from tempfile import NamedTemporaryFile
 
@@ -234,7 +234,8 @@ class NugetReleasesFetcher(ReleasesFetcher):
     def __init__(self, ecosystem):
         super(NugetReleasesFetcher, self).__init__(ecosystem)
 
-    def fetch_releases(self, package):
+    @staticmethod
+    def _scrape_versions_from_nuget_org(package):
         """
         Scrape 'Version History' from https://www.nuget.org/packages/<package>
         """
@@ -243,9 +244,24 @@ class NugetReleasesFetcher(ReleasesFetcher):
         poppage = BeautifulSoup(pop.text, 'html.parser')
         for link in poppage.find_all(href=re.compile(r'^/packages/')):
             version = link['href'].split('/')[-1].strip()
-            if validate(version):
+            try:
+                semver_version.coerce(version)
+            except ValueError:
+                pass
+            else:
                 releases.append(version)
         return package, list(reversed(releases))
+
+    def fetch_releases(self, package):
+        if not package:
+            raise ValueError("package not specified")
+
+        # There's an API interface which lists available releases at
+        # https://api.nuget.org/v3-flatcontainer/{package}/index.json
+        # But it lists also unlisted/deprecated/shouldn't-be-used versions,
+        # so we don't use it.
+
+        return self._scrape_versions_from_nuget_org(package)
 
 
 class F8aReleasesFetcher(ReleasesFetcher):

@@ -191,6 +191,9 @@ class TestFetcher(object):
          {'5.0.0', '5.2.0', '5.2.3'}),
         ('NUnit',
          {'2.6.4', '3.0.0', '3.7.1'}),
+        # Only one not sem-ver-compliant version
+        ('System.Data.SQLite',
+         {'1.0.105.2'})
     ])
     def test_nuget_fetcher(self, nuget, package, expected):
         f = NugetReleasesFetcher(nuget)
