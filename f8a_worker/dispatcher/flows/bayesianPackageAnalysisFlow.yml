@@ -9,7 +9,7 @@
       edges:
         - from:
           to: 'github_details'
-          condition:
+          condition: &isGhRepoCheck
             name: 'isGhRepo'
             args:
               key: 'url'
@@ -17,16 +17,15 @@
         - from:
           to: 'GitReadmeCollectorTask'
           condition:
-            name: 'isGhRepo'
-            args:
-              key: 'url'
+            <<: *isGhRepoCheck
+
+        - from: 'GitReadmeCollectorTask'
+          to: 'package_keywords_tagging'
 
         - from:
           to: 'git_stats'
           condition:
-            name: 'isGhRepo'
-            args:
-              key: 'url'
+            <<: *isGhRepoCheck
 
         - from:
           to: 'libraries_io'

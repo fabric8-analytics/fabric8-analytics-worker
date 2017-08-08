@@ -59,6 +59,8 @@
           condition:
             name: 'alwaysFalse'
         - from: 'metadata'
+          to: 'keywords_tagging'
+        - from: 'metadata'
           to: 'bayesianPackageFlow'
         - from: 'metadata'
           to: 'dependency_snapshot'
