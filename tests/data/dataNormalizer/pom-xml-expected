@@ -1,0 +1,42 @@
+{
+        "code_repository": {
+          "type": "git",
+          "url": "git@github.com:eclipse/vert.x.git"
+        },
+        "declared_licenses": [
+          "The Apache Software License, Version 2.0",
+          "Eclipse Public License - v 1.0"
+        ],
+        "dependencies": [
+          "org.apache.logging.log4j:log4j-api 2.5",
+          "org.apache.logging.log4j:log4j-core 2.5",
+          "io.netty:netty-buffer 4.1.8.Final",
+          "io.netty:netty-codec-http2 4.1.8.Final",
+          "log4j:log4j 1.2.17",
+          "io.netty:netty-codec-http 4.1.8.Final",
+          "com.fasterxml.jackson.core:jackson-core 2.7.4",
+          "org.slf4j:slf4j-api 1.7.21",
+          "io.vertx:vertx-docgen 3.4.2",
+          "com.fasterxml.jackson.core:jackson-databind 2.7.4",
+          "io.netty:netty-handler-proxy 4.1.8.Final",
+          "io.netty:netty-common 4.1.8.Final",
+          "io.netty:netty-resolver-dns 4.1.8.Final",
+          "io.netty:netty-transport 4.1.8.Final",
+          "io.netty:netty-handler 4.1.8.Final",
+          "io.netty:netty-resolver 4.1.8.Final",
+          "io.vertx:vertx-codegen 3.4.2"
+        ],
+        "description": "Sonatype helps open source projects to set up Maven repositories on https://oss.sonatype.org/",
+        "devel_dependencies": [
+          "org.mortbay.jetty.alpn:jetty-alpn-agent 2.0.6",
+          "junit:junit 4.12",
+          "io.netty:netty-tcnative-boringssl-static 1.1.33.Fork26",
+          "org.apache.directory.server:apacheds-protocol-dns 1.5.7",
+          "org.slf4j:slf4j-simple 1.7.21",
+          "org.assertj:assertj-core 3.4.1"
+        ],
+        "ecosystem": "java-pom",
+        "homepage": "http://nexus.sonatype.org/oss-repository-hosting.html/vertx-parent/vertx-core",
+        "name": "Vert.x Core",
+        "version": "3.4.2"
+}

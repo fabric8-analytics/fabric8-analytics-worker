@@ -1,0 +1,61 @@
+{
+   "versions": {
+      "Java-POM": "9626b64ed050648950b1dc4461e7a59777dfddee"
+   },
+   "items": [
+      {
+         "time": "2017-08-08T16:31:22.026699059+02:00",
+         "path": "vertx-core-3.4.2/pom.xml",
+         "ecosystem": "Java-POM",
+         "result": {
+            "pom.xml": {
+               "artifactId": "vertx-core",
+               "dependencies": {
+                  "compile": {
+                     "com.fasterxml.jackson.core:jackson-core::": "2.7.4",
+                     "com.fasterxml.jackson.core:jackson-databind::": "2.7.4",
+                     "io.netty:netty-buffer::": "4.1.8.Final",
+                     "io.netty:netty-codec-http2::": "4.1.8.Final",
+                     "io.netty:netty-codec-http::": "4.1.8.Final",
+                     "io.netty:netty-common::": "4.1.8.Final",
+                     "io.netty:netty-handler-proxy::": "4.1.8.Final",
+                     "io.netty:netty-handler::": "4.1.8.Final",
+                     "io.netty:netty-resolver-dns::": "4.1.8.Final",
+                     "io.netty:netty-resolver::": "4.1.8.Final",
+                     "io.netty:netty-transport::": "4.1.8.Final",
+                     "io.vertx:vertx-codegen::": "3.4.2",
+                     "io.vertx:vertx-docgen::": "3.4.2"
+                  },
+                  "provided": {
+                     "log4j:log4j::": "1.2.17",
+                     "org.apache.logging.log4j:log4j-api::": "2.5",
+                     "org.apache.logging.log4j:log4j-core::": "2.5",
+                     "org.slf4j:slf4j-api::": "1.7.21"
+                  },
+                  "test": {
+                     "io.netty:netty-tcnative-boringssl-static::": "1.1.33.Fork26",
+                     "junit:junit::": "4.12",
+                     "org.apache.directory.server:apacheds-protocol-dns::": "1.5.7",
+                     "org.assertj:assertj-core::": "3.4.1",
+                     "org.mortbay.jetty.alpn:jetty-alpn-agent::": "2.0.6",
+                     "org.slf4j:slf4j-simple::": "1.7.21"
+                  }
+               },
+               "description": "Sonatype helps open source projects to set up Maven repositories on https://oss.sonatype.org/",
+               "groupId": "io.vertx",
+               "licenses": [
+                  "The Apache Software License, Version 2.0",
+                  "Eclipse Public License - v 1.0"
+               ],
+               "name": "Vert.x Core",
+               "scm_url": "git@github.com:eclipse/vert.x.git",
+               "url": "http://nexus.sonatype.org/oss-repository-hosting.html/vertx-parent/vertx-core",
+               "version": "3.4.2"
+            }
+         },
+         "digests": {
+            "manifest": "154443cbed1a98e20fc07a413f626dc40b0f2725"
+         }
+      }
+   ]
+}

@@ -9,7 +9,7 @@ Output: information such as: homepage, bug tracking, dependencies
 sample output:
 {'author': 'Aaron Patterson <aaronp@rubyforge.org>, Mike Dalessio '
            '<mike.dalessio@gmail.com>, Yoko Harada <yokolet@gmail.com>',
- 'declared_license': 'MIT',
+ 'declared_licenses': ['MIT'],
  'dependencies': ['mini_portile2 ~>2.0.0.rc2'],
  'description': 'Nokogiri is an HTML, XML, SAX, and Reader parser.',
  'devel_dependencies': ['rdoc ~>4.0',
@@ -116,7 +116,7 @@ class DataNormalizer(object):
 
     def _handle_javascript(self, data):
         "Handle Javascript package (package.json) analysis data"
-        key_map = ((('license', 'licenses',), 'declared_license'),
+        key_map = ((('license', 'licenses',), 'declared_licenses'),
                    ('_dependency_tree_lock_file', '_dependency_tree_lock'), ('homepage',), ('version',),
                    ('description',), ('dependencies',), ('devDependencies', 'devel_dependencies'),
                    ('bugs', 'bug_reporting'), ('author',), ('contributors',), ('maintainers',),
@@ -152,17 +152,22 @@ class DataNormalizer(object):
                 else:  # default is github
                     url = 'https://github.com/' + url + '.git'
             repository_dict = {'type': 'git', 'url': url}
-            #self.log.debug("transforming '%s' to '%s'" % (base[k], repository_dict))
             base[k] = repository_dict
 
-        # transform a dict/list (deprecated, but still used in older packages) to string
-        if 'declared_license' in base and not isinstance(base['declared_license'], str):
-            k = 'declared_license'
+        # transform 'declared_licenses' to a list
+        if 'declared_licenses' in base:
+            k = 'declared_licenses'
             value = base[k]
+            # e.g. "(ISC OR GPL-3.0)"
+            if isinstance(value, str):
+                if ' OR ' in value:
+                    base[k] = value.strip('()').split(' OR ')
+                else:
+                    base[k] = [value]
             # e.g. {"license": {"type": "ISC", "url": "http://opensource.org/licenses/ISC"}}
-            if isinstance(value, dict) and \
-               "type" in value and isinstance(value["type"], str):
-                base[k] = value["type"]
+            elif isinstance(value, dict) and \
+                "type" in value and isinstance(value["type"], str):
+                base[k] = [value["type"]]
             # e.g. {"licenses": [{"type": "MIT", "url": "http://..."},
             #                    {"type": "Apache-2.0", "url": "http://..."}]}
             elif isinstance(value, list):
@@ -171,7 +176,7 @@ class DataNormalizer(object):
                     if isinstance(l, dict) and \
                        "type" in l and isinstance(l["type"], str):
                         licenses.append(l["type"])
-                base[k] = ", ".join(licenses)
+                base[k] = licenses
 
         # transform dict dependencies into flat list of strings
         # name and version spec are separated by ' ' space
@@ -235,6 +240,8 @@ class DataNormalizer(object):
 
     @staticmethod
     def _split_keywords(keywords, separator=','):
+        if keywords is None:
+            return None
         if isinstance(keywords, list):
             return keywords
         keywords = keywords.split(separator)
@@ -247,15 +254,16 @@ class DataNormalizer(object):
             # mercator by default (MERCATOR_INTERPRET_SETUP_PY=false) doesn't interpret setup.py
             return {}
 
-        key_map = (('license', 'declared_license'), ('url', 'homepage'),
+        key_map = (('url', 'homepage'),
                    ('install_requires', 'dependencies'), ('name',),
                    ('description',), ('version',))
 
         transformed = self.transform_keys(data, key_map)
+        transformed['declared_licenses'] = self._split_keywords(data.get('license'))
         transformed['author'] = self._join_name_email(data, 'author', 'author_email')
         transformed['code_repository'] = self._python_identify_repo(data.get('url')) or\
                                          self._python_identify_repo(data.get('download_url'))
-        transformed['keywords'] = self._split_keywords(data.get('keywords', []))
+        transformed['keywords'] = self._split_keywords(data.get('keywords'))
         return transformed
 
     def _handle_python_dist(self, data):
@@ -282,17 +290,19 @@ class DataNormalizer(object):
             result = {'author': author, 'homepage': homepage, 'description': data.get('summary', None),
                       'dependencies': sorted(dependencies), 'name': data.get('name', None),
                       'version': data.get('version', None),
-                      'declared_license': details.get('license', None)}
+                      'declared_licenses': self._split_keywords(data.get('license'))}
         else:
             key_map = (('summary', 'description'), ('requires_dist', 'dependencies'), ('name',),
-                       ('home-page', 'homepage'), ('version',), ('license', 'declared_license'),
-                       ('platform',), )
+                       ('home-page', 'homepage'), ('version',), ('platform',), )
 
             result = self.transform_keys(data, key_map)
             result['author'] = self._join_name_email(data, 'author', 'author-email')
+            result['declared_licenses'] = self._split_keywords(data.get('license'))
+
         result['code_repository'] = self._python_identify_repo(data.get('home-page')) or \
                                     self._python_identify_repo(data.get('download-url'))
-        result['keywords'] = self._split_keywords(data.get('keywords', []))
+        result['keywords'] = self._split_keywords(data.get('keywords'))
+
         return result
 
     def _handle_java(self, data):
@@ -301,10 +311,10 @@ class DataNormalizer(object):
         if pom is None:
             return None
 
-        key_map = (('name',), ('version', ), ('description', ), ('url', 'homepage'))
+        key_map = (('name',), ('version', ), ('description', ), ('url', 'homepage'),
+                   ('licenses', 'declared_licenses'))
         # handle licenses
         transformed = self.transform_keys(pom, key_map)
-        transformed['declared_license'] = ', '.join(pom.get('licenses', [])) or None
         # dependencies with scope 'compile' and 'runtime' are needed at runtime;
         # dependencies with scope 'provided' are not necessarily runtime dependencies,
         # but they are commonly used for example in web applications
@@ -344,15 +354,10 @@ class DataNormalizer(object):
 
     def _handle_rubygems(self, data):
         key_map = (('author',), ('authors',), ('email',), ('name',), ('version',), ('homepage',),
-                   (('license', 'licenses',), 'declared_license'),
+                   (('license', 'licenses',), 'declared_licenses'),
                    ('dependencies',), ('devel_dependencies',), ('description',),
                    ('metadata',), ('platform',), )
         transformed = self.transform_keys(data, key_map)
-
-        # list of licenses  ->  string of comma separated licenses
-        value = transformed['declared_license']
-        if isinstance(value, list):
-            transformed['declared_license'] = ", ".join(value)
 
         # 'authors' (list of strings) or 'author' (string) is required attribute
         authors = transformed.get('authors') or [transformed.get('author')]
@@ -412,7 +417,7 @@ class DataNormalizer(object):
             return {}
         data = data['Metadata']
         key_map = (('Id', 'name'), ('Description',),
-                   ('ProjectUrl', 'homepage'), ('LicenseUrl', 'declared_license'),
+                   ('ProjectUrl', 'homepage'),
                    # ('Summary',), ('Copyright',),
                    # ('RequireLicenseAcceptance', 'require_license_acceptance'),
                    )
@@ -420,6 +425,9 @@ class DataNormalizer(object):
 
         if data.get('Authors'):
             transformed['author'] = ','.join(data['Authors'])
+
+        if data.get('LicenseUrl'):
+            transformed['declared_licenses'] = [data['LicenseUrl']]
 
         # transform
         # "DependencyGroups": [

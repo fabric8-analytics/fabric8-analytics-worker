@@ -21,6 +21,7 @@ def added_in(role):
     """
     return jsl.Scope(lambda v: v >= role)
 
+
 def removed_in(role):
     """Helper for schema fields removed in a particular version
 

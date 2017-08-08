@@ -3,7 +3,7 @@
   "author": "OpenStack <openstack-dev@lists.openstack.org>",
   "code_repository": null,
   "homepage": "http://docs.openstack.org/developer/python-openstackclient",
-  "declared_license": "UNKNOWN",
+  "declared_licenses": ["UNKNOWN"],
   "dependencies": null,
   "name": "python-openstackclient",
   "description": "OpenStack Command-line Client",

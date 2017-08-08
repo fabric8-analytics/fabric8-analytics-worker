@@ -29,7 +29,7 @@ class TestMercator(object):
         flexmock(self.m.storage).should_receive('get_ecosystem').with_args('npm').and_return(npm)
         name = 'wrappy'
         version = '1.0.2'
-        required = {'homepage', 'version', 'declared_license', 'code_repository',
+        required = {'homepage', 'version', 'declared_licenses', 'code_repository',
                     'bug_reporting', 'description', 'name', 'author'}
         IndianaJones.fetch_artifact(
             npm, artifact=name,
