@@ -88,7 +88,7 @@
       "soldair <soldair@gmail.com>",
       "zkat <kat@sykosomatic.org>"
    ],
-   "declared_license":"ISC",
+   "declared_licenses":["ISC"],
    "code_repository":{
       "type":"git",
       "url":"git://github.com/isaacs/node-tar.git"

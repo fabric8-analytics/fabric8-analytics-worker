@@ -6,7 +6,7 @@
    "metadata":{
 
    },
-   "declared_license":"MIT",
+   "declared_licenses":["MIT"],
    "platform":"ruby",
    "devel_dependencies":[
       "minitest >=5.0,",

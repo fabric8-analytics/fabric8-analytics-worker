@@ -30,6 +30,25 @@ class TestDataNormalizer(object):
             return json.load(f)
 
     @pytest.mark.parametrize('args, expected', [
+        ({'keywords': None},
+         None),
+        ({'keywords': []},
+         []),
+        ({'keywords': ['x', 'y']},
+         ['x', 'y']),
+        ({'keywords': ''},
+         ['']),
+        ({'keywords': 'one'},
+         ['one']),
+        ({'keywords': 'one, two'},
+         ['one', 'two']),
+        ({'keywords': 'one two', 'separator': ' '},
+         ['one', 'two']),
+    ])
+    def test__split_keywords(self, args, expected):
+        assert self._dataNormalizer._split_keywords(**args) == expected
+
+    @pytest.mark.parametrize('args, expected', [
         # pick one key which IS there
         ({'data': {'author': 'me', 'version': '0.1.2'}, 'keymap': (('author',),)},
          {'author': 'me'}),
@@ -49,8 +68,8 @@ class TestDataNormalizer(object):
         ({'data': {'licenses': ['MIT', 'BSD']}, 'keymap': ((('license', 'licenses',),),)},
          {'licenses': ['MIT', 'BSD']}),
         # pick one of keys and rename it
-        ({'data': {'license': 'MIT'}, 'keymap': ((('license', 'licenses',), 'declared_license'),)},
-         {'declared_license': 'MIT'}),
+        ({'data': {'license': 'MIT'}, 'keymap': ((('license', 'licenses',), 'declared_licenses'),)},
+         {'declared_licenses': 'MIT'}),
     ])
     def test__transform_keys(self, args, expected):
         assert self._dataNormalizer.transform_keys(**args) == expected
@@ -145,19 +164,19 @@ class TestDataNormalizer(object):
         ({'bugs': {'url': 'https://github.com/owner/project/issues', 'email': 'project@name.com'}},
          {'bug_reporting': 'https://github.com/owner/project/issues <project@name.com>'}),
         ({'license': 'BSD-3-Clause'},
-         {'declared_license': 'BSD-3-Clause'}),
+         {'declared_licenses': ['BSD-3-Clause']}),
         ({'license': '(ISC OR GPL-3.0)'},
-         {'declared_license': '(ISC OR GPL-3.0)'}),
+         {'declared_licenses': ['ISC', 'GPL-3.0']}),
         # deprecated, but used in older packages
         ({'license': {'type': 'ISC',
                       'url': 'http://opensource.org/licenses/ISC'}},
-         {'declared_license': 'ISC'}),
+         {'declared_licenses': ['ISC']}),
         # deprecated, but used in older packages
         ({'licenses': [{'type': 'MIT',
                         'url': 'http://www.opensource.org/licenses/mit-license.php'},
                        {'type': 'Apache-2.0',
                         'url': 'http://opensource.org/licenses/apache2.0.php'}]},
-         {'declared_license': 'MIT, Apache-2.0'}),
+         {'declared_licenses': ['MIT', 'Apache-2.0']}),
         ({'repository': {'type': 'git', 'url': 'https://github.com/npm/npm.git'}},
          {'code_repository': {'type': 'git', 'url': 'https://github.com/npm/npm.git'}}),
         ({'repository': 'expressjs/express'},
@@ -239,7 +258,7 @@ class TestDataNormalizer(object):
          {'code_repository': {'url': 'git@github.com:fabric8-analytics/fabric8-analytics-worker.git',
                               'type': 'git'}}),
         ({'pom.xml': {'licenses': ['ASL 2.0', 'MIT']}},
-         {'declared_license': 'ASL 2.0, MIT'}),
+         {'declared_licenses': ['ASL 2.0', 'MIT']}),
         ({'pom.xml': {'description': 'Ich bin ein Bayesianer'}},
          {'description': 'Ich bin ein Bayesianer'}),
         ({'pom.xml': {'url': 'https://github.com/fabric8-analytics/fabric8-analytics-worker'}},

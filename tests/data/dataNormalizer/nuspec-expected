@@ -4,7 +4,7 @@
           "type": "git",
           "url": "https://github.com/JamesNK/Newtonsoft.Json"
         },
-        "declared_license": "https://raw.github.com/JamesNK/Newtonsoft.Json/master/LICENSE.md",
+        "declared_licenses": ["https://raw.github.com/JamesNK/Newtonsoft.Json/master/LICENSE.md"],
         "dependencies": [
           "System.Xml.XmlDocument 4.3.0",
           "System.Runtime.Serialization.Primitives 4.3.0",
