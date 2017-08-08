@@ -1,7 +1,7 @@
 # TODO: mercator is very different than other workers - do we want to change that?
 import jsl
 
-from f8a_worker.schemas import JSLSchemaBaseWithRelease, added_in
+from f8a_worker.schemas import JSLSchemaBaseWithRelease, added_in, removed_in
 
 ROLE_v1_0_0 = "v1-0-0"
 ROLE_v1_0_1 = "v1-0-1"
@@ -13,6 +13,7 @@ ROLE_v3_0_0 = "v3-0-0"
 ROLE_v3_0_1 = "v3-0-1"
 ROLE_v3_1_0 = "v3-1-0"
 ROLE_v3_1_1 = "v3-1-1"
+ROLE_v3_2_0 = "v3-2-0"
 ROLE_TITLE = jsl.roles.Var({
     ROLE_v1_0_0: "Package Metadata v1-0-0",
     ROLE_v1_0_1: "Package Metadata v1-0-1",
@@ -28,6 +29,8 @@ ROLE_TITLE = jsl.roles.Var({
     ROLE_v3_1_0: "Package Metadata v3-1-0",
     # Add 'path', optional
     ROLE_v3_1_1: "Package Metadata v3-1-0",
+    # declared_license (str) -> declared_licenses (list)
+    ROLE_v3_2_0: "Package Metadata v3-2-0",
 })
 
 _type_field_required = jsl.Var(
@@ -75,7 +78,7 @@ class LockFile(jsl.Document):
     runtime = jsl.StringField()
     version = jsl.StringField()
     dependencies = jsl.ArrayField(jsl.DocumentField(LockedDependency, as_ref=True))
-    with jsl.Scope(lambda v: v >= ROLE_v3_0_0) as since_v3_0_0:
+    with added_in(ROLE_v3_0_0) as since_v3_0_0:
         since_v3_0_0.name = jsl.StringField()
 
 
@@ -90,7 +93,7 @@ class NpmShrinkwrap(jsl.Document):
     node_version = jsl.StringField()
     with jsl.Scope(lambda v: v in (ROLE_v1_0_1, ROLE_v1_1_0)) as v1_0_1_v1_1_0:
         v1_0_1_v1_1_0.resolved_dependencies = jsl.ArrayField(jsl.StringField())
-    with jsl.Scope(lambda v: v >= ROLE_v2_0_0) as since_v2_0_0:
+    with added_in(ROLE_v2_0_0) as since_v2_0_0:
         since_v2_0_0.dependencies = jsl.ArrayField(jsl.StringField())
         since_v2_0_0._system = jsl.StringField()
 
@@ -106,9 +109,12 @@ class MetadataDict(jsl.Document):
     code_repository = jsl.OneOfField(
         [jsl.DocumentField(CodeRepository, as_ref=True), jsl.NullField()]
     )
-    declared_license = jsl.OneOfField(
-        [jsl.StringField(), jsl.NullField()]
-    )
+
+    with removed_in(ROLE_v3_2_0) as removed_in_v3_2_0:
+        removed_in_v3_2_0.declared_license = jsl.OneOfField([jsl.StringField(), jsl.NullField()])
+    with added_in(ROLE_v3_2_0) as added_in_v3_2_0:
+        added_in_v3_2_0.declared_licenses = jsl.ArrayField(jsl.StringField(), required=True)
+
     dependencies = jsl.OneOfField(
         [jsl.ArrayField(jsl.StringField()), jsl.NullField()]
     )
@@ -148,7 +154,7 @@ class MetadataDict(jsl.Document):
     with jsl.Scope(lambda v: v < ROLE_v1_1_0) as before_v1_1_0:
         before_v1_1_0.maintainers = jsl.OneOfField(
                     [jsl.ArrayField(jsl.DocumentField(Maintainer, as_ref=True)), jsl.NullField()])
-    with jsl.Scope(lambda v: v >= ROLE_v1_1_0) as since_v1_1_0:
+    with added_in(ROLE_v1_1_0) as since_v1_1_0:
         since_v1_1_0.contributors = jsl.OneOfField(
                     [jsl.ArrayField(jsl.StringField()), jsl.NullField()])
         since_v1_1_0.maintainers = jsl.OneOfField(
@@ -159,14 +165,14 @@ class MetadataDict(jsl.Document):
         since_v2_1_0._bayesian_dependency_tree_lock = jsl.OneOfField([
             jsl.DocumentField(LockFile, as_ref=True), jsl.NullField()
         ])
-    with jsl.Scope(lambda v: v >= ROLE_v2_1_1) as since_v2_1_1:
+    with added_in(ROLE_v2_1_1) as since_v2_1_1:
         since_v2_1_1._tests_implemented = jsl.BooleanField()
-    with jsl.Scope(lambda v: v >= ROLE_v3_0_0) as since_v3_0_0:
+    with added_in(ROLE_v3_0_0) as since_v3_0_0:
         since_v3_0_0.ecosystem = jsl.StringField()
         since_v3_0_0._dependency_tree_lock = jsl.OneOfField([
             jsl.DocumentField(LockFile, as_ref=True), jsl.NullField()
         ])
-    with jsl.Scope(lambda v: v >= ROLE_v3_1_1) as since_v3_1_1:
+    with added_in(ROLE_v3_1_1) as since_v3_1_1:
         since_v3_1_1.path = jsl.OneOfField(
             [jsl.StringField(), jsl.NullField()],
             required=False
