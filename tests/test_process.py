@@ -7,6 +7,7 @@ import subprocess
 import tempfile
 
 from f8a_worker.process import Git, IndianaJones
+from f8a_worker.utils import MavenCoordinates
 
 
 @pytest.fixture
@@ -88,6 +89,8 @@ class TestIndianaJones(object):
     @pytest.mark.parametrize('name, version, expected_digest', [
         ('com.rabbitmq:amqp-client', '3.6.1',
          'cb6cdb7de8d37cb1b15b23867435c7dbbeaa1ca4b766f434138a8b9ef131994f'),
+        ('org.springframework:spring-aop', '5.0.0.M5',
+         '2b51fe492f6a7ed76b27c319b035c289926f399934f9d6bf072baac62ebf4fa5')
     ])
     def test_fetch_maven_specific(self, tmpdir, maven, name, version, expected_digest):
         digest, path = IndianaJones.fetch_artifact(maven,
@@ -110,3 +113,20 @@ class TestIndianaJones(object):
         assert digest == expected_digest
         assert osp.exists(osp.join(str(tmpdir), '{}.{}.nupkg'.format(name.lower(),
                                                                      version)))
+
+    @pytest.mark.parametrize('name, version, expected_repos', [
+        ('org.apache.ant:ant', '1.9.4',
+         ['http://central.maven.org/maven2/',
+          'https://repository.apache.org/content/repositories/releases/',
+          'https://maven.repository.redhat.com/ga/']),
+        ('org.netbeans.api:org-netbeans-modules-java-source', 'RELEASE81',
+         ['http://bits.netbeans.org/maven2/']),
+        ('org.springframework.boot:spring-boot-starter-thymeleaf', '1.3.0.M2',
+         ['http://repo.spring.io/milestone/',
+          'https://artifacts.alfresco.com/nexus/content/repositories/public/'])
+    ])
+    def test_webscrape_maven_repos_urls(self, name, version, expected_repos):
+        artifact_coords = MavenCoordinates.from_str(name)
+        artifact_coords.version = version
+        repos = list(IndianaJones.webscrape_maven_repos_urls(artifact_coords))
+        assert repos == expected_repos
