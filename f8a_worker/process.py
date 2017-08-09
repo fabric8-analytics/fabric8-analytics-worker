@@ -7,9 +7,9 @@ import shutil
 import logging
 import requests
 
+from bs4 import BeautifulSoup
 from git2json.parser import parse_commits
 from git2json import run_git_log
-
 from re import compile as re_compile
 from urllib.parse import urljoin, urlparse
 
@@ -232,6 +232,31 @@ class IndianaJones(object):
             return TimedCommand.get_command_output(['git', 'rev-parse', 'HEAD'], graceful=False).pop()
 
     @staticmethod
+    def webscrape_maven_repos_urls(artifact_coords):
+        url = 'https://mvnrepository.com/artifact/{group}/{artifact}/{version}'\
+              .format(group=artifact_coords.groupId,
+                      artifact=artifact_coords.artifactId,
+                      version=artifact_coords.version)
+        response = requests.get(url)
+        if not response.ok:
+            return None
+        page = BeautifulSoup(response.text, 'html.parser')
+        th_repos = page.find('th', text='Repositories')
+        # <td><a class="b lic" href="/repos/springio-milestone">Spring Milestones</a>
+        #     <a class="b lic" href="/repos/alfresco-public">Alfresco Public</a></td>
+        td_repos = [r['href'] for r in
+                    th_repos.find_next('td').find_all('a', href=re_compile(r'^/repos/'))]
+        for repo in td_repos:
+            response = requests.get('https://mvnrepository.com' + repo)
+            if not response.ok:
+                continue
+            page = BeautifulSoup(response.text, 'html.parser')
+            th_url = page.find('th', text='URL')
+            # <td><a href="http://repo.spring.io/milestone/">http://repo.spring.io/milestone/
+            # </a></td>
+            yield th_url.find_next('td').text
+
+    @staticmethod
     def fetch_artifact(ecosystem=None,
                        artifact=None,
                        version=None,
@@ -355,19 +380,24 @@ class IndianaJones(object):
             artifact_coords = MavenCoordinates.from_str(artifact)
             if not version:
                 raise ValueError("No version provided for '%s'" % artifact_coords.to_str())
-            git = Git.create_git(target_dir)
-            # lxml can't handle HTTPS URLs
-            maven_url = "http://repo1.maven.org/maven2/"
             artifact_coords.version = version
-            logger.info("downloading maven package %s", artifact_coords.to_str())
-
             if not artifact_coords.is_valid():
                 raise ValueError("Invalid Maven coordinates: {a}".format(a=artifact_coords.to_str()))
 
+            git = Git.create_git(target_dir)
+            maven_url = "http://repo1.maven.org/maven2/"
             artifact_url = urljoin(maven_url, artifact_coords.to_repo_url())
+            logger.info("Downloading maven package %s", artifact_coords.to_str())
             local_filename = IndianaJones.download_file(artifact_url, target_dir)
             if local_filename is None:
-                raise RuntimeError("Unable to download: %s" % artifact_url)
+                logger.debug('Failed to download from central repository, trying others')
+                for repo_url in IndianaJones.webscrape_maven_repos_urls(artifact_coords):
+                    artifact_url = urljoin(repo_url, artifact_coords.to_repo_url())
+                    local_filename = IndianaJones.download_file(artifact_url, target_dir)
+                    if local_filename is not None:
+                        break
+                if local_filename is None:
+                    raise RuntimeError("Unable to download %s" % artifact_coords.to_str())
             artifact_path = os.path.join(target_dir,
                                          os.path.split(artifact_coords.to_repo_url())[1])
             digest = compute_digest(artifact_path)
