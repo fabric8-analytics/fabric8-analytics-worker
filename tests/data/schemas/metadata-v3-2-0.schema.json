@@ -249,9 +249,6 @@
                     ]
                 }
             },
-            "required": [
-                "declared_licenses"
-            ],
             "additionalProperties": false
         },
         "metadata_code_repository": {
