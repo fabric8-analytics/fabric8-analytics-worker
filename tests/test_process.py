@@ -8,30 +8,6 @@ import tempfile
 
 from f8a_worker.process import Git, IndianaJones
 
-NPM_MODULE_NAME = "dezalgo"
-NPM_MODULE_VERSION = "1.0.2"
-# Prior to npm-2.x.x (Fedora 24)
-# npm client was repackaging modules on download. It modified file permissions inside
-# package.tgz so they matched UID/GID of a user running npm command. Therefore
-# this hash was valid only for user 1000:1000.
-# If the test that checks this fails, it means that the feature is back in npm and we can't
-# rely on the digest of the npm downloaded tarball matching the upstream one.
-# In that case we should probably consider downloading tarballs directly from registry.npmjs.org.
-# because for example AnityaTask relies on this.
-NPM_MODULE_DIGEST = '8db082250efa45673f344bb809c7cfa1ce37ca9274de29635a40d1e7df6d6114'
-PYPI_MODULE_NAME = "six"
-PYPI_MODULE_VERSION = "1.0.0"
-PYPI_MODULE_DIGEST = 'ca79c14c8cb5e58912d185f0e07ca9c687e232b7c68c4b73bf1c83ef5979333e'
-RUBYGEMS_MODULE_NAME = "permutation"
-RUBYGEMS_MODULE_VERSION = "0.1.7"
-RUBYGEMS_MODULE_DIGEST = 'e715cccaccb8e2d1450fbdda85bbe84963a32e9bf612db278cbb3d6781267638'
-MAVEN_MODULE_NAME = "com.rabbitmq:amqp-client"
-MAVEN_MODULE_VERSION = "3.6.1"
-MAVEN_MODULE_DIGEST = 'cb6cdb7de8d37cb1b15b23867435c7dbbeaa1ca4b766f434138a8b9ef131994f'
-NUGET_PACKAGE_NAME = 'NUnit'
-NUGET_PACKAGE_VERSION = '3.7.1'
-NUGET_PACKAGE_DIGEST = 'db714c0a01d8a172e6c378144b1192290263f8c308e8e2baba9c11d9fe165db4'
-
 
 @pytest.fixture
 def tmpdir():
@@ -56,61 +32,81 @@ class TestGit(object):
 
 
 class TestIndianaJones(object):
-    @pytest.mark.parametrize("package,version,digest", [
+    @pytest.mark.parametrize("name, version, expected_digest", [
+        # Prior to npm-2.x.x (Fedora 24)
+        # npm client was repackaging modules on download. It modified file permissions inside
+        # package.tgz so they matched UID/GID of a user running npm command. Therefore
+        # this hash was valid only for user 1000:1000.
+        # If the test that checks this fails, it means that the feature is back in npm and we can't
+        # rely on the digest of the npm downloaded tarball matching the upstream one.
+        # In that case we should probably consider downloading tarballs directly from registry.npmjs.org.
+        # because for example AnityaTask relies on this.
         ("abbrev", "1.0.7", "30f6880e415743312a0021a458dd6d26a7211f803a42f1e4a30ebff44d26b7de"),
         ("abbrev", "1.0.4", "8dc0f480571a4a19e74f1abd4f31f6a70f94953d1ccafa16ed1a544a19a6f3a8")
     ])
-    def test_fetch_npm_specific(self, tmpdir, npm, package, version, digest):
+    def test_fetch_npm_specific(self, tmpdir, npm, name, version, expected_digest):
         cache_path = subprocess.check_output(["npm", "config", "get", "cache"],
                                              universal_newlines=True).strip()
         assert ".npm" in cache_path
         package_digest, path = IndianaJones.fetch_artifact(npm,
-                                                           artifact=package,
+                                                           artifact=name,
                                                            version=version,
                                                            target_dir=tmpdir)
-        assert len(glob.glob(osp.join(cache_path, package, "*"))) == 1,\
+        assert len(glob.glob(osp.join(cache_path, name, "*"))) == 1,\
             "there should be just one version of the artifact in the NPM cache"
-        assert package_digest == digest
+        assert package_digest == expected_digest
         assert osp.exists(path)
-        assert osp.exists(osp.join(osp.join(cache_path, package), version))
+        assert osp.exists(osp.join(osp.join(cache_path, name), version))
         assert osp.exists(osp.join(tmpdir, "package.tgz"))
 
-    def test_fetch_pypi_specific(self, tmpdir, pypi):
+    @pytest.mark.parametrize('name, version, expected_digest', [
+        ('six', '1.0.0', 'ca79c14c8cb5e58912d185f0e07ca9c687e232b7c68c4b73bf1c83ef5979333e'),
+    ])
+    def test_fetch_pypi_specific(self, tmpdir, pypi, name, version, expected_digest):
         digest, path = IndianaJones.fetch_artifact(pypi,
-                                                   artifact=PYPI_MODULE_NAME,
-                                                   version=PYPI_MODULE_VERSION,
+                                                   artifact=name,
+                                                   version=version,
                                                    target_dir=str(tmpdir))
-        assert digest == PYPI_MODULE_DIGEST
+        assert digest == expected_digest
         assert len(os.listdir(str(tmpdir))) > 1
-        glob_whl_path = glob.glob(osp.join(str(tmpdir), "{}-{}*".format(PYPI_MODULE_NAME,
-                                                                        PYPI_MODULE_VERSION))).pop()
+        glob_whl_path = glob.glob(osp.join(str(tmpdir), "{}-{}*".format(name,
+                                                                        version))).pop()
         assert osp.exists(glob_whl_path)
 
-    def test_fetch_rubygems_specific(self, tmpdir, rubygems):
+    @pytest.mark.parametrize('name, version, expected_digest', [
+        ('permutation', '0.1.7', 'e715cccaccb8e2d1450fbdda85bbe84963a32e9bf612db278cbb3d6781267638')
+    ])
+    def test_fetch_rubygems_specific(self, tmpdir, rubygems, name, version, expected_digest):
         digest, path = IndianaJones.fetch_artifact(rubygems,
-                                                   artifact=RUBYGEMS_MODULE_NAME,
-                                                   version=RUBYGEMS_MODULE_VERSION,
+                                                   artifact=name,
+                                                   version=version,
                                                    target_dir=str(tmpdir))
-        assert digest == RUBYGEMS_MODULE_DIGEST
-        assert osp.exists(osp.join(str(tmpdir), "{}-{}.gem".format(RUBYGEMS_MODULE_NAME,
-                                                                   RUBYGEMS_MODULE_VERSION)))
+        assert digest == expected_digest
+        assert osp.exists(osp.join(str(tmpdir), "{}-{}.gem".format(name,
+                                                                   version)))
 
-    def test_fetch_maven_specific(self, tmpdir, maven):
+    @pytest.mark.parametrize('name, version, expected_digest', [
+        ('com.rabbitmq:amqp-client', '3.6.1',
+         'cb6cdb7de8d37cb1b15b23867435c7dbbeaa1ca4b766f434138a8b9ef131994f'),
+    ])
+    def test_fetch_maven_specific(self, tmpdir, maven, name, version, expected_digest):
         digest, path = IndianaJones.fetch_artifact(maven,
-                                                   artifact=MAVEN_MODULE_NAME,
-                                                   version=MAVEN_MODULE_VERSION,
+                                                   artifact=name,
+                                                   version=version,
                                                    target_dir=str(tmpdir))
-        _, artifactId = MAVEN_MODULE_NAME.split(':', 1)
-        assert digest == MAVEN_MODULE_DIGEST
+        _, artifactId = name.split(':', 1)
+        assert digest == expected_digest
         assert osp.exists(osp.join(str(tmpdir), '{}-{}.jar'.format(artifactId,
-                                                                   MAVEN_MODULE_VERSION)))
+                                                                   version)))
 
-    @pytest.mark.usefixtures('nuget')
-    def test_fetch_nuget_specific(self, tmpdir, nuget):
+    @pytest.mark.parametrize('name, version, expected_digest', [
+        ('NUnit', '3.7.1', 'db714c0a01d8a172e6c378144b1192290263f8c308e8e2baba9c11d9fe165db4'),
+    ])
+    def test_fetch_nuget_specific(self, tmpdir, nuget, name, version, expected_digest):
         digest, path = IndianaJones.fetch_artifact(nuget,
-                                                   artifact=NUGET_PACKAGE_NAME,
-                                                   version=NUGET_PACKAGE_VERSION,
+                                                   artifact=name,
+                                                   version=version,
                                                    target_dir=str(tmpdir))
-        assert digest == NUGET_PACKAGE_DIGEST
-        assert osp.exists(osp.join(str(tmpdir), '{}.{}.nupkg'.format(NUGET_PACKAGE_NAME.lower(),
-                                                                     NUGET_PACKAGE_VERSION)))
+        assert digest == expected_digest
+        assert osp.exists(osp.join(str(tmpdir), '{}.{}.nupkg'.format(name.lower(),
+                                                                     version)))
