@@ -104,8 +104,8 @@ RUN cd /tmp/f8a_worker && pip3 install .
 RUN find ${HOME} -mindepth 1 -delete
 
 # A temporary hack to keep Selinon up2date
-COPY hack/update_selinon.sh /tmp/
-RUN sh /tmp/update_selinon.sh
+COPY hack/install_selinon.sh /tmp/
+RUN sh /tmp/install_selinon.sh
 
 # Not-yet-upstream-released patches
 RUN mkdir -p /tmp/install_deps/patches/
