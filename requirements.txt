@@ -7,6 +7,7 @@
 amqp==2.1.4
 anymarkup-core==0.7.1     # via anymarkup
 anymarkup==0.7.0
+argcomplete==1.8.2        # via selinonlib
 beautifulsoup4==4.6.0
 bigquery-python==1.12.0
 billiard==3.5.0.2         # via celery
@@ -14,13 +15,15 @@ boto3==1.4.4
 boto==2.48.0
 botocore==1.5.81          # via boto3, s3transfer
 cachetools==2.0.0         # via google-auth
-celery==4.0.2             # via selinon
+celery==4.0.2             # via selinon, selinonlib
 certifi==2017.4.17        # via requests
 chardet==3.0.4            # via requests
 codegen==1.0              # via selinonlib
+colorama==0.3.9           # via rainbow-logging-handler
 configobj==5.0.6          # via anymarkup
-dill==0.2.7               # via google-gax, selinonlib
+dill==0.2.7               # via google-gax
 docutils==0.13.1          # via botocore
+flexmock==0.10.2          # via selinonlib
 future==0.16.0            # via google-gax
 gapic-google-cloud-datastore-v1==0.15.3  # via google-cloud-datastore
 gapic-google-cloud-error-reporting-v1beta1==0.15.3  # via google-cloud-error-reporting
@@ -67,6 +70,7 @@ jsl==0.2.4
 json5==0.2.4              # via anymarkup
 jsonschema==2.6.0
 kombu==4.0.2              # via celery
+logutils==0.3.5           # via rainbow-logging-handler
 lxml==3.8.0
 numpy==1.13.1
 oauth2client==3.0.0       # via gapic-google-cloud-datastore-v1, gapic-google-cloud-error-reporting-v1beta1, gapic-google-cloud-logging-v2, gapic-google-cloud-pubsub-v1, gapic-google-cloud-spanner-admin-database-v1, gapic-google-cloud-spanner-admin-instance-v1, gapic-google-cloud-spanner-v1, gapic-google-cloud-speech-v1, google-api-python-client, grpc-google-iam-v1, proto-google-cloud-datastore-v1, proto-google-cloud-error-reporting-v1beta1, proto-google-cloud-logging-v2, proto-google-cloud-pubsub-v1, proto-google-cloud-spanner-admin-database-v1, proto-google-cloud-spanner-admin-instance-v1, proto-google-cloud-spanner-v1, proto-google-cloud-speech-v1
@@ -88,14 +92,15 @@ pyjwt==1.5.2              # via pygithub
 python-dateutil==2.6.1    # via bigquery-python, botocore
 pytz==2017.2              # via celery
 pyyaml==3.12              # via anymarkup, selinonlib
+rainbow-logging-handler==2.2.2  # via selinonlib
 redis==2.10.5             # via selinon
 requests==2.18.1
 rsa==3.4.2                # via google-auth, google-auth-httplib2, oauth2client
 s3transfer==0.1.10        # via boto3
 scikit-learn==0.18.2
 scipy==0.19.1
-selinon==0.1.0rc3
-selinonlib==0.1.0rc3
+selinon==0.1.0rc5
+selinonlib==0.1.0rc5
 semantic-version==2.6.0
 six==1.10.0               # via anymarkup-core, configobj, google-api-python-client, google-auth, google-auth-httplib2, google-cloud-core, google-cloud-videointelligence, google-resumable-media, grpcio, oauth2client, protobuf, python-dateutil
 sqlalchemy==1.1.11
