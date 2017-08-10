@@ -2,18 +2,9 @@ import glob
 import os
 import os.path as osp
 import pytest
-import shutil
 import subprocess
-import tempfile
 
 from f8a_worker.process import Git, IndianaJones
-
-
-@pytest.fixture
-def tmpdir():
-    tmp = tempfile.mkdtemp()
-    yield tmp
-    shutil.rmtree(tmp)
 
 
 class TestGit(object):
@@ -39,8 +30,8 @@ class TestIndianaJones(object):
         # this hash was valid only for user 1000:1000.
         # If the test that checks this fails, it means that the feature is back in npm and we can't
         # rely on the digest of the npm downloaded tarball matching the upstream one.
-        # In that case we should probably consider downloading tarballs directly from registry.npmjs.org.
-        # because for example AnityaTask relies on this.
+        # In that case we should probably consider downloading tarballs directly from
+        # registry.npmjs.org, because for example AnityaTask relies on this.
         ("abbrev", "1.0.7", "30f6880e415743312a0021a458dd6d26a7211f803a42f1e4a30ebff44d26b7de"),
         ("abbrev", "1.0.4", "8dc0f480571a4a19e74f1abd4f31f6a70f94953d1ccafa16ed1a544a19a6f3a8")
     ])
@@ -51,13 +42,13 @@ class TestIndianaJones(object):
         package_digest, path = IndianaJones.fetch_artifact(npm,
                                                            artifact=name,
                                                            version=version,
-                                                           target_dir=tmpdir)
+                                                           target_dir=str(tmpdir))
         assert len(glob.glob(osp.join(cache_path, name, "*"))) == 1,\
             "there should be just one version of the artifact in the NPM cache"
         assert package_digest == expected_digest
         assert osp.exists(path)
         assert osp.exists(osp.join(osp.join(cache_path, name), version))
-        assert osp.exists(osp.join(tmpdir, "package.tgz"))
+        assert osp.exists(osp.join(str(tmpdir), "package.tgz"))
 
     @pytest.mark.parametrize('name, version, expected_digest', [
         ('six', '1.0.0', 'ca79c14c8cb5e58912d185f0e07ca9c687e232b7c68c4b73bf1c83ef5979333e'),
