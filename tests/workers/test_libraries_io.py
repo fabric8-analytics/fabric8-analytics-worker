@@ -9,7 +9,7 @@ class TestLibrariesIoTask(object):
          {'ecosystem': 'maven', 'name': 'org.jboss.netty:netty'},
          {'ecosystem': 'npm', 'name': 'grunt'},
          {'ecosystem': 'pypi', 'name': 'Flask'},
-         {'ecosystem': 'nuget', 'name': 'Newtonsoft.Json'}
+         {'ecosystem': 'nuget', 'name': 'NPOI'}
     ])
     def test_execute(self, args):
         task = LibrariesIoTask.create_test_instance(task_name='libraries_io')
