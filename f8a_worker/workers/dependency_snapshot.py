@@ -68,7 +68,7 @@ class DependencySnapshotTask(BaseTask):
 
         package, version = pkgspec.popitem()
         if not version:
-            raise TaskError("bad version resolved for {}".format(dep))
+            raise TaskError("could not resolve {}".format(dep))
 
         ret['name'] = package
         ret['version'] = version
@@ -96,6 +96,7 @@ class DependencySnapshotTask(BaseTask):
                 self.log.error(str(e))
                 result['summary']['errors'].append(str(e))
                 result['status'] = 'error'
+                break
             self.log.info('resolved dependency %s as %s', resolved, dep)
             resolved_deps.append(resolved)
         # in future, we may want to provide also build/test dependencies, not just runtime
