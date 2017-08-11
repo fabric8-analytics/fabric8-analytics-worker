@@ -103,6 +103,10 @@ RUN cd /tmp/f8a_worker && pip3 install .
 # as this directory can be used by non-root user at runtime.
 RUN find ${HOME} -mindepth 1 -delete
 
+# A temporary hack to keep tagger up2date
+COPY hack/install_tagger.sh /tmp/
+RUN sh /tmp/install_tagger.sh
+
 # Not-yet-upstream-released patches
 RUN mkdir -p /tmp/install_deps/patches/
 COPY hack/patches/* /tmp/install_deps/patches/

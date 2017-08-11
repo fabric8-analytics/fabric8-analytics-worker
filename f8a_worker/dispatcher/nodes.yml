@@ -301,6 +301,19 @@
       import: 'f8a_worker.workers'
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_BookkeeperTask_v0'
+    - name: 'package_keywords_tagging'
+      classname: 'KeywordsTaggingTask'
+      storage_task_name: 'keywords_tagging'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_package_keywords_tagging_v0'
+      storage: 'PackagePostgres'
+    - name: 'keywords_tagging'
+      classname: 'KeywordsTaggingTask'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_keywords_tagging_v0'
+      storage: 'BayesianPostgres'
 
   flows:
     - 'bayesianAnalysisFlow'
