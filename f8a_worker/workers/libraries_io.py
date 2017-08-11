@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+from re import compile as re_compile
 from requests import get
 
 from f8a_worker.base import BaseTask
@@ -12,7 +13,7 @@ class LibrariesIoTask(BaseTask):
 
     @staticmethod
     def _get_list_term_description(page, term_name):
-        tag = page.find(string='\n{}\n'.format(term_name))
+        tag = page.find(string=re_compile(r'^\s*{}\s*$'.format(term_name)))
         return tag.find_next('dd')
 
     def _get_list_term_description_text(self, page, term_name):
