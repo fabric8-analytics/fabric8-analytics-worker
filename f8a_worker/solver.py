@@ -527,7 +527,7 @@ class NugetDependencyParser(object):
         for spec in specs:
             name, version_range = spec.split(' ', 1)
 
-            # 1.0 -> 1.0 ≤ x
+            # 1.0 -> 1.0≤x
             if re.search('[,()\[\]]', version_range) is None:
                 dep = Dependency(name, [('>=', version_range)])
             # [1.0,2.0] -> 1.0≤x≤2.0
@@ -538,6 +538,13 @@ class NugetDependencyParser(object):
             elif re.fullmatch(r'\((.+),(.+)\)', version_range):
                 m = re.fullmatch(r'\((.+),(.+)\)', version_range)
                 dep = Dependency(name, [[('>', m.group(1)), ('<', m.group(2))]])
+            # The following one is not in specification,
+            # so we can just guess what was the intention.
+            # Seen in NLog:5.0.0-beta08 dependencies
+            # [1.0, ) -> 1.0≤x
+            elif re.fullmatch(r'\[(.+), \)', version_range):
+                m = re.fullmatch(r'\[(.+), \)', version_range)
+                dep = Dependency(name, [('>=', m.group(1))])
             # [1.0,2.0) -> 1.0≤x<2.0
             elif re.fullmatch(r'\[(.+),(.+)\)', version_range):
                 m = re.fullmatch(r'\[(.+),(.+)\)', version_range)

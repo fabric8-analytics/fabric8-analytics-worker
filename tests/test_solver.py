@@ -171,12 +171,14 @@ class TestSolver(object):
     def test_nuget_solver(self, nuget):
         solver = get_ecosystem_solver(nuget)
         deps = ['jQuery [1.4.4, 1.6)',
-                'NUnit 3.2.1']
+                'NUnit 3.2.1',
+                'NETStandard.Library [1.6.0, )']
         out = solver.solve(deps)
         # nuget resolves to lowest version by default, see
         # https://docs.microsoft.com/en-us/nuget/release-notes/nuget-2.8#-dependencyversion-switch
         assert out == {'jQuery': '1.4.4',
-                       'NUnit': '3.2.1'}
+                       'NUnit': '3.2.1',
+                       'NETStandard.Library': '1.6.0'}
 
 
 class TestFetcher(object):
