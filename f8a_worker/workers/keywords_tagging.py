@@ -65,7 +65,7 @@ class KeywordsTaggingTask(BaseTask):
     def execute(self, arguments):
         # Keep f8a_tagger import local as other components dependent on f8a_worker do not require it installed.
         from f8a_tagger import lookup_readme as keywords_lookup_readme
-        from f8a_tagger import lookup_tetxt as keywords_lookup_text
+        from f8a_tagger import lookup_text as keywords_lookup_text
 
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
