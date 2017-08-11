@@ -446,21 +446,23 @@ class DataNormalizer(object):
             for package in dep_group.get('Packages', []):
                 deps.add('{} {}'.format(package.get('Id', ''),
                                         package.get('VersionRange', {}).get('OriginalString', '')))
-        transformed['dependencies'] = list(deps)
+        if deps:
+            transformed['dependencies'] = list(deps)
 
-        if isinstance(data.get('Repository'), dict):
-            transformed['code_repository'] = {'type': data['Repository'].get('Type'),
-                                              'url': data['Repository'].get('Url')}
+        repository = data.get('Repository')
+        if isinstance(repository, dict) and repository:
+            transformed['code_repository'] = {'type': repository.get('Type'),
+                                              'url': repository.get('Url')}
 
         version = data.get('Version')
-        if isinstance(version, dict):
+        if isinstance(version, dict) and version:
             transformed['version'] = '{}.{}.{}'.format(version.get('Major', ''),
                                                        version.get('Minor', ''),
                                                        version.get('Patch', ''))
 
-        tags = data.get('Tags', '')
-        separator = ',' if ',' in tags else ' '
-        transformed['keywords'] = self._split_keywords(tags, separator)
+        if data.get('Tags'):
+            separator = ',' if ',' in data['Tags'] else ' '
+            transformed['keywords'] = self._split_keywords(data['Tags'], separator)
 
         return transformed
 
