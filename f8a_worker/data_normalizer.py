@@ -27,7 +27,7 @@ import json
 from os import path
 from itertools import zip_longest
 
-from f8a_worker.utils import parse_gh_repo
+from f8a_worker.utils import parse_gh_repo, tempdir
 
 
 # TODO: we need to unify the output from different ecosystems
@@ -427,7 +427,18 @@ class DataNormalizer(object):
             transformed['author'] = ','.join(data['Authors'])
 
         if data.get('LicenseUrl'):
+            from f8a_worker.process import IndianaJones  # download_file
+            # It's here due to circular dependencies
+            from f8a_worker.workers import LicenseCheckTask  # run_scancode
             transformed['declared_licenses'] = [data['LicenseUrl']]
+            with tempdir() as tmpdir:
+                try:
+                    if IndianaJones.download_file(data['LicenseUrl'], tmpdir):
+                        scancode_results = LicenseCheckTask.run_scancode(tmpdir)
+                        if scancode_results.get('summary', {}).get('sure_licenses'):
+                            transformed['declared_licenses'] = scancode_results['summary']['sure_licenses']
+                except:
+                    pass
 
         # transform
         # "DependencyGroups": [
