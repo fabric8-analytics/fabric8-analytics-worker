@@ -57,6 +57,9 @@ class Git(object):
         :return: instance of Git()
         """
         cls.config()
+        # git clone doesn't understand urls starting with: git+ssh, git+http, git+https
+        if url.startswith('git+'):
+            url = url[len('git+'):]
         cmd = ["git", "clone", url, path]
         if depth is not None:
             cmd.extend(["--depth", depth])
