@@ -21,6 +21,11 @@
 
         - from: 'GitReadmeCollectorTask'
           to: 'package_keywords_tagging'
+          condition:
+            name: 'argsFieldEqual'
+            args:
+              key: 'ecosystem'
+              value: 'pypi'
 
         - from:
           to: 'git_stats'
