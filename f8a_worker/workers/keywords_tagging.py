@@ -33,7 +33,6 @@ class KeywordsTaggingTask(BaseTask):
     _LOOKUP_CONF = {
         'lemmatize': True,
         'stemmer': 'EnglishStemmer',
-        'ignore_errors': False,
         'ngram_size': None
     }
 
