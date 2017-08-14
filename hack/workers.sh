@@ -10,7 +10,7 @@
 #   * if WORKER_EXCLUDE_QUEUES and WORKER_INCLUDE_QUEUES are not present worker will listen on all queues
 #   * WORKER_EXCLUDE_QUEUES excludes queues based on list of all queues that are present according to YAML conf files
 
-set -e
+set -ex
 
 DISPATCHER_YAML_FILES_DIR="/usr/lib/python3.4/site-packages/f8a_worker/dispatcher"
 WORKER_NAME="${WORKER_NAME:-bayesian}"
