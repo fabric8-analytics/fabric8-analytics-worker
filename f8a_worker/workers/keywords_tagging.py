@@ -33,7 +33,8 @@ class KeywordsTaggingTask(BaseTask):
     _LOOKUP_CONF = {
         'lemmatize': True,
         'stemmer': 'EnglishStemmer',
-        'ngram_size': None
+        'ngram_size': None,
+        'scorer': 'RelativeUsage'
     }
 
     def _get_keywords_yaml(self, ecosystem):
