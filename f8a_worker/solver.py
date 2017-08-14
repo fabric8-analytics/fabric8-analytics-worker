@@ -4,6 +4,7 @@ from collections import defaultdict
 from functools import cmp_to_key
 import logging
 from lxml import etree
+from operator import itemgetter
 from pip.req.req_file import parse_requirements
 import re
 from requests import get
@@ -235,7 +236,7 @@ class NugetReleasesFetcher(ReleasesFetcher):
         super(NugetReleasesFetcher, self).__init__(ecosystem)
 
     @staticmethod
-    def _scrape_versions_from_nuget_org(package):
+    def scrape_versions_from_nuget_org(package, sort_by_downloads=False):
         """
         Scrape 'Version History' from https://www.nuget.org/packages/<package>
         """
@@ -246,11 +247,14 @@ class NugetReleasesFetcher(ReleasesFetcher):
             version = link['href'].split('/')[-1].strip()
             try:
                 semver_version.coerce(version)
+                downloads = int(link.find_next('td').text.strip().replace(',', ''))
             except ValueError:
                 pass
             else:
-                releases.append(version)
-        return package, list(reversed(releases))
+                releases.append((version, downloads))
+        if sort_by_downloads:
+            releases.sort(key=itemgetter(1))
+        return package, [p[0] for p in reversed(releases)]
 
     def fetch_releases(self, package):
         if not package:
@@ -261,7 +265,7 @@ class NugetReleasesFetcher(ReleasesFetcher):
         # But it lists also unlisted/deprecated/shouldn't-be-used versions,
         # so we don't use it.
 
-        return self._scrape_versions_from_nuget_org(package)
+        return self.scrape_versions_from_nuget_org(package)
 
 
 class F8aReleasesFetcher(ReleasesFetcher):
