@@ -382,7 +382,7 @@ class IndianaJones(object):
             git = Git.create_git(target_dir)
             file_url = '{url}{artifact}.{version}.nupkg'.format(url=ecosystem.fetch_url,
                                                                 artifact=artifact.lower(),
-                                                                version=version)
+                                                                version=version.lower())
             local_filename = IndianaJones.download_file(file_url, target_dir)
             if local_filename is None:
                 raise RuntimeError("Unable to download: %s" % file_url)
