@@ -35,7 +35,10 @@ DIGESTER='ssdeep'
 BREWUTILS="python2-brewutils"
 
 # mercator-go
-MERCATOR="mercator"
+# Requires nodejs, which requires http-parser, which is not in EPEL repo due to https://bugzilla.redhat.com/show_bug.cgi?id=1481008
+# This http-parser hack can be removed once Centos-7.4 image is out
+MERCATOR="https://kojipkgs.fedoraproject.org/packages/http-parser/2.7.1/3.el7/x86_64/http-parser-2.7.1-3.el7.x86_64.rpm
+          mercator"
 
 # CodeMetricsTask - it requires python-pip, since we'll be installing mccabe for both Python 2 and 3
 # CODE_METRICS="cloc python-pip"
