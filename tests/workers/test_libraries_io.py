@@ -3,6 +3,9 @@ import pytest
 from f8a_worker.workers import LibrariesIoTask
 
 
+# expected to fail, since getting libraries.io web page quite often results in
+# unpredictably incomplete html code
+@pytest.mark.xfail
 @pytest.mark.usefixtures("dispatcher_setup")
 class TestLibrariesIoTask(object):
     @pytest.mark.parametrize('args', [
