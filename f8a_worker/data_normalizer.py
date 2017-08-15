@@ -230,7 +230,7 @@ class DataNormalizer(object):
         return base
 
     @staticmethod
-    def _python_identify_repo(homepage):
+    def _identify_gh_repo(homepage):
         """Returns code repository dict filled with homepage, if homepage is GH repo
         (None otherwise)
         """
@@ -261,8 +261,8 @@ class DataNormalizer(object):
         transformed = self.transform_keys(data, key_map)
         transformed['declared_licenses'] = self._split_keywords(data.get('license'))
         transformed['author'] = self._join_name_email(data, 'author', 'author_email')
-        transformed['code_repository'] = self._python_identify_repo(data.get('url')) or\
-                                         self._python_identify_repo(data.get('download_url'))
+        transformed['code_repository'] = self._identify_gh_repo(data.get('url')) or\
+                                         self._identify_gh_repo(data.get('download_url'))
         transformed['keywords'] = self._split_keywords(data.get('keywords'))
         return transformed
 
@@ -299,8 +299,8 @@ class DataNormalizer(object):
             result['author'] = self._join_name_email(data, 'author', 'author-email')
             result['declared_licenses'] = self._split_keywords(data.get('license'))
 
-        result['code_repository'] = self._python_identify_repo(data.get('home-page')) or \
-                                    self._python_identify_repo(data.get('download-url'))
+        result['code_repository'] = self._identify_gh_repo(data.get('home-page')) or \
+                                    self._identify_gh_repo(data.get('download-url'))
         result['keywords'] = self._split_keywords(data.get('keywords'))
 
         return result
@@ -464,6 +464,8 @@ class DataNormalizer(object):
         if isinstance(repository, dict) and repository:
             transformed['code_repository'] = {'type': repository.get('Type'),
                                               'url': repository.get('Url')}
+        elif 'ProjectUrl' in data:
+            transformed['code_repository'] = self._identify_gh_repo(data['ProjectUrl'])
 
         version = data.get('Version')
         if isinstance(version, dict) and version:
