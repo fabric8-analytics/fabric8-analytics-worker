@@ -1,5 +1,5 @@
 import anymarkup
-import glob
+from glob import glob
 import os
 from shutil import rmtree
 from tempfile import gettempdir
@@ -81,7 +81,7 @@ class CVEcheckerTask(BaseTask):
 
     def _run_owasp_dep_check(self, scan_path, experimental=False):
         def _clean_dep_check_tmp():
-            for dcdir in glob.glob(os.path.join(gettempdir(), 'dctemp*')):
+            for dcdir in glob(os.path.join(gettempdir(), 'dctemp*')):
                 rmtree(dcdir)
 
         s3 = StoragePool.get_connected_storage('S3OWASPDepCheck')
@@ -209,7 +209,9 @@ class CVEcheckerTask(BaseTask):
         https://jeremylong.github.io/DependencyCheck/analyzers/nuspec-analyzer.html
         """
         extracted_nupkg = ObjectCache.get_from_dict(arguments).get_extracted_source_tarball()
-        return self._run_owasp_dep_check(extracted_nupkg, experimental=False)
+        # Point to nuspec (and not extracted_nupkg) as DependencyCheck mostly fails on *.dll
+        nuspec = glob(os.path.join(extracted_nupkg, '*.nuspec'))[0]
+        return self._run_owasp_dep_check(nuspec, experimental=False)
 
     def execute(self, arguments):
         self._strict_assert(arguments.get('ecosystem'))
