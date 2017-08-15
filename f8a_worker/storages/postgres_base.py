@@ -115,7 +115,7 @@ class PostgresBase(DataStorage):
         # Note that raising NotImplementedError will cause Selinon to treat behaviour correctly - no error is
         # permanently stored (but reported in logs).
         #
-        if task_name in ('InitPackageFlow', 'InitBayesianFlow'):
+        if task_name in ('InitPackageFlow', 'InitAnalysisFlow'):
             raise NotImplementedError()
 
         # Sanity checks
