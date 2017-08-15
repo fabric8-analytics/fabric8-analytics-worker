@@ -4,6 +4,6 @@
 
 set -e
 
-F8A_TAGGER_COMMIT=19d6a97
+F8A_TAGGER_COMMIT=bb2c8ba
 
 pip3 install git+https://github.com/fabric8-analytics/fabric8-analytics-tagger@${F8A_TAGGER_COMMIT}
