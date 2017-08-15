@@ -209,6 +209,8 @@ class Archive(object):
 class IndianaJones(object):
     @staticmethod
     def download_file(url, target_dir=None, name=None):
+        if url.endswith('/'):
+            url = url[:-1]
         local_filename = name or url.split('/')[-1]
 
         logger.debug("fetching artifact from: %s", url)
