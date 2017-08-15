@@ -209,8 +209,7 @@ class CVEcheckerTask(BaseTask):
         https://jeremylong.github.io/DependencyCheck/analyzers/nuspec-analyzer.html
         """
         extracted_nupkg = ObjectCache.get_from_dict(arguments).get_extracted_source_tarball()
-        nuspec = os.path.join(extracted_nupkg, '{}.nuspec'.format(arguments['name']))
-        return self._run_owasp_dep_check(nuspec, experimental=False)
+        return self._run_owasp_dep_check(extracted_nupkg, experimental=False)
 
     def execute(self, arguments):
         self._strict_assert(arguments.get('ecosystem'))
