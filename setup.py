@@ -11,7 +11,6 @@ setup(
     name='f8a_worker',
     version='0.2',
     scripts=[
-        'hack/env.sh',
         'hack/workers.sh',
         'hack/worker-liveness.sh',
         'hack/worker-readiness.sh'
