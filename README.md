@@ -12,7 +12,7 @@ The following libraries are provided:
   * One-to-many dictionary
   * Shell command wrapper with timeout support
 
-See ./f8a_worker/workers/README.md for a listing of the concrete services.  
+See [workers/README.md](./f8a_worker/workers/README.md) for a listing of the concrete services.
 
 ## Contributing
 
