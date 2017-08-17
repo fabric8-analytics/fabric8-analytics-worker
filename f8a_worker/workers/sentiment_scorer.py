@@ -6,16 +6,10 @@ Output: TBD
 
 """
 
-import os
-import json
-import requests
 import abc
 import os
 import datetime
-# import asyncio
-import time
 
-import requests
 import json
 import logging
 
@@ -26,10 +20,9 @@ from f8a_worker.utils import get_session_retry
 
 from joblib import Parallel, delayed
 
-from google.cloud import language
-from google.cloud import bigquery
 
 logger = logging.getLogger(__name__)
+
 
 class SentimentAnalyzer(object):
     @abc.abstractmethod
@@ -39,12 +32,12 @@ class SentimentAnalyzer(object):
 
 class GoogleSentimentAnalyzer(SentimentAnalyzer):
     def __init__(self, key_file_path):
+        # Keep import local so other services do not need this dep
+        from google.cloud import language
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = key_file_path
         self.lang_client = language.Client()
 
     def analyze_sentiment(self, text):
-        start_time = time.time()
-
         document = self.lang_client.document_from_text(text)
         annotations = document.annotate_text(include_sentiment=True,
                                              include_syntax=False,
@@ -63,6 +56,8 @@ class ExternalDataStore(object):
 
 class GooglePublicDataStore(ExternalDataStore):
     def __init__(self, key_file_path):
+        # Keep import local so other services do not need this dep
+        from google.cloud import bigquery
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = key_file_path
         self.big_query_client = bigquery.Client()
 
@@ -79,7 +74,6 @@ class GooglePublicDataStore(ExternalDataStore):
         return aggregated_text
 
     def get_stack_overflow_data(self, search_keyword, search_tag, num_months, max_len=90000):
-        start_time = time.time()
         logger.info('Started to collect data from stackoverflow for package: {}'.format(search_keyword))
         min_date = datetime.date.today() - datetime.timedelta(num_months*365/12)
         min_timestamp = min_date.strftime("%Y-%m-%d %H:%M:%S")
@@ -225,9 +219,8 @@ def write_key_file(local_path):
                    auth_provider_cert_url=auth_provider_cert_url,
                    client_url=client_url)
 
-    key_file = open(local_path, "w")
-    key_file.write(key_file_contents)
-    key_file.close()
+    with open(local_path, 'w') as key_file:
+        key_file.write(key_file_contents)
 
 
 def sentiment_analysis(arg):
