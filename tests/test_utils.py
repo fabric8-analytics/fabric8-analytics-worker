@@ -13,7 +13,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 Base = declarative_base()
 
-from f8a_worker.conf import get_configuration, get_postgres_connection_string
+from f8a_worker.conf import get_configuration
 from f8a_worker.errors import TaskError
 from f8a_worker import utils  # so that we can mock functions from here
 from f8a_worker.utils import (get_all_files_from,
@@ -198,7 +198,7 @@ class TestDownstreamMapCache(object):
             key = Column(String(255), primary_key=True)
             value = Column(String(512), nullable=False)
 
-        connection_string = get_postgres_connection_string()
+        connection_string = configuration.postgres_connection
         engine = create_engine(connection_string)
         session = sessionmaker(bind=engine)()
         Base.metadata.create_all(engine)
