@@ -31,12 +31,10 @@ RUN yum install -y epel-release && \
     /tmp/install_deps/install_deps_rpm.sh && \
     yum clean all
 
-# Fixes:
+# Work-arounds & hacks:
 # 'pip install --upgrade wheel': http://stackoverflow.com/questions/14296531
-# 'install --no-binary :all: protobuf': https://github.com/google/protobuf/issues/1296
 RUN pip3 install --upgrade pip && pip install --upgrade wheel && \
-    pip3 install alembic psycopg2 git+git://github.com/msrb/kombu@sqs-conn#egg=kombu && \
-    pip3 install --upgrade --no-binary :all: protobuf
+    pip3 install alembic psycopg2 git+git://github.com/msrb/kombu@sqs-conn#egg=kombu
 
 # Install javascript deps
 COPY hack/install_deps_npm.sh /tmp/install_deps/
@@ -98,6 +96,13 @@ COPY alembic/ ${ALEMBIC_DIR}/alembic
 # Install f8a_worker
 COPY ./ /tmp/f8a_worker
 RUN cd /tmp/f8a_worker && pip3 install .
+
+# Reinstall google.protobuf from source
+# https://github.com/fabric8-analytics/fabric8-analytics-worker/issues/261
+# https://github.com/google/protobuf/issues/1296
+RUN pip3 uninstall -y protobuf && \
+    pip3 install packaging appdirs && \
+    pip3 install --upgrade --no-binary :all: protobuf==3.3.0
 
 # Make sure there are no root-owned files and directories in the home directory,
 # as this directory can be used by non-root user at runtime.
