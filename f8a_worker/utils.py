@@ -9,11 +9,11 @@ from os import path as os_path, walk, getcwd, chdir, environ as os_environ, kill
 from threading import Thread
 from subprocess import Popen, PIPE, check_output, CalledProcessError, TimeoutExpired
 from traceback import format_exc
-from urllib.parse import urlparse
 from shlex import split
 from queue import Queue, Empty
 from contextlib import contextmanager
 import requests
+from urllib.parse import urlparse
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from sqlalchemy.exc import SQLAlchemyError
@@ -609,6 +609,21 @@ def parse_gh_repo(potential_url):
             return None
 
     return repo_name
+
+
+def url2git_repo(url):
+    """Convert URL to git repo URL and force use HTTPS."""
+    if url.startswith('git+'):
+        return url[len('git+'):]
+
+    if url.startswith('git@'):
+        url = url[len('git@'):]
+        url = url.split(':')
+        if len(url) != 2:
+            raise ValueError("Unable to parse git repo URL '%s'" % str(url))
+        return 'https://{}/{}'.format(url[0], url[1])
+
+    return url
 
 
 def mvn_pkg_to_repo_path(pkg):
