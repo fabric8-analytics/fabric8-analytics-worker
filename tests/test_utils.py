@@ -25,7 +25,8 @@ from f8a_worker.utils import (get_all_files_from,
                             get_latest_upstream_details,
                             safe_get_latest_version,
                             DownstreamMapCache,
-                            parse_gh_repo)
+                            parse_gh_repo,
+                            url2git_repo)
 
 configuration = get_configuration()
 
@@ -241,3 +242,21 @@ class TestParseGHRepo:
     ])
     def test_parse_gh_repo_nok(self, url):
         assert parse_gh_repo(url) is None
+
+
+class TestUrl2GitRepo(object):
+    @pytest.mark.parametrize('url,expected_result', [
+        ('git@github.com:foo/bar', 'https://github.com/foo/bar'),
+        ('git@github.com:foo/bar.git', 'https://github.com/foo/bar.git'),
+        ('https://github.com/foo/bar.git', 'https://github.com/foo/bar.git'),
+        ('git+https://github.com/foo/bar.git', 'https://github.com/foo/bar.git')
+    ])
+    def test_url2git_repo_ok(self, url, expected_result):
+        assert url2git_repo(url) == expected_result
+
+    @pytest.mark.parametrize('url', [
+        'git@github.com/foo/bar'
+    ])
+    def test_url2git_repo_nok(self, url):
+        with pytest.raises(ValueError):
+            url2git_repo(url)
