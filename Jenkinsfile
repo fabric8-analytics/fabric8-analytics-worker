@@ -18,7 +18,7 @@ node('docker') {
         dockerCleanup()
         docker.build(image.id, '--pull --no-cache .')
         sh "docker tag ${image.id} registry.devshift.net/${image.id}"
-        docker.build('cucos-lib-tests', '--no-cache -f Dockerfile.tests .')
+        docker.build('worker-tests', '--no-cache -f Dockerfile.tests .')
     }
 
     stage('Unit Tests') {
