@@ -71,6 +71,12 @@ class LibrariesIoTask(BaseTask):
         url = 'https://libraries.io/{ecosystem}/{name}'.format(ecosystem=arguments['ecosystem'],
                                                                name=arguments['name'])
         page = BeautifulSoup(get(url).text, 'html.parser')
+        if page.find(text="We can't find whatever it was you were looking for."):
+            self.log.warning('%r does not exist' % url)
+            return {'status': 'error',
+                    'summary': ['{url} does not exist'.format(url=url)],
+                    'details': {}}
+
         top_dependent_repos_page = BeautifulSoup(get(url+'/top_dependent_repos').text,
                                                  'html.parser')
 

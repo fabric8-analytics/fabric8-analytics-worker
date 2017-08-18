@@ -34,3 +34,14 @@ class TestLibrariesIoTask(object):
         dependent_repos = results['details']['dependent_repositories']
         assert dependent_repos.get('count')
         assert dependent_repos.get('top')
+
+    @pytest.mark.parametrize('args', [
+         {'ecosystem': 'maven', 'name': 'madeup.group:nonexistent.id'},
+    ])
+    def test_execute_nonexistent(self, args):
+        task = LibrariesIoTask.create_test_instance(task_name='libraries_io')
+        results = task.execute(arguments=args)
+
+        assert isinstance(results, dict)
+        assert set(results.keys()) == {'details', 'status', 'summary'}
+        assert results['status'] == 'error'
