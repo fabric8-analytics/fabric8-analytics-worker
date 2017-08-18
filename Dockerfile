@@ -31,12 +31,14 @@ RUN yum install -y epel-release && \
     /tmp/install_deps/install_deps_rpm.sh && \
     yum clean all
 
-# Fixes:
+# Work-arounds & hacks:
 # 'pip install --upgrade wheel': http://stackoverflow.com/questions/14296531
-# 'install --no-binary :all: protobuf': https://github.com/google/protobuf/issues/1296
+# protobuf: https://github.com/google/protobuf/issues/1296
+#           https://github.com/fabric8-analytics/fabric8-analytics-worker/issues/261
+#           needs to match version in requirements.txt
 RUN pip3 install --upgrade pip && pip install --upgrade wheel && \
     pip3 install alembic psycopg2 git+git://github.com/msrb/kombu@sqs-conn#egg=kombu && \
-    pip3 install --upgrade --no-binary :all: protobuf
+    pip3 install --upgrade --no-binary :all: protobuf==3.3.0
 
 # Install javascript deps
 COPY hack/install_deps_npm.sh /tmp/install_deps/
