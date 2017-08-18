@@ -125,8 +125,11 @@ class GraphDB:
             }
         }
         json_response = self.execute_gremlin_dsl(payload)
-        if json_response is not None:
-            ref_stack_matching_components = self.get_response_data(json_response, data_default=[])
+       
+        if json_response is None:
+            return []
+
+        ref_stack_matching_components = self.get_response_data(json_response, data_default=[])
 
         # Collect all the stack names
         for sname, val in ref_stack_matching_components[0].items():
@@ -633,15 +636,27 @@ class RecommendationV2Task(BaseTask):
     def execute(self, parguments=None):
         arguments = self.parent_task_result('GraphAggregatorTask')
         results = arguments['result']
-        input_stack = {d["package"]: d["version"] for d in
-                       arguments.get("result", [])[0].get("details", [])[0].get("_resolved")}
-
+        
         input_task_for_pgm = []
-
+        recommendations = []
+        input_stack = {}
+        for result in results:
+            temp_input_stack = {d["package"]: d["version"] for d in
+                       result.get("details", [])[0].get("_resolved")}
+            input_stack.update(temp_input_stack)
+        
         for result in results:
             details = result['details'][0]
             resolved = details['_resolved']
+            manifest_file_path = details['manifest_file_path']
+
             self.log.debug(result)
+            recommendation = {
+                'companion': [],
+                'alternate': [],
+                'usage_outliers': [],
+                'manifest_file_path': manifest_file_path
+            }
             new_arr = [r['package'] for r in resolved]
             json_object = {
                 'ecosystem': details['ecosystem'],
@@ -655,88 +670,78 @@ class RecommendationV2Task(BaseTask):
             self.log.debug(json_object)
             input_task_for_pgm.append(json_object)
 
-            recommendation = {
-                'recommendations': {
-                    'companion': [],
-                    'alternate': [],
-                    'usage_outliers': []
-                }
-            }
-
             # Call PGM and get the response
             pgm_response = self.call_pgm(input_task_for_pgm)
-
+            
             # From PGM response process companion and alternate packages and then get Data from Graph
             # TODO - implement multiple manifest file support for below loop
-            for pgm_result in pgm_response:
-                companion_packages = []
-                ecosystem = pgm_result['ecosystem']
 
-                # Get usage based outliers
-                recommendation['recommendations']['usage_outliers'] = pgm_result.get('outlier_package_list', [])
+            if pgm_response is not None:
+                for pgm_result in pgm_response:
+                    companion_packages = []
+                    ecosystem = pgm_result['ecosystem']
 
-                # Append Topics for User Stack
-                recommendation['recommendations']['input_stack_topics'] = pgm_result.get('package_to_topic_dict', {})
+                    # Get usage based outliers
+                    recommendation['usage_outliers'] = \
+                        pgm_result['outlier_package_list']
 
-                for pkg in pgm_result['companion_packages']:
-                    companion_packages.append(pkg['package_name'])
+                    for pkg in pgm_result['companion_packages']:
+                        companion_packages.append(pkg['package_name'])
 
-                # Get Companion Packages from Graph
-                comp_packages_graph = GraphDB().get_version_information(companion_packages, ecosystem)
+                    # Get Companion Packages from Graph
+                    comp_packages_graph = GraphDB().get_version_information(companion_packages, ecosystem)
 
-                # Apply Version Filters
-                filtered_comp_packages_graph, filtered_list = GraphDB().filter_versions(comp_packages_graph,
-                                                                                        input_stack)
-                _logger.info("Companion Packages Filtered for external_request_id {} {}"
+                    # Apply Version Filters
+                    filtered_comp_packages_graph, filtered_list = GraphDB().filter_versions(comp_packages_graph, input_stack)
+
+                    _logger.info("Companion Packages Filtered for external_request_id {} {}"
                              .format(parguments.get('external_request_id', ''),
                                      set(companion_packages).difference(set(filtered_list))))
 
-                # Get Topics Added to Filtered Versions
-                topics_comp_packages_graph = GraphDB().get_topics_for_comp(filtered_comp_packages_graph,
-                                                                           pgm_result['companion_packages'])
+                    # Create Companion Block
+                    comp_packages = create_package_dict(filtered_comp_packages_graph)
+                    recommendation['companion'] = comp_packages
 
-                # Create Companion Block
-                comp_packages = create_package_dict(topics_comp_packages_graph)
-                recommendation['recommendations']['companion'] = comp_packages
+                    # Get the topmost alternate package for each input package
 
-                # Get the topmost alternate package for each input package
+                    # Create intermediate dict to Only Get Top 1 companion packages for the time being.
+                    temp_dict = {}
+                    for pkg_name, contents in pgm_result['alternate_packages'].items():
+                        pkg = {}
+                        for ind in contents:
+                            pkg[ind['package_name']] = ind['similarity_score']
+                        temp_dict[pkg_name] = pkg
 
-                # Create intermediate dict to Only Get Top 1 companion packages for the time being.
-                temp_dict = {}
-                for pkg_name, contents in pgm_result['alternate_packages'].items():
-                    pkg = {}
-                    for ind in contents:
-                        pkg[ind['package_name']] = ind['similarity_score']
-                    temp_dict[pkg_name] = pkg
+                    final_dict = {}
+                    alternate_packages = []
+                    for pkg_name, contents in temp_dict.items():
+                        # For each input package
+                        # Get only the topmost alternate package from a set of packages based on similarity score
+                        top_dict = dict(Counter(contents).most_common(1))
+                        for alt_pkg, sim_score in top_dict.items():
+                            final_dict[alt_pkg] = {
+                                'version': input_stack[pkg_name],
+                                'replaces': pkg_name,
+                                'similarity_score': sim_score
+                            }
+                            alternate_packages.append(alt_pkg)
 
-                final_dict = {}
-                alternate_packages = []
-                for pkg_name, contents in temp_dict.items():
-                    # For each input package
-                    # Get only the topmost alternate package from a set of packages based on similarity score
-                    top_dict = dict(Counter(contents).most_common(1))
-                    for alt_pkg, sim_score in top_dict.items():
-                        final_dict[alt_pkg] = {
-                            'version': input_stack[pkg_name],
-                            'replaces': pkg_name,
-                            'similarity_score': sim_score
-                        }
-                        alternate_packages.append(alt_pkg)
-                # Get Alternate Packages from Graph
-                alt_packages_graph = GraphDB().get_version_information(alternate_packages, ecosystem)
+                    # Get Alternate Packages from Graph
+                    alt_packages_graph = GraphDB().get_version_information(alternate_packages, ecosystem)
 
-                # Apply Version Filters
-                filtered_alt_packages_graph, filtered_list = GraphDB().filter_versions(alt_packages_graph, input_stack)
-                _logger.info("Alternate Packages Filtered for external_request_id {} {}"
+                    # Apply Version Filters
+                    filtered_alt_packages_graph, filtered_list = GraphDB().filter_versions(alt_packages_graph, input_stack)
+
+                    _logger.info("Alternate Packages Filtered for external_request_id {} {}"
                              .format(parguments.get('external_request_id', ''),
                                      set(alternate_packages).difference(set(filtered_list))))
 
-                # Get Topics Added to Filtered Versions
-                topics_comp_packages_graph = GraphDB().get_topics_for_alt(filtered_alt_packages_graph,
-                                                                          pgm_result['alternate_packages'])
+                    # Get Topics Added to Filtered Versions
+                    topics_comp_packages_graph = GraphDB().get_topics_for_alt(filtered_alt_packages_graph,
+                                                                            pgm_result['alternate_packages'])
 
-                # Create Companion Dict
-                alt_packages = create_package_dict(topics_comp_packages_graph, final_dict)
-                recommendation['recommendations']['alternate'] = alt_packages
-
-            return recommendation
+                    # Create Companion Dict
+                    alt_packages = create_package_dict(topics_comp_packages_graph, final_dict)
+                    recommendation['alternate'] = alt_packages
+            recommendations.append(recommendation)
+        return {'recommendations': recommendations}
