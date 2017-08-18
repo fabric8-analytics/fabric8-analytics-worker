@@ -89,7 +89,6 @@ def extract_component_details(component):
 
     return component_summary
 
-
 def perform_license_analysis(license_score_list, dependencies):
     license_url = LICENSE_SCORING_URL_REST + "/api/v1/stack_license"
 
@@ -129,8 +128,7 @@ def perform_license_analysis(license_score_list, dependencies):
     }
     return output, dependencies
 
-
-def aggregate_stack_data(stack, manifest_file, ecosystem, deps):
+def aggregate_stack_data(stack, manifest_file, ecosystem, deps, manifest_file_path):
     dependencies = []
     licenses = []
     license_score_list = []
@@ -156,6 +154,7 @@ def aggregate_stack_data(stack, manifest_file, ecosystem, deps):
 
     data = {
             "manifest_name": manifest_file,
+            "manifest_file_path": manifest_file_path,
             "user_stack_info": {
                 "ecosystem": ecosystem,
                 "analyzed_dependencies_count": len(dependencies),
@@ -207,16 +206,19 @@ class StackAggregatorV2Task(BaseTask):
         return {"result": result}
 
     def execute(self, arguments=None):
+        finished = []
+        stack_data = []
         aggregated = self.parent_task_result('GraphAggregatorTask')
-
+        
         for result in aggregated['result']:
             resolved = result['details'][0]['_resolved']
             ecosystem = result['details'][0]['ecosystem']
             manifest = result['details'][0]['manifest_file']
+            manifest_file_path = result['details'][0]['manifest_file_path']
 
             finished = self._get_dependency_data(resolved, ecosystem)
-            if finished is not None:
-                stack_data = aggregate_stack_data(finished, manifest, ecosystem.lower(), resolved)
-                return stack_data
+            if finished != None:
+                stack_data.append(aggregate_stack_data(finished, manifest, ecosystem.lower(), resolved, manifest_file_path))
 
-        return {}
+        return {"stack_data": stack_data}
+

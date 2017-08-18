@@ -284,20 +284,25 @@ class UserStackSentimentScoringTask(BaseTask):
     def execute(self, arguments=None):
         aggregated = self.parent_task_result('GraphAggregatorTask')
 
-        sentiment_output = {}
-        arg_instances = []
+        sentiment_output = []
+        
         for result in aggregated['result']:
+            arg_instances = []
+            temp_sentiment_output = {}
             resolved = result['details'][0]['_resolved']
             ecosystem = result['details'][0]['ecosystem']
+            manifest_file_path = result['details'][0].get('manifest_file_path', 'File path not available')
             for elm in resolved:
                 arg_instances.append((ecosystem, elm['package']))
 
-        sentiment_results = Parallel(n_jobs=4, verbose=1, backend="threading")\
-            (map(delayed(sentiment_analysis), arg_instances))
-        for r in sentiment_results:
-            sentiment_output[r['package_name']] = r
+            sentiment_results = Parallel(n_jobs=4, verbose=1, backend="threading")\
+                (map(delayed(sentiment_analysis), arg_instances))
+            for res in sentiment_results:
+                temp_sentiment_output[res['package_name']] = res
+            temp_sentiment_output['manifest_file_path'] = manifest_file_path
+            sentiment_output.append(temp_sentiment_output)
 
-        return sentiment_output
+        return {'sentiment': sentiment_output}
 
 
 class RecoPkgSentimentScoringTask(BaseTask):
@@ -307,17 +312,23 @@ class RecoPkgSentimentScoringTask(BaseTask):
     def execute(self, arguments=None):
         parent_result = self.parent_task_result('recommendation_v2')
 
-        sentiment_output = {}
-        arg_instances = []
+        sentiment_output = []
         recommendations = parent_result['recommendations']
-        for pkg in recommendations['alternate']:
-            arg_instances.append((pkg['ecosystem'], pkg['name']))
-        for pkg in recommendations['companion']:
-            arg_instances.append((pkg['ecosystem'], pkg['name']))
 
-        sentiment_results = Parallel(n_jobs=4, verbose=1, backend="threading")\
-            (map(delayed(sentiment_analysis), arg_instances))
-        for r in sentiment_results:
-            sentiment_output[r['package_name']] = r
+        for recommendation in recommendations:
+            arg_instances = []
+            temp_sentiment_output = {}
+            manifest_file_path = recommendation.get('manifest_file_path', 'File path not available')
+            for pkg in recommendation['alternate']:
+                arg_instances.append((pkg['ecosystem'], pkg['name']))
+            for pkg in recommendation['companion']:
+                arg_instances.append((pkg['ecosystem'], pkg['name']))
 
-        return sentiment_output
+            sentiment_results = Parallel(n_jobs=4, verbose=1, backend="threading")\
+                (map(delayed(sentiment_analysis), arg_instances))
+            for res in sentiment_results:
+                temp_sentiment_output[res['package_name']] = res
+            temp_sentiment_output['manifest_file_path'] = manifest_file_path
+            sentiment_output.append(temp_sentiment_output)
+
+        return {'sentiment': sentiment_output}
