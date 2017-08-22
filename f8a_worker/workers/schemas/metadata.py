@@ -113,7 +113,8 @@ class MetadataDict(jsl.Document):
     with removed_in(ROLE_v3_2_0) as removed_in_v3_2_0:
         removed_in_v3_2_0.declared_license = jsl.OneOfField([jsl.StringField(), jsl.NullField()])
     with added_in(ROLE_v3_2_0) as added_in_v3_2_0:
-        added_in_v3_2_0.declared_licenses = jsl.ArrayField(jsl.StringField())
+        added_in_v3_2_0.declared_licenses = jsl.OneOfField([jsl.ArrayField(jsl.StringField()),
+                                                            jsl.NullField()])
 
     dependencies = jsl.OneOfField(
         [jsl.ArrayField(jsl.StringField()), jsl.NullField()]
