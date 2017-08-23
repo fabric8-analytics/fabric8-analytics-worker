@@ -90,6 +90,12 @@
             - 'digests'
             - 'metadata'
           to: 'anitya'
+          condition:
+            not:
+              name: 'argsFieldEqual'
+              args:
+                key: 'ecosystem'
+                value: 'nuget'
         - from:
             - 'anitya'
             - 'digests'

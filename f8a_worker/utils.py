@@ -496,8 +496,8 @@ def safe_get_latest_version(ecosystem, package):
     version = None
     try:
         version = get_latest_upstream_details(ecosystem, package)['versions'][0]
-    except:
-        logger.exception('Unable to obtain latest version information')
+    except (requests.exceptions.RequestException, IndexError) as e:
+        logger.warning('Unable to obtain latest version information: %r' % e)
     return version
 
 
