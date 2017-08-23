@@ -172,6 +172,11 @@ class BayesianPostgres(PostgresBase):
             request_digest=request_digest
         )
 
-        PostgresBase.session.add(req)
-        PostgresBase.session.commit()
+        try:
+            PostgresBase.session.add(req)
+            PostgresBase.session.commit()
+        except:
+            PostgresBase.session.rollback()
+            raise
+
         return True

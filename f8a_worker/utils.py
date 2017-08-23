@@ -629,8 +629,8 @@ def url2git_repo(url):
 def mvn_pkg_to_repo_path(pkg):
     """Translate Maven package name to repository path.
 
-    >>> mvn_pkg_to_repo_path("com.redhat:artifact")
-    'com/redhat/artifact'
+    :param pkg: str, e.g. 'com.redhat:artifact'
+    :return: 'com/redhat/artifact'
     """
     gid, aid = pkg.split(':')
     return "{g}/{a}".format(g=gid.replace('.', '/'), a=aid)
@@ -648,6 +648,7 @@ def case_sensitivity_transform(ecosystem, name):
 
     return name
 
+
 def get_session_retry(retries=3, backoff_factor=0.2, status_forcelist=(404, 500, 502, 504), session=None):
     session = session or requests.Session()
     retry = Retry(total=retries, read=retries, connect=retries,
@@ -657,6 +658,39 @@ def get_session_retry(retries=3, backoff_factor=0.2, status_forcelist=(404, 500,
     return session
 
 
+class QueryWrapper(object):
+    # These Query methods return Query instance, therefore we need to wrapper also their result
+    RETURN_QUERY = {'autoflush', 'correlate', 'distinct', 'filter', 'filter_by', 'from_self',
+                    'group_by', 'having', 'intersect', 'intersect_all', 'join',
+                    'options', 'order_by', 'outerjoin', 'populate_existing', 'prefix_with',
+                    'select_entity_from', 'select_from', 'slice', 'suffix_with',
+                    'union', 'union_all', 'with_entities', 'with_for_update',
+                    'with_lockmode', 'with_session', 'with_transformation',
+                    }
+
+    def __init__(self, session, query):
+        self._session = session
+        self._query = query
+
+    def __getattr__(self, item):
+        def wrapper(*args, **kwds):
+            attr = getattr(self._query, item)
+            try:
+                # Call the method (item)
+                ret = attr(*args, **kwds)
+                if item in self.RETURN_QUERY:
+                    # method produces Query, wrap it
+                    return QueryWrapper(self._session, ret)
+                else:
+                    return ret
+            except SQLAlchemyError:
+                # Automagically fix problems
+                self._session.rollback()
+                raise
+
+        return wrapper
+
+
 class PostgresSessionWrapper(object):
     """Wrapper for PostgreSQL session."""
 
@@ -664,17 +698,20 @@ class PostgresSessionWrapper(object):
         self._session = session
 
     def __getattr__(self, item):
-        def decorated(func, *args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except SQLAlchemyError:
-                self._session.rollback()
-                raise
+        def query_wrapper(*args, **kwds):
+            """
+            sqlalchemy.orm.session.Session.query() returns sqlalchemy.orm.query.Query instance
+            This wrapper returns QueryWrapper instance, which wraps Query
+            """
+            # attr = getattr(self._session, item)
+            # query = attr(*args, **kwds)
+            query = self._session.query(*args, **kwds)
+            return QueryWrapper(self._session, query)
 
-        if item in ('query', 'commit', 'add'):
-            return decorated(getattr, self._session, item)
-
-        return getattr(self._session, item)
+        if item == 'query':
+            return query_wrapper
+        else:
+            return getattr(self._session, item)
 
 # get not hidden files from current directory
 # print(list(get_all_files_from('.', file_filter=lambda a: not startswith(a, ['.']))))
