@@ -176,7 +176,7 @@ class StackAggregatorTask(BaseTask):
             manifest_file_path = result['details'][0]['manifest_file_path']
 
             finished = self._get_dependency_data(resolved, ecosystem)
-            if finished != None:
+            if finished is not None:
                 stack_data.append(aggregate_stack_data(finished, manifest, ecosystem.lower(), manifest_file_path))
 
         return {"stack_data": stack_data}
