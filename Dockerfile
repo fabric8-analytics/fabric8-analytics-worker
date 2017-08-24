@@ -21,7 +21,6 @@ COPY requirements.txt /tmp/f8a_worker
 # https://github.com/fabric8-analytics/fabric8-analytics-worker/issues/261
 # https://github.com/google/protobuf/issues/1296
 RUN cd /tmp/f8a_worker && \
-    pip3 install --upgrade --no-binary :all: protobuf==3.3.0 && \
     pip3 install -r requirements.txt
 
 COPY alembic.ini hack/run-db-migrations.sh ${ALEMBIC_DIR}/

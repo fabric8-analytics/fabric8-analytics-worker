@@ -196,18 +196,6 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_RecommendationTask_v0'
       storage: 'BayesianPostgres'
-    - name: 'user_stack_sentiment_scorer'
-      classname: 'UserStackSentimentScoringTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_UserStackSentimentScoringTask_v0'
-      storage: 'BayesianPostgres'
-    - name: 'reco_pkg_sentiment_scorer'
-      classname: 'RecoPkgSentimentScoringTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_RecoPkgSentimentScoringTask_v0'
-      storage: 'BayesianPostgres'
     - name: 'recommendation_v2'
       classname: 'RecommendationV2Task'
       import: 'f8a_worker.workers'

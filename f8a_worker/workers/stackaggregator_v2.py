@@ -85,7 +85,6 @@ def extract_component_details(component):
         "name": name,
         "version": version,
         "licenses": licenses,
-        "sentiment": {"overall_score": 0, "latest_comment": '', "magnitude": 0},
         "security": cves,
         "osio_user_count": component.get("version", {}).get("osio_usage_count", 0),
         "latest_version": latest_version,
