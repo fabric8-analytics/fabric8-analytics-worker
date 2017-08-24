@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
 import os
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from selinon import DataStorage
-from f8a_worker.models import Analysis, Ecosystem, Package, Version, WorkerResult
-from f8a_worker.utils import PostgresSessionWrapper
+from f8a_worker.models import Ecosystem
 
 
 Base = declarative_base()
@@ -61,7 +62,7 @@ class PostgresBase(DataStorage):
             pool_size=1,
             max_overflow=-1
         )
-        PostgresBase.session = PostgresSessionWrapper(sessionmaker(bind=engine)())
+        PostgresBase.session = sessionmaker(bind=engine)()
         Base.metadata.create_all(engine)
 
     def disconnect(self):
@@ -73,7 +74,16 @@ class PostgresBase(DataStorage):
         if not self.is_connected():
             self.connect()
 
-        record = PostgresBase.session.query(self.query_table).filter_by(worker_id=task_id).one()
+        try:
+            record = PostgresBase.session.query(self.query_table).\
+                                          filter_by(worker_id=task_id).\
+                                          one()
+        except (NoResultFound, MultipleResultsFound):
+            raise
+        except SQLAlchemyError:
+            PostgresBase.session.rollback()
+            raise
+
         assert record.worker == task_name
 
         task_result = record.task_result
@@ -101,7 +111,7 @@ class PostgresBase(DataStorage):
         try:
             PostgresBase.session.add(res)
             PostgresBase.session.commit()
-        except:
+        except SQLAlchemyError:
             PostgresBase.session.rollback()
             raise
 
@@ -126,7 +136,7 @@ class PostgresBase(DataStorage):
         try:
             PostgresBase.session.add(res)
             PostgresBase.session.commit()
-        except:
+        except SQLAlchemyError:
             PostgresBase.session.rollback()
             raise
 

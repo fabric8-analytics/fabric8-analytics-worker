@@ -43,11 +43,16 @@ def get_package_dependents_count(ecosystem_backend, package, db_session=None):
         storage = StoragePool.get_connected_storage("BayesianPostgres")
         db_session = storage.session
 
-    count = db_session.query(PackageGHUsage.count).filter(PackageGHUsage.name == package) \
-        .filter(PackageGHUsage.ecosystem_backend == ecosystem_backend) \
-        .order_by(desc(PackageGHUsage.timestamp)) \
-        .first()
-    if count is not None and len(count) >= 1:
+    try:
+        count = db_session.query(PackageGHUsage.count).filter(PackageGHUsage.name == package) \
+                          .filter(PackageGHUsage.ecosystem_backend == ecosystem_backend) \
+                          .order_by(desc(PackageGHUsage.timestamp)) \
+                          .first()
+    except SQLAlchemyError:
+        db_session.rollback()
+        raise
+
+    if count:
         return count[0]
     return -1
 
@@ -65,13 +70,18 @@ def get_dependents_count(ecosystem_backend, package, version, db_session=None):
         storage = StoragePool.get_connected_storage("BayesianPostgres")
         db_session = storage.session
 
-    count = db_session.query(ComponentGHUsage.count) \
-        .filter(ComponentGHUsage.name == package) \
-        .filter(ComponentGHUsage.version == version) \
-        .filter(ComponentGHUsage.ecosystem_backend == ecosystem_backend) \
-        .order_by(desc(ComponentGHUsage.timestamp)) \
-        .first()
-    if count is not None and len(count) >= 1:
+    try:
+        count = db_session.query(ComponentGHUsage.count) \
+                          .filter(ComponentGHUsage.name == package) \
+                          .filter(ComponentGHUsage.version == version) \
+                          .filter(ComponentGHUsage.ecosystem_backend == ecosystem_backend) \
+                          .order_by(desc(ComponentGHUsage.timestamp)) \
+                          .first()
+    except SQLAlchemyError:
+        db_session.rollback()
+        raise
+
+    if count:
         return count[0]
     return -1
 
@@ -89,8 +99,9 @@ def get_latest_analysis(ecosystem, package, version, db_session=None):
             filter(Version.identifier == version).\
             order_by(Analysis.started_at.desc()).\
             first()
-    except NoResultFound:
-        return None
+    except SQLAlchemyError:
+        db_session.rollback()
+        raise
 
 
 def get_component_percentile_rank(ecosystem_backend, package, version, db_session=None):
@@ -103,11 +114,11 @@ def get_component_percentile_rank(ecosystem_backend, package, version, db_sessio
     :return: component's percentile rank, or -1 if the information is not available
     """
 
-    try:
-        if not db_session:
-            storage = StoragePool.get_connected_storage("BayesianPostgres")
-            db_session = storage.session
+    if not db_session:
+        storage = StoragePool.get_connected_storage("BayesianPostgres")
+        db_session = storage.session
 
+    try:
         rank = db_session.query(ComponentGHUsage.percentile_rank) \
             .filter(ComponentGHUsage.name == package) \
             .filter(ComponentGHUsage.version == version) \
@@ -115,14 +126,12 @@ def get_component_percentile_rank(ecosystem_backend, package, version, db_sessio
             .order_by(desc(ComponentGHUsage.timestamp)) \
             .first()
     except SQLAlchemyError:
-        epv = '{e}/{p}/{v}'.format(e=ecosystem_backend, p=package, v=version)
-        logger.exception('Unable to retrieve percentile_rank for {epv}'.format(epv=epv))
-        return -1
+        db_session.rollback()
+        raise
 
-    if rank is None or len(rank) == 0:
-        return 0
-
-    return rank[0]
+    if rank:
+        return rank[0]
+    return 0
 
 
 @contextmanager
@@ -512,9 +521,13 @@ class DownstreamMapCache(object):
 
     def _query(self, key):
         """ Returns None if key is not in DB """
-        return self.session.query(DownstreamMap) \
-                           .filter(DownstreamMap.key == key) \
-                           .first()
+        try:
+            return self.session.query(DownstreamMap) \
+                               .filter(DownstreamMap.key == key) \
+                               .first()
+        except SQLAlchemyError:
+            self.session.rollback()
+            raise
 
     def _update(self, key, value):
         q = self._query(key)
@@ -522,7 +535,7 @@ class DownstreamMapCache(object):
             try:
                 q.value = value
                 self.session.commit()
-            except:
+            except SQLAlchemyError:
                 self.session.rollback()
                 raise
 
@@ -535,7 +548,7 @@ class DownstreamMapCache(object):
         try:
             self.session.add(mapping)
             self.session.commit()
-        except:
+        except SQLAlchemyError:
             self.session.rollback()
             try:
                 self._update(key, value)
@@ -639,7 +652,7 @@ def mvn_pkg_to_repo_path(pkg):
 def case_sensitivity_transform(ecosystem, name):
     """Transform package name to lowercase for ecosystem that are not case sensitive.
 
-    :param ecosystem: name of ecocsystem in which the package is sits
+    :param ecosystem: name of ecosystem in which the package is sits
     :param name: name of ecosystem
     :return: transformed package name base on ecosystem package case sensitivity
     """
@@ -652,66 +665,10 @@ def case_sensitivity_transform(ecosystem, name):
 def get_session_retry(retries=3, backoff_factor=0.2, status_forcelist=(404, 500, 502, 504), session=None):
     session = session or requests.Session()
     retry = Retry(total=retries, read=retries, connect=retries,
-                backoff_factor=backoff_factor, status_forcelist=status_forcelist)
+                  backoff_factor=backoff_factor, status_forcelist=status_forcelist)
     adapter = HTTPAdapter(max_retries=retry)
     session.mount('http://', adapter)
     return session
-
-
-class QueryWrapper(object):
-    # These Query methods return Query instance, therefore we need to wrapper also their result
-    RETURN_QUERY = {'autoflush', 'correlate', 'distinct', 'filter', 'filter_by', 'from_self',
-                    'group_by', 'having', 'intersect', 'intersect_all', 'join',
-                    'options', 'order_by', 'outerjoin', 'populate_existing', 'prefix_with',
-                    'select_entity_from', 'select_from', 'slice', 'suffix_with',
-                    'union', 'union_all', 'with_entities', 'with_for_update',
-                    'with_lockmode', 'with_session', 'with_transformation',
-                    }
-
-    def __init__(self, session, query):
-        self._session = session
-        self._query = query
-
-    def __getattr__(self, item):
-        def wrapper(*args, **kwds):
-            attr = getattr(self._query, item)
-            try:
-                # Call the method (item)
-                ret = attr(*args, **kwds)
-                if item in self.RETURN_QUERY:
-                    # method produces Query, wrap it
-                    return QueryWrapper(self._session, ret)
-                else:
-                    return ret
-            except SQLAlchemyError:
-                # Automagically fix problems
-                self._session.rollback()
-                raise
-
-        return wrapper
-
-
-class PostgresSessionWrapper(object):
-    """Wrapper for PostgreSQL session."""
-
-    def __init__(self, session):
-        self._session = session
-
-    def __getattr__(self, item):
-        def query_wrapper(*args, **kwds):
-            """
-            sqlalchemy.orm.session.Session.query() returns sqlalchemy.orm.query.Query instance
-            This wrapper returns QueryWrapper instance, which wraps Query
-            """
-            # attr = getattr(self._session, item)
-            # query = attr(*args, **kwds)
-            query = self._session.query(*args, **kwds)
-            return QueryWrapper(self._session, query)
-
-        if item == 'query':
-            return query_wrapper
-        else:
-            return getattr(self._session, item)
 
 # get not hidden files from current directory
 # print(list(get_all_files_from('.', file_filter=lambda a: not startswith(a, ['.']))))

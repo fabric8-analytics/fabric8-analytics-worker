@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 from itertools import chain
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from selinon import StoragePool
 from f8a_worker.models import PackageAnalysis, Ecosystem, Package, PackageWorkerResult
 from f8a_worker.utils import MavenCoordinates
@@ -42,11 +43,15 @@ class PackagePostgres(PostgresBase):
         :return: analysis result
         """
 
-        found = PostgresBase.session.query(PackageAnalysis).\
-            filter(PackageAnalysis.id == analysis_id).\
-            one()
-
-        return found
+        try:
+            return PostgresBase.session.query(PackageAnalysis).\
+                                        filter(PackageAnalysis.id == analysis_id).\
+                                        one()
+        except (NoResultFound, MultipleResultsFound):
+            raise
+        except SQLAlchemyError:
+            PostgresBase.session.rollback()
+            raise
 
     def get_analysis_count(self, ecosystem, package):
         """Get count of previously scheduled analyses for given ecosystem-package.
@@ -58,11 +63,15 @@ class PackagePostgres(PostgresBase):
         if ecosystem == 'maven':
             package = MavenCoordinates.normalize_str(package)
 
-        count = PostgresBase.session.query(PackageAnalysis).\
-            join(Package).join(Ecosystem).\
-            filter(Ecosystem.name == ecosystem).\
-            filter(Package.name == package).\
-            count()
+        try:
+            count = PostgresBase.session.query(PackageAnalysis).\
+                                         join(Package).join(Ecosystem).\
+                                         filter(Ecosystem.name == ecosystem).\
+                                         filter(Package.name == package).\
+                                         count()
+        except SQLAlchemyError:
+            PostgresBase.session.rollback()
+            raise
 
         return count
 
@@ -73,11 +82,16 @@ class PackagePostgres(PostgresBase):
         :param analysis_id: analysis id for which task names should retrieved
         :return: a list of task names
         """
-        task_names = PostgresBase.session.query(PackageWorkerResult.worker).\
-            join(PackageAnalysis).\
-            filter(PackageAnalysis.id == analysis_id).\
-            filter(PackageWorkerResult.error.is_(False)).\
-            all()
+        try:
+            task_names = PostgresBase.session.query(PackageWorkerResult.worker).\
+                                              join(PackageAnalysis).\
+                                              filter(PackageAnalysis.id == analysis_id).\
+                                              filter(PackageWorkerResult.error.is_(False)).\
+                                              all()
+        except SQLAlchemyError:
+            PostgresBase.session.rollback()
+            raise
+
         return list(chain(*task_names))
 
     def get_latest_task_result(self, ecosystem, package, task_name, error=False):
@@ -93,7 +107,7 @@ class PackagePostgres(PostgresBase):
             self.connect()
 
         try:
-            record = PostgresBase.session.query(PackageWorkerResult).\
+            return PostgresBase.session.query(PackageWorkerResult).\
                 join(PackageAnalysis).\
                 join(Package).join(Ecosystem).\
                 filter(PackageWorkerResult.worker == task_name).\
@@ -101,7 +115,6 @@ class PackagePostgres(PostgresBase):
                 filter(Ecosystem.name == ecosystem).\
                 filter(PackageWorkerResult.error.is_(error)).\
                 order_by(PackageAnalysis.finished_at.desc()).first()
-        except NoResultFound:
-            return None
-
-        return record
+        except SQLAlchemyError:
+            PostgresBase.session.rollback()
+            raise
