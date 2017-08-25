@@ -44,6 +44,9 @@ class Git(object):
             TimedCommand.get_command_output(["git", "config", "--global", "user.name", user_name])
         if not TimedCommand.get_command_output(["git", "config", "--get", "user.email"]):
             TimedCommand.get_command_output(["git", "config", "--global", "user.email", user_email])
+        # Use 'true' as external program to ask for credentials, i.e. don't ask
+        # Better would be GIT_TERMINAL_PROMPT=0, but that requires git >= 2.3
+        TimedCommand.get_command_output(["git", "config", "--global", "core.askpass", "/usr/bin/true"])
 
     @classmethod
     def clone(cls, url, path, depth=None, branch=None):
