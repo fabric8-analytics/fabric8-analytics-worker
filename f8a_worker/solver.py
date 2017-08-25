@@ -393,6 +393,10 @@ class PypiDependencyParser(DependencyParser):
                 else:
                     raise ValueError('%r must not be used with %r' % (spec.operator, spec.version))
                 return [('>=', spec.version), ('<', '.'.join(version))]
+            # https://www.python.org/dev/peps/pep-0440/#arbitrary-equality
+            # Use of this operator is heavily discouraged, so just convert it to 'Version matching'
+            elif spec.operator == '===':
+                return '==', spec.version
             else:
                 return spec.operator, spec.version
 
