@@ -35,8 +35,6 @@ RUN cd /tmp/f8a_worker && pip3 install .
 # as this directory can be used by non-root user at runtime.
 RUN find ${HOME} -mindepth 1 -delete
 
-RUN pip3 install celery-prometheus-exporter
-
 # Not-yet-upstream-released patches
 RUN mkdir -p /tmp/install_deps/patches/
 COPY hack/patches/* /tmp/install_deps/patches/
