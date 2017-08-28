@@ -9,7 +9,7 @@ data = {
     # URL to npmjs couch DB, which returns stream of changes happening in npm registry
     "npmjs_changes_url": "https://skimdb.npmjs.com/registry/_changes?descending=true&include_docs=true&feed=continuous",
     "git": {
-        "user_name": "f8a",             # git config user.name
+        "user_name": "f8a",       # git config user.name
         "user_email": "f8a@f8a"   # git config user.email
     },
     "broker": {
