@@ -196,11 +196,11 @@ objects:
           - name: PGM_SERVICE_HOST
             value: bayesian-kronos
           - name: MAX_COMPANION_PACKAGES
-            value: "5"
+            value: "4"
           - name: MAX_ALTERNATE_PACKAGES
             value: "2"
           - name: OUTLIER_THRESHOLD
-            value: "0.6"
+            value: "0.88"
           - name: UNKNOWN_PACKAGES_THRESHOLD
             value: "0.3"
           - name: LICENSE_SERVICE_HOST
