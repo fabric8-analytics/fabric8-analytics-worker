@@ -297,6 +297,9 @@ class GraphDB:
         for epv in epv_list:
             name = epv.get('pkg', {}).get('name', [''])[0]
             version = epv.get('ver', {}).get('version', [''])[0]
+            # needed for maven version like 1.5.2.RELEASE to be converted to 1.5.2-RELEASE for semantic version to work'
+            semversion = version.replace('.', '-', 3)
+            semversion = semversion.replace('-', '.', 2)
             if name and version:
                 if name not in pkg_dict:
                     pkg_dict[name] = {}
@@ -306,7 +309,7 @@ class GraphDB:
                 latest_version = epv.get('pkg').get('libio_latest_version', [''])[0]
                 if latest_version not in pkg_dict[name]:
                     try:
-                        if sv.SpecItem('>=' + input_stack.get(name, '0.0.0')).match(sv.Version(version)):
+                        if sv.SpecItem('>=' + input_stack.get(name, '0.0.0')).match(sv.Version(semversion)):
                             pkg_dict[name] = {"latest_version": latest_version}
                             new_dict[name]['latest_version'] = epv.get('ver')
                             new_dict[name]['pkg'] = epv.get('pkg')
@@ -320,7 +323,7 @@ class GraphDB:
                     if 'deps_count' not in pkg_dict[name] or \
                        deps_count > pkg_dict[name].get('deps_count', {}).get('deps_count', 0):
                         try:
-                            if sv.SpecItem('>=' + input_stack.get(name, '0.0.0')).match(sv.Version(version)):
+                            if sv.SpecItem('>=' + input_stack.get(name, '0.0.0')).match(sv.Version(semversion)):
                                 pkg_dict[name]['deps_count'] = {"version": version, "deps_count": deps_count}
                                 new_dict[name]['deps_count'] = epv.get('ver')
                                 new_dict[name]['pkg'] = epv.get('pkg')
@@ -334,7 +337,7 @@ class GraphDB:
                     if 'gh_release_date' not in pkg_dict[name] or \
                        gh_release_date > pkg_dict[name].get('gh_release_date', {}).get('gh_release_date', 0):
                         try:
-                            if sv.SpecItem('>=' + input_stack.get(name, '0.0.0')).match(sv.Version(version)):
+                            if sv.SpecItem('>=' + input_stack.get(name, '0.0.0')).match(sv.Version(semversion)):
                                 pkg_dict[name]['gh_release_date'] = {"version": version,
                                                                      "gh_release_date": gh_release_date}
                                 new_dict[name]['gh_release_date'] = epv.get('ver')
@@ -672,7 +675,7 @@ class RecommendationV2Task(BaseTask):
 
             # Call PGM and get the response
             pgm_response = self.call_pgm(input_task_for_pgm)
-            
+
             # From PGM response process companion and alternate packages and then get Data from Graph
             # TODO - implement multiple manifest file support for below loop
 
@@ -695,8 +698,8 @@ class RecommendationV2Task(BaseTask):
                     filtered_comp_packages_graph, filtered_list = GraphDB().filter_versions(comp_packages_graph, input_stack)
 
                     _logger.info("Companion Packages Filtered for external_request_id {} {}"
-                             .format(parguments.get('external_request_id', ''),
-                                     set(companion_packages).difference(set(filtered_list))))
+                                 .format(parguments.get('external_request_id', ''),
+                                         set(companion_packages).difference(set(filtered_list))))
 
                     # Create Companion Block
                     comp_packages = create_package_dict(filtered_comp_packages_graph)
