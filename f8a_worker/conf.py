@@ -121,8 +121,8 @@ class Configuration(object):
             logger.debug(self.__dict__)
             try:
                 c = self.__dict__["entries"][item]
-            except KeyError:
-                raise AttributeError("there is no configuration key %r" % item)
+            except KeyError as exc:
+                raise AttributeError("there is no configuration key %r" % item) from exc
             else:
                 return self.get(c.path, graceful=c.graceful)
 
@@ -154,8 +154,7 @@ class Configuration(object):
                 if graceful:
                     return
                 else:
-                    raise ConfigurationException("Can't get value %s from %s: %r" %
-                                                 (p, node, ex))
+                    raise ConfigurationException("Can't get value %s from %s" % (p, node)) from ex
         return node
 
 
@@ -199,7 +198,7 @@ class FileBackend(ConfigurationBackend):
             if self.graceful:
                 return {}
             else:
-                raise ConfigurationException("Can't open file %s: %r" % (self.path, ex))
+                raise ConfigurationException("Can't open file %s" % self.path) from ex
 
 
 class ObjectBackend(ConfigurationBackend):

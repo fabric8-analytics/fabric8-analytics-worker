@@ -381,11 +381,11 @@ def compute_digest(target, function='sha256', raise_on_error=False):
     data = TimedCommand.get_command_output([function, target], graceful=not raise_on_error)
     try:
         return data[0].split(' ')[0].strip()
-    except IndexError:
+    except IndexError as exc:
         logger.error("unable to compute digest of %r, likely it doesn't exist or is a directory",
                      target)
         if raise_on_error:
-            raise RuntimeError("can't compute digest of %s" % target)
+            raise RuntimeError("can't compute digest of %s" % target) from exc
 
 
 class MavenCoordinates(object):
@@ -647,6 +647,7 @@ def case_sensitivity_transform(ecosystem, name):
         return name.lower()
 
     return name
+
 
 def get_session_retry(retries=3, backoff_factor=0.2, status_forcelist=(404, 500, 502, 504), session=None):
     session = session or requests.Session()

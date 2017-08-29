@@ -57,9 +57,9 @@ class JSLSchemaBase(jsl.Document):
         try:
             options = self.Options
             definition_id = options.definition_id
-        except AttributeError:
+        except AttributeError as exc:
             msg = "Published schema {} missing 'definition_id' option"
-            raise TypeError(msg.format(type(self).__name__))
+            raise TypeError(msg.format(type(self).__name__)) from exc
         title = "{}-{}".format(definition_id, role)
         schema_as_json["title"] = title
         return schema_as_json
@@ -136,10 +136,7 @@ class AbstractSchemaLibrary(object, metaclass=abc.ABCMeta):
         try:
             schema_data = self.read_binary_schema(schema_ref)
         except Exception as exc:
-            # Py2 compatibility: switch to "from exc" once workers are on Py3
-            new_exc = SchemaLookupError(schema_ref)
-            new_exc.__cause__ = exc
-            raise new_exc
+            raise SchemaLookupError(schema_ref) from exc
         return json.loads(schema_data.decode("utf-8"), object_pairs_hook=OrderedDict)
 
     @abc.abstractmethod
@@ -189,7 +186,7 @@ class BundledDynamicSchemaLibrary(AbstractSchemaLibrary):
         try:
             mod = importlib.import_module(module_fqn)
         except ImportError as e:
-            raise SchemaImportError(module_fqn)
+            raise SchemaImportError(module_fqn) from e
         role_name = 'ROLE_v{}'.format(schema_ref.version).replace('-', '_')
         result_class_name = 'THE_SCHEMA'
         if not hasattr(mod, role_name):
@@ -327,17 +324,17 @@ def get_schema_ref(analysis, default=None):
     """Retrieves a schema reference from a component analysis"""
     try:
         schema_ref_dict = analysis["schema"]
-    except KeyError:
+    except KeyError as exc:
         if default is None:
-            raise SchemaLookupError("No schema reference found")
+            raise SchemaLookupError("No schema reference found") from exc
         return default
     try:
         result = SchemaRef(**schema_ref_dict)
         if any(field is None for field in result):
             raise TypeError
-    except TypeError:
+    except TypeError as exc:
         msg = "Malformed schema reference: {!r}"
-        raise SchemaLookupError(msg.format(schema_ref_dict))
+        raise SchemaLookupError(msg.format(schema_ref_dict)) from exc
     return result
 
 

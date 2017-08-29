@@ -37,9 +37,9 @@ class DigesterTask(BaseTask):
         data = TimedCommand.get_command_output(['ssdeep', '-c', '-s', target])
         try:
             return data[1].split(',')[0].strip()
-        except IndexError:
+        except IndexError as exc:
             self.log.error("unable to compute ssdeep of %r", target)
-            raise RuntimeError("can't compute digest of %r" % target)
+            raise RuntimeError("can't compute digest of %r" % target) from exc
 
     def compute_digests(self, cache_path, f, artifact=False):
         f_digests = {
