@@ -307,10 +307,10 @@ class GraphDB:
                     new_dict[name] = {}
                 # Check libio Latest Version and add to filter_list if latest version is > current version
                 latest_version = epv.get('pkg').get('libio_latest_version', [''])[0]
-                if latest_version not in pkg_dict[name]:
+                if latest_version == version:
                     try:
                         if sv.SpecItem('>=' + input_stack.get(name, '0.0.0')).match(sv.Version(semversion)):
-                            pkg_dict[name] = {"latest_version": latest_version}
+                            pkg_dict[name]['latest_version'] = latest_version
                             new_dict[name]['latest_version'] = epv.get('ver')
                             new_dict[name]['pkg'] = epv.get('pkg')
                             filtered_comp_list.append(name)
@@ -327,6 +327,7 @@ class GraphDB:
                                 pkg_dict[name]['deps_count'] = {"version": version, "deps_count": deps_count}
                                 new_dict[name]['deps_count'] = epv.get('ver')
                                 new_dict[name]['pkg'] = epv.get('pkg')
+
                                 filtered_comp_list.append(name)
                         except ValueError:
                             pass
@@ -701,8 +702,11 @@ class RecommendationV2Task(BaseTask):
                                  .format(parguments.get('external_request_id', ''),
                                          set(companion_packages).difference(set(filtered_list))))
 
+                    # Get Topics Added to Filtered Versions
+                    topics_comp_packages_graph = GraphDB().get_topics_for_comp(filtered_comp_packages_graph,
+                                                                               pgm_result['companion_packages'])
                     # Create Companion Block
-                    comp_packages = create_package_dict(filtered_comp_packages_graph)
+                    comp_packages = create_package_dict(topics_comp_packages_graph)
                     recommendation['companion'] = comp_packages
 
                     # Get the topmost alternate package for each input package
@@ -736,8 +740,8 @@ class RecommendationV2Task(BaseTask):
                     filtered_alt_packages_graph, filtered_list = GraphDB().filter_versions(alt_packages_graph, input_stack)
 
                     _logger.info("Alternate Packages Filtered for external_request_id {} {}"
-                             .format(parguments.get('external_request_id', ''),
-                                     set(alternate_packages).difference(set(filtered_list))))
+                                 .format(parguments.get('external_request_id', ''),
+                                         set(alternate_packages).difference(set(filtered_list))))
 
                     # Get Topics Added to Filtered Versions
                     topics_comp_packages_graph = GraphDB().get_topics_for_alt(filtered_alt_packages_graph,
