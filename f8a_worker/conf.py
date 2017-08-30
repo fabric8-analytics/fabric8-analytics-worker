@@ -253,7 +253,7 @@ class EnvVarBackend(ObjectBackend):
             d[path[-1]] = val
 
 
-class SingleItemBackend(ObjectBackend):
+class SingleItemBackend(ConfigurationBackend):
     """
     Inject single item from code
     """
@@ -288,7 +288,7 @@ class SingleItemBackend(ObjectBackend):
         d[path[-1]] = entry_value
 
 
-def get_postgres_connection_string():
+def _get_postgres_connection_string():
     return 'postgresql://{postgresql_user}:{postgresql_password}@{pgbouncer_service_host}:{postgresql_port}/' \
            '{postgresql_database}?sslmode=disable'. \
         format(
@@ -322,7 +322,7 @@ class F8aConfiguration(Configuration):
         super(F8aConfiguration, self).__init__(self.backends)
 
         self.add_configuration_entry(
-            "postgres_connection", ["postgres", "connection_string"], entry_value=get_postgres_connection_string())
+            "postgres_connection", ["postgres", "connection_string"], entry_value=_get_postgres_connection_string())
         self.add_configuration_entry(
             "broker_connection", ["broker", "connection_string"],
             entry_value="amqp://guest@${rabbit_host}:${rabbit_port}".format(
@@ -388,10 +388,10 @@ class F8aConfiguration(Configuration):
         config_path = os.getenv("F8A_CONFIG_PATH", "/etc/f8a.yaml")
         secrets_path = os.getenv("F8A_SECRETS_PATH", "/var/lib/secrets/secrets.yaml")
         return [
-            ObjectBackend(defaultconf.data),
             FileBackend(path=config_path, graceful=True),
             FileBackend(path=secrets_path, graceful=True),
             EnvVarBackend(),
+            SingleItemBackend(),
             ObjectBackend(configuration_override or {}),
         ]
 
