@@ -2,6 +2,7 @@ import os
 import logging
 import json
 import datetime
+import semantic_version as sv
 from f8a_worker.utils import get_session_retry
 
 logger = logging.getLogger(__name__)
@@ -222,7 +223,8 @@ def create_package_dict(graph_results, alt_dict=None):
                 'version': version,
                 'licenses': epv['ver'].get('licenses', []),
                 'sentiment': {"overall_score": 0, "magnitude": 0, 'latest_comment': 'N/A'},
-                'latest_version': epv['pkg'].get('libio_latest_version', [''])[0],
+                'latest_version': select_latest_version(epv['pkg'].get('libio_latest_version', [''])[0],
+                                                        epv['pkg'].get('latest_version', [''])[0]),
                 'security': [],
                 'osio_user_count': osio_user_count,
                 'topic_list': epv['pkg'].get('pgm_topics', [])
@@ -286,3 +288,20 @@ def create_package_dict(graph_results, alt_dict=None):
 
             pkg_list.append(pkg_dict)
     return pkg_list
+
+
+def select_latest_version(libio, anitya):
+    libio_latest_version = libio if libio else '0.0.0'
+    anitya_latest_version = anitya if anitya else '0.0.0'
+    libio_latest_version = libio_latest_version.replace('.', '-', 3)
+    libio_latest_version = libio_latest_version.replace('-', '.', 2)
+    anitya_latest_version = anitya_latest_version.replace('.', '-', 3)
+    anitya_latest_version = anitya_latest_version.replace('-', '.', 2)
+    try:
+        latest_version = libio if libio else ''
+        if sv.SpecItem('<' + anitya_latest_version).match(sv.Version(libio_latest_version)):
+            latest_version = anitya
+    except ValueError:
+        pass
+
+    return latest_version

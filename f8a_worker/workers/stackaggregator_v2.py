@@ -10,7 +10,7 @@ import json
 import datetime
 
 from f8a_worker.base import BaseTask
-from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST, LICENSE_SCORING_URL_REST
+from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST, LICENSE_SCORING_URL_REST, select_latest_version
 from f8a_worker.utils import get_session_retry
 
 
@@ -73,7 +73,8 @@ def extract_component_details(component):
     name = component.get("version", {}).get("pname", [""])[0]
     version = component.get("version", {}).get("version", [""])[0]
     ecosystem = component.get("version", {}).get("pecosystem", [""])[0]
-    latest_version = component.get("package", {}).get("libio_latest_version", [""])[0]
+    latest_version = select_latest_version(component.get("package", {}).get("libio_latest_version", [""])[0],
+                                           component.get("package", {}).get("latest_version", [""])[0])
     component_summary = {
         "ecosystem": ecosystem,
         "name": name,
