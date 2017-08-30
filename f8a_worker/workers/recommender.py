@@ -2,12 +2,12 @@ from __future__ import division
 import json
 import requests
 import os
-from collections import Counter
+from collections import Counter, defaultdict
 import re
 import logging
 import semantic_version as sv
 
-from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST, create_package_dict
+from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST, create_package_dict, select_latest_version
 from f8a_worker.base import BaseTask
 from f8a_worker.conf import get_configuration
 from f8a_worker.utils import get_session_retry
@@ -291,8 +291,8 @@ class GraphDB:
         4. Dependents Count in Github Manifest Data
         5. Github Release Date"""
 
-        pkg_dict = {}
-        new_dict = {}
+        pkg_dict = defaultdict(dict)
+        new_dict = defaultdict(dict)
         filtered_comp_list = []
         for epv in epv_list:
             name = epv.get('pkg', {}).get('name', [''])[0]
@@ -301,13 +301,10 @@ class GraphDB:
             semversion = version.replace('.', '-', 3)
             semversion = semversion.replace('-', '.', 2)
             if name and version:
-                if name not in pkg_dict:
-                    pkg_dict[name] = {}
-                if name not in new_dict:
-                    new_dict[name] = {}
-                # Check libio Latest Version and add to filter_list if latest version is > current version
-                latest_version = epv.get('pkg').get('libio_latest_version', [''])[0]
-                if latest_version == version:
+                # Select Latest Version and add to filter_list if latest version is > current version
+                latest_version = select_latest_version(epv.get('pkg').get('libio_latest_version', [''])[0],
+                                                       epv.get('pkg').get('latest_version', [''])[0])
+                if latest_version and latest_version == version:
                     try:
                         if sv.SpecItem('>=' + input_stack.get(name, '0.0.0')).match(sv.Version(semversion)):
                             pkg_dict[name]['latest_version'] = latest_version
