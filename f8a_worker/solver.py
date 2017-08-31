@@ -658,31 +658,31 @@ class Solver(object):
 
 
 class PypiSolver(Solver):
-    def __init__(self, ecosystem, fetcher=None):
+    def __init__(self, ecosystem, parser=None, fetcher=None):
         super(PypiSolver, self).__init__(ecosystem,
-                                         PypiDependencyParser(),
+                                         parser or PypiDependencyParser(),
                                          fetcher or PypiReleasesFetcher(ecosystem))
 
 
 class NpmSolver(Solver):
-    def __init__(self, ecosystem, fetcher=None):
+    def __init__(self, ecosystem, parser=None, fetcher=None):
         super(NpmSolver, self).__init__(ecosystem,
-                                        NpmDependencyParser(),
+                                        parser or NpmDependencyParser(),
                                         fetcher or NpmReleasesFetcher(ecosystem))
 
 
 class RubyGemsSolver(Solver):
-    def __init__(self, ecosystem, fetcher=None):
+    def __init__(self, ecosystem, parser=None, fetcher=None):
         super(RubyGemsSolver, self).__init__(ecosystem,
-                                             RubyGemsDependencyParser(),
+                                             parser or RubyGemsDependencyParser(),
                                              fetcher or RubyGemsReleasesFetcher(ecosystem))
 
 
 class NugetSolver(Solver):
     # https://docs.microsoft.com/en-us/nuget/release-notes/nuget-2.8#-dependencyversion-switch
-    def __init__(self, ecosystem, fetcher=None):
+    def __init__(self, ecosystem, parser=None, fetcher=None):
         super(NugetSolver, self).__init__(ecosystem,
-                                          NugetDependencyParser(),
+                                          parser or NugetDependencyParser(),
                                           fetcher or NugetReleasesFetcher(ecosystem),
                                           highest_dependency_version=False)
 
@@ -767,7 +767,7 @@ class MavenSolver(object):
         return result
 
 
-def get_ecosystem_solver(ecosystem, with_fetcher=None):
+def get_ecosystem_solver(ecosystem, with_parser=None, with_fetcher=None):
     """
     Get `Solver` instance for particular ecosystem
 
@@ -777,13 +777,13 @@ def get_ecosystem_solver(ecosystem, with_fetcher=None):
     if ecosystem.is_backed_by(EcosystemBackend.maven):
         return MavenSolver()
     elif ecosystem.is_backed_by(EcosystemBackend.npm):
-        return NpmSolver(ecosystem, with_fetcher)
+        return NpmSolver(ecosystem, with_parser, with_fetcher)
     elif ecosystem.is_backed_by(EcosystemBackend.pypi):
-        return PypiSolver(ecosystem, with_fetcher)
+        return PypiSolver(ecosystem, with_parser, with_fetcher)
     elif ecosystem.is_backed_by(EcosystemBackend.rubygems):
-        return RubyGemsSolver(ecosystem, with_fetcher)
+        return RubyGemsSolver(ecosystem, with_parser, with_fetcher)
     elif ecosystem.is_backed_by(EcosystemBackend.nuget):
-        return NugetSolver(ecosystem, with_fetcher)
+        return NugetSolver(ecosystem, with_parser, with_fetcher)
 
     raise ValueError('Unknown ecosystem: {}'.format(ecosystem.name))
 

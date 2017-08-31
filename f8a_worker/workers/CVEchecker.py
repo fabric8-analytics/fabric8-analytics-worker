@@ -9,7 +9,7 @@ from f8a_worker.base import BaseTask
 from f8a_worker.errors import TaskError
 from f8a_worker.object_cache import ObjectCache
 from f8a_worker.schemas import SchemaRef
-from f8a_worker.solver import get_ecosystem_solver
+from f8a_worker.solver import get_ecosystem_solver, NpmDependencyParser
 from f8a_worker.utils import TimedCommand, tempdir
 
 
@@ -54,11 +54,15 @@ class CVEcheckerTask(BaseTask):
     def _query_ossindex(self, arguments):
         """ Query OSS Index REST API """
         entries = []
-        solver = get_ecosystem_solver(self.storage.get_ecosystem(arguments['ecosystem']))
-
+        # 'versions' field has https://semver.npmjs.com syntax
+        # Use NpmDependencyParser for all ecosystems
+        solver = get_ecosystem_solver(self.storage.get_ecosystem(arguments['ecosystem']),
+                                      with_parser=NpmDependencyParser())
         for entry in self._query_ossindex_package(arguments['ecosystem'], arguments['name']):
             for vulnerability in entry.get('vulnerabilities', []):
                 for version_range in vulnerability.get('versions', []):
+                    # from unknown reasons there's sometimes '|' instead of '||'
+                    version_range = version_range.replace(' | ', ' || ')
                     affected_versions = solver.solve(["{} {}".format(arguments['name'],
                                                                      version_range)],
                                                      all_versions=True)

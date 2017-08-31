@@ -231,7 +231,7 @@ class TestFetcher(object):
         assert r.pop() == '1.0.5'
 
         # try different dependency specs
-        s = get_ecosystem_solver(npm, f)
+        s = get_ecosystem_solver(npm, with_fetcher=f)
         assert s.solve(['f8a ^0.5.0'])['f8a'] == '0.5.1'
         assert s.solve(['f8a 0.x.x'])['f8a'] == '0.9.0'
         assert s.solve(['f8a >1.0.0'])['f8a'] == '1.0.5'
