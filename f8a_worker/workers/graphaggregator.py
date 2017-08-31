@@ -22,11 +22,11 @@ class GraphAggregatorTask(BaseTask):
         return [{"package": k, "version": v} for k, v in versions.items()]
 
     def execute(self, arguments):
-        self._strict_assert(arguments.get('manifest'))
+        self._strict_assert(arguments.get('data'))
 
         # If we receive a manifest file we need to save it first
         result = []
-        for manifest in arguments['manifest']:
+        for manifest in arguments.get('data', {}).get('request', []):
             temp_path = mkdtemp()
 
             with open(os.path.join(temp_path, manifest['filename']), 'a+') as fd:
