@@ -15,6 +15,7 @@ from urllib.parse import urljoin, urlparse
 
 from f8a_worker.conf import get_configuration
 from f8a_worker.enums import EcosystemBackend
+from f8a_worker.errors import TaskError
 from f8a_worker.utils import cwd, TimedCommand, compute_digest, MavenCoordinates, url2git_repo
 
 logger = logging.getLogger(__name__)
@@ -44,6 +45,9 @@ class Git(object):
             TimedCommand.get_command_output(["git", "config", "--global", "user.name", user_name])
         if not TimedCommand.get_command_output(["git", "config", "--get", "user.email"]):
             TimedCommand.get_command_output(["git", "config", "--global", "user.email", user_email])
+        # Use 'true' as external program to ask for credentials, i.e. don't ask
+        # Better would be GIT_TERMINAL_PROMPT=0, but that requires git >= 2.3
+        TimedCommand.get_command_output(["git", "config", "--global", "core.askpass", "/usr/bin/true"])
 
     @classmethod
     def clone(cls, url, path, depth=None, branch=None):
@@ -56,6 +60,7 @@ class Git(object):
         :param branch: str
         :return: instance of Git()
         """
+        orig_url = url
         cls.config()
         # git clone doesn't understand urls starting with: git+ssh, git+http, git+https
         url = url2git_repo(url)
@@ -64,7 +69,10 @@ class Git(object):
             cmd.extend(["--depth", depth])
         if branch is not None:
             cmd.extend(["--branch", branch])
-        TimedCommand.get_command_output(cmd, graceful=False)
+        try:
+            TimedCommand.get_command_output(cmd, graceful=False)
+        except TaskError as exc:
+            raise TaskError("Unable to clone: %s" % orig_url) from exc
         return cls(path=path)
 
     @classmethod

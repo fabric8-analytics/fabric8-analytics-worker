@@ -151,7 +151,8 @@ def tempdir():
     try:
         yield dirpath
     finally:
-        shutil.rmtree(dirpath)
+        if os_path.isdir(dirpath):
+            shutil.rmtree(dirpath)
 
 
 @contextmanager
