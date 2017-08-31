@@ -118,8 +118,8 @@ class GithubTask(BaseTask):
         gh = github.Github(login_or_token=token)
         try:
             repo = gh.get_repo(full_name_or_id=self._repo_name, lazy=False)
-        except github.GithubException as e:
-            self.log.exception(str(e))
+        except github.GithubException:
+            self.log.error("Failed to get repo %s" % self._repo_name)
             result_data['status'] = 'error'
             return result_data
 
