@@ -16,26 +16,16 @@ class TestCVEchecker(object):
         assert isinstance(results, dict)
         assert set(results.keys()) == {'details', 'status', 'summary'}
         details = results.get('details')
-        # [
-        #    {
-        #        "cvss": {
-        #           "score": 5.0,
-        #            "vector": "AV:N/AC:L/Au:N/C:P/I:N/A:N"
-        #        },
-        #        "description": "## Overview\n\nGeddy ...",
-        #        "id": "CVE-2015-5688",
-        #        "references": [],
-        #        "severity": "medium"
-        #    }
-        # ]
         assert isinstance(details, list) and len(details) == 1
         detail = details[0]
         assert set(detail.keys()) == {'cvss', 'description', 'id', 'references', 'severity'}
-        cvss = detail['cvss']
-        assert cvss['score'] == 5.0
-        assert cvss['vector'] == 'AV:N/AC:L/Au:N/C:P/I:N/A:N'
+        assert detail['description']
+        assert detail['references']
+        # cvss = detail['cvss']
+        # assert cvss['score'] == 5.0
+        # assert cvss['vector'] == 'AV:N/AC:L/Au:N/C:P/I:N/A:N'
         assert detail['id'] == 'CVE-2015-5688'
-        assert detail['severity'] == 'medium'
+        # assert detail['severity'] == 'medium'
         assert results['status'] == 'success'
         assert results['summary'] == ['CVE-2015-5688']
 
@@ -44,7 +34,7 @@ class TestCVEchecker(object):
                     os.path.dirname(
                      os.path.abspath(__file__)), '..', 'data', 'maven',
                                                  'commons-collections-3.2.1.jar')
-        args = {'ecosystem': 'maven', 'name': 'mako', 'version': '0.3.3'}
+        args = {'ecosystem': 'maven', 'name': 'commons-collections', 'version': '3.2.1'}
         flexmock(EPVCache).should_receive('get_source_tarball').and_return(jar_path)
         task = CVEcheckerTask.create_test_instance(task_name='source_licenses')
         results = task.execute(arguments=args)
@@ -122,26 +112,21 @@ class TestCVEchecker(object):
         assert results['status'] == 'success'
         assert results['summary'] == ['CVE-2010-2480']
 
-    def test_nuget_jquery_ui(self):
-        nuspec_dir = os.path.join(
-                    os.path.dirname(
-                     os.path.abspath(__file__)), '..', 'data', 'nuget', 'nuspec')
-        args = {'ecosystem': 'nuget', 'name': 'jQuery.UI.Combined', 'version': '1.8.9'}
-        flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(nuspec_dir)
+    @pytest.mark.usefixtures('nuget')
+    def test_nuget_system_net_http(self):
+        args = {'ecosystem': 'nuget', 'name': 'System.Net.Http', 'version': '4.1.1'}
         task = CVEcheckerTask.create_test_instance(task_name='source_licenses')
         results = task.execute(arguments=args)
 
         assert isinstance(results, dict)
         assert set(results.keys()) == {'details', 'status', 'summary'}
+        # https://github.com/dotnet/announcements/issues/12
+        assert set(results.get('summary')) >= {'CVE-2017-0247', 'CVE-2017-0248',
+                                               'CVE-2017-0249', 'CVE-2017-0256'}
         details = results.get('details')
-        # dependency-check finds
-        # https://nvd.nist.gov/vuln/detail/CVE-2007-2379
-        # but according to NIST, there should be also
-        # https://nvd.nist.gov/vuln/detail/CVE-2010-5312
-        # https://nvd.nist.gov/vuln/detail/CVE-2012-6662
-        # so don't check exact CVEs for now, just make sure it does *something*
-        assert isinstance(details, list) and len(details) > 0
-        detail = details[0]
-        assert set(detail.keys()) == {'cvss', 'description', 'id', 'references', 'severity'}
-        cvss = detail['cvss']
-        assert set(cvss.keys()) == {'score', 'vector'}
+        assert isinstance(details, list) and len(details) >= 4
+        for detail in details:
+            assert set(detail.keys()) == {'cvss', 'description', 'id', 'references', 'severity'}
+            assert detail['description']
+            assert detail['references']
+            assert set(detail['cvss'].keys()) == {'score', 'vector'}
