@@ -687,7 +687,7 @@ class RecommendationV2Task(BaseTask):
                         pgm_result['outlier_package_list']
 
                     # Append Topics for User Stack
-                    recommendation['recommendations']['input_stack_topics'] = pgm_result.get('package_to_topic_dict', {})
+                    recommendation['input_stack_topics'] = pgm_result.get('package_to_topic_dict', {})
 
                     for pkg in pgm_result['companion_packages']:
                         companion_packages.append(pkg['package_name'])
