@@ -4,11 +4,12 @@ import hashlib
 import json
 from itertools import chain
 
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from selinon import StoragePool
 from f8a_worker.models import Analysis, Ecosystem, Package, Version, WorkerResult, APIRequests
 from f8a_worker.utils import MavenCoordinates
-from sqlalchemy.orm.exc import NoResultFound
 
 from .postgres_base import PostgresBase
 
@@ -52,17 +53,16 @@ class BayesianPostgres(PostgresBase):
             self.connect()
 
         try:
-            record = PostgresBase.session.query(WorkerResult).join(Analysis).join(Version).join(Package).join(Ecosystem).\
+            return PostgresBase.session.query(WorkerResult).join(Analysis).join(Version).join(Package).join(Ecosystem).\
                 filter(WorkerResult.worker == task_name).\
                 filter(Package.name == package).\
                 filter(Version.identifier == version).\
                 filter(Ecosystem.name == ecosystem).\
                 filter(WorkerResult.error.is_(error)).\
                 order_by(Analysis.finished_at.desc()).first()
-        except NoResultFound:
-            return None
-
-        return record
+        except SQLAlchemyError:
+            PostgresBase.session.rollback()
+            raise
 
     def get_analysis_count(self, ecosystem, package, version):
         """Get count of previously scheduled analysis for given EPV triplet.
@@ -75,12 +75,16 @@ class BayesianPostgres(PostgresBase):
         if ecosystem == 'maven':
             package = MavenCoordinates.normalize_str(package)
 
-        count = PostgresBase.session.query(Analysis).\
-            join(Version).join(Package).join(Ecosystem).\
-            filter(Ecosystem.name == ecosystem).\
-            filter(Package.name == package).\
-            filter(Version.identifier == version).\
-            count()
+        try:
+            count = PostgresBase.session.query(Analysis).\
+                                         join(Version).join(Package).join(Ecosystem).\
+                                         filter(Ecosystem.name == ecosystem).\
+                                         filter(Package.name == package).\
+                                         filter(Version.identifier == version).\
+                                         count()
+        except SQLAlchemyError:
+            PostgresBase.session.rollback()
+            raise
 
         return count
 
@@ -91,11 +95,16 @@ class BayesianPostgres(PostgresBase):
         :param analysis_id: analysis id for which task names should retrieved
         :return: a list of task names
         """
-        task_names = PostgresBase.session.query(WorkerResult.worker).\
-            join(Analysis).\
-            filter(Analysis.id == analysis_id).\
-            filter(WorkerResult.error.is_(False)).\
-            all()
+        try:
+            task_names = PostgresBase.session.query(WorkerResult.worker).\
+                                              join(Analysis).\
+                                              filter(Analysis.id == analysis_id).\
+                                              filter(WorkerResult.error.is_(False)).\
+                                              all()
+        except SQLAlchemyError:
+            PostgresBase.session.rollback()
+            raise
+
         return list(chain(*task_names))
 
     def get_worker_id_count(self, worker_id):
@@ -104,7 +113,11 @@ class BayesianPostgres(PostgresBase):
         :param worker_id: unique worker id
         :return: worker result count
         """
-        return PostgresBase.session.query(WorkerResult).filter(WorkerResult.worker_id == worker_id).count()
+        try:
+            return PostgresBase.session.query(WorkerResult).filter(WorkerResult.worker_id == worker_id).count()
+        except SQLAlchemyError:
+            PostgresBase.session.rollback()
+            raise
 
     @staticmethod
     def get_analysis_by_id(analysis_id):
@@ -113,12 +126,15 @@ class BayesianPostgres(PostgresBase):
         :param analysis_id: str, ID of analysis
         :return: analysis result
         """
-
-        found = PostgresBase.session.query(Analysis).\
-            filter(Analysis.id == analysis_id).\
-            one()
-
-        return found
+        try:
+            return PostgresBase.session.query(Analysis).\
+                                        filter(Analysis.id == analysis_id).\
+                                        one()
+        except (NoResultFound, MultipleResultsFound):
+            raise
+        except SQLAlchemyError:
+            PostgresBase.session.rollback()
+            raise
 
     @staticmethod
     def check_api_user_entry(email):
@@ -127,8 +143,13 @@ class BayesianPostgres(PostgresBase):
         :param email: str, user's email id
         :return: First entry in api_requests table with matching email id 
         """
-        return PostgresBase.session.query(APIRequests).\
-            filter(APIRequests.user_email == email).first()
+        try:
+            return PostgresBase.session.query(APIRequests).\
+                                        filter(APIRequests.user_email == email).\
+                                        first()
+        except SQLAlchemyError:
+            PostgresBase.session.rollback()
+            raise
 
     @staticmethod
     def store_in_bucket(content):
@@ -172,6 +193,11 @@ class BayesianPostgres(PostgresBase):
             request_digest=request_digest
         )
 
-        PostgresBase.session.add(req)
-        PostgresBase.session.commit()
+        try:
+            PostgresBase.session.add(req)
+            PostgresBase.session.commit()
+        except SQLAlchemyError:
+            PostgresBase.session.rollback()
+            raise
+
         return True

@@ -3,7 +3,7 @@ from sqlalchemy import (Column, DateTime, Enum, ForeignKey, Integer, String, Uni
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, scoped_session, sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
@@ -42,11 +42,21 @@ class BayesianModelMixin(object):
 
     @classmethod
     def _by_attrs(cls, session, **attrs):
-        return session.query(cls).filter_by(**attrs).one()
+        try:
+            return session.query(cls).filter_by(**attrs).one()
+        except NoResultFound:
+            raise
+        except SQLAlchemyError:
+            session.rollback()
+            raise
 
     @classmethod
     def by_id(cls, session, id):
-        return cls._by_attrs(session, id=id)
+        try:
+            return cls._by_attrs(session, id=id)
+        except NoResultFound:
+            # What to do here ?
+            raise
 
     @classmethod
     def get_or_create(cls, session, **attrs):
@@ -55,8 +65,12 @@ class BayesianModelMixin(object):
         except NoResultFound:
             try:
                 o = cls(**attrs)
-                session.add(o)
-                session.commit()
+                try:
+                    session.add(o)
+                    session.commit()
+                except SQLAlchemyError:
+                    session.rollback()
+                    raise
                 return o
             except IntegrityError:  # object was created in the meanwhile by someone else
                 return cls._by_attrs(**attrs)
@@ -89,7 +103,11 @@ class Ecosystem(Base):
 
     @classmethod
     def by_name(cls, session, name):
-        return cls._by_attrs(session, name=name)
+        try:
+            return cls._by_attrs(session, name=name)
+        except NoResultFound:
+            # What to do here ?
+            raise
 
 
 class Package(Base):
@@ -107,7 +125,11 @@ class Package(Base):
     @classmethod
     def by_name(cls, session, name):
         # TODO: this is dangerous at is does not consider Ecosystem
-        return cls._by_attrs(session, name=name)
+        try:
+            return cls._by_attrs(session, name=name)
+        except NoResultFound:
+            # What to do here ?
+            raise
 
 
 class Version(Base):
@@ -124,7 +146,11 @@ class Version(Base):
 
     @classmethod
     def by_identifier(cls, session, identifier):
-        return cls._by_attrs(session, identifier=identifier)
+        try:
+            return cls._by_attrs(session, identifier=identifier)
+        except NoResultFound:
+            # What to do here ?
+            raise
 
 
 class Analysis(Base):

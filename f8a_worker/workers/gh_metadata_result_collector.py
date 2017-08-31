@@ -1,9 +1,9 @@
-from selinon import StoragePool
-from f8a_worker.base import BaseTask
-
-import urllib.parse
 import requests
-import os
+from selinon import StoragePool
+from sqlalchemy.exc import SQLAlchemyError
+import urllib.parse
+
+from f8a_worker.base import BaseTask
 
 
 class GitHubManifestMetadataResultCollector(BaseTask):
@@ -52,4 +52,8 @@ class GitHubManifestMetadataResultCollector(BaseTask):
             version_id = s3.store(arguments, self.flow_name, self.task_name, self.task_id,
                                   (result_name, worker_result.task_result))
             worker_result.task_result = {'version_id': version_id}
-        postgres.session.commit()
+        try:
+            postgres.session.commit()
+        except SQLAlchemyError:
+            postgres.session.rollback()
+            raise

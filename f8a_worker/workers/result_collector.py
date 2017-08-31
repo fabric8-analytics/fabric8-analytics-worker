@@ -1,4 +1,5 @@
 from selinon import StoragePool
+from sqlalchemy.exc import SQLAlchemyError
 from f8a_worker.base import BaseTask
 
 
@@ -21,7 +22,12 @@ class _ResultCollectorBase(BaseTask):
             # Substitute task's result with version that we got on S3
             worker_result.task_result = {'version_id': version_id}
 
-        postgres.session.commit()
+        try:
+            postgres.session.commit()
+        except SQLAlchemyError:
+            postgres.session.rollback()
+            raise
+
         s3.store_base_file_record(arguments, results.to_dict())
 
 
