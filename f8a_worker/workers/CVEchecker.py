@@ -16,7 +16,7 @@ from f8a_worker.utils import TimedCommand, tempdir
 class CVEcheckerTask(BaseTask):
     name = 'f8a_worker.workers.CVEchecker'
     _analysis_name = 'security_issues'
-    description = "Security issues scanner. Uses Snyk vulndb for npm and OWASP Dep.Check for maven"
+    description = "Security issues scanner"
     schema_ref = SchemaRef(_analysis_name, '3-0-0')
 
     @staticmethod
@@ -46,10 +46,18 @@ class CVEcheckerTask(BaseTask):
         return CVEcheckerTask.query_url(url)
 
     @staticmethod
-    def _query_ossindex_vulnerability_fromtill(ecosystem, from_time=0, till_time=-1):
+    def query_ossindex_vulnerability_fromtill(ecosystem, from_time=0, till_time=-1):
+        # OSS Index uses timestamp in milliseconds
+        from_time = int(from_time * 1000)
+        till_time = int(till_time * 1000)
         url = "https://ossindex.net/v2.0/vulnerability/pm/{pm}/fromtill/{from_time}/{till_time}".\
             format(pm=ecosystem, from_time=from_time, till_time=till_time)
-        return CVEcheckerTask.query_url(url)
+        packages = []
+        while url:
+            response = CVEcheckerTask.query_url(url)
+            packages += response.get('packages', [])
+            url = response.get('next')
+        return packages
 
     def _query_ossindex(self, arguments):
         """ Query OSS Index REST API """
@@ -60,12 +68,17 @@ class CVEcheckerTask(BaseTask):
                                       with_parser=NpmDependencyParser())
         for entry in self._query_ossindex_package(arguments['ecosystem'], arguments['name']):
             for vulnerability in entry.get('vulnerabilities', []):
-                for version_range in vulnerability.get('versions', []):
+                for version_string in vulnerability.get('versions', []):
                     # from unknown reasons there's sometimes '|' instead of '||'
-                    version_range = version_range.replace(' | ', ' || ')
-                    affected_versions = solver.solve(["{} {}".format(arguments['name'],
-                                                                     version_range)],
-                                                     all_versions=True)
+                    version_string = version_string.replace(' | ', ' || ')
+                    try:
+                        affected_versions = solver.solve(["{} {}".format(arguments['name'],
+                                                                         version_string)],
+                                                         all_versions=True)
+                    except:
+                        self.log.exception("Failed to resolve %r for %s:%s", version_string,
+                                           arguments['ecosystem'], arguments['name'])
+                        continue
                     if arguments['version'] in affected_versions.get(arguments['name'], []):
                         entries.append(self._filter_ossindex_fields(vulnerability))
 
@@ -81,7 +94,7 @@ class CVEcheckerTask(BaseTask):
             for dcdir in glob(os.path.join(gettempdir(), 'dctemp*')):
                 rmtree(dcdir)
 
-        s3 = StoragePool.get_connected_storage('S3OWASPDepCheck')
+        s3 = StoragePool.get_connected_storage('S3VulnDB')
         depcheck = os.path.join(os.environ['OWASP_DEP_CHECK_PATH'], 'bin', 'dependency-check.sh')
         with tempdir() as temp_data_dir:
             retrieved = s3.retrieve_depcheck_db_if_exists(temp_data_dir)

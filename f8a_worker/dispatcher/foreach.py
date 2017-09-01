@@ -86,6 +86,6 @@ def iter_cvedb_updates(storage_pool, node_args):
             epv['force'] = True
         return modified
     except:
-        logger.exception("Failed to collect snyk updates")
+        logger.exception("Failed to collect OSS Index updates")
         return []
 
