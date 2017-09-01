@@ -29,13 +29,16 @@ class BayesianPostgres(PostgresBase):
             self._s3 = StoragePool.get_connected_storage('S3Data')
         return self._s3
 
-    def _create_result_entry(self, node_args, flow_name, task_name, task_id, result, error=False):
+    def _create_result_entry(self, node_args, flow_name, task_name, task_id, result, error=None):
+        if error is None and isinstance(result, dict):
+            error = result.get('status') == 'error'
+
         return WorkerResult(
             worker=task_name,
             worker_id=task_id,
             analysis_id=node_args.get('document_id') if isinstance(node_args, dict) else None,
             task_result=result,
-            error=error or result.get('status') == 'error' if isinstance(result, dict) else None,
+            error=error,
             external_request_id=node_args.get('external_request_id') if isinstance(node_args, dict) else None
         )
 

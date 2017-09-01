@@ -6,6 +6,7 @@ import uuid
 import boto3
 import botocore
 from selinon import DataStorage
+from selinon import StoragePool
 from f8a_worker.conf import is_local_deployment
 
 
@@ -217,3 +218,13 @@ class AmazonS3(DataStorage):
         except ValueError:
             return False
 
+    def store_error(self, node_args, flow_name, task_name, task_id, exc_info):
+        """Store error to Postgres/RDS so we know about task failures that store data on S3."""
+        if flow_name == 'bayesianAnalysisFlow':
+            postgres = StoragePool.get_connected_storage('BayesianPostgres')
+        elif flow_name == 'bayesianPackageAnalysisFlow':
+            postgres = StoragePool.get_connected_storage('PackagePostgres')
+        else:
+            raise RuntimeError("Unable to store error, error storing not defined for flow '%s'" % flow_name)
+
+        return postgres.store_error(node_args, flow_name, task_name, task_id, exc_info)

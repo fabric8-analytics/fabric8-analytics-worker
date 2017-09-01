@@ -33,4 +33,17 @@
             <<: *isGhRepoCheck
 
         - from:
+          to: 'RepositoryDescCollectorTask'
+          condition:
+            or:
+              - name: 'argsFieldEqual'
+                args:
+                  key: 'ecosystem'
+                  value: 'pypi'
+              - name: 'argsFieldEqual'
+                args:
+                  key: 'ecosystem'
+                  value: 'npm'
+
+        - from:
           to: 'libraries_io'
