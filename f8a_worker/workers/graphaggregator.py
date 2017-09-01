@@ -3,9 +3,12 @@ import json
 from shutil import rmtree
 from selinon import FatalTaskError
 from tempfile import mkdtemp
+from sqlalchemy.exc import SQLAlchemyError
+
 from f8a_worker.solver import get_ecosystem_solver
 from f8a_worker.base import BaseTask
 from f8a_worker.manifests import get_manifest_descriptor_by_filename
+from f8a_worker.models import StackAnalysisRequest
 
 from f8a_worker.workers.mercator import MercatorTask
 
@@ -23,10 +26,26 @@ class GraphAggregatorTask(BaseTask):
 
     def execute(self, arguments):
         self._strict_assert(arguments.get('data'))
+        self._strict_assert(arguments.get('external_request_id'))
+
+        db = self.storage.session
+        try:
+            results = db.query(StackAnalysisRequest)\
+                            .filter(StackAnalysisRequest.id == arguments.get('external_request_id'))\
+                            .first()
+        except SQLAlchemyError:
+            db.rollback()
+            raise
+
+        manifests = []
+        if results is not None:
+            row = results.to_dict()
+            request_json = row.get("requestJson", {})
+            manifests = request_json.get('manifest', [])
 
         # If we receive a manifest file we need to save it first
         result = []
-        for manifest in arguments.get('data', {}).get('request', []):
+        for manifest in manifests:
             temp_path = mkdtemp()
 
             with open(os.path.join(temp_path, manifest['filename']), 'a+') as fd:
