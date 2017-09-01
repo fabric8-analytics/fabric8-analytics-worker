@@ -2,6 +2,7 @@ import os
 from selinon import StoragePool
 from f8a_worker.base import BaseTask
 from f8a_worker.models import StackAnalysisRequest
+from sqlalchemy.exc import SQLAlchemyError
 
 
 class ManifestKeeperTask(BaseTask):
@@ -13,12 +14,18 @@ class ManifestKeeperTask(BaseTask):
         self._strict_assert(arguments.get('external_request_id'))
 
         postgres = StoragePool.get_connected_storage('BayesianPostgres')
-        results = postgres.session.query(StackAnalysisRequest)\
-                        .filter(StackAnalysisRequest.id == arguments.get('external_request_id'))
+        
+        try:
+            results = postgres.session.query(StackAnalysisRequest)\
+                        .filter(StackAnalysisRequest.id == arguments.get('external_request_id'))\
+                        .first()
+        except SQLAlchemyError:
+            postgres.session.rollback()
+            raise
 
         manifests = []
-        if results.count() > 0:
-            row = results.first().to_dict()
+        if results is not None:
+            row = results.to_dict()
             request_json = row.get("requestJson", {})
             manifests = request_json.get('manifest', [])
 

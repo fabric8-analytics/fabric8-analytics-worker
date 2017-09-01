@@ -3,6 +3,8 @@ import json
 from shutil import rmtree
 from selinon import FatalTaskError
 from tempfile import mkdtemp
+from sqlalchemy.exc import SQLAlchemyError
+
 from f8a_worker.solver import get_ecosystem_solver
 from f8a_worker.base import BaseTask
 from f8a_worker.manifests import get_manifest_descriptor_by_filename
@@ -27,11 +29,17 @@ class GraphAggregatorTask(BaseTask):
         self._strict_assert(arguments.get('external_request_id'))
 
         db = self.storage.session
-        results = db.query(StackAnalysisRequest)\
-                        .filter(StackAnalysisRequest.id == arguments.get('external_request_id'))
+        try:
+            results = db.query(StackAnalysisRequest)\
+                            .filter(StackAnalysisRequest.id == arguments.get('external_request_id'))\
+                            .first()
+        except SQLAlchemyError:
+            db.rollback()
+            raise
+
         manifests = []
-        if results.count() > 0:
-            row = results.first().to_dict()
+        if results is not None:
+            row = results.to_dict()
             request_json = row.get("requestJson", {})
             manifests = request_json.get('manifest', [])
 
