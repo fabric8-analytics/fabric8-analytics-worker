@@ -24,6 +24,8 @@ sample output:
 """
 
 import os
+import json
+from itertools import chain
 
 from f8a_worker.base import BaseTask
 from f8a_worker.data_normalizer import DataNormalizer
@@ -192,9 +194,16 @@ class MercatorTask(BaseTask):
                        'summary': [],
                        'details': []}
         mercator_target = arguments.get('cache_sources_path', cache_path)
-        tc = TimedCommand(['mercator', mercator_target])
-        update_env = {'MERCATOR_JAVA_RESOLVE_POMS': 'true'} if resolve_poms else {}
-        status, data, err = tc.run(timeout=timeout, is_json=True, update_env=update_env)
+
+        if arguments['ecosystem'] == 'go':
+            tc = TimedCommand(['gofedlib-cli', '--dependencies-main', '--dependencies-packages', mercator_target])
+            status, data, err = tc.run(timeout=timeout)
+        else:
+            tc = TimedCommand(['mercator', mercator_target])
+            update_env = {'MERCATOR_JAVA_RESOLVE_POMS': 'true'} if resolve_poms else {}
+            status, data, err = tc.run(timeout=timeout,
+                                       is_json=True,
+                                       update_env=update_env)
         if status != 0:
             self.log.error(err)
             result_data['status'] = 'error'
@@ -203,6 +212,11 @@ class MercatorTask(BaseTask):
         if ecosystem_object.is_backed_by(EcosystemBackend.pypi):
             # TODO: attempt static setup.py parsing with mercator
             items = [self._merge_python_items(mercator_target, data)]
+        elif arguments['ecosystem'] == 'go':
+            items = json.loads(data[0])
+            result_data['details']['dependencies'] = list(chain(items.values()))
+            self.log.debug('gofedlib found %i dependencies', len(result_data['details']['dependencies']))
+            return result_data
         else:
             if outermost_only:
                 # process only root level manifests (or the ones closest to the root level)
