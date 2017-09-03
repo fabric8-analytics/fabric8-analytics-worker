@@ -12,6 +12,7 @@ from traceback import format_exc
 from shlex import split
 from queue import Queue, Empty
 from contextlib import contextmanager
+from urllib.parse import unquote
 import requests
 from urllib.parse import urlparse
 from requests.adapters import HTTPAdapter
@@ -669,5 +670,12 @@ def get_session_retry(retries=3, backoff_factor=0.2, status_forcelist=(404, 500,
     session.mount('http://', adapter)
     return session
 
-# get not hidden files from current directory
-# print(list(get_all_files_from('.', file_filter=lambda a: not startswith(a, ['.']))))
+
+def normalize_package_name(ecosystem, name):
+    normalized_name = name
+    if ecosystem == 'pypi':
+        case_sensitivity_transform(ecosystem, name)
+    elif ecosystem == 'go':
+        # go package name is the host+path part of a URL, thus it can be URL encoded
+        normalized_name = unquote(name)
+    return normalized_name
