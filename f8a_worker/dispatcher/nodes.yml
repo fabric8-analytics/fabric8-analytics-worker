@@ -317,7 +317,7 @@
     - name: 'RepositoryDescCollectorTask'
       import: 'f8a_worker.workers'
       max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_RepositoryDescCollectorTask_tagging_v0'
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_RepositoryDescCollectorTask_v0'
       storage: 'S3RepositoryDescription'
 
   flows:
