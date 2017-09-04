@@ -19,22 +19,9 @@
           condition:
             <<: *isGhRepoCheck
 
-        - from: 'GitReadmeCollectorTask'
-          to: 'package_keywords_tagging'
-          condition:
-            name: 'argsFieldEqual'
-            args:
-              key: 'ecosystem'
-              value: 'pypi'
-
-        - from:
-          to: 'git_stats'
-          condition:
-            <<: *isGhRepoCheck
-
         - from:
           to: 'RepositoryDescCollectorTask'
-          condition:
+          condition: &repositoryDescCollectorCheck
             or:
               - name: 'argsFieldEqual'
                 args:
@@ -44,6 +31,35 @@
                 args:
                   key: 'ecosystem'
                   value: 'npm'
+
+        - from: 'GitReadmeCollectorTask'
+          to: 'package_keywords_tagging'
+          condition:
+            and:
+              -  &keywordsTaggingCheck
+                 name: 'argsFieldEqual'
+                 args:
+                   key: 'ecosystem'
+                   value: 'pypi'
+              - not:
+                  # prevent package_keywords_tagging to be run twice
+                  <<: *repositoryDescCollectorCheck
+
+        - from:
+            - 'GitReadmeCollectorTask'
+            - 'RepositoryDescCollectorTask'
+          to: 'package_keywords_tagging'
+          condition:
+            and:
+              - <<: *keywordsTaggingCheck
+              # prevent package_keywords_tagging to be run twice
+              # TODO: it would be nice to have https://github.com/selinon/selinon/issues/22 to avoid this check
+              - <<: *repositoryDescCollectorCheck
+
+        - from:
+          to: 'git_stats'
+          condition:
+            <<: *isGhRepoCheck
 
         - from:
           to: 'libraries_io'

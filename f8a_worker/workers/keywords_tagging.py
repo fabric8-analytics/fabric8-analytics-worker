@@ -140,4 +140,13 @@ class KeywordsTaggingTask(BaseTask):
                                                        stopwords_file=stopwords_file_name,
                                                        **self._LOOKUP_CONF)
 
+        if 'RepositoryDescCollectorTask' in self.parent.keys():
+            s3 = StoragePool.get_connected_storage('S3RepositoryDescription')
+            description = s3.retrieve_repository_description(arguments['ecosystem'], arguments['name'])
+            self.log.debug("Computing keywords on description from repository")
+            details['repository_description'] = keywords_lookup_text(description,
+                                                                     keywords_file=keywords_file_name,
+                                                                     stopwords_file=stopwords_file_name,
+                                                                     **self._LOOKUP_CONF)
+
         return {'status': 'success', 'summary': [], 'details': details}

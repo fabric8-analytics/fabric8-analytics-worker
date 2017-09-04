@@ -10,7 +10,7 @@ class S3RepositoryDescription(AmazonS3):
 
     def retrieve_repository_description(self, ecosystem, name):
         object_key = self._construct_object_key(ecosystem=ecosystem, name=name)
-        return self.retrieve_dict(object_key)
+        return self.retrieve_blob(object_key).decode()
 
     def store(self, node_args, flow_name, task_name, task_id, result):
         assert 'ecosystem' in node_args
