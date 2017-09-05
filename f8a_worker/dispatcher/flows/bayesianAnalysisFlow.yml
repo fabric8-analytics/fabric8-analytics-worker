@@ -61,10 +61,15 @@
         - from: 'metadata'
           to: 'keywords_tagging'
           condition:
-            name: 'argsFieldEqual'
-            args:
-              key: 'ecosystem'
-              value: 'pypi'
+            or:
+              - name: 'argsFieldEqual'
+                args:
+                  key: 'ecosystem'
+                  value: 'pypi'
+              - name: 'argsFieldEqual'
+                args:
+                  key: 'ecosystem'
+                  value: 'maven'
         - from: 'metadata'
           to: 'bayesianPackageFlow'
         - from: 'metadata'

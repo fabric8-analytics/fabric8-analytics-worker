@@ -36,11 +36,16 @@
           to: 'package_keywords_tagging'
           condition:
             and:
-              -  &keywordsTaggingCheck
-                 name: 'argsFieldEqual'
-                 args:
-                   key: 'ecosystem'
-                   value: 'pypi'
+              - &keywordsTaggingCheck
+                or:
+                  - name: 'argsFieldEqual'
+                    args:
+                      key: 'ecosystem'
+                      value: 'pypi'
+                  - name: 'argsFieldEqual'
+                    args:
+                      key: 'ecosystem'
+                      value: 'maven'
               - not:
                   # prevent package_keywords_tagging to be run twice
                   <<: *repositoryDescCollectorCheck
