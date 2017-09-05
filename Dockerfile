@@ -31,6 +31,10 @@ COPY alembic/ ${ALEMBIC_DIR}/alembic
 COPY ./ /tmp/f8a_worker
 RUN cd /tmp/f8a_worker && pip3 install .
 
+# A temporary hack to keep tagger up2date
+COPY hack/install_tagger.sh /tmp/
+RUN sh /tmp/install_tagger.sh
+
 # Make sure there are no root-owned files and directories in the home directory,
 # as this directory can be used by non-root user at runtime.
 RUN find ${HOME} -mindepth 1 -delete
