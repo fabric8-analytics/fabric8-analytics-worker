@@ -327,7 +327,6 @@
     - 'bayesianApiFlow'
     - 'bigQueryFlow'
     - 'stackApiGraphFlow'
-    - 'stackApiGraphV2Flow'
     - 'livenessFlow'
     - 'cveCheckFlow'
     - 'graphImportFlow'
