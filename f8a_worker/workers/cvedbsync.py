@@ -1,7 +1,7 @@
 import os
 from selinon import StoragePool
 from f8a_worker.base import BaseTask
-from f8a_worker.solver import get_ecosystem_solver, NpmDependencyParser
+from f8a_worker.solver import get_ecosystem_solver, OSSIndexDependencyParser
 from f8a_worker.utils import TimedCommand, tempdir
 from f8a_worker.workers import CVEcheckerTask
 
@@ -25,19 +25,22 @@ class CVEDBSyncTask(BaseTask):
         :return: generator of e:p:v
         """
         to_scan = []
-        for ecosystem in ['npm', 'nuget']:  # TODO: maven
+        for ecosystem in ['maven', 'npm', 'nuget']:
             ecosystem_solver = get_ecosystem_solver(self.storage.get_ecosystem(ecosystem),
-                                                    with_parser=NpmDependencyParser())
+                                                    with_parser=OSSIndexDependencyParser())
             self.log.debug("Retrieving new %s vulnerabilities from OSS Index", ecosystem)
             ossindex_updated_packages = CVEcheckerTask.\
                 query_ossindex_vulnerability_fromtill(ecosystem=ecosystem,
                                                       from_time=previous_sync_timestamp)
             for ossindex_updated_package in ossindex_updated_packages:
-                package_name = ossindex_updated_package['name']
+                if ecosystem == 'maven':
+                    package_name = "{g}:{n}".format(g=ossindex_updated_package['group'],
+                                                    n=ossindex_updated_package['name'])
+                else:
+                    package_name = ossindex_updated_package['name']
                 package_affected_versions = set()
                 for vulnerability in ossindex_updated_package.get('vulnerabilities', []):
                     for version_string in vulnerability.get('versions', []):
-                        version_string = version_string.replace(' | ', ' || ')  # '|' work-around
                         try:
                             resolved_versions = ecosystem_solver.\
                                 solve(["{} {}".format(package_name, version_string)],
@@ -61,10 +64,10 @@ class CVEDBSyncTask(BaseTask):
                         'name': package_name,
                         'version': version
                         })
-        msg = "Components to be {}scanned for vulnerabilities:".\
-            format("re-" if only_already_scanned else "")
+        msg = "Components to be {prefix}scanned for vulnerabilities: {components}".\
+            format(prefix="re-" if only_already_scanned else "",
+                   components=to_scan)
         self.log.debug(msg)
-        self.log.debug(to_scan)
         return to_scan
 
     def execute(self, arguments):
