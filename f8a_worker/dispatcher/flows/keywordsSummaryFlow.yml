@@ -1,0 +1,8 @@
+---
+  flow-definitions:
+    - name: 'keywordsSummaryFlow'
+      queue: '{DEPLOYMENT_PREFIX}_ingestion_keywordsSummaryFlow_v0'
+      nowait: 'KeywordsSummaryTask'
+      edges:
+        - from:
+          to: 'KeywordsSummaryTask'

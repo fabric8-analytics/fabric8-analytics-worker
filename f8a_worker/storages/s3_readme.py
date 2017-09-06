@@ -16,6 +16,9 @@ class S3Readme(AmazonS3):
         assert 'ecosystem' in node_args
         assert 'name' in node_args
 
+        if result is None:
+            return
+
         object_key = self._construct_object_key(**node_args)
         self.store_dict(result, object_key)
 

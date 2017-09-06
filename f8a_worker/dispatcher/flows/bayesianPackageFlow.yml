@@ -6,6 +6,7 @@
       propagate_node_args:
         - 'bayesianPackageAnalysisFlow'
         - 'bayesianPriorityPackageAnalysisFlow'
+        - 'bayesianPackageTaggingFlow'
       node_args_from_first: true
       nowait: 'PackageGraphImporterTask'
       sampling:
@@ -37,10 +38,10 @@
                   env: 'WORKER_ADMINISTRATION_REGION'
                   value: 'priority'
         - from: 'bayesianPackageAnalysisFlow'
+          to: 'bayesianPackageTaggingFlow'
+        - from: 'bayesianPackageTaggingFlow'
           to: 'PackageFinalizeTask'
         - from: 'PackageFinalizeTask'
-          to: 'PackageResultCollector'
-        - from: 'PackageFinalizeTaskError'
           to: 'PackageResultCollector'
         - from: 'PackageResultCollector'
           to: 'PackageGraphImporterTask'
@@ -56,7 +57,7 @@
                   value: true
       failures:
         - nodes: 'bayesianPackageAnalysisFlow'
-          fallback: 'PackageFinalizeTaskError'
+          fallback: 'bayesianPackageTaggingFlow'
 
     - <<: *bayesianPackageFlow
       name: 'bayesianPriorityPackageFlow'

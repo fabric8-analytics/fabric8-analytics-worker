@@ -15,15 +15,15 @@ def selective_run_function(flow_name, node_name, node_args, task_names, storage_
     :return: ID of task that should be reused, None if task should be run again
     """
     try:
-        if flow_name in ('bayesianPackageFlow', 'bayesianPackageAnalysisFlow'):
-            task_result = storage_pool.get_connected_storage('PackagePostgres').get_latest_task_result(
+        if flow_name in ('bayesianPackageFlow', 'bayesianPackageAnalysisFlow', 'bayesianPackageTaggingFlow'):
+            task_result = storage_pool.get_connected_storage('PackagePostgres').get_latest_task_entry(
                 node_args['ecosystem'],
                 node_args['name'],
                 node_name,
                 error=False
             )
         else:
-            task_result = storage_pool.get_connected_storage('BayesianPostgres').get_latest_task_result(
+            task_result = storage_pool.get_connected_storage('BayesianPostgres').get_latest_task_entry(
                 node_args['ecosystem'],
                 node_args['name'],
                 node_args['version'],
