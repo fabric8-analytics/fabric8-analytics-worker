@@ -61,6 +61,12 @@
               # TODO: it would be nice to have https://github.com/selinon/selinon/issues/22 to avoid this check
               - <<: *repositoryDescCollectorCheck
 
+        - from: 'RepositoryDescCollectorTask'
+          to: 'package_keywords_tagging'
+          condition:
+            not:
+              <<: *isGhRepoCheck
+
         - from:
           to: 'git_stats'
           condition:
