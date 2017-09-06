@@ -239,11 +239,13 @@ class DataNormalizer(object):
         return None
 
     @staticmethod
-    def _split_keywords(keywords, separator=','):
+    def _split_keywords(keywords, separator=None):
         if keywords is None:
             return None
         if isinstance(keywords, list):
             return keywords
+        if separator is None:
+            separator = ',' if ',' in keywords else ' '
         keywords = keywords.split(separator)
         keywords = [kw.strip() for kw in keywords]
         return keywords
@@ -259,7 +261,7 @@ class DataNormalizer(object):
                    ('description',), ('version',))
 
         transformed = self.transform_keys(data, key_map)
-        transformed['declared_licenses'] = self._split_keywords(data.get('license'))
+        transformed['declared_licenses'] = self._split_keywords(data.get('license'), separator=',')
         transformed['author'] = self._join_name_email(data, 'author', 'author_email')
         transformed['code_repository'] = self._identify_gh_repo(data.get('url')) or\
                                          self._identify_gh_repo(data.get('download_url'))
@@ -290,14 +292,14 @@ class DataNormalizer(object):
             result = {'author': author, 'homepage': homepage, 'description': data.get('summary', None),
                       'dependencies': sorted(dependencies), 'name': data.get('name', None),
                       'version': data.get('version', None),
-                      'declared_licenses': self._split_keywords(data.get('license'))}
+                      'declared_licenses': self._split_keywords(data.get('license'), separator=',')}
         else:
             key_map = (('summary', 'description'), ('requires_dist', 'dependencies'), ('name',),
                        ('home-page', 'homepage'), ('version',), ('platform',), )
 
             result = self.transform_keys(data, key_map)
             result['author'] = self._join_name_email(data, 'author', 'author-email')
-            result['declared_licenses'] = self._split_keywords(data.get('license'))
+            result['declared_licenses'] = self._split_keywords(data.get('license'), separator=',')
 
         result['code_repository'] = self._identify_gh_repo(data.get('home-page')) or \
                                     self._identify_gh_repo(data.get('download-url'))
@@ -474,8 +476,7 @@ class DataNormalizer(object):
                                                        version.get('Patch', ''))
 
         if data.get('Tags'):
-            separator = ',' if ',' in data['Tags'] else ' '
-            transformed['keywords'] = self._split_keywords(data['Tags'], separator)
+            transformed['keywords'] = self._split_keywords(data['Tags'])
 
         return transformed
 
