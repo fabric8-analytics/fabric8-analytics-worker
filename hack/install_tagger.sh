@@ -4,8 +4,10 @@
 
 set -e
 
-F8A_TAGGER_COMMIT=abe57e0
+F8A_TAGGER_COMMIT=474c44c
 
 # tagger uses python wrapper above libarchive so install it explicitly
 yum install -y libarchive
 pip3 install --upgrade git+https://github.com/fabric8-analytics/fabric8-analytics-tagger@${F8A_TAGGER_COMMIT}
+# Install external resources needed for automated tagging.
+python3 -c 'import f8a_tagger; f8a_tagger.prepare()'
