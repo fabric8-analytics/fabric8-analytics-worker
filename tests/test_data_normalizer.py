@@ -42,7 +42,11 @@ class TestDataNormalizer(object):
          ['one']),
         ({'keywords': 'one, two'},
          ['one', 'two']),
+        ({'keywords': 'one two'},
+         ['one', 'two']),
         ({'keywords': 'one two', 'separator': ' '},
+         ['one', 'two']),
+        ({'keywords': 'one, two', 'separator': ','},
          ['one', 'two']),
     ])
     def test__split_keywords(self, args, expected):
