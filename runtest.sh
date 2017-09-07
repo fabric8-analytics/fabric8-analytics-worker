@@ -100,6 +100,7 @@ docker run -t \
   -e S3_ENDPOINT_URL=${S3_ENDPOINT_URL} \
   -e DEPLOYMENT_PREFIX='test' \
   -e WORKER_ADMINISTRATION_REGION='api' \
+  -e F8A_UNCLOUDED_MODE='true' \
   --env-file tests/postgres.env \
   --name=${CONTAINER_NAME} \
   ${TEST_IMAGE_NAME} ./hack/exec_tests.sh $@ tests/
