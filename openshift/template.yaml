@@ -252,7 +252,7 @@ objects:
 
 
 parameters:
-- description: Worker region for serving tasks - api or ingestion
+- description: Worker region for serving tasks - api, priority or ingestion
   displayName: Worker administration region
   required: true
   name: WORKER_ADMINISTRATION_REGION

@@ -1,8 +1,11 @@
 ---
   flow-definitions:
-    - name: 'bayesianPackageFlow'
+    - &bayesianPackageFlow
+      name: 'bayesianPackageFlow'
       queue: '{DEPLOYMENT_PREFIX}_ingestion_bayesianPackageFlow_v0'
-      propagate_node_args: 'bayesianPackageAnalysisFlow'
+      propagate_node_args:
+        - 'bayesianPackageAnalysisFlow'
+        - 'bayesianPriorityPackageAnalysisFlow'
       node_args_from_first: true
       nowait: 'PackageGraphImporterTask'
       sampling:
@@ -14,10 +17,25 @@
           to: 'InitPackageFlow'
         - from: 'InitPackageFlow'
           to: 'bayesianPackageAnalysisFlow'
-          condition: &shouldSchedulePackageAnalysisCheck
-            name: 'fieldExist'
-            args:
-              key: 'document_id'
+          condition:
+            and:
+              - &shouldSchedulePackageAnalysisCheck
+                name: 'fieldExist'
+                args:
+                  key: 'document_id'
+              - name: 'envEqual'
+                args:
+                  env: 'WORKER_ADMINISTRATION_REGION'
+                  value: 'ingestion'
+        - from: 'InitPackageFlow'
+          to: 'bayesianPriorityPackageAnalysisFlow'
+          condition:
+            and:
+              - <<: *shouldSchedulePackageAnalysisCheck
+              - name: 'envEqual'
+                args:
+                  env: 'WORKER_ADMINISTRATION_REGION'
+                  value: 'priority'
         - from: 'bayesianPackageAnalysisFlow'
           to: 'PackageFinalizeTask'
         - from: 'PackageFinalizeTask'
@@ -39,3 +57,7 @@
       failures:
         - nodes: 'bayesianPackageAnalysisFlow'
           fallback: 'PackageFinalizeTaskError'
+
+    - <<: *bayesianPackageFlow
+      name: 'bayesianPriorityPackageFlow'
+      queue: '{DEPLOYMENT_PREFIX}_priority_bayesianPackageFlow_v0'

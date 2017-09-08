@@ -7,8 +7,13 @@
       nowait:
        - 'bayesianFlow'
        - 'bayesianPackageFlow'
-      propagate_parent: 'bayesianPackageFlow'
-      propagate_node_args: 'bayesianPackageFlow'
+       - 'bayesianPriorityPackageFlow'
+      propagate_parent:
+       - 'bayesianPackageFlow'
+       - 'bayesianPriorityPackageFlow'
+      propagate_node_args:
+       - 'bayesianPackageFlow'
+       - 'bayesianPriorityPackageFlow'
       #sampling:
       #  name: 'biexponential_decrease'
       #  args:
@@ -71,7 +76,17 @@
                   key: 'ecosystem'
                   value: 'maven'
         - from: 'metadata'
+          to: 'bayesianPriorityPackageFlow'
+          condition: &priorityAnalysisCheck
+            name: 'envEqual'
+            args:
+              env: 'WORKER_ADMINISTRATION_REGION'
+              value: 'priority'
+        - from: 'metadata'
           to: 'bayesianPackageFlow'
+          condition:
+            not:
+              <<: *priorityAnalysisCheck
         - from: 'metadata'
           to: 'dependency_snapshot'
         - from: 'dependency_snapshot'
@@ -135,3 +150,7 @@
     - <<: *bayesianAnalysisFlow
       name: 'bayesianApiAnalysisFlow'
       queue: '{DEPLOYMENT_PREFIX}_api_bayesianAnalysisFlow_v0'
+
+    - <<: *bayesianAnalysisFlow
+      name: 'bayesianPriorityAnalysisFlow'
+      queue: '{DEPLOYMENT_PREFIX}_priority_bayesianAnalysisFlow_v0'
