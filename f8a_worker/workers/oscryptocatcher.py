@@ -11,8 +11,8 @@ from f8a_worker.object_cache import ObjectCache
 
 
 class OSCryptoCatcherTask(BaseTask):
+    """ Runs oscryptocatcher tool for matching crypto algorithms """
     _analysis_name = 'crypto_algorithms'
-    description = "Runs oscryptocatcher tool for matching crypto algorithms"
     schema_ref = SchemaRef(_analysis_name, '1-0-0')
 
     def execute(self, arguments):

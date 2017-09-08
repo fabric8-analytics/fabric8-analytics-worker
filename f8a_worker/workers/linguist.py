@@ -39,8 +39,8 @@ from f8a_worker.object_cache import ObjectCache
 
 
 class LinguistTask(BaseTask):
+    """ GitHub's tool to figure out what language is used in code """
     _analysis_name = 'languages'
-    description = "GitHub's tool to figure out what language is used in code"
     schema_ref = SchemaRef(_analysis_name, '1-0-0')
 
     def _parse_linguist(self, output):

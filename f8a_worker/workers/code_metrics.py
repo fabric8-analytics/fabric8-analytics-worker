@@ -10,8 +10,8 @@ from f8a_worker.object_cache import ObjectCache
 
 
 class CodeMetricsTask(BaseTask):
+    """ Compute various code metrics for a project """
     _analysis_name = 'code_metrics'
-    description = 'Compute various code metrics for a project'
     schema_ref = SchemaRef(_analysis_name, '1-0-0')
     _CLI_TIMEOUT = 300
 

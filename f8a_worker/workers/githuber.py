@@ -13,7 +13,7 @@ REPO_PROPS = ('forks_count', 'subscribers_count',  'stargazers_count', 'open_iss
 
 
 class GithubTask(BaseTask):
-    description = 'Collects statistics using Github API'
+    """ Collects statistics using Github API """
     _analysis_name = "github_details"
     schema_ref = SchemaRef(_analysis_name, '1-0-4')
     # used for testing

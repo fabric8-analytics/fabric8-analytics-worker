@@ -11,8 +11,8 @@ from selinon import FatalTaskError
 
 
 class LicenseCheckTask(BaseTask):
+    """ Check licences of all files of a package """
     _analysis_name = 'source_licenses'
-    description = "Check licences of all files of a package"
     schema_ref = SchemaRef(_analysis_name, '3-0-0')
 
     SCANCODE_LICENSE_SCORE = getenv('SCANCODE_LICENSE_SCORE', '20')  # scancode's default is 0

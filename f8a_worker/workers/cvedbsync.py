@@ -1,72 +1,74 @@
 import os
-import json
-from dateutil import parser as datetime_parser
 from selinon import StoragePool
-from f8a_worker.process import Git
-from f8a_worker.utils import cwd, TimedCommand, tempdir
 from f8a_worker.base import BaseTask
-from f8a_worker.solver import get_ecosystem_solver
+from f8a_worker.solver import get_ecosystem_solver, OSSIndexDependencyParser
+from f8a_worker.utils import TimedCommand, tempdir
+from f8a_worker.workers import CVEcheckerTask
 
 
 class CVEDBSyncTask(BaseTask):
-    """ Download and update NPM vulnerability database """
-    _VULNDB_GIT_REPO = 'https://github.com/snyk/vulndb'
-    _VULNDB_FILENAME = 'vulndb.json'
+    """ Update vulnerability sources """
 
-    def _update_dep_check_db(self, data_dir):
+    def update_dep_check_db(self, data_dir):
         depcheck = os.path.join(os.environ['OWASP_DEP_CHECK_PATH'], 'bin', 'dependency-check.sh')
         self.log.debug('Updating OWASP Dependency-Check CVE DB')
         TimedCommand.get_command_output([depcheck, '--updateonly', '--data', data_dir],
                                         timeout=1800)
 
-    def _get_snyk_vulndb(self):
+    def components_to_scan(self, previous_sync_timestamp, only_already_scanned):
         """
-        :return: retrieve Snyk CVE db
+        Get components (e:p:v) that were recently (since previous_sync_timestamp) updated
+        in OSS Index, which means that they can contain new vulnerabilities.
+
+        :param previous_sync_timestamp: timestamp of previous check
+        :param only_already_scanned: include already scanned components only
+        :return: generator of e:p:v
         """
+        to_scan = []
+        for ecosystem in ['maven', 'npm', 'nuget']:
+            ecosystem_solver = get_ecosystem_solver(self.storage.get_ecosystem(ecosystem),
+                                                    with_parser=OSSIndexDependencyParser())
+            self.log.debug("Retrieving new %s vulnerabilities from OSS Index", ecosystem)
+            ossindex_updated_packages = CVEcheckerTask.\
+                query_ossindex_vulnerability_fromtill(ecosystem=ecosystem,
+                                                      from_time=previous_sync_timestamp)
+            for ossindex_updated_package in ossindex_updated_packages:
+                if ecosystem == 'maven':
+                    package_name = "{g}:{n}".format(g=ossindex_updated_package['group'],
+                                                    n=ossindex_updated_package['name'])
+                else:
+                    package_name = ossindex_updated_package['name']
+                package_affected_versions = set()
+                for vulnerability in ossindex_updated_package.get('vulnerabilities', []):
+                    for version_string in vulnerability.get('versions', []):
+                        try:
+                            resolved_versions = ecosystem_solver.\
+                                solve(["{} {}".format(package_name, version_string)],
+                                      all_versions=True)
+                        except:
+                            self.log.exception("Failed to resolve %r for %s:%s", version_string,
+                                               ecosystem, package_name)
+                            continue
+                        resolved_versions = resolved_versions.get(package_name, [])
+                        if only_already_scanned:
+                            already_scanned_versions =\
+                                [ver for ver in resolved_versions if
+                                 self.storage.get_analysis_count(ecosystem, package_name, ver) > 0]
+                            package_affected_versions.update(already_scanned_versions)
+                        else:
+                            package_affected_versions.update(resolved_versions)
 
-        with tempdir() as vulndb_dir:
-            # clone vulndb git repo
-            self.log.debug("Cloning snyk/vulndb repo")
-            # 'develop' branch seems to be a bit more stable than master
-            Git.clone(self._VULNDB_GIT_REPO, vulndb_dir, depth="1", branch="develop")
-            with cwd(vulndb_dir):
-                # install dependencies
-                self.log.debug("Installing snyk/vulndb dependencies")
-                TimedCommand.get_command_output(['npm', 'install'])
-                # generate database (json in file)
-                self.log.debug("Generating snyk/vulndb")
-                TimedCommand.get_command_output([os.path.join('cli', 'shrink.js'),
-                                                 'data',
-                                                 self._VULNDB_FILENAME])
-                # parse the JSON so we are sure that we have a valid JSON
-                with open(self._VULNDB_FILENAME) as f:
-                    return json.load(f)
-
-    def _get_versions_to_scan(self, package_name, version_string, only_already_scanned):
-        """ Compute versions that should be scanned based on version string
-
-        :param package_name: name of the package which versions should be resolved
-        :param version_string: version string for the package
-        :param only_already_scanned: if True analyse only packages that were already analysed
-        :return: list of versions that should be analysed
-        """
-        solver = get_ecosystem_solver(self.storage.get_ecosystem('npm'))
-        try:
-            resolved = solver.solve(["{} {}".format(package_name, version_string)], all_versions=True)
-        except:
-            self.log.exception("Failed to resolve versions for package '%s'", package_name)
-            return []
-
-        resolved_versions = resolved.get(package_name, [])
-
-        if only_already_scanned:
-            result = []
-            for version in resolved_versions:
-                if self.storage.get_analysis_count('npm', package_name, version) > 0:
-                    result.append(version)
-            return result
-        else:
-            return resolved_versions
+                for version in package_affected_versions:
+                    to_scan.append({
+                        'ecosystem': ecosystem,
+                        'name': package_name,
+                        'version': version
+                        })
+        msg = "Components to be {prefix}scanned for vulnerabilities: {components}".\
+            format(prefix="re-" if only_already_scanned else "",
+                   components=to_scan)
+        self.log.debug(msg)
+        return to_scan
 
     def execute(self, arguments):
         """
@@ -78,34 +80,18 @@ class CVEDBSyncTask(BaseTask):
         ignore_modification_time = arguments.pop('ignore_modification_time', False) if arguments else False
         self._strict_assert(not arguments)
 
-        s3 = StoragePool.get_connected_storage('S3OWASPDepCheck')
+        s3 = StoragePool.get_connected_storage('S3VulnDB')
+
+        # Update OWASP Dependency-check DB on S3
         with tempdir() as temp_data_dir:
             s3.retrieve_depcheck_db_if_exists(temp_data_dir)
-            self._update_dep_check_db(temp_data_dir)
+            self.update_dep_check_db(temp_data_dir)
             s3.store_depcheck_db(temp_data_dir)
 
-        cve_db = self._get_snyk_vulndb()
-        s3 = StoragePool.get_connected_storage('S3Snyk')
-        s3.store_vulndb(cve_db)
-        last_sync_datetime = s3.update_sync_date()
-
-        to_update = []
-        for package_name, cve_records in cve_db.get('npm', {}).items():
-            for record in cve_records:
-                modification_time = datetime_parser.parse(record['modificationTime'])
-
-                if ignore_modification_time or modification_time >= last_sync_datetime:
-                    affected_versions = self._get_versions_to_scan(
-                        package_name,
-                        record['semver']['vulnerable'],
-                        only_already_scanned
-                    )
-
-                    for version in affected_versions:
-                        to_update.append({
-                            'ecosystem': 'npm',
-                            'name': package_name,
-                            'version': version
-                        })
-
-        return {'modified': to_update}
+        self.log.debug('Updating sync associated metadata')
+        previous_sync_timestamp = s3.update_sync_date()
+        if ignore_modification_time:
+            previous_sync_timestamp = 0
+        # get components which might have new vulnerabilities since previous sync
+        to_scan = self.components_to_scan(previous_sync_timestamp, only_already_scanned)
+        return {'modified': to_scan}

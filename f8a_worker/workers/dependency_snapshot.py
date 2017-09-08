@@ -12,8 +12,8 @@ gh_dep = regexp('@?[\w-]+/[\w-]+')
 
 
 class DependencySnapshotTask(BaseTask):
+    """ Task that analyzes dependencies """
     _analysis_name = 'dependency_snapshot'
-    description = 'Task that analyzes dependencies'
     schema_ref = SchemaRef(_analysis_name, '1-0-0')
 
     def _collect_dependencies(self):

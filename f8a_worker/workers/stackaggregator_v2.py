@@ -174,7 +174,7 @@ def aggregate_stack_data(stack, manifest_file, ecosystem, deps, manifest_file_pa
 
 
 class StackAggregatorV2Task(BaseTask):
-    description = 'Aggregates stack data from components'
+    """ Aggregates stack data from components """
     _analysis_name = 'stack_aggregator_v2'
 
     def _get_dependency_data(self, resolved, ecosystem):

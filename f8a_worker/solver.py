@@ -12,6 +12,7 @@ from xmlrpc.client import ServerProxy
 from semantic_version import Version as semver_version
 from subprocess import check_output
 from tempfile import NamedTemporaryFile
+from urllib.parse import urljoin
 
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.models import Analysis, Ecosystem, Package, Version
@@ -266,6 +267,33 @@ class NugetReleasesFetcher(ReleasesFetcher):
         # so we don't use it.
 
         return self.scrape_versions_from_nuget_org(package)
+
+
+class MavenReleasesFetcher(ReleasesFetcher):
+    def __init__(self, ecosystem):
+        super().__init__(ecosystem)
+
+    @staticmethod
+    def releases_from_maven_org(url):
+        releases = []
+        page = BeautifulSoup(get(url).text, 'html.parser')
+        for link in page.find_all('a'):
+            if link.text.endswith('/') and link.text != '../':
+                releases.append(link.text.rstrip('/'))
+        return releases
+
+    def fetch_releases(self, package):
+        if not package:
+            raise ValueError("package not specified")
+        try:
+            group_id, artifact_id = package.split(':')
+        except ValueError as exc:
+            raise ValueError("Invalid Maven coordinates: {a}".format(a=package)) from exc
+
+        maven_url = "http://repo1.maven.org/maven2/"
+        dir_path = "{g}/{a}/".format(g=group_id.replace('.', '/'), a=artifact_id)
+        url = urljoin(maven_url, dir_path)
+        return package, self.releases_from_maven_org(url)
 
 
 class F8aReleasesFetcher(ReleasesFetcher):
@@ -528,6 +556,17 @@ class NpmDependencyParser(DependencyParser):
 RubyGemsDependencyParser = NpmDependencyParser
 
 
+class OSSIndexDependencyParser(NpmDependencyParser):
+    def _parse_npm(self, name, spec):
+        """ Parse OSS Index version specification.
+            It's similar to NPM semver, with few tweaks. """
+        # sometimes there's '|' instead of  '||', but the meaning seems to be the same
+        spec = spec.replace(' | ', ' || ')
+        # remove superfluous brackets
+        spec = spec.replace('(', '').replace(')', '')
+        return super()._parse_npm(name, spec)
+
+
 class NugetDependencyParser(object):
     # https://docs.microsoft.com/en-us/nuget/create-packages/dependency-versions#version-ranges
     def parse(self, specs):
@@ -658,33 +697,43 @@ class Solver(object):
 
 
 class PypiSolver(Solver):
-    def __init__(self, ecosystem, fetcher=None):
+    def __init__(self, ecosystem, parser=None, fetcher=None):
         super(PypiSolver, self).__init__(ecosystem,
-                                         PypiDependencyParser(),
+                                         parser or PypiDependencyParser(),
                                          fetcher or PypiReleasesFetcher(ecosystem))
 
 
 class NpmSolver(Solver):
-    def __init__(self, ecosystem, fetcher=None):
+    def __init__(self, ecosystem, parser=None, fetcher=None):
         super(NpmSolver, self).__init__(ecosystem,
-                                        NpmDependencyParser(),
+                                        parser or NpmDependencyParser(),
                                         fetcher or NpmReleasesFetcher(ecosystem))
 
 
 class RubyGemsSolver(Solver):
-    def __init__(self, ecosystem, fetcher=None):
+    def __init__(self, ecosystem, parser=None, fetcher=None):
         super(RubyGemsSolver, self).__init__(ecosystem,
-                                             RubyGemsDependencyParser(),
+                                             parser or RubyGemsDependencyParser(),
                                              fetcher or RubyGemsReleasesFetcher(ecosystem))
 
 
 class NugetSolver(Solver):
     # https://docs.microsoft.com/en-us/nuget/release-notes/nuget-2.8#-dependencyversion-switch
-    def __init__(self, ecosystem, fetcher=None):
+    def __init__(self, ecosystem, parser=None, fetcher=None):
         super(NugetSolver, self).__init__(ecosystem,
-                                          NugetDependencyParser(),
+                                          parser or NugetDependencyParser(),
                                           fetcher or NugetReleasesFetcher(ecosystem),
                                           highest_dependency_version=False)
+
+
+class MavenManualSolver(Solver):
+    """ If you need to resolve all versions or use specific DependencyParser.
+        Otherwise use MavenSolver (below).
+    """
+    def __init__(self, ecosystem, parser, fetcher=None):
+        super().__init__(ecosystem,
+                         parser,
+                         fetcher or MavenReleasesFetcher(ecosystem))
 
 
 class MavenSolver(object):
@@ -692,6 +741,7 @@ class MavenSolver(object):
     Doesn't inherit from Solver, because we don't use its solve().
     We also don't need a DependencyParser nor a ReleasesFetcher for Maven.
     'mvn versions:resolve-ranges' does all the dirty work for us.
+    Resolves only to one version, so if you need solve(all_versions=True), use MavenManualSolver
     """
 
     @staticmethod
@@ -767,23 +817,28 @@ class MavenSolver(object):
         return result
 
 
-def get_ecosystem_solver(ecosystem, with_fetcher=None):
+def get_ecosystem_solver(ecosystem, with_parser=None, with_fetcher=None):
     """
     Get `Solver` instance for particular ecosystem
 
     :param ecosystem: Ecosystem
+    :param with_parser: DependencyParser instance
+    :param with_fetcher: ReleasesFetcher instance
     :return: Solver
     """
     if ecosystem.is_backed_by(EcosystemBackend.maven):
-        return MavenSolver()
+        if with_parser is None:
+            return MavenSolver()
+        else:
+            return MavenManualSolver(ecosystem, with_parser, with_fetcher)
     elif ecosystem.is_backed_by(EcosystemBackend.npm):
-        return NpmSolver(ecosystem, with_fetcher)
+        return NpmSolver(ecosystem, with_parser, with_fetcher)
     elif ecosystem.is_backed_by(EcosystemBackend.pypi):
-        return PypiSolver(ecosystem, with_fetcher)
+        return PypiSolver(ecosystem, with_parser, with_fetcher)
     elif ecosystem.is_backed_by(EcosystemBackend.rubygems):
-        return RubyGemsSolver(ecosystem, with_fetcher)
+        return RubyGemsSolver(ecosystem, with_parser, with_fetcher)
     elif ecosystem.is_backed_by(EcosystemBackend.nuget):
-        return NugetSolver(ecosystem, with_fetcher)
+        return NugetSolver(ecosystem, with_parser, with_fetcher)
 
     raise ValueError('Unknown ecosystem: {}'.format(ecosystem.name))
 

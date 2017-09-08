@@ -47,8 +47,8 @@ class StaticAnalysis(object):
 
 
 class CsmockTask(BaseTask):
+    """ Static analysis of source code """
     _analysis_name = 'static_analysis'
-    description = "Static analysis of source code"
 
     def execute(self, arguments):
         """

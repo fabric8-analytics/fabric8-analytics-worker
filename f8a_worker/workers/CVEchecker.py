@@ -1,6 +1,7 @@
 import anymarkup
 from glob import glob
 import os
+import requests
 from shutil import rmtree
 from tempfile import gettempdir
 from selinon import StoragePool
@@ -8,83 +9,87 @@ from f8a_worker.base import BaseTask
 from f8a_worker.errors import TaskError
 from f8a_worker.object_cache import ObjectCache
 from f8a_worker.schemas import SchemaRef
-from f8a_worker.solver import get_ecosystem_solver
+from f8a_worker.solver import get_ecosystem_solver, OSSIndexDependencyParser
 from f8a_worker.utils import TimedCommand, tempdir
 
 
 class CVEcheckerTask(BaseTask):
-    name = 'f8a_worker.workers.CVEchecker'
+    """ Security issues scanner """
     _analysis_name = 'security_issues'
-    description = "Security issues scanner. Uses Snyk vulndb for npm and OWASP Dep.Check for maven"
     schema_ref = SchemaRef(_analysis_name, '3-0-0')
 
     @staticmethod
-    def _filter_vulndb_fields(entry):
+    def _filter_ossindex_fields(entry):
         result = {
+            'id': entry.get('cve') or entry.get('title'),
+            'description': entry.get('description'),
+            'references': entry.get('references'),
             'cvss': {
-                'score': 0,
-                'vector': ""
-            }
+                'score': 0,   # TODO: needs to be supplied by other means
+                'vector': ''  # TODO: needs to be supplied by other means
+            },
+            'severity': ''    # TODO: needs to be supplied by other means
         }
-        for field in ['description', 'severity']:
-            result[field] = entry.get(field)
-        id = entry.get('identifiers', {}).get('CVE') or entry.get('identifiers', {}).get('CWE')
-        result['id'] = id[0] if id else ''
-        # prefer CVSSv2, because CVSSv3 seems to contain only vector string, not score itself
-        if entry.get('CVSSv2'):
-            # "CVSSv2": "7.5 (HIGH) (AV:N/AC:L/Au:N/C:P/I:P/A:P)"
-            try:
-                score, severity, vector = entry.get('CVSSv2').split(' ')
-                score = float(score)
-                vector = vector.strip('()')
-            except ValueError:
-                pass
-            else:
-                result['cvss']['score'] = score
-                result['cvss']['vector'] = vector
-        elif entry.get('CVSSv3'):
-            # "CVSSv3": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H" <- there's no score ??
-            result['cvss']['score'] = 0  # ?
-            result['cvss']['vector'] = entry.get('CVSSv3')
-        # Snyk vulndb doesn't contain references
-        result['references'] = []
+
         return result
 
-    def _npm_scan(self, arguments):
-        """
-        Query Snyk vulndb stored on S3
-        """
-        s3 = StoragePool.get_connected_storage('S3Snyk')
+    @staticmethod
+    def query_url(url):
+        response = requests.get(url)
+        response.raise_for_status()
+        return response.json()
 
-        try:
-            self.log.debug('Retrieving Snyk vulndb from S3')
-            vulndb = s3.retrieve_vulndb()
-        except:
-            self.log.error('Failed to obtain Snyk vulndb database')
-            return {'summary': ['Failed to obtain Snyk vulndb database'],
-                    'status': 'error',
-                    'details': []}
+    @staticmethod
+    def _query_ossindex_package(ecosystem, name):
+        url = "https://ossindex.net/v2.0/package/{pm}/{package}".format(pm=ecosystem, package=name)
+        return CVEcheckerTask.query_url(url)
 
+    @staticmethod
+    def query_ossindex_vulnerability_fromtill(ecosystem, from_time=0, till_time=-1):
+        # OSS Index uses timestamp in milliseconds
+        from_time = int(from_time * 1000)
+        till_time = int(till_time * 1000)
+        url = "https://ossindex.net/v2.0/vulnerability/pm/{pm}/fromtill/{from_time}/{till_time}".\
+            format(pm=ecosystem, from_time=from_time, till_time=till_time)
+        packages = []
+        while url:
+            response = CVEcheckerTask.query_url(url)
+            packages += response.get('packages', [])
+            url = response.get('next')
+        return packages
+
+    def _query_ossindex(self, arguments):
+        """ Query OSS Index REST API """
         entries = []
-        solver = get_ecosystem_solver(self.storage.get_ecosystem('npm'))
-        for entry in vulndb.get('npm', {}).get(arguments['name'], []):
-            vulnerable_versions = entry['semver']['vulnerable']
-            affected_versions = solver.solve(["{} {}".format(arguments['name'],
-                                                             vulnerable_versions)],
-                                             all_versions=True)
-            if arguments['version'] in affected_versions.get(arguments['name'], []):
-                entries.append(self._filter_vulndb_fields(entry))
+        solver = get_ecosystem_solver(self.storage.get_ecosystem(arguments['ecosystem']),
+                                      with_parser=OSSIndexDependencyParser())
+        for entry in self._query_ossindex_package(arguments['ecosystem'], arguments['name']):
+            for vulnerability in entry.get('vulnerabilities', []):
+                for version_string in vulnerability.get('versions', []):
+                    try:
+                        affected_versions = solver.solve(["{} {}".format(arguments['name'],
+                                                                         version_string)],
+                                                         all_versions=True)
+                    except:
+                        self.log.exception("Failed to resolve %r for %s:%s", version_string,
+                                           arguments['ecosystem'], arguments['name'])
+                        continue
+                    if arguments['version'] in affected_versions.get(arguments['name'], []):
+                        entries.append(self._filter_ossindex_fields(vulnerability))
 
-        return {'summary': [e['id'] for e in entries if e],
+        return {'summary': [e['id'] for e in entries if e['id']],
                 'status': 'success',
                 'details': entries}
+
+    def _npm_scan(self, arguments):
+        return self._query_ossindex(arguments)
 
     def _run_owasp_dep_check(self, scan_path, experimental=False):
         def _clean_dep_check_tmp():
             for dcdir in glob(os.path.join(gettempdir(), 'dctemp*')):
                 rmtree(dcdir)
 
-        s3 = StoragePool.get_connected_storage('S3OWASPDepCheck')
+        s3 = StoragePool.get_connected_storage('S3VulnDB')
         depcheck = os.path.join(os.environ['OWASP_DEP_CHECK_PATH'], 'bin', 'dependency-check.sh')
         with tempdir() as temp_data_dir:
             retrieved = s3.retrieve_depcheck_db_if_exists(temp_data_dir)
@@ -205,13 +210,7 @@ class CVEcheckerTask(BaseTask):
         return self._run_owasp_dep_check(scan_path, experimental=True)
 
     def _nuget_scan(self, arguments):
-        """
-        https://jeremylong.github.io/DependencyCheck/analyzers/nuspec-analyzer.html
-        """
-        extracted_nupkg = ObjectCache.get_from_dict(arguments).get_extracted_source_tarball()
-        # Point to nuspec (and not extracted_nupkg) as DependencyCheck mostly fails on *.dll
-        nuspec = glob(os.path.join(extracted_nupkg, '*.nuspec'))[0]
-        return self._run_owasp_dep_check(nuspec, experimental=False)
+        return self._query_ossindex(arguments)
 
     def execute(self, arguments):
         self._strict_assert(arguments.get('ecosystem'))

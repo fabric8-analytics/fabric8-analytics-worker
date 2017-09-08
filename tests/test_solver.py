@@ -3,9 +3,10 @@ import pytest
 import datetime
 import flexmock
 from f8a_worker.models import Analysis, Package, Version
-from f8a_worker.solver import (get_ecosystem_solver, Dependency,
-                               PypiDependencyParser, NpmDependencyParser, NugetDependencyParser,
-                               F8aReleasesFetcher, NpmReleasesFetcher, NugetReleasesFetcher)
+from f8a_worker.solver import\
+    (get_ecosystem_solver, Dependency,
+     PypiDependencyParser, NpmDependencyParser, OSSIndexDependencyParser, NugetDependencyParser,
+     MavenReleasesFetcher, NpmReleasesFetcher, NugetReleasesFetcher, F8aReleasesFetcher)
 
 
 class TestDependencyParser(object):
@@ -47,6 +48,14 @@ class TestDependencyParser(object):
     ])
     def test_npm_dependency_parser_parse(self, args, expected):
         dep_parser = NpmDependencyParser()
+        assert dep_parser.parse(args) == expected
+
+    @pytest.mark.parametrize('args, expected', [
+        (["name <1.6.17 | (>=2.0.0 <2.0.2)"],
+         [Dependency("name", [('<', '1.6.17'), [('>=', '2.0.0'), ('<', '2.0.2')]])]),
+    ])
+    def test_oss_index_dependency_parser_parse(self, args, expected):
+        dep_parser = OSSIndexDependencyParser()
         assert dep_parser.parse(args) == expected
 
     @pytest.mark.parametrize('args, expected', [
@@ -185,6 +194,15 @@ class TestSolver(object):
 
 class TestFetcher(object):
     @pytest.mark.parametrize('package, expected', [
+        ('org.apache.flex.blazeds:flex-messaging-core',
+         {'4.7.0', '4.7.1', '4.7.2', '4.7.3'})
+    ])
+    def test_maven_fetcher(self, maven, package, expected):
+        f = MavenReleasesFetcher(maven)
+        _, releases = f.fetch_releases(package)
+        assert set(releases) >= expected
+
+    @pytest.mark.parametrize('package, expected', [
         ('AjaxControlToolkit',
          {'4.1.60919', '7.1005.0', '17.1.1'}),
         ('Bootstrap',
@@ -202,7 +220,7 @@ class TestFetcher(object):
     def test_nuget_fetcher(self, nuget, package, expected):
         f = NugetReleasesFetcher(nuget)
         _, releases = f.fetch_releases(package)
-        assert expected.issubset(set(releases))
+        assert set(releases) >= expected
 
     def test_f8a_fetcher(self, rdb, npm):
         # create initial dataset
@@ -231,7 +249,7 @@ class TestFetcher(object):
         assert r.pop() == '1.0.5'
 
         # try different dependency specs
-        s = get_ecosystem_solver(npm, f)
+        s = get_ecosystem_solver(npm, with_fetcher=f)
         assert s.solve(['f8a ^0.5.0'])['f8a'] == '0.5.1'
         assert s.solve(['f8a 0.x.x'])['f8a'] == '0.9.0'
         assert s.solve(['f8a >1.0.0'])['f8a'] == '1.0.5'

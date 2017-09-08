@@ -411,11 +411,11 @@
         encryption: false
         versioned: false
 
-    - name: 'S3OWASPDepCheck'
+    - name: 'S3VulnDB'
       import: 'f8a_worker.storages'
       configuration:
         <<: *configurationS3
-        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-owasp-dep-check'
+        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-vuln-db'
         region_name: 'us-east-1'
         encryption: false
         versioned: false
@@ -436,15 +436,6 @@
         bucket_name: '{DEPLOYMENT_PREFIX}-janus-json-data'
         region_name: 'us-east-1'
         encryption: 'aws:kms'
-        versioned: true
-
-    - name: 'S3Snyk'
-      import: 'f8a_worker.storages'
-      configuration:
-        <<: *configurationS3
-        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-snyk'
-        region_name: 'us-east-1'
-        encryption: false
         versioned: true
 
     - name: 'S3GitHubManifestMetadata'
