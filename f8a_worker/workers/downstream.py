@@ -34,7 +34,6 @@ class DownstreamUsageTask(BaseTask):
       - the Pulp CDN for redistribution details
     """
     _analysis_name = 'redhat_downstream'
-    description = 'Queries Red Hat internal toolchain for downstream usage'
     schema_ref = SchemaRef(_analysis_name, '2-2-1')
 
     _backend_to_anitya_ecosystem = {

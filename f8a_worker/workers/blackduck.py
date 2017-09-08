@@ -19,8 +19,8 @@ class BlackDuckDataNotReady(Exception):
 
 
 class BlackDuckTask(BaseTask):
+    """ Scan the package using Black Duck """
     _analysis_name = 'blackduck'
-    description = 'Scan the package using Black Duck'
     _valid_ecosystems = ["npm", "maven", "pypi"]
     _allow_cli_scan = True
     schema_ref = SchemaRef(_analysis_name, '1-0-0')

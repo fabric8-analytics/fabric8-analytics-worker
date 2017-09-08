@@ -7,7 +7,7 @@ from f8a_worker.utils import get_session_retry
 
 
 class BookkeeperTask(BaseTask):
-    description = 'Keep bookkeeping data on RDS'
+    """ Keep bookkeeping data on RDS """
     # we don't want to add `_audit` etc into the manifest submitted
     add_audit_info = False
 

@@ -37,9 +37,9 @@ from f8a_worker.process import Git
 
 # TODO: we need to unify the output from different ecosystems
 class MercatorTask(BaseTask):
+    """ Collects `Release` specific information from Mercator """
     _analysis_name = 'metadata'
     _dependency_tree_lock = '_dependency_tree_lock'
-    description = 'Collects `Release` specific information from Mercator'
     schema_ref = SchemaRef(_analysis_name, '3-2-0')
     _data_normalizer = DataNormalizer()
 

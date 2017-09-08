@@ -19,8 +19,9 @@ from f8a_worker.utils import get_session_retry
 
 config = get_configuration()
 
+
 class StackAggregatorTask(BaseTask):
-    description = 'Aggregates stack data from components'
+    """ Aggregates stack data from components """
     _analysis_name = 'stack_aggregator'
 
     def _get_stack_usage_data(self,components):

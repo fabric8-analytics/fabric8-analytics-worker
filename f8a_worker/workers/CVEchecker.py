@@ -14,9 +14,8 @@ from f8a_worker.utils import TimedCommand, tempdir
 
 
 class CVEcheckerTask(BaseTask):
-    name = 'f8a_worker.workers.CVEchecker'
+    """ Security issues scanner """
     _analysis_name = 'security_issues'
-    description = "Security issues scanner"
     schema_ref = SchemaRef(_analysis_name, '3-0-0')
 
     @staticmethod
