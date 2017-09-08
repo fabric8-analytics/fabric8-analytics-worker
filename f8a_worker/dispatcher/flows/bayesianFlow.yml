@@ -41,6 +41,15 @@
                   env: 'WORKER_ADMINISTRATION_REGION'
                   value: 'api'
         - from: 'InitAnalysisFlow'
+          to: 'bayesianPriorityAnalysisFlow'
+          condition:
+            and:
+              - <<: *shouldScheduleAnalysisCheck
+              - name: 'envEqual'
+                args:
+                  env: 'WORKER_ADMINISTRATION_REGION'
+                  value: 'priority'
+        - from: 'InitAnalysisFlow'
           to: 'GraphImporterTask'
           condition:
             and:
@@ -85,3 +94,7 @@
     - <<: *bayesianFlow
       name: 'bayesianApiFlow'
       queue: '{DEPLOYMENT_PREFIX}_api_bayesianFlow_v0'
+
+    - <<: *bayesianFlow
+      name: 'bayesianPriorityFlow'
+      queue: '{DEPLOYMENT_PREFIX}_priority_bayesianFlow_v0'
