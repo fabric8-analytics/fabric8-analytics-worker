@@ -1,6 +1,7 @@
 """Perform keywords lookup on texts collected and available."""
 
 import os
+import re
 import requests
 from tempfile import NamedTemporaryFile
 from datetime import timedelta
@@ -8,6 +9,7 @@ from datetime import datetime
 
 from f8a_worker.base import BaseTask
 from selinon import StoragePool
+from selinon import FatalTaskError
 
 # from f8a_worker.schemas import SchemaRef
 
@@ -102,19 +104,60 @@ class KeywordsTaggingTask(BaseTask):
         stopwords_txt = self._get_stopwords_txt()
         return keywords_yaml, stopwords_txt
 
-    def execute(self, arguments):
+    def _package_level_keywords(self, keywords_file_name, stopwords_file_name, arguments):
         # Keep f8a_tagger import local as other components dependent on f8a_worker do not require it installed.
         from f8a_tagger import lookup_readme as keywords_lookup_readme
         from f8a_tagger import lookup_text as keywords_lookup_text
 
-        self._strict_assert(arguments.get('ecosystem'))
-        self._strict_assert(arguments.get('name'))
+        details = {}
+        package_postgres = StoragePool.get_connected_storage('PackagePostgres')
 
-        ecosystem = arguments['ecosystem']
-        name = arguments['name']
+        gh_info = package_postgres.get_task_result_by_analysis_id(arguments['ecosystem'],
+                                                                  arguments['name'],
+                                                                  'github_details',
+                                                                  arguments['document_id'])
+        if gh_info:
+            self.log.debug("Aggregating explicitly stated keywords (topics) on GitHub")
+            details['gh_topics'] = gh_info.get('details', {}).get('topics', [])
+
+        s3_readme = StoragePool.get_connected_storage('S3Readme')
+        try:
+            readme_json = s3_readme.retrieve_readme_json(arguments['ecosystem'], arguments['name'])
+            self.log.debug("Computing keywords from README.json")
+            details['README'] = keywords_lookup_readme(readme_json,
+                                                       keywords_file=keywords_file_name,
+                                                       stopwords_file=stopwords_file_name,
+                                                       **self._LOOKUP_CONF)
+        except Exception as exc:
+            self.log.info("Failed to retrieve README: %s", str(exc))
+
+        s3_rd = StoragePool.get_connected_storage('S3RepositoryDescription')
+        try:
+            description = s3_rd.retrieve_repository_description(arguments['ecosystem'], arguments['name'])
+            self.log.debug("Computing keywords on description from repository")
+            details['repository_description'] = keywords_lookup_text(description,
+                                                                     keywords_file=keywords_file_name,
+                                                                     stopwords_file=stopwords_file_name,
+                                                                     **self._LOOKUP_CONF)
+        except Exception as exc:
+            self.log.info("Failed to retrieve repository description: %s", str(exc))
+
+        if self.task_name == 'package_keywords_tagging':
+            # We are tagging on package level, add also tags that are found in package name
+            name_parts = re.split('[\.\-_:]', arguments['name'])
+            self.log.debug("Computing keywords from package name %s", name_parts)
+            details['package_name'] = keywords_lookup_text(" ".join(name_parts),
+                                                           keywords_file=keywords_file_name,
+                                                           stopwords_file=stopwords_file_name,
+                                                           **self._LOOKUP_CONF)
+
+        return details
+
+    def _package_version_level_keywords(self, keywords_file_name, stopwords_file_name, arguments):
+        # Keep f8a_tagger import local as other components dependent on f8a_worker do not require it installed.
+        from f8a_tagger import lookup_text as keywords_lookup_text
 
         details = {}
-        keywords_file_name, stopwords_file_name = self._get_config_files(ecosystem)
         if 'metadata' in self.parent.keys():
             self._strict_assert(arguments.get('version'))
 
@@ -131,22 +174,19 @@ class KeywordsTaggingTask(BaseTask):
             self.log.debug("Aggregating explicitly stated keywords by publisher")
             details['keywords'] = metadata.get('details', [{}])[0].get('keywords')
 
-        if 'GitReadmeCollectorTask' in self.parent.keys():
-            s3 = StoragePool.get_connected_storage('S3Readme')
-            readme_json = s3.retrieve_readme_json(ecosystem, name)
-            self.log.debug("Computing keywords from README.json")
-            details['README'] = keywords_lookup_readme(readme_json,
-                                                       keywords_file=keywords_file_name,
-                                                       stopwords_file=stopwords_file_name,
-                                                       **self._LOOKUP_CONF)
+        return details
 
-        if 'RepositoryDescCollectorTask' in self.parent.keys():
-            s3 = StoragePool.get_connected_storage('S3RepositoryDescription')
-            description = s3.retrieve_repository_description(arguments['ecosystem'], arguments['name'])
-            self.log.debug("Computing keywords on description from repository")
-            details['repository_description'] = keywords_lookup_text(description,
-                                                                     keywords_file=keywords_file_name,
-                                                                     stopwords_file=stopwords_file_name,
-                                                                     **self._LOOKUP_CONF)
+    def execute(self, arguments):
+        self._strict_assert(arguments.get('ecosystem'))
+        self._strict_assert(arguments.get('name'))
+
+        keywords_file_name, stopwords_file_name = self._get_config_files(arguments['ecosystem'])
+
+        if self.task_name == 'package_keywords_tagging':
+            details = self._package_level_keywords(keywords_file_name, stopwords_file_name, arguments)
+        elif self.task_name == 'keywords_tagging':
+            details = self._package_version_level_keywords(keywords_file_name, stopwords_file_name, arguments)
+        else:
+            raise FatalTaskError("Unable to decide which keywords should be aggregated")
 
         return {'status': 'success', 'summary': [], 'details': details}

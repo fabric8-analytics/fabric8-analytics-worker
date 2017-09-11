@@ -42,7 +42,7 @@ class BayesianPostgres(PostgresBase):
             external_request_id=node_args.get('external_request_id') if isinstance(node_args, dict) else None
         )
 
-    def get_latest_task_result(self, ecosystem, package, version, task_name, error=False):
+    def get_latest_task_result(self, ecosystem, package, version, task_name):
         """Get latest task result based on task name
         
         :param ecosystem: name of the ecosystem
@@ -50,22 +50,61 @@ class BayesianPostgres(PostgresBase):
         :param version: package version
         :param task_name: name of task for which the latest result should be obtained
         :param error: if False, avoid returning entries that track errors
+        :param real: if False, do not check results that are stored on S3 but rather return Postgres entry
         """
         # TODO: we should store date timestamps directly in WorkerResult
         if not self.is_connected():
             self.connect()
 
         try:
-            return PostgresBase.session.query(WorkerResult).join(Analysis).join(Version).join(Package).join(Ecosystem).\
+            entry = PostgresBase.session.query(WorkerResult.task_result).\
+                join(Analysis).join(Version).join(Package).join(Ecosystem).\
                 filter(WorkerResult.worker == task_name).\
                 filter(Package.name == package).\
                 filter(Version.identifier == version).\
+                filter(Ecosystem.name == ecosystem).\
+                filter(WorkerResult.error.is_(False)).\
+                order_by(Analysis.finished_at.desc()).first()
+        except SQLAlchemyError:
+            PostgresBase.session.rollback()
+            raise
+
+        if not entry:
+            return None
+
+        if not self.is_real_task_result(entry.task_result):
+            return self.s3.retrieve_task_result(ecosystem, package, version, task_name)
+
+        return entry.task_result
+
+    def get_latest_task_entry(self, ecosystem, package, version, task_name, error=False):
+        """Get latest task result based on task name
+
+        :param ecosystem: name of the ecosystem
+        :param package: name of the package
+        :param task_name: name of task for which the latest result should be obtained
+        :param error: if False, avoid returning entries that track errors
+        :param real: if False, do not check results that are stored on S3 but rather return Postgres entry
+        """
+        # TODO: we should store date timestamps directly in PackageWorkerResult
+        if not self.is_connected():
+            self.connect()
+
+        try:
+            entry = PostgresBase.session.query(WorkerResult).\
+                join(Analysis).\
+                join(Package).join(Ecosystem).\
+                filter(WorkerResult.worker == task_name).\
+                filter(Version.identifier == version). \
+                filter(Package.name == package).\
                 filter(Ecosystem.name == ecosystem).\
                 filter(WorkerResult.error.is_(error)).\
                 order_by(Analysis.finished_at.desc()).first()
         except SQLAlchemyError:
             PostgresBase.session.rollback()
             raise
+
+        return entry
 
     def get_analysis_count(self, ecosystem, package, version):
         """Get count of previously scheduled analysis for given EPV triplet.
@@ -204,3 +243,23 @@ class BayesianPostgres(PostgresBase):
             raise
 
         return True
+
+    @staticmethod
+    def get_analysed_versions(ecosystem, package):
+        """Return all already analysed versions for the given package.
+
+
+        :param ecosystem: str, Ecosystem name
+        :param package: str, Package name
+        return: a list of package version identifiers of already analysed versions
+        """
+        try:
+            return chain(*PostgresBase.session.query(Version.identifier).
+                         join(Analysis).join(Package).join(Ecosystem).\
+                         filter(Ecosystem.name == ecosystem).\
+                         filter(Package.name == package).\
+                         filter(Analysis.finished_at.isnot(None)).\
+                         distinct().all())
+        except SQLAlchemyError:
+            PostgresBase.session.rollback()
+            raise

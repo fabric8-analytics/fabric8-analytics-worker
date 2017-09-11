@@ -97,20 +97,88 @@ class PackagePostgres(PostgresBase):
 
         return list(chain(*task_names))
 
-    def get_latest_task_result(self, ecosystem, package, task_name, error=False):
+    def get_latest_task_result(self, ecosystem, package, task_name):
         """Get latest task result based on task name
 
         :param ecosystem: name of the ecosystem
         :param package: name of the package
         :param task_name: name of task for which the latest result should be obtained
-        :param error: if False, avoid returning entries that track errors
         """
         # TODO: we should store date timestamps directly in PackageWorkerResult
         if not self.is_connected():
             self.connect()
 
         try:
-            return PostgresBase.session.query(PackageWorkerResult).\
+            entry = PostgresBase.session.query(PackageWorkerResult.task_result).\
+                join(PackageAnalysis).\
+                join(Package).join(Ecosystem).\
+                filter(PackageWorkerResult.worker == task_name).\
+                filter(Package.name == package).\
+                filter(Ecosystem.name == ecosystem).\
+                filter(PackageWorkerResult.error.is_(False)).\
+                order_by(PackageAnalysis.finished_at.desc()).first()
+        except SQLAlchemyError:
+            PostgresBase.session.rollback()
+            raise
+
+        if not entry:
+            return None
+
+        if not self.is_real_task_result(entry.task_result):
+            return self.s3.retrieve_task_result(ecosystem, package, task_name)
+
+        return entry.task_result
+
+    def get_task_result_by_analysis_id(self, ecosystem, package, task_name, analysis_id):
+        """Get latest task result based analysis id.
+
+        :param ecosystem: name of the ecosystem
+        :param package: name of the package
+        :param task_name: name of task for which the latest result should be obtained
+        :param analysis_id: analysis id to be used
+        """
+        # TODO: we should store date timestamps directly in PackageWorkerResult
+        if not self.is_connected():
+            self.connect()
+
+        try:
+            entry = PostgresBase.session.query(PackageWorkerResult.task_result).\
+                join(PackageAnalysis).\
+                join(Package).join(Ecosystem).\
+                filter(PackageWorkerResult.worker == task_name).\
+                filter(Package.name == package).\
+                filter(Ecosystem.name == ecosystem).\
+                filter(PackageWorkerResult.error.is_(False)).\
+                filter(PackageAnalysis.id == analysis_id).first()
+        except SQLAlchemyError:
+            PostgresBase.session.rollback()
+            raise
+
+        if not entry:
+            return None
+
+        if not self.is_real_task_result(entry.task_result):
+            # This can be confusing as we do not retrieve directly version that is referenced but we rather replace
+            # it with the latest.
+            return self.s3.retrieve_task_result(ecosystem, package, task_name)
+
+        return entry.task_result
+
+    def get_latest_task_entry(self, ecosystem, package, task_name, error=False):
+        """Get latest task result based on task name
+
+        :param ecosystem: name of the ecosystem
+        :param package: name of the package
+        :param task_name: name of task for which the latest result should be obtained
+        :param error: if False, avoid returning entries that track errors
+        :param real: if False, do not check results that are stored on S3 but rather return Postgres entry
+        """
+        # TODO: we should store date timestamps directly in PackageWorkerResult
+        if not self.is_connected():
+            self.connect()
+
+        try:
+            entry = PostgresBase.session.query(PackageWorkerResult).\
                 join(PackageAnalysis).\
                 join(Package).join(Ecosystem).\
                 filter(PackageWorkerResult.worker == task_name).\
@@ -121,3 +189,5 @@ class PackagePostgres(PostgresBase):
         except SQLAlchemyError:
             PostgresBase.session.rollback()
             raise
+
+        return entry
