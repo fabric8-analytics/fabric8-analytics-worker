@@ -100,9 +100,9 @@ class TestBayesianPostgres:
         res['later'] = 'aligator'
         self.bp.store(node_args={'document_id': self.a2.id},
                       flow_name='blah', task_name=tn, task_id=tid + '2', result=res)
-        assert self.bp.get_latest_task_result(self.en, self.pn, self.vi, tn).task_result == res
-        assert self.bp.get_latest_task_result(self.en, self.pn, self.vi, tn).worker_id == tid
-        assert self.bp.get_latest_task_result(self.en, self.pn, self.vi, tn).worker == tn
+        assert self.bp.get_latest_task_entry(self.en, self.pn, self.vi, tn).task_result == res
+        assert self.bp.get_latest_task_entry(self.en, self.pn, self.vi, tn).worker_id == tid
+        assert self.bp.get_latest_task_entry(self.en, self.pn, self.vi, tn).worker == tn
 
 
     def test_get_latest_task_result_no_results(self):
