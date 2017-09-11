@@ -4,7 +4,7 @@
 
 set -e
 
-F8A_TAGGER_COMMIT=ffd80c62
+F8A_TAGGER_COMMIT=6972ade
 
 # tagger uses python wrapper above libarchive so install it explicitly
 yum install -y libarchive
