@@ -7,6 +7,16 @@ from f8a_worker.workers import CVEcheckerTask
 
 @pytest.mark.usefixtures("dispatcher_setup")
 class TestCVEchecker(object):
+    @pytest.mark.parametrize(('id_', 'score', 'vector', 'severity'), [
+        ('CVE-2017-0249', 7.3, 'CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L', 'high'),
+        ('cve-2015-1164', 4.3, 'AV:N/AC:M/Au:N/C:N/I:P/A:N', 'medium')
+    ])
+    def test_get_cve_impact(self, id_, score, vector, severity):
+        score_, vector_, severity_ = CVEcheckerTask.get_cve_impact(id_)
+        assert score_ == score
+        assert vector_ == vector
+        assert severity_ == severity
+
     @pytest.mark.usefixtures('npm')
     def test_npm_geddy(self):
         args = {'ecosystem': 'npm', 'name': 'geddy', 'version': '13.0.7'}
@@ -21,11 +31,11 @@ class TestCVEchecker(object):
         assert set(detail.keys()) == {'cvss', 'description', 'id', 'references', 'severity'}
         assert detail['description']
         assert detail['references']
-        # cvss = detail['cvss']
-        # assert cvss['score'] == 5.0
-        # assert cvss['vector'] == 'AV:N/AC:L/Au:N/C:P/I:N/A:N'
+        cvss = detail['cvss']
+        assert cvss['score'] == 5.0
+        assert cvss['vector'] == 'AV:N/AC:L/Au:N/C:P/I:N/A:N'
         assert detail['id'] == 'CVE-2015-5688'
-        # assert detail['severity'] == 'medium'
+        assert detail['severity'] == 'medium'
         assert results['status'] == 'success'
         assert results['summary'] == ['CVE-2015-5688']
 
