@@ -2,7 +2,7 @@
   flow-definitions:
     - &bayesianPackageAnalysisFlow
       name: 'bayesianPackageAnalysisFlow'
-      queue: '{DEPLOYMENT_PREFIX}_ingestion_bayesianPackageAnalysisFlow_v0'
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_bayesianPackageAnalysisFlow_v0'
       sampling:
         name: 'constant'
         args:
@@ -14,12 +14,10 @@
             name: 'isGhRepo'
             args:
               key: 'url'
-
         - from:
           to: 'GitReadmeCollectorTask'
           condition:
             <<: *isGhRepoCheck
-
         - from:
           to: 'RepositoryDescCollectorTask'
           condition: &repositoryDescCollectorCheck
@@ -32,15 +30,9 @@
                 args:
                   key: 'ecosystem'
                   value: 'npm'
-
         - from:
           to: 'git_stats'
           condition:
             <<: *isGhRepoCheck
-
         - from:
           to: 'libraries_io'
-
-    - <<: *bayesianPackageAnalysisFlow
-      name: 'bayesianPriorityPackageAnalysisFlow'
-      queue: '{DEPLOYMENT_PREFIX}_priority_bayesianPackageAnalysisFlow_v0'

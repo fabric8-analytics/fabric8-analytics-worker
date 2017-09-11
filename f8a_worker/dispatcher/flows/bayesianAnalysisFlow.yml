@@ -2,23 +2,28 @@
   flow-definitions:
     - &bayesianAnalysisFlow
       name: 'bayesianAnalysisFlow'
-      queue: '{DEPLOYMENT_PREFIX}_ingestion_bayesianAnalysisFlow_v0'
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_bayesianAnalysisFlow_v0'
       # we will not wait for recursive analyses
       nowait:
        - 'bayesianFlow'
+       - 'bayesianApiFlow'
+       - 'bayesianPriorityFlow'
        - 'bayesianPackageFlow'
+       - 'bayesianApiPackageFlow'
        - 'bayesianPriorityPackageFlow'
       propagate_parent:
+       # InitPackageFlow uses data from mercator (upstream URL)
        - 'bayesianPackageFlow'
+       - 'bayesianApiPackageFlow'
        - 'bayesianPriorityPackageFlow'
       propagate_node_args:
        - 'bayesianPackageFlow'
+       - 'bayesianApiPackageFlow'
        - 'bayesianPriorityPackageFlow'
-      #sampling:
-      #  name: 'biexponential_decrease'
-      #  args:
-      #    start_retry: 30
-      #    stop_retry: 5
+      sampling:
+        name: 'constant'
+        args:
+          retry: 15
       edges:
         - from:
           to:
@@ -85,8 +90,17 @@
         - from: 'metadata'
           to: 'bayesianPackageFlow'
           condition:
-            not:
-              <<: *priorityAnalysisCheck
+            name: 'envEqual'
+            args:
+              env: 'WORKER_ADMINISTRATION_REGION'
+              value: 'ingestion'
+        - from: 'metadata'
+          to: 'bayesianApiPackageFlow'
+          condition:
+            name: 'envEqual'
+            args:
+              env: 'WORKER_ADMINISTRATION_REGION'
+              value: 'api'
         - from: 'metadata'
           to: 'dependency_snapshot'
         - from: 'dependency_snapshot'
@@ -97,15 +111,46 @@
             # result of the function is used as sub-flow arguments
             propagate_result: true
           condition:
-            or:
-              - not:
-                 name: 'argsFieldExist'
-                 args:
-                   key: 'recursive_limit'
-              - name: 'argsFieldGreater'
+            and:
+              - &recursiveAnalysisCheck
+                or:
+                - not:
+                    name: 'argsFieldExist'
+                    args:
+                      key: 'recursive_limit'
+                - name: 'argsFieldGreater'
+                  args:
+                     key: 'recursive_limit'
+                     value: 0
+              - name: 'envEqual'
                 args:
-                   key: 'recursive_limit'
-                   value: 0
+                  env: 'WORKER_ADMINISTRATION_REGION'
+                  value: 'ingestion'
+        - from: 'dependency_snapshot'
+          to: 'bayesianApiFlow'
+          foreach:
+            import: 'f8a_worker.dispatcher.foreach'
+            function: 'iter_dependencies_analysis'
+            # result of the function is used as sub-flow arguments
+            propagate_result: true
+          condition:
+            and:
+              - <<: *recursiveAnalysisCheck
+              - name: 'envEqual'
+                args:
+                  env: 'WORKER_ADMINISTRATION_REGION'
+                  value: 'api'
+        - from: 'dependency_snapshot'
+          to: 'bayesianPriorityFlow'
+          foreach:
+            import: 'f8a_worker.dispatcher.foreach'
+            function: 'iter_dependencies_analysis'
+            # result of the function is used as sub-flow arguments
+            propagate_result: true
+          condition:
+            and:
+              - <<: *recursiveAnalysisCheck
+              - <<: *priorityAnalysisCheck
         - from:
             - 'digests'
             - 'metadata'
@@ -146,11 +191,3 @@
           #        value: 'maven'
         - from: 'blackduck_executor'
           to: 'blackduck'
-
-    - <<: *bayesianAnalysisFlow
-      name: 'bayesianApiAnalysisFlow'
-      queue: '{DEPLOYMENT_PREFIX}_api_bayesianAnalysisFlow_v0'
-
-    - <<: *bayesianAnalysisFlow
-      name: 'bayesianPriorityAnalysisFlow'
-      queue: '{DEPLOYMENT_PREFIX}_priority_bayesianAnalysisFlow_v0'

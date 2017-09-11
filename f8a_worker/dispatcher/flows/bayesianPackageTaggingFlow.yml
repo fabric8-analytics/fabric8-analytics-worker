@@ -9,8 +9,7 @@
       edges:
         - from:
           to: 'package_keywords_tagging'
-          # TODO: we can move this condition to parent flow specification once
-          # https://github.com/selinon/selinon/issues/23 will be implemented
+          # TODO: remove once https://github.com/selinon/selinon/pull/29 gets merged
           condition:
             or:
               - name: 'argsFieldEqual'
