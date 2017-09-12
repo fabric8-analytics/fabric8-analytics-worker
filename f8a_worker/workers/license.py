@@ -54,38 +54,35 @@ class LicenseCheckTask(BaseTask):
         result_data = {'status': 'unknown',
                        'summary': {},
                        'details': {}}
-        try:
-            command = [path.join(getenv('SCANCODE_PATH', '/opt/scancode-toolkit/'),
-                                 'scancode'),
-                       # Scan for licenses
-                       '--license',
-                       # Do not return license matches with scores lower than this score
-                       '--license-score', LicenseCheckTask.SCANCODE_LICENSE_SCORE,
-                       # Files without findings are omitted
-                       '--only-findings',
-                       # Use n parallel processes
-                       '--processes', LicenseCheckTask.SCANCODE_PROCESSES,
-                       # Do not print summary or progress messages
-                       '--quiet',
-                       # Strip the root directory segment of all paths
-                       '--strip-root',
-                       # Stop scanning a file if scanning takes longer than a timeout in seconds
-                       '--timeout', LicenseCheckTask.SCANCODE_TIMEOUT,
-                       scan_path]
-            for ignore_pattern in LicenseCheckTask.SCANCODE_IGNORE:
-                command += ['--ignore', '{}'.format(ignore_pattern)]
-            with username():
-                tc = TimedCommand(command)
-                status, output, error = tc.run(is_json=True, timeout=1200)
-                if status != 0:
-                    raise FatalTaskError("Error (%s) during running command %s: %r" % (str(status), command, error))
+        command = [path.join(getenv('SCANCODE_PATH', '/opt/scancode-toolkit/'),
+                             'scancode'),
+                   # Scan for licenses
+                   '--license',
+                   # Do not return license matches with scores lower than this score
+                   '--license-score', LicenseCheckTask.SCANCODE_LICENSE_SCORE,
+                   # Files without findings are omitted
+                   '--only-findings',
+                   # Use n parallel processes
+                   '--processes', LicenseCheckTask.SCANCODE_PROCESSES,
+                   # Do not print summary or progress messages
+                   '--quiet',
+                   # Strip the root directory segment of all paths
+                   '--strip-root',
+                   # Stop scanning a file if scanning takes longer than a timeout in seconds
+                   '--timeout', LicenseCheckTask.SCANCODE_TIMEOUT,
+                   scan_path]
+        for ignore_pattern in LicenseCheckTask.SCANCODE_IGNORE:
+            command += ['--ignore', '{}'.format(ignore_pattern)]
+        with username():
+            tc = TimedCommand(command)
+            status, output, error = tc.run(is_json=True, timeout=1200)
+            if status != 0:
+                raise FatalTaskError("Error (%s) during running command %s: %r" % (str(status), command, error))
 
-            details = LicenseCheckTask.process_output(output)
-            result_data['details'] = details
-            result_data['status'] = 'success'
-            result_data['summary'] = {'sure_licenses': list(details['licenses'].keys())}
-        except:
-            result_data['status'] = 'error'
+        details = LicenseCheckTask.process_output(output)
+        result_data['details'] = details
+        result_data['status'] = 'success'
+        result_data['summary'] = {'sure_licenses': list(details['licenses'].keys())}
 
         return result_data
 
@@ -109,6 +106,4 @@ class LicenseCheckTask(BaseTask):
             cache_path = ObjectCache.get_from_dict(arguments).get_extracted_source_tarball()
 
         result_data = self.run_scancode(cache_path)
-        if result_data['status'] == 'error':
-            self.log.exception("License scan failed")
         return result_data
