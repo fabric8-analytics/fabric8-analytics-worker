@@ -27,12 +27,8 @@ class TestLicenseCheck(object):
         args = dict.fromkeys(('ecosystem', 'name', 'version'), 'some-value')
         flexmock(EPVCache).should_receive('get_sources').and_return(data)
         task = LicenseCheckTask.create_test_instance(task_name='source_licenses')
-        results = task.execute(arguments=args)
-
-        assert results is not None
-        assert isinstance(results, dict)
-        assert results['status'] == 'error'
-        task.validate_result(results)
+        with pytest.raises(Exception):
+            results = task.execute(arguments=args)
 
     @pytest.mark.skipif(not os.path.isfile('/opt/scancode-toolkit/scancode'),
                         reason="requires scancode")
