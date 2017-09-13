@@ -8,6 +8,7 @@ from f8a_worker.schemas import load_worker_schema, set_schema_ref
 from f8a_worker.utils import json_serial
 from f8a_worker.object_cache import ObjectCache
 from f8a_worker.storages import BayesianPostgres
+from f8a_worker.storages import PackagePostgres
 
 
 class BaseTask(SelinonTask):
@@ -28,8 +29,8 @@ class BaseTask(SelinonTask):
             raise FatalTaskError("Strict assert failed in task '%s'" % cls.__name__)
 
     def run(self, node_args):
-        if self.storage and isinstance(self.storage, BayesianPostgres):
-            # SQS guarantees 'deliver at least once', so there could be multiple messages of a type, give up immediately
+        # SQS guarantees 'deliver at least once', so there could be multiple messages of a type, give up immediately
+        if self.storage and isinstance(self.storage, (BayesianPostgres, PackagePostgres)):
             if self.storage.get_worker_id_count(self.task_id) > 0:
                 raise FatalTaskError("Task with ID '%s' was already processed" % self.task_id)
 
