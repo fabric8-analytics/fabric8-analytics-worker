@@ -123,22 +123,24 @@ class KeywordsTaggingTask(BaseTask):
         s3_readme = StoragePool.get_connected_storage('S3Readme')
         try:
             readme_json = s3_readme.retrieve_readme_json(arguments['ecosystem'], arguments['name'])
-            self.log.debug("Computing keywords from README.json")
-            details['README'] = keywords_lookup_readme(readme_json,
-                                                       keywords_file=keywords_file_name,
-                                                       stopwords_file=stopwords_file_name,
-                                                       **self._LOOKUP_CONF)
+            if readme_json:
+                self.log.debug("Computing keywords from README.json")
+                details['README'] = keywords_lookup_readme(readme_json,
+                                                           keywords_file=keywords_file_name,
+                                                           stopwords_file=stopwords_file_name,
+                                                           **self._LOOKUP_CONF)
         except Exception as exc:
             self.log.info("Failed to retrieve README: %s", str(exc))
 
         s3_rd = StoragePool.get_connected_storage('S3RepositoryDescription')
         try:
             description = s3_rd.retrieve_repository_description(arguments['ecosystem'], arguments['name'])
-            self.log.debug("Computing keywords on description from repository")
-            details['repository_description'] = keywords_lookup_text(description,
-                                                                     keywords_file=keywords_file_name,
-                                                                     stopwords_file=stopwords_file_name,
-                                                                     **self._LOOKUP_CONF)
+            if description:
+                self.log.debug("Computing keywords on description from repository")
+                details['repository_description'] = keywords_lookup_text(description,
+                                                                         keywords_file=keywords_file_name,
+                                                                         stopwords_file=stopwords_file_name,
+                                                                         **self._LOOKUP_CONF)
         except Exception as exc:
             self.log.info("Failed to retrieve repository description: %s", str(exc))
 
@@ -164,11 +166,12 @@ class KeywordsTaggingTask(BaseTask):
             details['description'] = []
             metadata = self.parent_task_result('metadata')
             description = metadata.get('details', [{}])[0].get('description', '')
-            self.log.debug("Computing keywords from description: '%s'", description)
-            details['description'] = keywords_lookup_text(description,
-                                                          keywords_file=keywords_file_name,
-                                                          stopwords_file=stopwords_file_name,
-                                                          **self._LOOKUP_CONF)
+            if description:
+                self.log.debug("Computing keywords from description: '%s'", description)
+                details['description'] = keywords_lookup_text(description,
+                                                              keywords_file=keywords_file_name,
+                                                              stopwords_file=stopwords_file_name,
+                                                              **self._LOOKUP_CONF)
 
             # explicitly gather declared keywords by publisher
             self.log.debug("Aggregating explicitly stated keywords by publisher")
