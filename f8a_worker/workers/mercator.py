@@ -197,7 +197,8 @@ class MercatorTask(BaseTask):
                        'details': []}
         mercator_target = arguments.get('cache_sources_path', cache_path)
         tc = TimedCommand(['mercator', mercator_target])
-        status, data, err = tc.run(timeout=timeout, is_json=True)
+        status, data, err = tc.run(timeout=timeout, is_json=True,
+                                   update_env={'MERCATOR_JAVA_RESOLVE_POMS': 'true'})
         if status != 0:
             self.log.error(err)
             result_data['status'] = 'error'
