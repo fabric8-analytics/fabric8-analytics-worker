@@ -317,6 +317,8 @@ class DataNormalizer(object):
                    ('licenses', 'declared_licenses'))
         # handle licenses
         transformed = self.transform_keys(pom, key_map)
+        if transformed['name'] is None:
+            transformed['name'] = "{}:{}".format(pom.get('groupId'), pom.get('artifactId'))
         # dependencies with scope 'compile' and 'runtime' are needed at runtime;
         # dependencies with scope 'provided' are not necessarily runtime dependencies,
         # but they are commonly used for example in web applications
@@ -328,6 +330,7 @@ class DataNormalizer(object):
 
         transformed['dependencies'] = [k.rstrip(':') + ' ' + v for k, v in dependencies_dict.items()]
         transformed['devel_dependencies'] = [k.rstrip(':') + ' ' + v for k, v in dev_dependencies_dict.items()]
+
         # handle code_repository
         if 'scm_url' in pom:
             # TODO: there's no way we can tell 100 % what the type is, but we could
