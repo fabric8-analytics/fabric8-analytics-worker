@@ -1,6 +1,8 @@
 import anymarkup
+from bs4 import BeautifulSoup
 from glob import glob
 import os
+from re import compile as re_compile
 import requests
 from shutil import rmtree
 from tempfile import gettempdir
@@ -19,16 +21,46 @@ class CVEcheckerTask(BaseTask):
     schema_ref = SchemaRef(_analysis_name, '3-0-0')
 
     @staticmethod
+    def get_cve_impact(id_):
+        score = 0
+        vector = ''
+        severity = ''
+        if id_:
+            response = requests.get("https://nvd.nist.gov/vuln/detail/{id_}".format(id_=id_))
+            if response.status_code == 200:
+                score_v3 = score_v2 = 0
+                severity_v3 = severity_v2 = vector_v3 = vector_v2 = ''
+                page = BeautifulSoup(response.text, 'html.parser')
+                for tag in page.find_all(href=re_compile('calculator')):
+                    if tag.attrs.get('data-testid') == 'vuln-cvssv3-base-score-link':
+                        score_v3 = float(tag.text.strip())
+                        severity_v3 = tag.find_next().text.lower()
+                    elif tag.attrs.get('data-testid') == 'vuln-cvssv3-vector-link':
+                        vector_v3 = tag.text.strip()
+                    elif tag.attrs.get('data-testid') == 'vuln-cvssv2-base-score-link':
+                        score_v2 = float(tag.text.strip())
+                        severity_v2 = tag.find_next().text.lower()
+                    elif tag.attrs.get('data-testid') == 'vuln-cvssv2-vector-link':
+                        vector_v2 = tag.text.strip().lstrip('(').rstrip(')')
+                # Prefer CVSS v3.0 over v2
+                score = score_v3 or score_v2
+                severity = severity_v3 or severity_v2
+                vector = vector_v3 or vector_v2
+
+        return score, vector, severity
+
+    @staticmethod
     def _filter_ossindex_fields(entry):
+        score, vector, severity = CVEcheckerTask.get_cve_impact(entry.get('cve'))
         result = {
             'id': entry.get('cve') or entry.get('title'),
             'description': entry.get('description'),
             'references': entry.get('references'),
             'cvss': {
-                'score': 0,   # TODO: needs to be supplied by other means
-                'vector': ''  # TODO: needs to be supplied by other means
+                'score': score,
+                'vector': vector
             },
-            'severity': ''    # TODO: needs to be supplied by other means
+            'severity': severity
         }
 
         return result

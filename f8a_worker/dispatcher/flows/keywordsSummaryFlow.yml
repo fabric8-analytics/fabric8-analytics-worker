@@ -1,8 +1,17 @@
 ---
   flow-definitions:
-    - name: 'keywordsSummaryFlow'
+    - &keywordsSummaryFlow
+      name: 'keywordsSummaryFlow'
       queue: '{DEPLOYMENT_PREFIX}_ingestion_keywordsSummaryFlow_v0'
       nowait: 'KeywordsSummaryTask'
       edges:
         - from:
           to: 'KeywordsSummaryTask'
+
+    - <<: *keywordsSummaryFlow
+      name: 'keywordsApiSummaryFlow'
+      queue: '{DEPLOYMENT_PREFIX}_api_keywordsSummaryFlow_v0'
+
+    - <<: *keywordsSummaryFlow
+      name: 'keywordsPrioritySummaryFlow'
+      queue: '{DEPLOYMENT_PREFIX}_priority_keywordsSummaryFlow_v0'
