@@ -19,36 +19,12 @@
           to: 'InitAnalysisFlow'
         - from: 'InitAnalysisFlow'
           to: 'bayesianAnalysisFlow'
-          condition:
-            and:
-              - &shouldScheduleAnalysisCheck
-                # InitAnalysisFlow returns flow arguments or None if analysis was already done
-                # exclude metadata we store with each task result
-                name: 'fieldExist'
-                args:
-                  key: 'ecosystem'
-              - name: 'envEqual'
-                args:
-                  env: 'WORKER_ADMINISTRATION_REGION'
-                  value: 'ingestion'
-        - from: 'InitAnalysisFlow'
-          to: 'bayesianApiAnalysisFlow'
-          condition:
-            and:
-              - <<: *shouldScheduleAnalysisCheck
-              - name: 'envEqual'
-                args:
-                  env: 'WORKER_ADMINISTRATION_REGION'
-                  value: 'api'
-        - from: 'InitAnalysisFlow'
-          to: 'bayesianPriorityAnalysisFlow'
-          condition:
-            and:
-              - <<: *shouldScheduleAnalysisCheck
-              - name: 'envEqual'
-                args:
-                  env: 'WORKER_ADMINISTRATION_REGION'
-                  value: 'priority'
+          condition: &shouldScheduleAnalysisCheck
+            # InitAnalysisFlow returns flow arguments or None if analysis was already done
+            # exclude metadata we store with each task result
+            name: 'fieldExist'
+            args:
+              key: 'ecosystem'
         - from: 'InitAnalysisFlow'
           to: 'GraphImporterTask'
           condition:
@@ -75,19 +51,11 @@
             args:
               env: 'BAYESIAN_SYNC_S3'
               value: '1'
-        # TODO: Fridolin - we can get rid of this duplicity once dispatcher will be able to propagate subflow failures
-        - from: 'bayesianApiAnalysisFlow'
-          to: 'FinalizeTask'
         - from: 'ResultCollector'
           to: 'GraphImporterTask'
       failures:
         - nodes:
             - 'bayesianAnalysisFlow'
-          fallback:
-            - 'FinalizeTaskError'
-        # TODO: Fridolin - we can get rid of this duplicity once dispatcher will be able to propagate subflow failures
-        - nodes:
-            - 'bayesianApiAnalysisFlow'
           fallback:
             - 'FinalizeTaskError'
 

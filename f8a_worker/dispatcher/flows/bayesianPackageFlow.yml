@@ -5,7 +5,6 @@
       queue: '{DEPLOYMENT_PREFIX}_ingestion_bayesianPackageFlow_v0'
       propagate_node_args:
         - 'bayesianPackageAnalysisFlow'
-        - 'bayesianPriorityPackageAnalysisFlow'
         - 'bayesianPackageTaggingFlow'
       node_args_from_first: true
       nowait: 'PackageGraphImporterTask'
@@ -18,27 +17,22 @@
           to: 'InitPackageFlow'
         - from: 'InitPackageFlow'
           to: 'bayesianPackageAnalysisFlow'
-          condition:
-            and:
-              - &shouldSchedulePackageAnalysisCheck
-                name: 'fieldExist'
-                args:
-                  key: 'document_id'
-              - name: 'envEqual'
-                args:
-                  env: 'WORKER_ADMINISTRATION_REGION'
-                  value: 'ingestion'
-        - from: 'InitPackageFlow'
-          to: 'bayesianPriorityPackageAnalysisFlow'
-          condition:
-            and:
-              - <<: *shouldSchedulePackageAnalysisCheck
-              - name: 'envEqual'
-                args:
-                  env: 'WORKER_ADMINISTRATION_REGION'
-                  value: 'priority'
+          condition: &shouldSchedulePackageAnalysisCheck
+            name: 'fieldExist'
+            args:
+              key: 'document_id'
         - from: 'bayesianPackageAnalysisFlow'
           to: 'bayesianPackageTaggingFlow'
+          condition:
+            or:
+              - name: 'argsFieldEqual'
+                args:
+                  key: 'ecosystem'
+                  value: 'pypi'
+              - name: 'argsFieldEqual'
+                args:
+                  key: 'ecosystem'
+                  value: 'maven'
         - from: 'bayesianPackageTaggingFlow'
           to: 'PackageFinalizeTask'
         - from: 'PackageFinalizeTask'
@@ -58,6 +52,21 @@
       failures:
         - nodes: 'bayesianPackageAnalysisFlow'
           fallback: 'bayesianPackageTaggingFlow'
+          # TODO: uncomment once https://github.com/selinon/selinon/pull/29 gets merged
+          #condition:
+          #  or:
+          #    - name: 'argsFieldEqual'
+          #      args:
+          #        key: 'ecosystem'
+          #        value: 'pypi'
+          #    - name: 'argsFieldEqual'
+          #      args:
+          #        key: 'ecosystem'
+          #        value: 'maven'
+
+    - <<: *bayesianPackageFlow
+      name: 'bayesianApiPackageFlow'
+      queue: '{DEPLOYMENT_PREFIX}_api_bayesianPackageFlow_v0'
 
     - <<: *bayesianPackageFlow
       name: 'bayesianPriorityPackageFlow'

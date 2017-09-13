@@ -12,7 +12,7 @@ which selinonlib-cli 2>/dev/null >&1 || {
 # As we are using custom predicates and we want to make sure that the queue
 # expansion name is done correctly, export expected env vars
 PYTHONPATH='../' DEPLOYMENT_PREFIX='plot_' WORKER_ADMINISTRATION_REGION="api" \
-    selinonlib-cli plot --nodes-definition "${DISPATCHER_CONF_DIR}/nodes.yml" \
+    selinonlib-cli -vvvv plot --nodes-definition "${DISPATCHER_CONF_DIR}/nodes.yml" \
                         --flow-definitions "${DISPATCHER_CONF_DIR}"/flows/*.yml \
                         --format png --output-dir . && echo "Graphs are available in the current directory"
 
