@@ -1,6 +1,7 @@
 import logging
 import re
 import time
+import json
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -203,7 +204,6 @@ class GraphPopulator(object):
     @classmethod
     def create_query_string(cls, input_json):
 
-        # NPM packages with dependencies, versions i.e. Package version
         pkg_name = input_json.get('package')
         ecosystem = input_json.get('ecosystem')
         version = input_json.get('version')
@@ -222,9 +222,9 @@ class GraphPopulator(object):
             # Add Package -> Version edge
             str_gremlin += "g.V().has('pecosystem','" + ecosystem + "').has('pname','" + pkg_name + \
                            "').has('version','" + version + "').in('has_version').tryNext()" \
-                           ".orElseGet{g.V().has('ecosystem','" + ecosystem + "').has('name','" + pkg_name + \
-                           "').next().addEdge('has_version', g.V().has('pecosystem','" + ecosystem + "').has('pname'," \
-                           + pkg_name + "').has('version','" + version + "').next())};"
+                           ".orElseGet{pkg=g.V().has('ecosystem','" + ecosystem + "').has('name','" + pkg_name + "')" \
+                           ".tryNext().orElseGet{graph.addVertex('ecosystem','" + ecosystem + "', 'name','" \
+                           + pkg_name + "', 'vertex_label', 'Package')};g.V(pkg).next().addEdge('has_version',ver)};"
 
         logger.debug(str_gremlin)
 
