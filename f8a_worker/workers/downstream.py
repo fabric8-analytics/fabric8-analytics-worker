@@ -6,14 +6,14 @@ import requests
 import json
 import os
 
-from f8a_worker.utils import TimedCommand, mvn_pkg_to_repo_path
+from f8a_worker.base import BaseTask
 from f8a_worker.conf import get_configuration
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.errors import TaskError
-from f8a_worker.schemas import SchemaRef
-from f8a_worker.base import BaseTask
-from f8a_worker.pulp import Pulp
 from f8a_worker.models import Ecosystem
+from f8a_worker.pulp import Pulp
+from f8a_worker.schemas import SchemaRef
+from f8a_worker.utils import TimedCommand, MavenCoordinates
 from f8a_worker.workers.anitya import RH_MVN_DISTRO_NAME, RH_MVN_GA_REPO, RH_RPM_DISTRO_NAME
 
 config = get_configuration()
@@ -112,8 +112,9 @@ class DownstreamUsageTask(BaseTask):
         downstream_rebuilds = []
 
         for name in anitya_mvn_names:
+            ga = MavenCoordinates.from_str(name).to_repo_url(ga_only=True)
             metadata_url = '{repo}/{pkg}/maven-metadata.xml'.format(repo=RH_MVN_GA_REPO,
-                                                                    pkg=mvn_pkg_to_repo_path(name))
+                                                                    pkg=ga)
             res = requests.get(metadata_url)
             if res.status_code != 200:
                 self.log.info('Metadata for package {pkg} not found in {repo} (status {code})'.

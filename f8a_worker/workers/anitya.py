@@ -6,7 +6,7 @@ import requests
 from f8a_worker.conf import get_configuration
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.errors import TaskError
-from f8a_worker.utils import DownstreamMapCache, mvn_pkg_to_repo_path
+from f8a_worker.utils import DownstreamMapCache, MavenCoordinates
 from f8a_worker.base import BaseTask
 
 # name of "RPM" distro for Anitya
@@ -134,8 +134,8 @@ class AnityaTask(BaseTask):
         packages = []
         self.log.info('Searching for {pkg} in maven repo {repo}...'.
                       format(pkg=pkg, repo=RH_MVN_GA_REPO))
-        result = requests.get('{repo}/{pkg}'.format(repo=RH_MVN_GA_REPO,
-                                                    pkg=mvn_pkg_to_repo_path(pkg)))
+        ga = MavenCoordinates.from_str(pkg).to_repo_url(ga_only=True)
+        result = requests.get('{repo}/{pkg}'.format(repo=RH_MVN_GA_REPO, pkg=ga))
         if result.status_code != 200:
             self.log.info('Package {pkg} not found in {repo} (status code {code})'.
                           format(pkg=pkg, repo=RH_MVN_GA_REPO, code=result.status_code))

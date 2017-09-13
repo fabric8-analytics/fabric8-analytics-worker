@@ -439,8 +439,12 @@ class MavenCoordinates(object):
 
         return mvnstr
 
-    def to_repo_url(self):
+    def to_repo_url(self, ga_only=False):
         """Returns relative path to the artifact in Maven repository."""
+        if ga_only:
+            return "{g}/{a}".format(g=self.groupId.replace('.', '/'),
+                                    a=self.artifactId)
+
         dir_path = "{g}/{a}/{v}/".format(g=self.groupId.replace('.', '/'),
                                          a=self.artifactId,
                                          v=self.version)
@@ -638,16 +642,6 @@ def url2git_repo(url):
         return 'https://{}/{}'.format(url[0], url[1])
 
     return url
-
-
-def mvn_pkg_to_repo_path(pkg):
-    """Translate Maven package name to repository path.
-
-    :param pkg: str, e.g. 'com.redhat:artifact'
-    :return: 'com/redhat/artifact'
-    """
-    gid, aid = pkg.split(':')
-    return "{g}/{a}".format(g=gid.replace('.', '/'), a=aid)
 
 
 def case_sensitivity_transform(ecosystem, name):
