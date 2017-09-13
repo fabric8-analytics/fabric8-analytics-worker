@@ -11,6 +11,7 @@ from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST, create_package_dict, 
 from f8a_worker.base import BaseTask
 from f8a_worker.conf import get_configuration
 from f8a_worker.utils import get_session_retry
+from f8a_worker.workers.stackaggregator_v2 import perform_license_analysis
 
 config = get_configuration()
 
@@ -607,6 +608,39 @@ class RecommendationTask(BaseTask):
             similarity_list.append(s_stack)
         return similarity_list
 
+def apply_license_filter(epv_list):
+    dependencies = []
+    licenses = []
+    license_score_list = []
+    for epv in epv_list:
+        name = epv.get('pkg', {}).get('name', [''])[0]
+        version = epv.get('ver', {}).get('version', [''])[0]
+        licenses = epv.get('ver', {}).get('version', {}).get('licenses', [])
+
+        license_scoring_input = {
+            'package': name,
+            'version': version,
+            'licenses': licenses
+        }
+        license_score_list.append(license_scoring_input)
+
+    # Call License Scoring to Get Stack License
+    license_analysis, dependencies = perform_license_analysis(license_score_list, dependencies)
+    conflicting_companions = []
+    if license_analysis['status'] == 'StackLicenseConflict':
+        conflict_packages = license_analysis.get('conflict_packages', {})
+        for conflict in conflict_packages:
+            for pkg in conflict.keys():
+                conflicting_companions.append(pkg)
+    conflicting_companions = list(set(conflicting_companions))
+
+    for epv in epv_list:
+        name = epv.get('pkg', {}).get('name', [''])[0]
+        if name in conflicting_companions:
+            epv_list.remove(epv)
+
+    return epv_list, conflicting_companions
+
 
 class RecommendationV2Task(BaseTask):
     _analysis_name = 'recommendation_v2'
@@ -702,8 +736,15 @@ class RecommendationV2Task(BaseTask):
                                  .format(parguments.get('external_request_id', ''),
                                          set(companion_packages).difference(set(filtered_list))))
 
+                    # Apply License Filters
+                    lic_filtered_companions, lic_filtered_list = apply_license_filter(filtered_comp_packages_graph, input_stack)
+
+                    _logger.info("Companion Packages further filtered (based on licenses) for external_request_id {} {}"
+                                 .format(parguments.get('external_request_id', ''),
+                                         set(companion_packages).difference(set(lic_filtered_list))))
+
                     # Get Topics Added to Filtered Versions
-                    topics_comp_packages_graph = GraphDB().get_topics_for_comp(filtered_comp_packages_graph,
+                    topics_comp_packages_graph = GraphDB().get_topics_for_comp(lic_filtered_companions,
                                                                                pgm_result['companion_packages'])
                     # Create Companion Block
                     comp_packages = create_package_dict(topics_comp_packages_graph)
