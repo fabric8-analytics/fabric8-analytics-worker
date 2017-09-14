@@ -24,6 +24,14 @@ objects:
           execNewPod:
             containerName: bayesian-worker
             command: ["/alembic/run-db-migrations.sh"]
+    strategy:
+      type: Rolling
+      rollingParams:
+        pre:
+          failurePolicy: Retry
+          execNewPod:
+            containerName: bayesian-worker
+            command: ["python3 /graph/create_graph_schema.py"]
     template:
       metadata:
         labels:
@@ -223,6 +231,20 @@ objects:
             value: bayesian-broker
           - name: SCANCODE_PROCESSES
             value: "2"
+          - name: BAYESIAN_GREMLIN_HTTP_SERVICE_HOST
+            value: "bayesian-gremlin-http"
+          - name: BAYESIAN_GREMLIN_HTTP_SERVICE_PORT
+            value: "8182"
+          - name: AWS_PKG_BUCKET
+            valueFrom:
+              configMapKeyRef:
+                name: bayesian-config
+                key: s3-bucket-for-package-analyses
+          - name: AWS_EPV_BUCKET
+            valueFrom:
+              configMapKeyRef:
+                name: bayesian-config
+                key: s3-bucket-for-analyses
           image: "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${IMAGE_TAG}"
           name: bayesian-worker
           readinessProbe:

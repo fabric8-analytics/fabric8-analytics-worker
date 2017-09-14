@@ -23,7 +23,7 @@ access_key = os.environ.get("AWS_S3_ACCESS_KEY_ID")
 secret_key = os.environ.get("AWS_S3_SECRET_ACCESS_KEY")
 s3_resource = None
 
-if int(os.environ.get("AWS_S3_IS_LOCAL")) == 1:
+if os.environ.get("AWS_S3_IS_LOCAL") and int(os.environ.get("AWS_S3_IS_LOCAL")) == 1:
     global s3_resource
     # access_key = os.environ.get("MINIO_ACCESS_KEY")
     # secret_key = os.environ.get("MINIO_SECRET_KEY")
