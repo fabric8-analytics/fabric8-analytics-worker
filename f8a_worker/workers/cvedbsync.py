@@ -67,7 +67,7 @@ class CVEDBSyncTask(BaseTask):
         msg = "Components to be {prefix}scanned for vulnerabilities: {components}".\
             format(prefix="re-" if only_already_scanned else "",
                    components=to_scan)
-        self.log.debug(msg)
+        self.log.info(msg)
         return to_scan
 
     def execute(self, arguments):
