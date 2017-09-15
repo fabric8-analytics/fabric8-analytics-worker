@@ -23,7 +23,7 @@
               key: 'document_id'
         - from: 'bayesianPackageAnalysisFlow'
           to: 'bayesianPackageTaggingFlow'
-          condition:
+          condition: &shouldSchedulePackageTaggingCheck
             or:
               - name: 'argsFieldEqual'
                 args:
@@ -33,6 +33,11 @@
                 args:
                   key: 'ecosystem'
                   value: 'maven'
+        - from: 'bayesianPackageAnalysisFlow'
+          to: 'PackageFinalizeTask'
+          condition:
+            not:
+              <<: *shouldSchedulePackageTaggingCheck
         - from: 'bayesianPackageTaggingFlow'
           to: 'PackageFinalizeTask'
         - from: 'PackageFinalizeTask'
