@@ -86,7 +86,16 @@ class CVEcheckerTask(BaseTask):
         packages = []
         while url:
             response = CVEcheckerTask.query_url(url)
-            packages += response.get('packages', [])
+            for package in response.get('packages', []):
+                for vulnerability in package.get('vulnerabilities', []):
+                    # Sanity check:
+                    # the response always contains at least one entry, even if it should be empty
+                    # (when 'from_time' is higher than 'updated' time of all entries in db)
+                    if int(vulnerability.get('updated')) < from_time:
+                        package['vulnerabilities'].remove(vulnerability)
+                if package.get('vulnerabilities', []):
+                    packages.append(package)
+
             url = response.get('next')
         return packages
 
@@ -95,8 +104,8 @@ class CVEcheckerTask(BaseTask):
         entries = []
         solver = get_ecosystem_solver(self.storage.get_ecosystem(arguments['ecosystem']),
                                       with_parser=OSSIndexDependencyParser())
-        for entry in self._query_ossindex_package(arguments['ecosystem'], arguments['name']):
-            for vulnerability in entry.get('vulnerabilities', []):
+        for package in self._query_ossindex_package(arguments['ecosystem'], arguments['name']):
+            for vulnerability in package.get('vulnerabilities', []):
                 for version_string in vulnerability.get('versions', []):
                     try:
                         affected_versions = solver.solve(["{} {}".format(arguments['name'],
