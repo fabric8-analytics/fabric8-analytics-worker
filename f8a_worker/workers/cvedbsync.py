@@ -78,7 +78,6 @@ class CVEDBSyncTask(BaseTask):
         """
         only_already_scanned = arguments.pop('only_already_scanned', True) if arguments else True
         ignore_modification_time = arguments.pop('ignore_modification_time', False) if arguments else False
-        self._strict_assert(not arguments)
 
         s3 = StoragePool.get_connected_storage('S3VulnDB')
 
