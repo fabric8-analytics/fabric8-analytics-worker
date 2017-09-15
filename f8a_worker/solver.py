@@ -242,17 +242,19 @@ class NugetReleasesFetcher(ReleasesFetcher):
         Scrape 'Version History' from https://www.nuget.org/packages/<package>
         """
         releases = []
-        pop = get('https://www.nuget.org/packages/' + package)
-        poppage = BeautifulSoup(pop.text, 'html.parser')
-        for link in poppage.find_all(href=re.compile(r'^/packages/')):
-            version = link['href'].split('/')[-1].strip()
+        nuget_packages_url = 'https://www.nuget.org/packages/'
+        page = get(nuget_packages_url + package)
+        page = BeautifulSoup(page.text, 'html.parser')
+        version_history = page.find(class_="version-history")
+        for version in version_history.find_all(href=re.compile('^' + nuget_packages_url)):
+            version_text = version.text.replace('(current version)', '').strip()
             try:
-                semver_version.coerce(version)
-                downloads = int(link.find_next('td').text.strip().replace(',', ''))
+                semver_version.coerce(version_text)
+                downloads = int(version.find_next('td').text.strip().replace(',', ''))
             except ValueError:
                 pass
             else:
-                releases.append((version, downloads))
+                releases.append((version_text, downloads))
         if sort_by_downloads:
             releases.sort(key=itemgetter(1))
         return package, [p[0] for p in reversed(releases)]
