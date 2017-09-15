@@ -235,16 +235,6 @@ objects:
             value: "bayesian-gremlin-http"
           - name: BAYESIAN_GREMLIN_HTTP_SERVICE_PORT
             value: "8182"
-          - name: AWS_PKG_BUCKET
-            valueFrom:
-              configMapKeyRef:
-                name: bayesian-config
-                key: s3-bucket-for-package-analyses
-          - name: AWS_EPV_BUCKET
-            valueFrom:
-              configMapKeyRef:
-                name: bayesian-config
-                key: s3-bucket-for-analyses
           image: "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${IMAGE_TAG}"
           name: bayesian-worker
           readinessProbe:
