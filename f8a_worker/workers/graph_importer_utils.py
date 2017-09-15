@@ -3,12 +3,9 @@ import requests
 import logging
 import json
 import traceback
-import botocore
-import boto3
-import time
-from datetime import datetime
 from f8a_worker.workers.graph_populator import GraphPopulator
-# from botocore.exceptions import
+from selinon import StoragePool
+
 
 logger = logging.getLogger(__name__)
 
@@ -16,73 +13,35 @@ logger = logging.getLogger(__name__)
 GREMLIN_SERVER_URL_REST = "http://{host}:{port}".format(
                            host=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_HOST", "localhost"),
                            port=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_PORT", "8182"))
-AWS_EPV_BUCKET = os.environ.get("AWS_EPV_BUCKET", "")
-AWS_PKG_BUCKET = os.environ.get("AWS_PKG_BUCKET", "")
-LOCAL_MINIO_ENDPOINT = os.environ.get("LOCAL_MINIO_ENDPOINT", "coreapi-s3:33000")
-access_key = os.environ.get("AWS_S3_ACCESS_KEY_ID")
-secret_key = os.environ.get("AWS_S3_SECRET_ACCESS_KEY")
-s3_resource = None
-
-if os.environ.get("AWS_S3_IS_LOCAL") and int(os.environ.get("AWS_S3_IS_LOCAL")) == 1:
-    global s3_resource
-    # access_key = os.environ.get("MINIO_ACCESS_KEY")
-    # secret_key = os.environ.get("MINIO_SECRET_KEY")
-    session = boto3.session.Session(aws_access_key_id=access_key, aws_secret_access_key=secret_key,
-                                    region_name="us-east-1")
-    s3_resource = session.resource('s3', config=botocore.client.Config(signature_version='s3v4'),
-                                   use_ssl=False, endpoint_url="http://" + LOCAL_MINIO_ENDPOINT)
-else:
-    global s3_resource
-    # access_key = os.environ.get("AWS_S3_ACCESS_KEY_ID")
-    # secret_key = os.environ.get("AWS_S3_SECRET_ACCESS_KEY")
-    session = boto3.session.Session(aws_access_key_id=access_key, aws_secret_access_key=secret_key)
-    s3_resource = session.resource('s3', config=botocore.client.Config(signature_version='s3v4'))
+s3 = s3_pkg = None
 
 
-def read_json_file(filename, bucket_name=None):
+def read_json_file(filename, bucket_type):
     """Read JSON file from the data source"""
 
-    global s3_resource
-    if bucket_name is None:
-        bucket_name = AWS_EPV_BUCKET
-
-    obj = s3_resource.Object(bucket_name, filename).get()['Body'].read()
-    utf_data = obj.decode("utf-8")
-    return json.loads(utf_data)
-
-
-def list_files(prefix=None, bucket_name=None):
-    """List all the files in the source directory"""
-
-    global s3_resource
-    if bucket_name is None:
-        bucket_name = AWS_EPV_BUCKET
-
-    bucket = s3_resource.Bucket(bucket_name)
-
-    if prefix is None:
-        objects = bucket.objects.all()
-    else:
-        objects = bucket.objects.filter(Prefix=prefix)
-
-    list_filenames = [x.key for x in objects if x.key.endswith('.json')]
-
-    return list_filenames
-
-
-def _first_key_info(first_key, bucket_name=None):
+    global s3, s3_pkg
     obj = {}
-    t = read_json_file(first_key, bucket_name)
+    if bucket_type == "version":
+        obj = s3.retrieve_dict(filename)
+    elif bucket_type == "package":
+        obj = s3_pkg.retrieve_dict(filename)
+
+    return obj
+
+
+def _first_key_info(first_key, bucket_type):
+    obj = {}
+    t = read_json_file(first_key, bucket_type)
     obj["dependents_count"] = t.get("dependents_count", '-1')
     obj["package_info"] = t.get("package_info", {})
     obj["latest_version"] = t.get("latest_version", '-1')
     return obj
 
 
-def _other_key_info(other_keys, bucket_name=None):
+def _other_key_info(other_keys, bucket_type):
     obj = {"analyses": {}}
     for this_key in other_keys:
-        value = read_json_file(this_key, bucket_name)
+        value = read_json_file(this_key, bucket_type)
         this_key = this_key.split("/")[-1]
         if 'success' == value.get('status', ''):
             obj["analyses"][this_key[:-len('.json')]] = value
@@ -137,9 +96,9 @@ def _import_keys_from_s3_http(epv_list):
                 # Check other Version level information and add it to common object
                 if len(contents.get('ver_list_keys')) > 0:
                     first_key = contents['ver_key_prefix'] + '.json'
-                    first_obj = _first_key_info(first_key, AWS_EPV_BUCKET)
+                    first_obj = _first_key_info(first_key, "version")
                     obj.update(first_obj)
-                    ver_obj = _other_key_info(contents.get('ver_list_keys'), AWS_EPV_BUCKET)
+                    ver_obj = _other_key_info(contents.get('ver_list_keys'), "version")
                     if 'analyses' in obj:
                         obj.get('analyses', {}).update(ver_obj['analyses'])
                     else:
@@ -147,7 +106,7 @@ def _import_keys_from_s3_http(epv_list):
 
                 # Check Package related information and add it to package object
                 if len(contents.get('pkg_list_keys')) > 0:
-                    pkg_obj = _other_key_info(contents.get('pkg_list_keys'), AWS_PKG_BUCKET)
+                    pkg_obj = _other_key_info(contents.get('pkg_list_keys'), "package")
                     if 'analyses' in obj:
                         obj.get('analyses', {}).update(pkg_obj['analyses'])
                     else:
@@ -169,7 +128,8 @@ def _import_keys_from_s3_http(epv_list):
                         count_imported_EPVs += 1
                         last_imported_EPV = obj.get('ecosystem') + ":" + obj.get('package') + ":" + obj.get('version')
                     elif 'Exception-Class' in resp:
-                        report['message'] = "The import failed " + resp['Exception-Class']
+                        report['message'] = "The import failed " + resp['message']
+                        report['status'] = 'Failure'
 
             except Exception as e:
                 msg = _get_exception_msg("The import failed", e)
@@ -187,27 +147,32 @@ def _import_keys_from_s3_http(epv_list):
 
 
 def import_epv_from_s3_http(list_epv, select_doc=None):
+
     try:
+        global s3, s3_pkg
+        s3 = StoragePool.get_connected_storage('S3Data')
+        s3_pkg = StoragePool.get_connected_storage('S3PackageData')
         # Collect relevant files from data-source and group them by package-version.
         list_keys = []
         for epv in list_epv:
             dict_keys = {}
             ver_list_keys = []
             pkg_list_keys = []
+            pkg_key_prefix = ver_key_prefix = ""
 
             if 'name' not in epv or 'ecosystem' not in epv:
                 continue
-            else:
+            elif 'version' not in epv or epv.get('version') is None:
+                epv['version'] = ''
                 # Get Package level keys
-                pkg_key_prefix = ver_key_prefix = epv.get('ecosystem') + "/" + epv.get('name') + "/"
-                pkg_list_keys.extend(list_files(bucket_name=AWS_PKG_BUCKET, prefix=pkg_key_prefix))
+                pkg_key_prefix = epv.get('ecosystem') + "/" + epv.get('name') + "/"
+                pkg_list_keys.extend(s3_pkg.retrieve_key_list(pkg_key_prefix))
 
-            if 'version' in epv and epv.get('version') is not None:
+            elif 'version' in epv and epv.get('version') is not None:
                 # Get EPV level keys
                 ver_key_prefix = epv.get('ecosystem') + "/" + epv.get('name') + "/" + epv.get('version')
-                ver_list_keys.extend(list_files(bucket_name=AWS_EPV_BUCKET, prefix=ver_key_prefix + "/"))
-            else:
-                epv['version'] = ''
+                ver_list_keys.extend(s3.retrieve_key_list(ver_key_prefix))
+
             if select_doc is not None and len(select_doc) > 0:
                 select_ver_doc = [ver_key_prefix + '/' + x + '.json' for x in select_doc]
                 select_pkg_doc = [pkg_key_prefix + x + '.json' for x in select_doc]
@@ -235,5 +200,5 @@ def import_epv_from_s3_http(list_epv, select_doc=None):
     except Exception as e:
         msg = _get_exception_msg("import_epv() failed with error", e)
         raise RuntimeError(msg)
-    return report
 
+    return report
