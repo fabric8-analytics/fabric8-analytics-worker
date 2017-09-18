@@ -195,12 +195,12 @@ class AmazonS3(DataStorage):
         """ Retrieve a dictionary stored as JSON from S3 """
         return json.loads(self.retrieve_blob(object_key).decode())
 
-    def retrieve_key_list(self, prefix=None):
+    def retrieve_key_list(self, object_key):
         """ Retrieve all the keys in S3 based on a prefix"""
         bucket = self._s3.Bucket(self.bucket_name)
         list_keys = []
-        if prefix:
-            objects = bucket.objects.filter(Prefix=prefix)
+        if object_key:
+            objects = bucket.objects.filter(Prefix=object_key)
             list_keys = [x.key for x in objects if x.key.endswith('.json')]
 
         return list_keys

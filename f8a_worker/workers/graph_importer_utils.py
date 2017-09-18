@@ -1,7 +1,7 @@
 import os
 import requests
 import logging
-import re
+import json
 import traceback
 from f8a_worker.workers.graph_populator import GraphPopulator
 from selinon import StoragePool
@@ -23,7 +23,7 @@ class GETS3:
 def read_json_file(filename, bucket_type):
     """Read JSON file from the data source"""
 
-    global s3, s3_pkg
+    s3, s3_pkg = GETS3.storage()
     obj = {}
     if bucket_type == "version":
         obj = s3.retrieve_dict(filename)
@@ -50,33 +50,6 @@ def _other_key_info(other_keys, bucket_type):
         if 'success' == value.get('status', ''):
             obj["analyses"][this_key[:-len('.json')]] = value
     return obj
-
-
-def _get_exception_msg(prefix, e):
-    msg = prefix + ": " + str(e)
-    logger.error(msg)
-    tb = traceback.format_exc()
-    logger.error("Traceback for latest failure in import call: %s" % tb)
-    return msg
-
-
-def _log_report_msg(import_type, report):
-    # Log the report
-    msg = """
-        Report from {}:
-        {}
-        Total number of EPVs imported: {}
-        The last successfully imported EPV: {}
-    """
-    msg = msg.format(import_type, report.get('message'),
-                     report.get('count_imported_EPVs'),
-                     report.get('last_imported_EPV'))
-
-    if report.get('status') is 'Success':
-        logger.debug(msg)
-    else:
-        # TODO: retry??
-        logger.exception(msg)
 
 
 def _import_keys_from_s3_http(epv_list):
@@ -144,10 +117,10 @@ def _import_keys_from_s3_http(epv_list):
                         logger.exception(report)
 
             except Exception as e:
-                msg = _get_exception_msg("The import failed", e)
-                report['status'] = 'Failure'
-                report['message'] = msg
-                report['epv'] = epv_key
+                msg = "The import failed: " + str(e)
+                tb = traceback.format_exc()
+                logger.error("Traceback for latest failure in import call: %s" % tb)
+                raise RuntimeError(msg)
 
     report['epv'] = epv_list
     report['count_imported_EPVs'] = count_imported_EPVs
@@ -161,7 +134,6 @@ def _import_keys_from_s3_http(epv_list):
 def import_epv_from_s3_http(list_epv, select_doc=None):
 
     try:
-        global s3, s3_pkg
         s3, s3_pkg = GETS3.storage()
         # Collect relevant files from data-source and group them by package-version.
         list_keys = []
@@ -169,20 +141,19 @@ def import_epv_from_s3_http(list_epv, select_doc=None):
             dict_keys = {}
             ver_list_keys = []
             pkg_list_keys = []
-            pkg_key_prefix = ver_key_prefix = ""
+            pkg_key_prefix = ver_key_prefix = epv.get('ecosystem') + "/" + epv.get('name') + "/"
 
             if 'name' not in epv or 'ecosystem' not in epv:
                 continue
             elif 'version' not in epv or epv.get('version') is None:
                 epv['version'] = ''
                 # Get Package level keys
-                pkg_key_prefix = epv.get('ecosystem') + "/" + epv.get('name') + "/"
-                pkg_list_keys.extend(s3_pkg.retrieve_key_list(pkg_key_prefix))
+                pkg_list_keys.extend(s3_pkg.retrieve_keys(epv.get('ecosystem'), epv.get('name')))
 
             elif 'version' in epv and epv.get('version') is not None:
                 # Get EPV level keys
                 ver_key_prefix = epv.get('ecosystem') + "/" + epv.get('name') + "/" + epv.get('version')
-                ver_list_keys.extend(s3.retrieve_key_list(ver_key_prefix))
+                ver_list_keys.extend(s3.retrieve_keys(epv.get('ecosystem'), epv.get('name'), epv.get('version')))
 
             if select_doc is not None and len(select_doc) > 0:
                 select_ver_doc = [ver_key_prefix + '/' + x + '.json' for x in select_doc]
@@ -205,11 +176,8 @@ def import_epv_from_s3_http(list_epv, select_doc=None):
         # Import the S3 data
         report = _import_keys_from_s3_http(list_keys)
 
-        # Log the report
-        _log_report_msg("import_epv()", report)
-
     except Exception as e:
-        msg = _get_exception_msg("import_epv() failed with error", e)
+        msg = "The import failed: " + str(e)
         raise RuntimeError(msg)
 
     return report

@@ -27,3 +27,13 @@ class S3Data(S3DataBase):
         """
         object_key = self._construct_task_result_object_key(locals(), task_name)
         return self.retrieve_dict(object_key)
+
+    def retrieve_keys(self, ecosystem, name, version):
+        """ Retrieve all the keys in S3 based for the given EPV
+        :param ecosystem: ecosystem name
+        :param name: package name
+        :param version: package version
+        :return: list of keys for a given EPV
+        """
+        object_key = ecosystem + "/" + name + "/" + version
+        return self.retrieve_key_list(object_key)
