@@ -141,6 +141,7 @@ def _import_keys_from_s3_http(epv_list):
                     elif 'Exception-Class' in resp:
                         report['message'] = "The import failed " + resp['message']
                         report['status'] = 'Failure'
+                        logger.exception(report)
 
             except Exception as e:
                 msg = _get_exception_msg("The import failed", e)
