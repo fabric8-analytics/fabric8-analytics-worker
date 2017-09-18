@@ -181,6 +181,10 @@ class StackAggregatorV2Task(BaseTask):
         # Hardcoded ecosystem
         result = []
         for elem in resolved:
+            if elem["package"] is None or elem["version"] is None:
+                self.log.warning("Either component name or component version is missing")
+                continue
+
             qstring = "g.V().has('pecosystem','"+ecosystem+"').has('pname','"+elem["package"]+"')." \
                       "has('version','"+elem["version"]+"')." \
                       "as('version').in('has_version').as('package').select('version','package').by(valueMap());"
