@@ -27,7 +27,4 @@ class GraphImporterTask(BaseTask):
                     'epv': package_list,
                     'count_imported_EPVs': report.get('count_imported_EPVs')}
 
-        self.log.debug(response)
-
-        if report.get('status') is not 'Success':
-            raise RuntimeError("Failed to ingest data for '%s' with %s" % (package_list, select_ingest))
+        self.log.info(response)

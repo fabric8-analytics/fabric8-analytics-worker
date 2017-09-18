@@ -31,7 +31,7 @@ objects:
           failurePolicy: Retry
           execNewPod:
             containerName: bayesian-worker
-            command: ["python3 /graph/create_graph_schema.py"]
+            command: ["python3",  "/graph/create_graph_schema.py"]
     template:
       metadata:
         labels:
