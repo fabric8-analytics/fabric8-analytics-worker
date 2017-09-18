@@ -1,11 +1,10 @@
 import os
 import requests
 import logging
-import json
+import re
 import traceback
 from f8a_worker.workers.graph_populator import GraphPopulator
 from selinon import StoragePool
-
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +12,12 @@ logger = logging.getLogger(__name__)
 GREMLIN_SERVER_URL_REST = "http://{host}:{port}".format(
                            host=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_HOST", "localhost"),
                            port=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_PORT", "8182"))
-s3 = s3_pkg = None
+
+
+class GETS3:
+    @staticmethod
+    def storage():
+        return StoragePool.get_connected_storage('S3Data'), StoragePool.get_connected_storage('S3PackageData')
 
 
 def read_json_file(filename, bucket_type):
@@ -72,7 +76,7 @@ def _log_report_msg(import_type, report):
         logger.debug(msg)
     else:
         # TODO: retry??
-        logger.error(msg)
+        logger.exception(msg)
 
 
 def _import_keys_from_s3_http(epv_list):
@@ -120,8 +124,15 @@ def _import_keys_from_s3_http(epv_list):
                     logger.info("Ingestion initialized for EPV - " +
                                 obj.get('ecosystem') + ":" + obj.get('package') + ":" + obj.get('version'))
                     epv.append(obj.get('ecosystem') + ":" + obj.get('package') + ":" + obj.get('version'))
-                    payload = {'gremlin': str_gremlin}
-                    response = requests.post(GREMLIN_SERVER_URL_REST, data=json.dumps(payload), timeout=30)
+                    payload = {
+                        'gremlin': str_gremlin,
+                        'bindings': {
+                            'pkg_name': obj.get('package'),
+                            'ecosystem': obj.get('ecosystem'),
+                            'version': obj.get('version')
+                        }
+                    }
+                    response = requests.post(GREMLIN_SERVER_URL_REST, json=payload, timeout=30)
                     resp = response.json()
 
                     if 'status' in resp and resp['status']['code'] == 200:
@@ -150,8 +161,7 @@ def import_epv_from_s3_http(list_epv, select_doc=None):
 
     try:
         global s3, s3_pkg
-        s3 = StoragePool.get_connected_storage('S3Data')
-        s3_pkg = StoragePool.get_connected_storage('S3PackageData')
+        s3, s3_pkg = GETS3.storage()
         # Collect relevant files from data-source and group them by package-version.
         list_keys = []
         for epv in list_epv:
