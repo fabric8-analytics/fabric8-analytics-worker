@@ -12,6 +12,7 @@ from f8a_worker.models import StackAnalysisRequest
 
 from f8a_worker.workers.mercator import MercatorTask
 
+
 class GraphAggregatorTask(BaseTask):
     _analysis_name = 'graph_aggregator'
     schema_ref = None
@@ -62,7 +63,7 @@ class GraphAggregatorTask(BaseTask):
             #  that it has storage; storage is assigned to tasks dynamically based on task_name
             subtask.task_name = self.task_name
             arguments['ecosystem'] = manifest['ecosystem']
-            out = subtask.run_mercator(arguments, temp_path)
+            out = subtask.run_mercator(arguments, temp_path, resolve_poms=False)
 
             if temp_path:
                 rmtree(temp_path, ignore_errors=True)

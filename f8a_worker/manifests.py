@@ -61,6 +61,7 @@ def xml_validator(data):
         return False
     return True
 
+
 def python_validator(data):
     """Very simple Python requirements.txt validator."""
     requirements_txt = StringIO()

@@ -191,14 +191,15 @@ class MercatorTask(BaseTask):
             if workdir:
                 shutil.rmtree(workdir)
 
-    def run_mercator(self, arguments, cache_path, keep_path=False, outermost_only=True, timeout=300):
+    def run_mercator(self, arguments, cache_path,
+                     keep_path=False, outermost_only=True, timeout=300, resolve_poms=True):
         result_data = {'status': 'unknown',
                        'summary': [],
                        'details': []}
         mercator_target = arguments.get('cache_sources_path', cache_path)
         tc = TimedCommand(['mercator', mercator_target])
-        status, data, err = tc.run(timeout=timeout, is_json=True,
-                                   update_env={'MERCATOR_JAVA_RESOLVE_POMS': 'true'})
+        update_env = {'MERCATOR_JAVA_RESOLVE_POMS': 'true'} if resolve_poms else {}
+        status, data, err = tc.run(timeout=timeout, is_json=True, update_env=update_env)
         if status != 0:
             self.log.error(err)
             result_data['status'] = 'error'
