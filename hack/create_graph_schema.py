@@ -1,10 +1,11 @@
 import os
 import requests
-import json
 import time
 import logging
 
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
 
 GREMLIN_SERVER_URL_REST = "http://{host}:{port}".format(
                           host=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_HOST", "localhost"),
@@ -15,14 +16,14 @@ SCHEMA_CREATED = False
 # wait for graph to be initialized
 while not GRAPH_INITIALIZED:
     try:
-        print("Calling GREMLIN - " + GREMLIN_SERVER_URL_REST)
+        logger.debug("Calling GREMLIN - " + GREMLIN_SERVER_URL_REST)
         resp = requests.get(GREMLIN_SERVER_URL_REST)
         if resp.status_code >= 200:
-            logger.info("Gremlin Instance available")
+            logger.debug("Gremlin Instance available")
             GRAPH_INITIALIZED = True
             break
     except:
-        print("Waiting for Gremlin HTTP to be initialized. Sleeping for 10 seconds")
+        logger.debug("Waiting for Gremlin HTTP to be initialized. Sleeping for 10 seconds")
         time.sleep(10)
         continue
 
@@ -33,14 +34,14 @@ with open(schema_file_path, 'r') as f:
     str_gremlin_dsl = f.read()
 
 while not SCHEMA_CREATED:
-    print("Creating Graph Schema Now...")
+    logger.debug("Creating Graph Schema Now...")
     payload = {'gremlin': str_gremlin_dsl}
 
     response = requests.post(GREMLIN_SERVER_URL_REST, json=payload)
-    json_response = response.json()
 
     if response.status_code != 200:
-        msg = "ERROR Creating Schema - %d(%s): %s" % (response.status_code, response.reason, json_response.get("message"))
+        msg = "ERROR Creating Schema - %d(%s): %s" % (response.status_code, response.reason,
+                                                      response.json().get("message"))
         raise RuntimeError(msg)
     else:
         SCHEMA_CREATED = True
