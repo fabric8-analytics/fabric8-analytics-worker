@@ -1,16 +1,15 @@
 import os
 import json
-from shutil import rmtree
 from selinon import FatalTaskError
-from tempfile import mkdtemp
 from sqlalchemy.exc import SQLAlchemyError
 
-from f8a_worker.solver import get_ecosystem_solver
 from f8a_worker.base import BaseTask
 from f8a_worker.manifests import get_manifest_descriptor_by_filename
 from f8a_worker.models import StackAnalysisRequest
-
+from f8a_worker.solver import get_ecosystem_solver
+from f8a_worker.utils import tempdir
 from f8a_worker.workers.mercator import MercatorTask
+
 
 class GraphAggregatorTask(BaseTask):
     _analysis_name = 'graph_aggregator'
@@ -46,26 +45,20 @@ class GraphAggregatorTask(BaseTask):
         # If we receive a manifest file we need to save it first
         result = []
         for manifest in manifests:
-            temp_path = mkdtemp()
+            with tempdir() as temp_path:
+                with open(os.path.join(temp_path, manifest['filename']), 'a+') as fd:
+                    fd.write(manifest['content'])
 
-            with open(os.path.join(temp_path, manifest['filename']), 'a+') as fd:
-                fd.write(manifest['content'])
+                # mercator-go does not work if there is no package.json
+                if 'shrinkwrap' in manifest['filename'].lower():
+                    with open(os.path.join(temp_path, 'package.json'), 'w') as f:
+                        f.write(json.dumps({}))
 
-            # mercator-go does not work if there is no package.json
-            if 'shrinkwrap' in manifest['filename'].lower():
-                with open(os.path.join(temp_path, 'package.json'), 'w') as f:
-                    f.write(json.dumps({}))
+                # Create instance manually since stack analysis is not handled by dispatcher
+                subtask = MercatorTask.create_test_instance(task_name=self.task_name)
+                arguments['ecosystem'] = manifest['ecosystem']
+                out = subtask.run_mercator(arguments, temp_path, resolve_poms=False)
 
-            # TODO: this is a workaround since stack analysis is not handled by dispatcher, so we create instance manually for now
-            subtask = MercatorTask(None, None, None, None, None)
-            # since we're creating MercatorTask dynamically in code, we need to make sure
-            #  that it has storage; storage is assigned to tasks dynamically based on task_name
-            subtask.task_name = self.task_name
-            arguments['ecosystem'] = manifest['ecosystem']
-            out = subtask.run_mercator(arguments, temp_path)
-
-            if temp_path:
-                rmtree(temp_path, ignore_errors=True)
             if not out["details"]:
                 raise FatalTaskError("No metadata found processing manifest file '{}'"
                                      .format(manifest['filename']))
