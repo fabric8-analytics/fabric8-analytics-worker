@@ -23,16 +23,14 @@ sample output:
 """
 
 import os
-import tempfile
-import shutil
 
-from f8a_worker.enums import EcosystemBackend
-from f8a_worker.utils import TimedCommand
-from f8a_worker.data_normalizer import DataNormalizer
-from f8a_worker.schemas import SchemaRef
 from f8a_worker.base import BaseTask
+from f8a_worker.data_normalizer import DataNormalizer
+from f8a_worker.enums import EcosystemBackend
 from f8a_worker.object_cache import ObjectCache
 from f8a_worker.process import Git
+from f8a_worker.schemas import SchemaRef
+from f8a_worker.utils import TimedCommand, tempdir
 
 
 # TODO: we need to unify the output from different ecosystems
@@ -168,12 +166,11 @@ class MercatorTask(BaseTask):
     def run_mercator_on_git_repo(self, arguments):
         self._strict_assert(arguments.get('url'))
 
-        workdir = None
-        try:
-            workdir = tempfile.mkdtemp()
+        with tempdir() as workdir:
             repo_url = arguments.get('url')
             repo = Git.clone(repo_url, path=workdir, depth=str(1))
-            metadata = self.run_mercator(arguments, workdir, keep_path=True, outermost_only=False, timeout=900)
+            metadata = self.run_mercator(arguments, workdir,
+                                         keep_path=True, outermost_only=False, timeout=900)
             if metadata.get('status', None) != 'success':
                 self.log.error('Mercator failed on %s', repo_url)
                 return None
@@ -187,9 +184,6 @@ class MercatorTask(BaseTask):
                 detail['path'] = head + path
 
             return metadata
-        finally:
-            if workdir:
-                shutil.rmtree(workdir)
 
     def run_mercator(self, arguments, cache_path,
                      keep_path=False, outermost_only=True, timeout=300, resolve_poms=True):
