@@ -164,12 +164,14 @@ class TestSolver(object):
         deps = ['django == 1.9.10',
                 'pymongo >=3.0, <3.2.2',
                 'six~=1.7.1',
-                'requests===2.16.2']
+                'requests===2.16.2',
+                'click==0.*']
         out = solver.solve(deps)
         assert out == {'django': '1.9.10',
                        'pymongo': '3.2.1',
                        'six': '1.7.3',
-                       'requests': '2.16.2'}
+                       'requests': '2.16.2',
+                       'click': '0.7'}
 
     def test_rubygems_solver(self, rubygems):
         solver = get_ecosystem_solver(rubygems)

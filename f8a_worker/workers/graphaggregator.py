@@ -76,8 +76,8 @@ class GraphAggregatorTask(BaseTask):
             manifest_descriptor = get_manifest_descriptor_by_filename(manifest['filename'])
             if 'external_request_id' in arguments:
                 manifest_dependencies = []
-                if manifest_descriptor.has_resolved_deps:  # npm-shrinkwrap.json, pom.xml, requirements.txt
-                    if "_dependency_tree_lock" in out["details"][0]:  # npm-shrinkwrap.json, requirements.txt
+                if manifest_descriptor.has_resolved_deps:  # npm-shrinkwrap.json, pom.xml
+                    if "_dependency_tree_lock" in out["details"][0]:  # npm-shrinkwrap.json
                         if 'dependencies' in out['details'][0]["_dependency_tree_lock"]:
                             manifest_dependencies = out["details"][0]["_dependency_tree_lock"].get("dependencies", [])
                     else:  # pom.xml
@@ -90,11 +90,11 @@ class GraphAggregatorTask(BaseTask):
                                 _flatten(dep['dependencies'], collect)
                         resolved_deps = []
                         _flatten(manifest_dependencies, resolved_deps)
-                    else:  # pom.xml, requirements.txt
+                    else:  # pom.xml
                         resolved_deps =\
                             [{'package': x.split(' ')[0], 'version': x.split(' ')[1]}
                              for x in manifest_dependencies]
-                else:  # package.json
+                else:  # package.json, requirements.txt
                     resolved_deps = self._handle_external_deps(
                         self.storage.get_ecosystem(arguments['ecosystem']),
                         out["details"][0]["dependencies"])

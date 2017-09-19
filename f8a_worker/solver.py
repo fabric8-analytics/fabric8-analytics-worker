@@ -423,6 +423,17 @@ class PypiDependencyParser(DependencyParser):
                 else:
                     raise ValueError('%r must not be used with %r' % (spec.operator, spec.version))
                 return [('>=', spec.version), ('<', '.'.join(version))]
+            # Trailing .* is permitted per
+            # https://www.python.org/dev/peps/pep-0440/#version-matching
+            elif spec.operator == '==' and spec.version.endswith('.*'):
+                try:
+                    result = check_output(['/usr/bin/semver-ranger', spec.version],
+                                          universal_newlines=True).strip()
+                    gte, lt = result.split()
+                    return [('>=', gte.lstrip('>=')), ('<', lt.lstrip('<'))]
+                except ValueError:
+                    logger.info("couldn't resolve ==%s", spec.version)
+                    return spec.operator, spec.version
             # https://www.python.org/dev/peps/pep-0440/#arbitrary-equality
             # Use of this operator is heavily discouraged, so just convert it to 'Version matching'
             elif spec.operator == '===':
