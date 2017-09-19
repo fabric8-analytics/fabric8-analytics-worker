@@ -679,3 +679,11 @@ def normalize_package_name(ecosystem, name):
         # go package name is the host+path part of a URL, thus it can be URL encoded
         normalized_name = unquote(name)
     return normalized_name
+
+
+def get_user_email(user_profile):
+    default_email = 'bayesian@redhat.com'
+    if user_profile is not None:
+        return user_profile.get('email', default_email)
+    else:
+        return default_email
