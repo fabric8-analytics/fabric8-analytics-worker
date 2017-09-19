@@ -14,16 +14,11 @@ GREMLIN_SERVER_URL_REST = "http://{host}:{port}".format(
                            port=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_PORT", "8182"))
 
 
-class GETS3:
-    @staticmethod
-    def storage():
-        return StoragePool.get_connected_storage('S3Data'), StoragePool.get_connected_storage('S3PackageData')
-
-
 def read_json_file(filename, bucket_type):
     """Read JSON file from the data source"""
 
-    s3, s3_pkg = GETS3.storage()
+    s3 = StoragePool.get_connected_storage('S3Data')
+    s3_pkg = StoragePool.get_connected_storage('S3PackageData')
     obj = {}
     if bucket_type == "version":
         obj = s3.retrieve_dict(filename)
@@ -134,7 +129,8 @@ def _import_keys_from_s3_http(epv_list):
 def import_epv_from_s3_http(list_epv, select_doc=None):
 
     try:
-        s3, s3_pkg = GETS3.storage()
+        s3 = StoragePool.get_connected_storage('S3Data')
+        s3_pkg = StoragePool.get_connected_storage('S3PackageData')
         # Collect relevant files from data-source and group them by package-version.
         list_keys = []
         for epv in list_epv:
