@@ -70,7 +70,8 @@ class GraphPopulator(object):
             cm_num_files = str(input_json.get('analyses').get('code_metrics').get('summary', {})
                                .get('total_files', -1))
             prp_version += "ver.property('cm_num_files'," + cls.str_value_cleaner(cm_num_files) + ");" \
-                           "ver.property('cm_avg_cyclomatic_complexity'," + cls.str_value_cleaner(cm_avg_cyclomatic_complexity) + ");" \
+                           "ver.property('cm_avg_cyclomatic_complexity'," \
+                           + cls.str_value_cleaner(cm_avg_cyclomatic_complexity) + ");" \
                            "ver.property('cm_loc'," + cls.str_value_cleaner(str(cm_loc)) + ");"
 
         # Get downstream details
@@ -104,8 +105,8 @@ class GraphPopulator(object):
                     # string with comma separated license names
                     declared_licenses = details[0]['declared_license'].split(',')
 
-                prp_version += " ".join(map(lambda x: "ver.property('declared_licenses', '" + cls.str_value_cleaner(x) \
-                                                      + "');", declared_licenses))
+                prp_version += " ".join(map(lambda x: "ver.property('declared_licenses', '" +
+                                                      cls.str_value_cleaner(x) + "');", declared_licenses))
                 # Create License Node and edge from EPV
                 for lic in declared_licenses:
                     prp_version += "lic = g.V().has('lname','" + lic + "').tryNext()." \
@@ -147,14 +148,22 @@ class GraphPopulator(object):
             gh_open_issues_count = str(gh_details.get('open_issues_count', -1))
             gh_subscribers_count = str(gh_details.get('subscribers_count', -1))
 
-            prp_package += "pkg.property('gh_prs_last_year_opened', " + cls.str_value_cleaner(gh_prs_last_year_opened) + ");" \
-                           "pkg.property('gh_prs_last_month_opened', " + cls.str_value_cleaner(gh_prs_last_month_opened) + ");" \
-                           "pkg.property('gh_prs_last_year_closed', " + cls.str_value_cleaner(gh_prs_last_year_closed) + ");" \
-                           "pkg.property('gh_prs_last_month_closed', " + cls.str_value_cleaner(gh_prs_last_month_closed) + ");" \
-                           "pkg.property('gh_issues_last_year_opened', " + cls.str_value_cleaner(gh_issues_last_year_opened) + ");" \
-                           "pkg.property('gh_issues_last_month_opened', " + cls.str_value_cleaner(gh_issues_last_month_opened) + ");" \
-                           "pkg.property('gh_issues_last_year_closed', " + cls.str_value_cleaner(gh_issues_last_year_closed) + ");" \
-                           "pkg.property('gh_issues_last_month_closed', " + cls.str_value_cleaner(gh_issues_last_month_closed) + ");" \
+            prp_package += "pkg.property('gh_prs_last_year_opened', " \
+                           + cls.str_value_cleaner(gh_prs_last_year_opened) + ");" \
+                           "pkg.property('gh_prs_last_month_opened', " \
+                           + cls.str_value_cleaner(gh_prs_last_month_opened) + ");" \
+                           "pkg.property('gh_prs_last_year_closed', " \
+                           + cls.str_value_cleaner(gh_prs_last_year_closed) + ");" \
+                           "pkg.property('gh_prs_last_month_closed', " \
+                           + cls.str_value_cleaner(gh_prs_last_month_closed) + ");" \
+                           "pkg.property('gh_issues_last_year_opened', " \
+                           + cls.str_value_cleaner(gh_issues_last_year_opened) + ");" \
+                           "pkg.property('gh_issues_last_month_opened', " \
+                           + cls.str_value_cleaner(gh_issues_last_month_opened) + ");" \
+                           "pkg.property('gh_issues_last_year_closed', " \
+                           + cls.str_value_cleaner(gh_issues_last_year_closed) + ");" \
+                           "pkg.property('gh_issues_last_month_closed', " \
+                           + cls.str_value_cleaner(gh_issues_last_month_closed) + ");" \
                            "pkg.property('gh_forks', " + cls.str_value_cleaner(gh_forks) + ");" \
                            "pkg.property('gh_stargazers', " + cls.str_value_cleaner(gh_stargazers) + ");" \
                            "pkg.property('gh_open_issues_count', " + cls.str_value_cleaner(gh_open_issues_count) + ");" \
@@ -191,10 +200,14 @@ class GraphPopulator(object):
                                       .get('dependent_repositories', {}).get('top', {}).items():
                 prp_package += "pkg.property('libio_usedby', '" + key + ":" + val + "');"
 
-            prp_package += "pkg.property('libio_dependents_projects', '" + cls.str_value_cleaner(libio_dependents_projects) + "');" \
-                           "pkg.property('libio_dependents_repos', '" + cls.str_value_cleaner(libio_dependents_repos) + "');" \
-                           "pkg.property('libio_total_releases', '" + cls.str_value_cleaner(libio_total_releases) + "');" \
-                           "pkg.property('libio_latest_version', '" + cls.str_value_cleaner(libio_latest_version) + "');"
+            prp_package += "pkg.property('libio_dependents_projects', '" \
+                           + cls.str_value_cleaner(libio_dependents_projects) + "');" \
+                           "pkg.property('libio_dependents_repos', '" \
+                           + cls.str_value_cleaner(libio_dependents_repos) + "');" \
+                           "pkg.property('libio_total_releases', '" \
+                           + cls.str_value_cleaner(libio_total_releases) + "');" \
+                           "pkg.property('libio_latest_version', '" \
+                           + cls.str_value_cleaner(libio_latest_version) + "');"
 
             # Update EPV Github Release Date based on libraries_io data
             try:
