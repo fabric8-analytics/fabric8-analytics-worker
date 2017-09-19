@@ -17,8 +17,8 @@ objects:
     selector:
       service: bayesian-worker-${WORKER_ADMINISTRATION_REGION}${WORKER_NAME_SUFFIX}
     strategy:
-      type: Rolling
-      rollingParams:
+      type: Recreate
+      recreateParams:
         pre:
           failurePolicy: Retry
           execNewPod:
