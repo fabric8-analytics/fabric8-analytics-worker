@@ -4,14 +4,11 @@ import logging
 import json
 import traceback
 from f8a_worker.workers.graph_populator import GraphPopulator
+from f8a_worker.storages.graph_data_base import GraphDataBase
 from selinon import StoragePool
 
 logger = logging.getLogger(__name__)
-
-# Get Variable Parameters from Environment
-GREMLIN_SERVER_URL_REST = "http://{host}:{port}".format(
-                           host=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_HOST", "localhost"),
-                           port=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_PORT", "8182"))
+gdb = GraphDataBase()
 
 
 def read_json_file(filename, bucket_type):
@@ -100,8 +97,8 @@ def _import_keys_from_s3_http(epv_list):
                             'version': obj.get('version')
                         }
                     }
-                    response = requests.post(GREMLIN_SERVER_URL_REST, json=payload, timeout=30)
-                    resp = response.json()
+                    # Store the properties in Graph
+                    status, resp = gdb.store(payload=payload, timeout=30)
 
                     if 'status' in resp and resp['status']['code'] == 200:
                         count_imported_EPVs += 1

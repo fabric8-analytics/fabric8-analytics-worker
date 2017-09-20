@@ -2,29 +2,13 @@ import logging
 import re
 import time
 from datetime import datetime
+from f8a_worker.storages.graph_data_base import GraphDataBase
 
 logger = logging.getLogger(__name__)
-
-# Compile patterns to clean a string (used for safety against GraphQL injection attack)
-danger_word_list = ["drop\(\)", "V\(\)", "count\(\)"]
-remove = '|'.join(danger_word_list)
-pattern = re.compile(r'(' + remove + ')', re.IGNORECASE)
-pattern_to_save = '[^\w\*\.Xx\-\>\=\<\~\^\|\/\:]'
-pattern_n2_remove = re.compile(pattern_to_save)
-
+gdb = GraphDataBase()
 
 class GraphPopulator(object):
-    @classmethod
-    def str_value_cleaner(cls, safe_string):
-        """
-        Clean up the safe_string to remove suspicious words,
-        and special characters.
-        """
-        result = ''
-        if isinstance(safe_string, str):  # can raise an exception as well
-            temp_str = pattern.sub('', safe_string)
-            result = pattern_n2_remove.sub('', temp_str)
-        return result
+
 
     @classmethod
     def construct_version_query(cls, input_json):
@@ -32,7 +16,7 @@ class GraphPopulator(object):
         try:
             if len(input_json.get('analyses', {}).get('metadata', {}).get('details')) > 0:
                 description = input_json.get('analyses').get('metadata').get('details')[0].get('description', '')
-                description = cls.str_value_cleaner(description).replace("'", "\\'")
+                description = gdb.str_value_cleaner(description).replace("'", "\\'")
         except:
             # we pass and move forward without description
             pass
@@ -69,29 +53,29 @@ class GraphPopulator(object):
             cm_loc = str(input_json.get('analyses').get('code_metrics').get('summary', {}).get('total_lines', -1))
             cm_num_files = str(input_json.get('analyses').get('code_metrics').get('summary', {})
                                .get('total_files', -1))
-            prp_version += "ver.property('cm_num_files'," + cls.str_value_cleaner(cm_num_files) + ");" \
+            prp_version += "ver.property('cm_num_files'," + gdb.str_value_cleaner(cm_num_files) + ");" \
                            "ver.property('cm_avg_cyclomatic_complexity'," \
-                           + cls.str_value_cleaner(cm_avg_cyclomatic_complexity) + ");" \
-                           "ver.property('cm_loc'," + cls.str_value_cleaner(str(cm_loc)) + ");"
+                           + gdb.str_value_cleaner(cm_avg_cyclomatic_complexity) + ");" \
+                           "ver.property('cm_loc'," + gdb.str_value_cleaner(str(cm_loc)) + ");"
 
         # Get downstream details
 
         if len(input_json.get('analyses', {}).get('redhat_downstream', {})
                .get('summary', {}).get('all_rhsm_product_names', [])) > 0:
             shipped_as_downstream = 'true'
-            prp_version += "ver.property('shipped_as_downstream'," + cls.str_value_cleaner(shipped_as_downstream) + ");"
+            prp_version += "ver.property('shipped_as_downstream'," + gdb.str_value_cleaner(shipped_as_downstream) + ");"
 
         # Add license details
         if 'source_licenses' in input_json.get('analyses', {}):
             licenses = input_json.get('analyses').get('source_licenses').get('summary', {}).get('sure_licenses', [])
-            prp_version += " ".join(map(lambda x: "ver.property('licenses', '" + cls.str_value_cleaner(x) + "');", licenses))
+            prp_version += " ".join(map(lambda x: "ver.property('licenses', '" + gdb.str_value_cleaner(x) + "');", licenses))
 
         # Add CVE property if it exists
         if 'security_issues' in input_json.get('analyses', {}):
             cves = []
             for cve in input_json.get('analyses', {}).get('security_issues', {}).get('details', []):
                 cves.append(cve.get('id') + ":" + str(cve.get('cvss', {}).get('score')))
-            prp_version += " ".join(map(lambda x: "ver.property('cve_ids', '" + cls.str_value_cleaner(x) + "');", cves))
+            prp_version += " ".join(map(lambda x: "ver.property('cve_ids', '" + gdb.str_value_cleaner(x) + "');", cves))
 
         # Get Metadata Details
         if 'metadata' in input_json.get('analyses', {}):
@@ -106,7 +90,7 @@ class GraphPopulator(object):
                     declared_licenses = details[0]['declared_license'].split(',')
 
                 prp_version += " ".join(map(lambda x: "ver.property('declared_licenses', '" +
-                                                      cls.str_value_cleaner(x) + "');", declared_licenses))
+                                                      gdb.str_value_cleaner(x) + "');", declared_licenses))
                 # Create License Node and edge from EPV
                 for lic in declared_licenses:
                     prp_version += "lic = g.V().has('lname','" + lic + "').tryNext()." \
@@ -149,30 +133,30 @@ class GraphPopulator(object):
             gh_subscribers_count = str(gh_details.get('subscribers_count', -1))
 
             prp_package += "pkg.property('gh_prs_last_year_opened', " \
-                           + cls.str_value_cleaner(gh_prs_last_year_opened) + ");" \
+                           + gdb.str_value_cleaner(gh_prs_last_year_opened) + ");" \
                            "pkg.property('gh_prs_last_month_opened', " \
-                           + cls.str_value_cleaner(gh_prs_last_month_opened) + ");" \
+                           + gdb.str_value_cleaner(gh_prs_last_month_opened) + ");" \
                            "pkg.property('gh_prs_last_year_closed', " \
-                           + cls.str_value_cleaner(gh_prs_last_year_closed) + ");" \
+                           + gdb.str_value_cleaner(gh_prs_last_year_closed) + ");" \
                            "pkg.property('gh_prs_last_month_closed', " \
-                           + cls.str_value_cleaner(gh_prs_last_month_closed) + ");" \
+                           + gdb.str_value_cleaner(gh_prs_last_month_closed) + ");" \
                            "pkg.property('gh_issues_last_year_opened', " \
-                           + cls.str_value_cleaner(gh_issues_last_year_opened) + ");" \
+                           + gdb.str_value_cleaner(gh_issues_last_year_opened) + ");" \
                            "pkg.property('gh_issues_last_month_opened', " \
-                           + cls.str_value_cleaner(gh_issues_last_month_opened) + ");" \
+                           + gdb.str_value_cleaner(gh_issues_last_month_opened) + ");" \
                            "pkg.property('gh_issues_last_year_closed', " \
-                           + cls.str_value_cleaner(gh_issues_last_year_closed) + ");" \
+                           + gdb.str_value_cleaner(gh_issues_last_year_closed) + ");" \
                            "pkg.property('gh_issues_last_month_closed', " \
-                           + cls.str_value_cleaner(gh_issues_last_month_closed) + ");" \
-                           "pkg.property('gh_forks', " + cls.str_value_cleaner(gh_forks) + ");" \
-                           "pkg.property('gh_stargazers', " + cls.str_value_cleaner(gh_stargazers) + ");" \
-                           "pkg.property('gh_open_issues_count', " + cls.str_value_cleaner(gh_open_issues_count) + ");" \
-                           "pkg.property('gh_subscribers_count', " + cls.str_value_cleaner(gh_subscribers_count) + ");"
+                           + gdb.str_value_cleaner(gh_issues_last_month_closed) + ");" \
+                           "pkg.property('gh_forks', " + gdb.str_value_cleaner(gh_forks) + ");" \
+                           "pkg.property('gh_stargazers', " + gdb.str_value_cleaner(gh_stargazers) + ");" \
+                           "pkg.property('gh_open_issues_count', " + gdb.str_value_cleaner(gh_open_issues_count) + ");" \
+                           "pkg.property('gh_subscribers_count', " + gdb.str_value_cleaner(gh_subscribers_count) + ");"
 
         # Add tokens for a package
         for tkn in pkg_name_tokens:
             if tkn:
-                str_package += "pkg.property('tokens', '" + cls.str_value_cleaner(tkn) + "');"
+                str_package += "pkg.property('tokens', '" + gdb.str_value_cleaner(tkn) + "');"
 
         # Get Libraries.io data
         if 'libraries_io' in input_json.get('analyses', {}):
@@ -201,19 +185,19 @@ class GraphPopulator(object):
                 prp_package += "pkg.property('libio_usedby', '" + key + ":" + val + "');"
 
             prp_package += "pkg.property('libio_dependents_projects', '" \
-                           + cls.str_value_cleaner(libio_dependents_projects) + "');" \
+                           + gdb.str_value_cleaner(libio_dependents_projects) + "');" \
                            "pkg.property('libio_dependents_repos', '" \
-                           + cls.str_value_cleaner(libio_dependents_repos) + "');" \
+                           + gdb.str_value_cleaner(libio_dependents_repos) + "');" \
                            "pkg.property('libio_total_releases', '" \
-                           + cls.str_value_cleaner(libio_total_releases) + "');" \
+                           + gdb.str_value_cleaner(libio_total_releases) + "');" \
                            "pkg.property('libio_latest_version', '" \
-                           + cls.str_value_cleaner(libio_latest_version) + "');"
+                           + gdb.str_value_cleaner(libio_latest_version) + "');"
 
             # Update EPV Github Release Date based on libraries_io data
             try:
                 if libio_latest_release:
                     prp_package += "g.V().has('pecosystem', ecosystem).has('pname', pkg_name)." \
-                                   "has('version','" + cls.str_value_cleaner(libio_latest_version) + "')." \
+                                   "has('version','" + gdb.str_value_cleaner(libio_latest_version) + "')." \
                                    "property('gh_release_date'," + str(time.mktime(datetime.strptime(libio_latest_release,
                                                                        '%b %d, %Y').timetuple())) + ");"
                 for version, release in input_json.get('analyses').get('libraries_io').get('details', {}) \
