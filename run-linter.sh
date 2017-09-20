@@ -1,4 +1,4 @@
-directories="alembic cucoslib tests"
+directories="alembic f8a_worker tests"
 separate_files="setup.py"
 fail=0
 
