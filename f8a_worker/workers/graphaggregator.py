@@ -15,12 +15,16 @@ class GraphAggregatorTask(BaseTask):
     _analysis_name = 'graph_aggregator'
     schema_ref = None
 
-    def _handle_external_deps(self, ecosystem, deps):
+    @staticmethod
+    def _handle_external_deps(ecosystem, deps):
         """Resolve external dependency specifications"""
         if not ecosystem or not deps:
             return []
         solver = get_ecosystem_solver(ecosystem)
-        versions = solver.solve(deps)
+        try:
+            versions = solver.solve(deps)
+        except Exception as exc:
+            raise FatalTaskError("Dependencies could not be resolved: '{}'" .format(deps)) from exc
         return [{"package": k, "version": v} for k, v in versions.items()]
 
     def execute(self, arguments):
@@ -30,8 +34,8 @@ class GraphAggregatorTask(BaseTask):
         db = self.storage.session
         try:
             results = db.query(StackAnalysisRequest)\
-                            .filter(StackAnalysisRequest.id == arguments.get('external_request_id'))\
-                            .first()
+                        .filter(StackAnalysisRequest.id == arguments.get('external_request_id'))\
+                        .first()
         except SQLAlchemyError:
             db.rollback()
             raise
@@ -63,7 +67,7 @@ class GraphAggregatorTask(BaseTask):
                 raise FatalTaskError("No metadata found processing manifest file '{}'"
                                      .format(manifest['filename']))
             
-            if not 'dependencies' in out['details'][0] and out.get('status', None) == 'success':
+            if 'dependencies' not in out['details'][0] and out.get('status', None) == 'success':
                 raise FatalTaskError("Dependencies could not be resolved from manifest file '{}'"
                                      .format(manifest['filename']))
 
