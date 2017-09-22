@@ -98,6 +98,62 @@ def extract_component_details(component):
     return component_summary
 
 
+def _extract_conflict_packages(license_service_output):
+    license_conflict_packages = []
+    if not license_service_output:
+        return license_conflict_packages
+
+    conflict_packages = license_service_output.get('conflict_packages', [])
+    for conflict_pair in conflict_packages:
+        list_pkgs = list(conflict_pair.keys())
+        assert len(list_pkgs) == 2
+        d = {
+            "package1": list_pkgs[0],
+            "license1": conflict_pair[list_pkgs[0]],
+            "package2": list_pkgs[1],
+            "license2": conflict_pair[list_pkgs[1]]
+        }
+        license_conflict_packages.append(d)
+
+    return license_conflict_packages
+
+
+def _extract_unknown_licenses(license_service_output):
+    unknown_licenses = []
+    if not license_service_output:
+        return unknown_licenses
+
+    if license_service_output.get('status', '') == 'Unknown':
+        list_components = license_service_output.get('packages', [])
+        for comp in list_components:
+            license_analysis = comp.get('license_analysis', {})
+            if license_analysis.get('status', '') == 'Unknown':
+                pkg = comp.get('package', 'Unknown')
+                comp_unknown_licenses = license_analysis.get('unknown_licenses', [])
+                for lic in comp_unknown_licenses:
+                    unknown_licenses.append({
+                        'package': pkg,
+                        'license': lic
+                    })
+
+    return unknown_licenses
+
+
+def _extract_license_outliers(license_service_output):
+    outliers = []
+    if not license_service_output:
+        return outliers
+
+    outlier_packages = license_service_output.get('outlier_packages', {})
+    for pkg in outlier_packages.keys():
+        outliers.append({
+            'package': pkg,
+            'license': outlier_packages.get(pkg, 'Unknown')
+        })
+
+    return outliers
+
+
 def perform_license_analysis(license_score_list, dependencies):
     license_url = LICENSE_SCORING_URL_REST + "/api/v1/stack_license"
 
@@ -112,31 +168,36 @@ def perform_license_analysis(license_score_list, dependencies):
     try:
         license_req = get_session_retry().post(license_url, data=json.dumps(payload))
         resp = license_req.json()
-    except Exception:
-        output = {
-            "status": stack_license_status,
-            "f8a_stack_licenses": stack_license,
-            "conflict_packages": license_conflict_packages
-        }
-        return output, dependencies
+    except:
+        flag_stack_license_exception = True
 
-    list_components = resp.get('packages', [])
-    for comp in list_components:  # output from license analysis
-        for dep in dependencies:  # the known dependencies
-            if dep.get('name', '') == comp.get('package', '') and \
-                            dep.get('version', '') == comp.get('version', ''):
-                dep['license_analysis'] = comp.get('license_analysis', {})
+    stack_license = []
+    stack_license_status = None
+    unknown_licenses = []
+    license_conflict_packages = []
+    license_outliers = []
+    if not flag_stack_license_exception:
+        list_components = resp.get('packages', [])
+        for comp in list_components:  # output from license analysis
+            for dep in dependencies:  # the known dependencies
+                if dep.get('name', '') == comp.get('package', '') and \
+                                dep.get('version', '') == comp.get('version', ''):
+                    dep['license_analysis'] = comp.get('license_analysis', {})
 
-    _stack_license = resp.get('stack_license', None)
-    if _stack_license is not None:
-        stack_license = [_stack_license]
-    stack_license_status = resp.get('status', None)
-    license_conflict_packages = {}
+        _stack_license = resp.get('stack_license', None)
+        if _stack_license is not None:
+            stack_license = [_stack_license]
+        stack_license_status = resp.get('status', None)
+        unknown_licenses = _extract_unknown_licenses(resp)
+        license_conflict_packages = _extract_conflict_packages(resp)
+        license_outliers = _extract_license_outliers(resp)
 
     output = {
         "status": stack_license_status,
         "f8a_stack_licenses": stack_license,
-        "conflict_packages": license_conflict_packages
+        "unknown_licenses": unknown_licenses,
+        "conflict_packages": license_conflict_packages,
+        "outlier_packages": license_outliers
     }
     return output, dependencies
 
