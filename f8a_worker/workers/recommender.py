@@ -1,5 +1,7 @@
 from __future__ import division
 import json
+import traceback
+
 import requests
 import os
 from collections import Counter, defaultdict
@@ -8,10 +10,11 @@ import logging
 import semantic_version as sv
 
 from f8a_worker.graphutils import (GREMLIN_SERVER_URL_REST, create_package_dict,
-                                   select_latest_version)
+                                   select_latest_version, LICENSE_SCORING_URL_REST)
 from f8a_worker.base import BaseTask
 from f8a_worker.utils import get_session_retry
-from f8a_worker.workers.stackaggregator_v2 import perform_license_analysis
+from f8a_worker.workers.stackaggregator_v2 import perform_license_analysis, get_dependency_data, aggregate_stack_data, \
+    extract_user_stack_package_licenses
 
 
 danger_word_list = ["drop\(\)", "V\(\)", "count\(\)"]
@@ -640,11 +643,28 @@ class RecommendationTask(BaseTask):
             similarity_list.append(s_stack)
         return similarity_list
 
-def apply_license_filter(epv_list):
-    dependencies = []
-    licenses = []
-    license_score_list = []
-    for epv in epv_list:
+def invoke_license_analysis_service(user_stack_packages, alternate_packages, companion_packages):
+    license_url = LICENSE_SCORING_URL_REST + "/api/v1/stack_license"
+
+    payload = {
+        "packages": user_stack_packages,
+        "alternate_packages": alternate_packages,
+        "companion_packages": companion_packages
+    }
+
+    resp = {}
+    try:
+        license_req = get_session_retry().post(license_url, data=json.dumps(payload))
+        resp = license_req.json()
+    except:  # TODO customized exception
+        msg = traceback.format_exc()
+        _logger.error("Unexpected error happened while invoking license analysis!\n{}".format(msg))
+
+    return resp
+
+def apply_license_filter(user_stack_components, epv_list_alt, epv_list_com):
+    license_score_list_alt = []
+    for epv in epv_list_alt:
         name = epv.get('pkg', {}).get('name', [''])[0]
         version = epv.get('ver', {}).get('version', [''])[0]
         licenses = epv.get('ver', {}).get('version', {}).get('licenses', [])
@@ -654,24 +674,55 @@ def apply_license_filter(epv_list):
             'version': version,
             'licenses': licenses
         }
-        license_score_list.append(license_scoring_input)
+        license_score_list_alt.append(license_scoring_input)
 
-    # Call License Scoring to Get Stack License
-    license_analysis, dependencies = perform_license_analysis(license_score_list, dependencies)
-    conflicting_companions = []
-    if license_analysis['status'] == 'StackLicenseConflict':
-        conflict_packages = license_analysis.get('conflict_packages', {})
-        for conflict in conflict_packages:
-            for pkg in conflict.keys():
-                conflicting_companions.append(pkg)
-    conflicting_companions = list(set(conflicting_companions))
-
-    for epv in epv_list:
+    license_score_list_com = []
+    for epv in epv_list_com:
         name = epv.get('pkg', {}).get('name', [''])[0]
-        if name in conflicting_companions:
-            epv_list.remove(epv)
+        version = epv.get('ver', {}).get('version', [''])[0]
+        licenses = epv.get('ver', {}).get('version', {}).get('licenses', [])
 
-    return epv_list, conflicting_companions
+        license_scoring_input = {
+            'package': name,
+            'version': version,
+            'licenses': licenses
+        }
+        license_score_list_com.append(license_scoring_input)
+
+    # Call license scoring to find license filters
+    la_output = invoke_license_analysis_service(user_stack_components,
+                                                license_score_list_alt,
+                                                license_score_list_com)
+
+    conflict_packages_alt = []
+    conflict_packages_com = []
+    if la_output['status'] == 'Successful' and la_output['license_filter'] is not None:
+        license_filter = la_output.get('license_filter', {})
+        conflict_packages_alt = license_filter.get('alternate_packages', {}).get('conflict_packages', [])
+        conflict_packages_com = license_filter.get('companion_packages', {}).get('conflict_packages', [])
+
+    list_pkg_names_alt = []
+    for epv in epv_list_alt:
+        name = epv.get('pkg', {}).get('name', [''])[0]
+        if name in conflict_packages_alt:
+            list_pkg_names_alt.append(name)
+            epv_list_alt.remove(epv)
+
+    list_pkg_names_com = []
+    for epv in epv_list_com:
+        name = epv.get('pkg', {}).get('name', [''])[0]
+        if name in conflict_packages_com:
+            list_pkg_names_com.append(name)
+            epv_list_com.remove(epv)
+
+    output = {
+        'filtered_alt_packages_graph': epv_list_alt,
+        'filtered_list_pkg_names_alt': list_pkg_names_alt,
+        'filtered_comp_packages_graph': epv_list_com,
+        'filtered_list_pkg_names_com': list_pkg_names_com
+    }
+
+    return output
 
 
 class RecommendationV2Task(BaseTask):
@@ -775,23 +826,9 @@ class RecommendationV2Task(BaseTask):
                     filtered_comp_packages_graph, filtered_list = GraphDB().filter_versions(
                         comp_packages_graph, input_stack)
 
+                    filtered_companion_packages = set(companion_packages).difference(set(filtered_list))
                     _logger.info("Companion Packages Filtered for external_request_id {} {}"
-                                 .format(parguments.get('external_request_id', ''),
-                                         set(companion_packages).difference(set(filtered_list))))
-
-                    # Apply License Filters
-                    lic_filtered_companions, lic_filtered_list = apply_license_filter(filtered_comp_packages_graph, input_stack)
-
-                    _logger.info("Companion Packages further filtered (based on licenses) for external_request_id {} {}"
-                                 .format(parguments.get('external_request_id', ''),
-                                         set(companion_packages).difference(set(lic_filtered_list))))
-
-                    # Get Topics Added to Filtered Versions
-                    topics_comp_packages_graph = GraphDB().get_topics_for_comp(lic_filtered_companions,
-                                                                               pgm_result['companion_packages'])
-                    # Create Companion Block
-                    comp_packages = create_package_dict(topics_comp_packages_graph)
-                    recommendation['companion'] = comp_packages
+                                 .format(parguments.get('external_request_id', ''), filtered_companion_packages))
 
                     # Get the topmost alternate package for each input package
 
@@ -827,17 +864,45 @@ class RecommendationV2Task(BaseTask):
                     filtered_alt_packages_graph, filtered_list = GraphDB().filter_versions(
                         alt_packages_graph, input_stack)
 
+                    filtered_alternate_packages = set(alternate_packages).difference(set(filtered_list))
                     _logger.info("Alternate Packages Filtered for external_request_id {} {}"
-                                 .format(parguments.get('external_request_id', ''),
-                                         set(alternate_packages).difference(set(filtered_list))))
+                                 .format(parguments.get('external_request_id', ''), filtered_alternate_packages))
 
-                    # Get Topics Added to Filtered Versions
-                    topics_comp_packages_graph = GraphDB().get_topics_for_alt(
-                        filtered_alt_packages_graph,
-                        pgm_result['alternate_packages'])
+                    # apply license based filters
+                    list_user_stack_components = extract_user_stack_package_licenses(resolved, ecosystem)
+                    license_filter_output = apply_license_filter(list_user_stack_components,
+                                                                 filtered_alt_packages_graph,
+                                                                 filtered_comp_packages_graph)
 
-                    # Create Companion Dict
+                    lic_filtered_alt_packages_graph = license_filter_output['filtered_alt_packages_graph']
+                    lic_filtered_comp_packages_graph = license_filter_output['filtered_comp_packages_graph']
+                    lic_filtered_list_alt = license_filter_output['filtered_list_pkg_names_alt']
+                    lic_filtered_list_com = license_filter_output['filtered_list_pkg_names_com']
+
+                    if len(lic_filtered_list_alt) > 0:
+                        _logger.info("Alternate Packages filtered (based on licenses) for external_request_id {} {}"
+                                     .format(parguments.get('external_request_id', ''),
+                                             set(filtered_alternate_packages).difference(set(lic_filtered_list_alt))))
+
+                    if len(lic_filtered_list_com) > 0:
+                        _logger.info("Companion Packages filtered (based on licenses) for external_request_id {} {}"
+                                     .format(parguments.get('external_request_id', ''),
+                                             set(filtered_companion_packages).difference(set(lic_filtered_list_com))))
+
+                    # Get Topics Added to Filtered Packages
+                    topics_comp_packages_graph = GraphDB().get_topics_for_comp(lic_filtered_comp_packages_graph,
+                                                                               pgm_result['companion_packages'])
+                    # Create Companion Block
+                    comp_packages = create_package_dict(topics_comp_packages_graph)
+                    recommendation['companion'] = comp_packages
+
+                    # Get Topics Added to Filtered Packages
+                    topics_comp_packages_graph = GraphDB().get_topics_for_alt(lic_filtered_alt_packages_graph,
+                                                                              pgm_result['alternate_packages'])
+
+                    # Create Alternate Dict
                     alt_packages = create_package_dict(topics_comp_packages_graph, final_dict)
                     recommendation['alternate'] = alt_packages
+
             recommendations.append(recommendation)
         return {'recommendations': recommendations}
