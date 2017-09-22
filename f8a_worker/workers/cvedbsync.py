@@ -67,7 +67,7 @@ class CVEDBSyncTask(BaseTask):
         msg = "Components to be {prefix}scanned for vulnerabilities: {components}".\
             format(prefix="re-" if only_already_scanned else "",
                    components=to_scan)
-        self.log.debug(msg)
+        self.log.info(msg)
         return to_scan
 
     def execute(self, arguments):
@@ -78,7 +78,6 @@ class CVEDBSyncTask(BaseTask):
         """
         only_already_scanned = arguments.pop('only_already_scanned', True) if arguments else True
         ignore_modification_time = arguments.pop('ignore_modification_time', False) if arguments else False
-        self._strict_assert(not arguments)
 
         s3 = StoragePool.get_connected_storage('S3VulnDB')
 

@@ -23,6 +23,10 @@ class BookkeeperTask(BaseTask):
                       "'vertex_label','User','userid','" + email + "', 'company','" + company + "')}; g.V(user).as('u')"
 
             for epvs in resolved:
+                if epvs['package'] is None or epvs['version'] is None:
+                    self.log.warning("Either component name or component version is missing.")
+                    continue
+
                 # Create Version Node if it does not exist
                 qstring += ".coalesce(g.V().has('pecosystem','" + ecosystem + "')." \
                             "has('pname','" + epvs['package'] + "')." \
