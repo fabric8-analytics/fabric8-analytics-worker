@@ -33,4 +33,6 @@
                    key: 'recursive_limit'
                    value: 0
         - from: 'dependency_snapshot'
+	  to:    'github_manifest_details'	
+	- from:    'github_manifest_details'
           to: 'GitHubManifestMetadataResultCollector'
