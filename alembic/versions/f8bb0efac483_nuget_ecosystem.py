@@ -43,15 +43,23 @@ def downgrade():
 
     # There's no 'ALTER TYPE enum REMOVE VALUE'
     op.alter_column('package_gh_usage', 'ecosystem_backend',
-                    existing_type=postgresql.ENUM('none', 'npm', 'maven', 'pypi', 'rubygems', 'scm', 'crates', 'nuget', name='ecosystem_backend_enum'),
-                    type_=postgresql.ENUM('none', 'npm', 'maven', 'pypi', 'rubygems', 'scm', 'crates', name='ecosystem_backend_enum'),
+                    existing_type=postgresql.ENUM('none', 'npm', 'maven', 'pypi', 'rubygems',
+                                                  'scm', 'crates', 'nuget',
+                                                  name='ecosystem_backend_enum'),
+                    type_=postgresql.ENUM('none', 'npm', 'maven', 'pypi', 'rubygems', 'scm',
+                                          'crates', name='ecosystem_backend_enum'),
                     existing_nullable=True)
     op.alter_column('ecosystems', '_backend',
-                    existing_type=sa.Enum('none', 'npm', 'maven', 'pypi', 'rubygems', 'scm', 'crates', 'nuget', name='ecosystem_backend_enum'),
-                    type_=sa.Enum('none', 'npm', 'maven', 'pypi', 'rubygems', 'scm', 'crates', name='ecosystem_backend_enum'),
+                    existing_type=sa.Enum('none', 'npm', 'maven', 'pypi', 'rubygems', 'scm',
+                                          'crates', 'nuget', name='ecosystem_backend_enum'),
+                    type_=sa.Enum('none', 'npm', 'maven', 'pypi', 'rubygems', 'scm', 'crates',
+                                  name='ecosystem_backend_enum'),
                     existing_nullable=True)
     op.alter_column('component_gh_usage', 'ecosystem_backend',
-                    existing_type=postgresql.ENUM('none', 'npm', 'maven', 'pypi', 'rubygems', 'scm', 'crates', 'nuget', name='ecosystem_backend_enum'),
-                    type_=postgresql.ENUM('none', 'npm', 'maven', 'pypi', 'rubygems', 'scm', 'crates', name='ecosystem_backend_enum'),
+                    existing_type=postgresql.ENUM('none', 'npm', 'maven', 'pypi', 'rubygems',
+                                                  'scm', 'crates', 'nuget',
+                                                  name='ecosystem_backend_enum'),
+                    type_=postgresql.ENUM('none', 'npm', 'maven', 'pypi', 'rubygems', 'scm',
+                                          'crates', name='ecosystem_backend_enum'),
                     existing_nullable=True)
     # ### end Alembic commands ###
