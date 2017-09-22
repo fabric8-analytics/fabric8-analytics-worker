@@ -9,10 +9,13 @@ Output: TBD
 import json
 import datetime
 
+import logging
+
 from f8a_worker.base import BaseTask
 from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST, LICENSE_SCORING_URL_REST, select_latest_version
 from f8a_worker.utils import get_session_retry
 
+_logger = logging.getLogger(__name__)
 
 def extract_component_details(component):
     github_details = {
@@ -129,6 +132,23 @@ def perform_license_analysis(license_score_list, dependencies):
     }
     return output, dependencies
 
+def extract_user_stack_package_licenses(resolved, ecosystem):
+    user_stack = get_dependency_data(resolved, ecosystem)
+    list_package_licenses = []
+    if user_stack is not None:
+        for component in user_stack.get('result', []):
+            data = component.get("data", None)
+            if data:
+                component_data = extract_component_details(data[0])
+                license_scoring_input = {
+                    'package': component_data['name'],
+                    'version': component_data['version'],
+                    'licenses': component_data['licenses']
+                }
+                list_package_licenses.append(license_scoring_input)
+
+    return list_package_licenses
+
 def aggregate_stack_data(stack, manifest_file, ecosystem, deps, manifest_file_path):
     dependencies = []
     licenses = []
@@ -172,39 +192,38 @@ def aggregate_stack_data(stack, manifest_file, ecosystem, deps, manifest_file_pa
     }
     return data
 
+def get_dependency_data(resolved, ecosystem):
+    result = []
+    for elem in resolved:
+        qstring = "g.V().has('pecosystem','"+ecosystem+"').has('pname','"+elem["package"]+"')." \
+                  "has('version','"+elem["version"]+"')." \
+                  "as('version').in('has_version').as('package').select('version','package').by(valueMap());"
+        payload = {'gremlin': qstring}
+
+        try:
+            graph_req = get_session_retry().post(GREMLIN_SERVER_URL_REST, data=json.dumps(payload))
+
+            if graph_req.status_code == 200:
+                graph_resp = graph_req.json()
+                if 'result' not in graph_resp:
+                    continue
+                if len(graph_resp['result']['data']) == 0:
+                    continue
+
+                result.append(graph_resp["result"])
+            else:
+                _logger.error("Failed retrieving dependency data.")
+                continue
+        except:
+            _logger.error("Error retrieving dependency data.")
+            continue
+
+    return {"result": result}
+
 
 class StackAggregatorV2Task(BaseTask):
     """ Aggregates stack data from components """
     _analysis_name = 'stack_aggregator_v2'
-
-    def _get_dependency_data(self, resolved, ecosystem):
-        # Hardcoded ecosystem
-        result = []
-        for elem in resolved:
-            qstring = "g.V().has('pecosystem','"+ecosystem+"').has('pname','"+elem["package"]+"')." \
-                      "has('version','"+elem["version"]+"')." \
-                      "as('version').in('has_version').as('package').select('version','package').by(valueMap());"
-            payload = {'gremlin': qstring}
-
-            try:
-                graph_req = get_session_retry().post(GREMLIN_SERVER_URL_REST, data=json.dumps(payload))
-
-                if graph_req.status_code == 200:
-                    graph_resp = graph_req.json()
-                    if 'result' not in graph_resp:
-                        continue
-                    if len(graph_resp['result']['data']) == 0:
-                        continue
-
-                    result.append(graph_resp["result"])
-                else:
-                    self.log.error("Failed retrieving dependency data.")
-                    continue
-            except:
-                self.log.error("Error retrieving dependency data.")
-                continue
-
-        return {"result": result}
 
     def execute(self, arguments=None):
         finished = []
@@ -217,7 +236,7 @@ class StackAggregatorV2Task(BaseTask):
             manifest = result['details'][0]['manifest_file']
             manifest_file_path = result['details'][0]['manifest_file_path']
 
-            finished = self._get_dependency_data(resolved, ecosystem)
+            finished = get_dependency_data(resolved, ecosystem)
             if finished is not None:
                 stack_data.append(aggregate_stack_data(finished, manifest, ecosystem.lower(), resolved, manifest_file_path))
 
