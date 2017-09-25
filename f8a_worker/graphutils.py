@@ -19,10 +19,9 @@ def get_stack_usage_data_graph(components):
     components_with_usage_data = 0
     total_dependents_count = 0
     rh_distributed_comp_count = 0
-    usage_threshold = 0
     try:
         usage_threshold = int(os.getenv("LOW_USAGE_THRESHOLD", "5000"))
-    except:
+    except (TypeError, ValueError):
         # low usage threshold is set to default 5000 as the env variable value is non numeric
         usage_threshold = 5000
     low_usage_component_count = 0
@@ -54,11 +53,10 @@ def get_stack_popularity_data_graph(components):
     components_with_forks = 0
     total_stargazers = 0
     total_forks = 0
-    popularity_threshold = 0  # based on stargazers count as of now
     less_popular_components = 0
     try:
         popularity_threshold = int(os.getenv("LOW_POPULARITY_THRESHOLD", "5000"))
-    except:
+    except (TypeError, ValueError):
         # low usage threshold is set to default 5000 as the env variable value is non numeric
         popularity_threshold = 5000
 
@@ -201,7 +199,7 @@ def get_osio_user_count(ecosystem, name, version):
         response = get_session_retry().post(GREMLIN_SERVER_URL_REST, data=json.dumps(payload))
         json_response = response.json()
         return json_response['result']['data'][0]
-    except:
+    except Exception:
         logger.error("Failed retrieving Gremlin data.")
         return -1
 

@@ -24,14 +24,13 @@ class StackAggregatorTask(BaseTask):
     """ Aggregates stack data from components """
     _analysis_name = 'stack_aggregator'
 
-    def _get_stack_usage_data(self,components):
+    def _get_stack_usage_data(self, components):
         components_with_usage_data = 0
         total_dependents_count = 0
         rh_distributed_comp_count = 0
-        usage_threshold = 0
         try:
             usage_threshold = int(os.getenv("LOW_USAGE_THRESHOLD", "5000"))
-        except:
+        except (TypeError, ValueError):
             # low usage threshold is set to default 5000 as the env variable value is non numeric
             usage_threshold = 5000
 
@@ -40,17 +39,17 @@ class StackAggregatorTask(BaseTask):
         for dep in components:
             dependents_count = 0
             try:
-                dependents_count = int(dep.get("package_dependents_count",-1))
-            except:
+                dependents_count = int(dep.get("package_dependents_count", -1))
+            except (TypeError, ValueError):
                 self.log.debug("Unexpected non-numeric value received for package_dependents_count." )
             else:
-                if dependents_count > 0 :
+                if dependents_count > 0:
                     if dependents_count < usage_threshold:
                         low_usage_component_count += 1
-                    total_dependents_count +=  dependents_count
+                    total_dependents_count += dependents_count
                     components_with_usage_data += 1
             finally:
-                rh_distros = dep.get("redhat_usage",{}).get("published_in",[])
+                rh_distros = dep.get("redhat_usage", {}).get("published_in", [])
                 if len(rh_distros) > 0:
                     rh_distributed_comp_count += 1
 
@@ -71,11 +70,10 @@ class StackAggregatorTask(BaseTask):
         components_with_forks = 0
         total_stargazers = 0
         total_forks = 0
-        popularity_threshold = 0 #based on stargazers count as of now
         less_popular_components = 0
         try:
             popularity_threshold = int(os.getenv("LOW_POPULARITY_THRESHOLD", "5000"))
-        except:
+        except (TypeError, ValueError):
             # low usage threshold is set to default 5000 as the env variable value is non numeric
             popularity_threshold = 5000
 
@@ -85,17 +83,17 @@ class StackAggregatorTask(BaseTask):
                 try:
                     forks_count = int(gh_data.get("forks_count", -1))
                     stargazers_count = int(gh_data.get("stargazers_count", -1))
-                    if forks_count > 0:
-                        total_forks += forks_count
-                        components_with_forks += 1
-
-                    if stargazers_count > 0:
-                        total_stargazers += stargazers_count
-                        components_with_stargazers += 1
-                        if stargazers_count < popularity_threshold:
-                            less_popular_components += 1
-                except:
+                except (TypeError, ValueError):
                     continue
+                if forks_count > 0:
+                    total_forks += forks_count
+                    components_with_forks += 1
+
+                if stargazers_count > 0:
+                    total_stargazers += stargazers_count
+                    components_with_stargazers += 1
+                    if stargazers_count < popularity_threshold:
+                        less_popular_components += 1
 
         result = {}
         if components_with_stargazers > 0:
@@ -104,7 +102,7 @@ class StackAggregatorTask(BaseTask):
             result["average_stars"] = 'NA'
 
         if components_with_forks > 0:
-            result['average_forks'] = "%.2f" % round(total_forks/components_with_forks,2)
+            result['average_forks'] = "%.2f" % round(total_forks/components_with_forks, 2)
         else:
             result['average_forks'] = 'NA'
         result['low_popularity_components'] = less_popular_components

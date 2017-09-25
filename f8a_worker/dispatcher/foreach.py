@@ -44,7 +44,7 @@ def iter_dependencies_analysis(storage_pool, node_args):
 
         logger.info("Arguments for next flows: %s" % str(arguments))
         return arguments
-    except:
+    except Exception:
         logger.exception("Failed to collect analysis dependencies")
         return []
 
@@ -72,7 +72,7 @@ def iter_dependencies_stack(storage_pool, node_args):
 
         logger.info("Arguments for next flows: %s" % str(arguments))
         return arguments
-    except:
+    except Exception:
         logger.exception("Failed to collect stack-analysis dependencies")
         return []
 
@@ -85,7 +85,7 @@ def iter_cvedb_updates(storage_pool, node_args):
         for epv in modified:
             epv['force'] = True
         return modified
-    except:
+    except Exception:
         logger.exception("Failed to collect OSS Index updates")
         return []
 

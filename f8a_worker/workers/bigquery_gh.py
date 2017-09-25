@@ -171,7 +171,7 @@ class BigQueryTask(SelinonTask):
             cur = conn.cursor()
             cur.copy_from(open(csv_file), table_name, sep=',', columns=csv_header)
             conn.commit()
-        except:
+        except Exception:
             raise
         finally:
             conn.close()

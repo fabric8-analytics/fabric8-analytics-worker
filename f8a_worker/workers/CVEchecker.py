@@ -111,7 +111,7 @@ class CVEcheckerTask(BaseTask):
                         affected_versions = solver.solve(["{} {}".format(arguments['name'],
                                                                          version_string)],
                                                          all_versions=True)
-                    except:
+                    except Exception:
                         self.log.exception("Failed to resolve %r for %s:%s", version_string,
                                            arguments['ecosystem'], arguments['name'])
                         continue

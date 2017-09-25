@@ -438,11 +438,14 @@ class DataNormalizer(object):
             transformed['declared_licenses'] = [data['LicenseUrl']]
             with tempdir() as tmpdir:
                 try:
+                    # Get file from 'LicenseUrl' and let LicenseCheckTask decide what license it is
                     if IndianaJones.download_file(data['LicenseUrl'], tmpdir):
                         scancode_results = LicenseCheckTask.run_scancode(tmpdir)
                         if scancode_results.get('summary', {}).get('sure_licenses'):
-                            transformed['declared_licenses'] = scancode_results['summary']['sure_licenses']
-                except:
+                            transformed['declared_licenses'] =\
+                                scancode_results['summary']['sure_licenses']
+                except Exception:
+                    # Don't raise if IndianaJones or LicenseCheckTask fail
                     pass
 
         # transform

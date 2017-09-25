@@ -73,7 +73,7 @@ class GraphDB:
             else:
                 json_response = response.json()
                 return json_response
-        except:
+        except Exception:
             _logger.error("Failed retrieving Gremlin data.")
             return None
 
@@ -630,7 +630,7 @@ class RecommendationV2Task(BaseTask):
                     return json_response
             else:
                 self.log.debug('Payload information is not passed in the call, Quitting! PGM\'s call')
-        except:
+        except Exception:
             self.log.error("Failed retrieving PGM data.")
             return None
 

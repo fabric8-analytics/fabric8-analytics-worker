@@ -21,19 +21,19 @@ class GraphSyncTask(BaseTask):
         port = environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_PORT", "8182")
         url = "http://{host}:{port}".format(host=host, port=port)
         # retry until the package data is avaiable in the graphDB
-        qstring =  "g.V().has('pecosystem','" + ecosystem + "').has('pname','" + name+"').has('version','" + version + "')."
+        qstring = "g.V().has('pecosystem','" + ecosystem + "').has('pname','" + name+"').has('version','" + version + "')."
         qstring += "as('version').in('PackageVersion').as('package').select('version','package').by(valueMap());"
         payload = {'gremlin': qstring}
 
         graph_req = post(url, json=payload)
         try:
             result = graph_req.json()
-            if  len(result.get('result',{}).get('result',{}).get('data', [])) > 0:
+            if len(result.get('result', {}).get('result', {}).get('data', [])) > 0:
                 self.log.info("Data for {eco}/{name}/{version} has been published on database".format(eco=ecosystem, name=name, version=version))
             else:
                 self.log.info("Package is not yet available on the database. Retrying in a while ...")
-                self.retry(self._RETRY_COUNTDOWN)
-        except:
+                self.retry(_RETRY_COUNTDOWN)
+        except Exception:
             self.log.error("Exception while parsing database response")
-            self.retry(self._RETRY_COUNTDOWN)
+            self.retry(_RETRY_COUNTDOWN)
 

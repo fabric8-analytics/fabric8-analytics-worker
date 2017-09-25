@@ -90,6 +90,7 @@ def extract_component_details(component):
 
     return component_summary
 
+
 def perform_license_analysis(license_score_list, dependencies):
     license_url = LICENSE_SCORING_URL_REST + "/api/v1/stack_license"
 
@@ -97,30 +98,33 @@ def perform_license_analysis(license_score_list, dependencies):
         "packages": license_score_list
     }
 
-    flag_stack_license_exception = False
-    resp = {}
-    try:
-        license_req = get_session_retry().post(license_url, data=json.dumps(payload))
-        resp = license_req.json()
-    except:
-        flag_stack_license_exception = True
-
     stack_license = []
     stack_license_status = None
     license_conflict_packages = {}
-    if not flag_stack_license_exception:
-        list_components = resp.get('packages', [])
-        for comp in list_components:  # output from license analysis
-            for dep in dependencies:  # the known dependencies
-                if dep.get('name', '') == comp.get('package', '') and \
-                                dep.get('version', '') == comp.get('version', ''):
-                    dep['license_analysis'] = comp.get('license_analysis', {})
 
-        _stack_license = resp.get('stack_license', None)
-        if _stack_license is not None:
-            stack_license = [_stack_license]
-        stack_license_status = resp.get('status', None)
-        license_conflict_packages = {}
+    try:
+        license_req = get_session_retry().post(license_url, data=json.dumps(payload))
+        resp = license_req.json()
+    except Exception:
+        output = {
+            "status": stack_license_status,
+            "f8a_stack_licenses": stack_license,
+            "conflict_packages": license_conflict_packages
+        }
+        return output, dependencies
+
+    list_components = resp.get('packages', [])
+    for comp in list_components:  # output from license analysis
+        for dep in dependencies:  # the known dependencies
+            if dep.get('name', '') == comp.get('package', '') and \
+                            dep.get('version', '') == comp.get('version', ''):
+                dep['license_analysis'] = comp.get('license_analysis', {})
+
+    _stack_license = resp.get('stack_license', None)
+    if _stack_license is not None:
+        stack_license = [_stack_license]
+    stack_license_status = resp.get('status', None)
+    license_conflict_packages = {}
 
     output = {
         "status": stack_license_status,
@@ -128,6 +132,7 @@ def perform_license_analysis(license_score_list, dependencies):
         "conflict_packages": license_conflict_packages
     }
     return output, dependencies
+
 
 def aggregate_stack_data(stack, manifest_file, ecosystem, deps, manifest_file_path):
     dependencies = []
@@ -204,7 +209,7 @@ class StackAggregatorV2Task(BaseTask):
                 else:
                     self.log.error("Failed retrieving dependency data.")
                     continue
-            except:
+            except Exception:
                 self.log.error("Error retrieving dependency data.")
                 continue
 

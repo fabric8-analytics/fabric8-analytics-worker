@@ -46,7 +46,7 @@ class BookkeeperTask(BaseTask):
                 if graph_req.status_code != 200:
                     self.log.error("Failed creating book-keeping record in graph")
                     continue
-            except:
+            except Exception:
                 self.log.exception("Failed to communicate to Graph Server.")
                 continue
 

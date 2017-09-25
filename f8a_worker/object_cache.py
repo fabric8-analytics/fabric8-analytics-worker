@@ -67,7 +67,7 @@ class EPVCache(object):
         if not self._meta:
             try:
                 self._meta = self._s3.retrieve_dict(self._meta_json_object_key)
-            except:
+            except Exception:
                 self.log.warning("Failed to retrieve %s", self._meta_json_object_key)
                 return None
         return self._meta
@@ -154,9 +154,9 @@ class EPVCache(object):
             os.makedirs(self._extracted_tarball_dir)
             try:
                 Archive.extract(source_tarball_path, self._extracted_tarball_dir)
-            except:
-                # remove in case of failure so if one catches the exception, the extraction code is correctly
-                # called again
+            except Exception:
+                # remove in case of failure so if one catches the exception,
+                # the extraction code is correctly called again
                 shutil.rmtree(self._extracted_tarball_dir, ignore_errors=True)
                 raise
 
@@ -197,7 +197,7 @@ class EPVCache(object):
             source_jar_path = self.get_source_jar()
             try:
                 Archive.extract(source_jar_path, self._extracted_source_jar_dir)
-            except:
+            except Exception:
                 # remove in case of failure so if one catches the exception, the extraction code is correctly
                 # called again
                 shutil.rmtree(self._extracted_source_jar_dir, ignore_errors=True)
