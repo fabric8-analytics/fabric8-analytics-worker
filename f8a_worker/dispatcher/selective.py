@@ -32,7 +32,7 @@ def selective_run_function(flow_name, node_name, node_args, task_names, storage_
             )
         if task_result:
             return task_result.worker_id
-    except:
+    except Exception:
         _logger.exception("Failed to get results in selective run function")
 
     return None

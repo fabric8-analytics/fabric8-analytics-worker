@@ -60,7 +60,8 @@ class AmazonS3(DataStorage):
 
     def _create_bucket_if_needed(self):
         """
-        Create desired bucket based on configuration if does not exist. Versioning is enabled on creation.
+        Create desired bucket based on configuration if does not exist.
+        Versioning is enabled on creation.
         """
         # check that the bucket exists - see boto3 docs
         try:
@@ -70,7 +71,7 @@ class AmazonS3(DataStorage):
             # if it was a 404 error, then the bucket does not exist.
             try:
                 error_code = int(exc.response['Error']['Code'])
-            except:
+            except (TypeError, ValueError, KeyError):
                 raise
             if error_code == 404:
                 self._create_bucket()
@@ -88,7 +89,8 @@ class AmazonS3(DataStorage):
                                        'LocationConstraint': self.region_name
                                    })
         if self.versioned and not is_local_deployment():
-            # Do not enable versioning when running locally. Our S3 alternatives are not capable to handle it.
+            # Do not enable versioning when running locally.
+            # Our S3 alternatives are not capable to handle it.
             self._s3.BucketVersioning(self.bucket_name).enable()
 
         bucket_tag = os.environ.get('DEPLOYMENT_PREFIX')

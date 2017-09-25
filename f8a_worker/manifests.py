@@ -47,7 +47,7 @@ def json_validator(data):
     """Very simple JSON validator."""
     try:
         json.loads(data)
-    except:
+    except Exception:
         return False
     return True
 
@@ -57,7 +57,7 @@ def xml_validator(data):
     try:
         # LXML likes bytes
         etree.fromstring(data.encode())
-    except:
+    except Exception:
         return False
     return True
 

@@ -203,7 +203,7 @@ class TimedCommand(object):
                 self.process = Popen(self.command, universal_newlines=True, **kwargs)
                 self.output, self.error = self.process.communicate()
                 self.status = self.process.returncode
-            except:
+            except Exception:
                 self.output = {} if is_json else []
                 self.error = format_exc()
                 self.status = -1
@@ -557,7 +557,7 @@ class DownstreamMapCache(object):
             self.session.rollback()
             try:
                 self._update(key, value)
-            except:
+            except Exception:
                 raise
             else:
                 pass

@@ -45,7 +45,7 @@ class CVEDBSyncTask(BaseTask):
                             resolved_versions = ecosystem_solver.\
                                 solve(["{} {}".format(package_name, version_string)],
                                       all_versions=True)
-                        except:
+                        except Exception:
                             self.log.exception("Failed to resolve %r for %s:%s", version_string,
                                                ecosystem, package_name)
                             continue

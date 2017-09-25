@@ -34,7 +34,7 @@ class OSCryptoCatcherTask(BaseTask):
             results['details'] = oscc['details']
             results['summary'] = oscc['summary']
             results['status'] = 'success'
-        except:
+        except Exception:
             results['status'] = 'error'
 
         return results

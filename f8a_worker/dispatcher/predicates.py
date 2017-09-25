@@ -12,5 +12,5 @@ def isGhRepo(node_args, key):
             return True
         else:
             return False
-    except:
+    except Exception:
         return False
