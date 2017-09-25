@@ -492,6 +492,18 @@
         versioned: false
         days_to_expire: 31
 
+    - name: 'GremlinHttp'
+      import: 'f8a_worker.storages'
+      configuration: &configurationGremlin
+        # Can be overwritten using env variables supplied on deployment
+        gremlin_http_host: bayesian-gremlin-http
+        gremlin_http_port: 8182
+
+    - name: 'PackageGremlinHttp'
+      import: 'f8a_worker.storages'
+      configuration:
+        <<: *configurationGremlin
+
   global:
     trace:
       import: 'f8a_worker.dispatcher.trace'

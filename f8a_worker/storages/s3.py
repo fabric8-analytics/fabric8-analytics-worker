@@ -216,6 +216,13 @@ class AmazonS3(DataStorage):
 
         return self._s3.Object(self.bucket_name, object_key).version_id
 
+    def list_available_task_results(self, arguments):
+        """Get names of all task results stored on S3."""
+        object_key = self._construct_base_file_name(arguments)
+        bucket = self._s3.Bucket(self.bucket_name)
+        objects = bucket.objects.filter(Prefix=object_key)
+        return list(x.key for x in objects if x.key.endswith('.json'))
+
     @staticmethod
     def is_enabled():
         """:return: True if S3 sync is enabled, False otherwise."""
