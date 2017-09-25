@@ -101,7 +101,7 @@ class CVEcheckerTask(BaseTask):
 
     def _query_ossindex(self, arguments):
         """ Query OSS Index REST API """
-        entries = []
+        entries = {}
         solver = get_ecosystem_solver(self.storage.get_ecosystem(arguments['ecosystem']),
                                       with_parser=OSSIndexDependencyParser())
         for package in self._query_ossindex_package(arguments['ecosystem'], arguments['name']):
@@ -116,11 +116,13 @@ class CVEcheckerTask(BaseTask):
                                            arguments['ecosystem'], arguments['name'])
                         continue
                     if arguments['version'] in affected_versions.get(arguments['name'], []):
-                        entries.append(self._filter_ossindex_fields(vulnerability))
+                        entry = self._filter_ossindex_fields(vulnerability)
+                        if entry.get('id'):
+                            entries[entry['id']] = entry
 
-        return {'summary': [e['id'] for e in entries if e['id']],
+        return {'summary': list(entries.keys()),
                 'status': 'success',
-                'details': entries}
+                'details': list(entries.values())}
 
     def _npm_scan(self, arguments):
         return self._query_ossindex(arguments)
