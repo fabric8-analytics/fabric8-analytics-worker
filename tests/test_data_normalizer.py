@@ -85,9 +85,11 @@ class TestDataNormalizer(object):
          "A"),
         ({'name_email_dict': {'email': 'B@C.com'}},
          "<B@C.com>"),
-        ({'name_email_dict': {'author': 'A', 'author-email': 'B@C.com'}, 'name_key': 'author', 'email_key': 'author-email'},
+        ({'name_email_dict': {'author': 'A', 'author-email': 'B@C.com'},
+          'name_key': 'author', 'email_key': 'author-email'},
          "A <B@C.com>"),
-        ({'name_email_dict': {'url': 'https://github.com/o/p/issues', 'email': 'project@name.com'}, 'name_key': 'url'},
+        ({'name_email_dict': {'url': 'https://github.com/o/p/issues', 'email': 'project@name.com'},
+          'name_key': 'url'},
          "https://github.com/o/p/issues <project@name.com>"),
     ])
     def test__join_name_email(self, args, expected):
@@ -140,7 +142,8 @@ class TestDataNormalizer(object):
 
     @pytest.mark.parametrize('args, expected', [
         # correct
-        ({'data': {'required_rubygem_version': {"requirements": [[">=", {"version": "1.9.2"}]]}}, 'key': 'required_rubygem_version'},
+        ({'data': {'required_rubygem_version': {"requirements": [[">=", {"version": "1.9.2"}]]}},
+          'key': 'required_rubygem_version'},
          '>=1.9.2'),
         # bad
         ({'data': {'required_ruby_version': {"requirement": [[">=", {"version": "1.9.2"}]]}},
@@ -264,7 +267,8 @@ class TestDataNormalizer(object):
          {'dependencies': sorted(['g:a 1.0', 'g2:a2 1.0.3-SNAPSHOT', 'r:r version', 'p:p 1000']),
           'devel_dependencies': sorted(['t:t 0'])}),
         ({'pom.xml': {'scm_url': 'git@github.com:fabric8-analytics/fabric8-analytics-worker.git'}},
-         {'code_repository': {'url': 'git@github.com:fabric8-analytics/fabric8-analytics-worker.git',
+         {'code_repository': {'url':
+                              'git@github.com:fabric8-analytics/fabric8-analytics-worker.git',
                               'type': 'git'}}),
         ({'pom.xml': {'licenses': ['ASL 2.0', 'MIT']}},
          {'declared_licenses': ['ASL 2.0', 'MIT']}),
@@ -277,5 +281,6 @@ class TestDataNormalizer(object):
         transformed_data = self._dataNormalizer._handle_java(data)
         for key, value in expected.items():
             assert key in transformed_data
-            transformed_value = sorted(transformed_data[key]) if isinstance(transformed_data[key], list) else transformed_data[key]
+            transformed_value = sorted(transformed_data[key]) \
+                if isinstance(transformed_data[key], list) else transformed_data[key]
             assert transformed_value == value

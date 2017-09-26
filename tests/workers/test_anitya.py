@@ -11,7 +11,8 @@ from f8a_worker.workers import AnityaTask
 from ..conftest import rdb
 
 example_projects = [
-        ('npm', 'underscore', '563b1d9f13887d4bdcb6b06270a54825', 'rh-dist-git filenam nodejs-underscore'),
+        ('npm', 'underscore', '563b1d9f13887d4bdcb6b06270a54825',
+         'rh-dist-git filenam nodejs-underscore'),
 ]
 
 

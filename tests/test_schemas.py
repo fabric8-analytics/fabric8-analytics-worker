@@ -5,13 +5,13 @@ import os
 import pytest
 
 from f8a_worker.schemas import (SchemaRef, SchemaLibrary,
-                              BundledSchemaLibrary,
-                              BundledDynamicSchemaLibrary,
-                              SchemaLookupError,
-                              SchemaModuleAttributeError,
-                              SchemaImportError,
-                              load_all_worker_schemas,
-                              assert_no_two_consecutive_schemas_are_same)
+                                BundledSchemaLibrary,
+                                BundledDynamicSchemaLibrary,
+                                SchemaLookupError,
+                                SchemaModuleAttributeError,
+                                SchemaImportError,
+                                load_all_worker_schemas,
+                                assert_no_two_consecutive_schemas_are_same)
 
 
 @pytest.mark.offline
