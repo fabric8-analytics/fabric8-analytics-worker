@@ -226,24 +226,19 @@ class CVEcheckerTask(BaseTask):
         """
         Run OWASP dependency-check experimental analyzer for Python artifacts
 
-        https://jeremylong.github.io/DependencyCheck/analyzers/python-analyzer.html
+        https://jeremylong.github.io/DependencyCheck/analyzers/python.html
         """
-        tarball = ObjectCache.get_from_dict(arguments).get_source_tarball()
-        if tarball.endswith('zip') or tarball.endswith('.whl'):  # tar.gz seems to be not supported
-            scan_path = tarball
-        else:
-            extracted_tarball = ObjectCache.get_from_dict(arguments).get_extracted_source_tarball()
-            # depcheck needs to be pointed to a specific file, we can't just scan whole directory
-            egg_info, pkg_info, metadata = None, None, None
-            for root, dirs, files in os.walk(extracted_tarball):
-                if root.endswith('.egg-info'):
-                    egg_info = root
-                if 'PKG-INFO' in files:
-                    pkg_info = os.path.join(root, 'PKG-INFO')
-                if 'METADATA' in files:
-                    metadata = os.path.join(root, 'METADATA')
-
-            scan_path = egg_info or pkg_info or metadata
+        extracted_tarball = ObjectCache.get_from_dict(arguments).get_extracted_source_tarball()
+        # depcheck needs to be pointed to a specific file, we can't just scan whole directory
+        egg_info = pkg_info = metadata = None
+        for root, _, files in os.walk(extracted_tarball):
+            if root.endswith('.egg-info'):
+                egg_info = root
+            if 'PKG-INFO' in files:
+                pkg_info = os.path.join(root, 'PKG-INFO')
+            if 'METADATA' in files:
+                metadata = os.path.join(root, 'METADATA')
+        scan_path = egg_info or pkg_info or metadata
 
         if not scan_path:
             return {'summary': ['File types not supported by OWASP dependency-check'],

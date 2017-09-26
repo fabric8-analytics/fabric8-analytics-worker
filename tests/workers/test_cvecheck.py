@@ -86,7 +86,6 @@ class TestCVEchecker(object):
                         os.path.dirname(
                          os.path.abspath(__file__)), '..', 'data', 'Mako.egg-info')
         args = {'ecosystem': 'pypi', 'name': 'mako', 'version': '0.3.3'}
-        flexmock(EPVCache).should_receive('get_source_tarball').and_return('mako.tgz')
         flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(egg_info_dir)
         task = CVEcheckerTask.create_test_instance(task_name='source_licenses')
         results = task.execute(arguments=args)

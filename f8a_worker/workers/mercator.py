@@ -94,7 +94,7 @@ class MercatorTask(BaseTask):
                         # if item is in .egg-info and current pkg_info is not
                         pkg_info = item
                     elif not (item_in_egg or pkg_info_in_egg) and is_deeper(pkg_info, item):
-                        # if none of them are in .egg-info, but current pkg_info is deeer
+                        # if none of them are in .egg-info, but current pkg_info is deeper
                         pkg_info = item
             elif item['ecosystem'] == 'Python-RequirementsTXT' and is_deeper(pkg_info, item):
                 requirements_txt = item
