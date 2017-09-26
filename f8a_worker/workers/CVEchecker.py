@@ -232,7 +232,7 @@ class CVEcheckerTask(BaseTask):
         # depcheck needs to be pointed to a specific file, we can't just scan whole directory
         egg_info = pkg_info = metadata = None
         for root, _, files in os.walk(extracted_tarball):
-            if root.endswith('.egg-info'):
+            if root.endswith('.egg-info') or root.endswith('.dist-info'):
                 egg_info = root
             if 'PKG-INFO' in files:
                 pkg_info = os.path.join(root, 'PKG-INFO')
