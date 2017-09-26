@@ -11,18 +11,22 @@ class TestRepositoryDescCollectorTask(object):
          {'ecosystem': 'pypi', 'name': 'celery'}
     ])
     def test_execute(self, args):
-        task = RepositoryDescCollectorTask.create_test_instance(task_name='RepositoryDescCollectorTask')
+        task = RepositoryDescCollectorTask.create_test_instance(
+            task_name='RepositoryDescCollectorTask')
         result = task.execute(arguments=args)
 
         assert isinstance(result, str)
         assert result
 
     @pytest.mark.parametrize('args', [
-         {'ecosystem': 'pypi', 'name': 'somenonexistentpackagethatwillneverexisreallyreallywontexist'},
-         {'ecosystem': 'npm', 'name': 'somenonexistentpackagethatwillneverexisreallyreallywontexist'}
+         {'ecosystem': 'pypi',
+          'name': 'somenonexistentpackagethatwillneverexisreallyreallywontexist'},
+         {'ecosystem': 'npm',
+          'name': 'somenonexistentpackagethatwillneverexisreallyreallywontexist'}
     ])
     def test_execute_nonexistent(self, args):
-        task = RepositoryDescCollectorTask.create_test_instance(task_name='RepositoryDescCollectorTask')
+        task = RepositoryDescCollectorTask.create_test_instance(
+            task_name='RepositoryDescCollectorTask')
 
         with pytest.raises(FatalTaskError):
             task.execute(arguments=args)
@@ -33,7 +37,8 @@ class TestRepositoryDescCollectorTask(object):
          {'ecosystem': 'go', 'name': 'bar'}
     ])
     def test_execute_unsupported_ecosystem(self, args):
-        task = RepositoryDescCollectorTask.create_test_instance(task_name='RepositoryDescCollectorTask')
+        task = RepositoryDescCollectorTask.create_test_instance(
+            task_name='RepositoryDescCollectorTask')
 
         with pytest.raises(FatalTaskError):
             task.execute(arguments=args)

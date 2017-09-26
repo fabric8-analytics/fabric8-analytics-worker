@@ -34,7 +34,8 @@ def test_get_postgres_conn():
 def test_npm_changes_url():
     c = F8aConfiguration()
     assert c.npmjs_changes_url == \
-        "https://skimdb.npmjs.com/registry/_changes?descending=true&include_docs=true&feed=continuous"
+        "https://skimdb.npmjs.com/registry/" + \
+        "_changes?descending=true&include_docs=true&feed=continuous"
 
 
 def test_get_postgres_conn_with_environ_override():
