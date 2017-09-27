@@ -8,6 +8,7 @@ from collections import OrderedDict
 from f8a_worker.schemas import SchemaRef
 from f8a_worker.base import BaseTask
 from f8a_worker.utils import parse_gh_repo
+from f8a_worker.worker.githubstas import GithubStats
 
 REPO_PROPS = ('forks_count', 'subscribers_count',  'stargazers_count', 'open_issues_count')
 
@@ -138,6 +139,8 @@ class GithubTask(BaseTask):
                                          'weekly': last_year_commits}}
         issues.update(commits)
         result_data['details'] = issues
+        github_stats = GithubStats.execute(arguments)
+        result_data["github_stats"] = github_stats
         return result_data
 
 
