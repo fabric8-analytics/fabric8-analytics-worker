@@ -9,6 +9,7 @@ from os import listdir, path
 
 config = get_configuration()
 
+
 class BlackDuckDataNotReady(Exception):
     def __init__(self, project, version):
         self.project = project
@@ -155,16 +156,19 @@ class BlackDuckTask(BaseTask):
                 # No data available, issue a new scan and re-query release data
                 source_tarball_path = ObjectCache.get_from_dict(arguments).get_source_tarball()
                 command = self._prepare_command(project, version, source_tarball_path)
-                self.log.debug("Executing command, timeout={timeout}: {cmd}".format(timeout=self._BLACKDUCK_CLI_TIMEOUT,
-                                                                                    cmd=command))
+                self.log.debug("Executing command, timeout={timeout}: {cmd}".format(
+                    timeout=self._BLACKDUCK_CLI_TIMEOUT,
+                    cmd=command))
                 bd = TimedCommand(command)
                 status, output, error = bd.run(timeout=self._BLACKDUCK_CLI_TIMEOUT,
-                                               update_env={'BD_HUB_PASSWORD': config.blackduck_password})
+                                               update_env={'BD_HUB_PASSWORD':
+                                                           config.blackduck_password})
                 self.log.debug("status = %s, error = %s", status, error)
                 self.log.debug("output = %s", output)
                 data = self._release_data(hub, project, version)
 
-            self.log.debug("Release data for project {p} {v}: {d}".format(p=project, v=version, d=data))
+            self.log.debug("Release data for project {p} {v}: {d}".format(p=project, v=version,
+                                                                          d=data))
             result_data['details'] = data
             result_data['status'] = 'success' if data else 'error'
         else:

@@ -83,8 +83,8 @@ class AnityaTask(BaseTask):
         url = anitya_url + '/api/downstreams/{e}/{p}/'.format(e=ecosystem, p=upstream_project)
         downstream_data = {'distro': distribution, 'package_name': package_name}
         self.log.debug('Adding Anitya mapping: %s for %s/%s' % (downstream_data,
-                                                              ecosystem,
-                                                              upstream_project))
+                                                                ecosystem,
+                                                                upstream_project))
         return requests.post(url, json=downstream_data)
 
     def _get_downstream_rpm_pkgs(self, ecosystem, name):
@@ -155,13 +155,13 @@ class AnityaTask(BaseTask):
         res = self._create_anitya_project(eco, pkg, homepage)
         if res.status_code == 200:
             self.log.info('Project {e}/{p} had already been registered to Anitya'.
-                        format(e=eco, p=pkg))
+                          format(e=eco, p=pkg))
         elif res.status_code == 201:
             self.log.info('Project {e}/{p} was successfully registered to Anitya'.
-                        format(e=eco, p=pkg))
+                          format(e=eco, p=pkg))
         else:
             self.log.error('Failed to create Anitya project {e}/{p}. Anitya response: {r}'.
-                         format(e=eco, p=pkg, r=res.text))
+                           format(e=eco, p=pkg, r=res.text))
             return None
             # TODO: When we move to a proper workflow manager, we'll want to raise TaskError
             #  here instead of just logging an error. Right now we don't want a problem
@@ -180,10 +180,10 @@ class AnityaTask(BaseTask):
                 res = self._add_downstream_mapping(eco, pkg, distro, package_name)
                 if res.status_code == 200:
                     self.log.info('Downstream mapping %s/%s has already been added to project %s' %
-                                (distro, package_name, pkg))
+                                  (distro, package_name, pkg))
                 elif res.status_code == 201:
                     self.log.info('Downstream mapping %s/%s was added to project %s' %
-                                (distro, package_name, pkg))
+                                  (distro, package_name, pkg))
                 else:
                     raise TaskError('Failed to add downstream mapping %s/%s to project %s' %
                                     (distro, package_name, pkg))

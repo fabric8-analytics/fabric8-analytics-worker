@@ -77,13 +77,13 @@ class LibrariesIoTask(BaseTask):
                     'summary': ['{url} does not exist'.format(url=url)],
                     'details': {}}
 
-        top_dependent_repos_page = BeautifulSoup(get(url+'/top_dependent_repos').text,
+        top_dependent_repos_page = BeautifulSoup(get(url + '/top_dependent_repos').text,
                                                  'html.parser')
 
         details = {'releases': self.get_releases(page),
                    'dependents': self.get_dependents(page),
-                   'dependent_repositories': self.get_dependent_repositories(page,
-                                                                        top_dependent_repos_page)}
+                   'dependent_repositories': self.get_dependent_repositories(
+                       page, top_dependent_repos_page)}
 
         return {'status': 'success',
                 'summary': [],

@@ -27,8 +27,9 @@ class DependencySnapshotTask(BaseTask):
             raise TaskError('metadata task result has unexpected type: {}; expected dict'.
                             format(type(wr)))
 
-        # there can be details about multiple manifests in the metadata, therefore we will collect dependency
-        # specifications from all of them and exclude obvious duplicates along the way
+        # there can be details about multiple manifests in the metadata,
+        # therefore we will collect dependency specifications from all of them
+        # and exclude obvious duplicates along the way
         dependencies = list({dep for m in wr.get('details', []) if m.get('dependencies')
                              for dep in m.get('dependencies', [])})
         return dependencies

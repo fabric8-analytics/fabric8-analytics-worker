@@ -194,8 +194,8 @@ class CVEcheckerTask(BaseTask):
                 i = i[0] if i else '?'
                 a = vulnerability.get('cvssAvailabilityImpact')
                 a = a[0] if a else '?'
-                vector = "AV:{AV}/AC:{AC}/Au:{Au}/C:{C}/I:{I}/A:{A}".\
-                    format(AV=av, AC=ac, Au=au, C=c, I=i, A=a)
+                vector = "AV:{AV}/AC:{AC}/Au:{Au}/C:{C}/I:{Integrity}/A:{A}".\
+                    format(AV=av, AC=ac, Au=au, C=c, Integrity=i, A=a)
                 result = {
                     'cvss': {
                         'score': vulnerability.get('cvssScore'),

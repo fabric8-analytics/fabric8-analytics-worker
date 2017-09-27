@@ -66,15 +66,16 @@ class GraphAggregatorTask(BaseTask):
             if not out["details"]:
                 raise FatalTaskError("No metadata found processing manifest file '{}'"
                                      .format(manifest['filename']))
-            
+
             if 'dependencies' not in out['details'][0] and out.get('status', None) == 'success':
                 raise FatalTaskError("Dependencies could not be resolved from manifest file '{}'"
                                      .format(manifest['filename']))
 
             out["details"][0]['manifest_file'] = manifest['filename']
             out["details"][0]['ecosystem'] = manifest['ecosystem']
-            out["details"][0]['manifest_file_path'] = manifest.get('filepath', 'File path not available')
-            
+            out["details"][0]['manifest_file_path'] = manifest.get('filepath',
+                                                                   'File path not available')
+
             # If we're handling an external request we need to convert dependency specifications to
             # concrete versions that we can query later on in the `AggregatorTask`
             manifest_descriptor = get_manifest_descriptor_by_filename(manifest['filename'])
@@ -83,7 +84,8 @@ class GraphAggregatorTask(BaseTask):
                 if manifest_descriptor.has_resolved_deps:  # npm-shrinkwrap.json, pom.xml
                     if "_dependency_tree_lock" in out["details"][0]:  # npm-shrinkwrap.json
                         if 'dependencies' in out['details'][0]["_dependency_tree_lock"]:
-                            manifest_dependencies = out["details"][0]["_dependency_tree_lock"].get("dependencies", [])
+                            manifest_dependencies = out["details"][0]["_dependency_tree_lock"].get(
+                                "dependencies", [])
                     else:  # pom.xml
                         if 'dependencies' in out['details'][0]:
                             manifest_dependencies = out["details"][0].get("dependencies", [])

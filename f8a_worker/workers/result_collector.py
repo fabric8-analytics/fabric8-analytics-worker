@@ -5,20 +5,23 @@ from f8a_worker.base import BaseTask
 
 class _ResultCollectorBase(BaseTask):
     """
-    Collect all results that were computed, upload them to S3 and store version reference to results in WorkerResult
+    Collect all results that were computed, upload them to S3 and store version
+    reference to results in WorkerResult
     """
     def do_run(self, arguments, s3, postgres, results):
         for worker_result in results.raw_analyses:
-            # We don't want to store tasks that do book-keeping for Selinon's Dispatcher (starting uppercase)
+            # We don't want to store tasks that do book-keeping for Selinon's
+            # Dispatcher (starting uppercase)
             if worker_result.worker[0].isupper():
                 continue
 
             if not postgres.is_real_task_result(worker_result.task_result):
-                # Do not overwrite results stored on S3 with references to their version - this can occur on
-                # selective task runs.
+                # Do not overwrite results stored on S3 with references to
+                # their version - this can occur on selective task runs.
                 continue
 
-            version_id = s3.store_task_result(arguments, worker_result.worker, worker_result.task_result)
+            version_id = s3.store_task_result(arguments, worker_result.worker,
+                                              worker_result.task_result)
             # Substitute task's result with version that we got on S3
             worker_result.task_result = {'version_id': version_id}
 

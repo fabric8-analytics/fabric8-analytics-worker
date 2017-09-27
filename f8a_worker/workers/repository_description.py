@@ -45,13 +45,14 @@ class RepositoryDescCollectorTask(BaseTask):
         if not content:
             raise FatalTaskError("No content was found at '%s' for PyPI package '%s'", name)
 
-        # Remove content that is automatically added by PyPI - this content is on the bottom and keeps info extracted
-        # from setup.py. We already keep this data, so remove duplicity in fact.
+        # Remove content that is automatically added by PyPI - this content is
+        # on the bottom and keeps info extracted from setup.py. We already keep
+        # this data, so remove duplicity in fact.
         content.find(class_='nodot').decompose()
         return content.text
 
     _COLLECTOR_HANDLERS = {
-        'npm':  collect_npm,
+        'npm': collect_npm,
         'maven': None,
         'pypi': collect_pypi,
         'nuget': None

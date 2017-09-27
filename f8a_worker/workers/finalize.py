@@ -23,8 +23,8 @@ class FinalizeTask(BaseTask):
             raise
 
         # Commented out for now since we want to sync to S3
-        #if self.task_name.endswith('Error'):
-        #    raise RuntimeError("Flow %s failed" % self.flow_name)
+        # if self.task_name.endswith('Error'):
+        #     raise RuntimeError("Flow %s failed" % self.flow_name)
 
 
 class PackageFinalizeTask(BaseTask):
@@ -42,5 +42,5 @@ class PackageFinalizeTask(BaseTask):
             raise
 
         # Commented out for now since we want to sync to S3
-        #if self.task_name.endswith('Error'):
-        #    raise RuntimeError("Flow %s failed" % self.flow_name)
+        # if self.task_name.endswith('Error'):
+        #     raise RuntimeError("Flow %s failed" % self.flow_name)

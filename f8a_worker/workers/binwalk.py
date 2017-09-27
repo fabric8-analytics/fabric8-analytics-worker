@@ -41,7 +41,7 @@ sample output of this task:
     }
   ]
 }
-"""
+"""  # noqa
 
 import os
 from f8a_worker.object_cache import ObjectCache
