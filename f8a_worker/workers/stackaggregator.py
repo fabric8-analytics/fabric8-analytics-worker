@@ -10,15 +10,12 @@ import os
 import json
 import requests
 
-from f8a_worker.conf import get_configuration
 from f8a_worker.solver import get_ecosystem_parser
 from f8a_worker.base import BaseTask
 from f8a_worker.graphutils import (get_stack_usage_data_graph, get_stack_popularity_data_graph,
                                    aggregate_stack_data, GREMLIN_SERVER_URL_REST)
 from f8a_worker.workers.mercator import MercatorTask
 from f8a_worker.utils import get_session_retry
-
-config = get_configuration()
 
 
 class StackAggregatorTask(BaseTask):
