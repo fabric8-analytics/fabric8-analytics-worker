@@ -4,7 +4,7 @@ from glob import glob
 import os
 from re import compile as re_compile
 import requests
-from shutil import rmtree
+from shutil import rmtree, copy
 from tempfile import gettempdir
 from selinon import StoragePool
 from f8a_worker.base import BaseTask
@@ -151,6 +151,10 @@ class CVEcheckerTask(BaseTask):
                        '--out', report_path]
             if experimental:
                 command.extend(['--enableExperimental'])
+            for suppress_xml in glob(os.path.join(os.environ['OWASP_DEP_CHECK_SUPPRESS_PATH'],
+                                                  '*.xml')):
+                command.extend(['--suppress', suppress_xml])
+
             output = []
             try:
                 self.log.debug('Running OWASP Dependency-Check to scan %s for vulnerabilities' %
@@ -226,24 +230,29 @@ class CVEcheckerTask(BaseTask):
         """
         Run OWASP dependency-check experimental analyzer for Python artifacts
 
-        https://jeremylong.github.io/DependencyCheck/analyzers/python-analyzer.html
+        https://jeremylong.github.io/DependencyCheck/analyzers/python.html
         """
-        tarball = ObjectCache.get_from_dict(arguments).get_source_tarball()
-        if tarball.endswith('zip') or tarball.endswith('.whl'):  # tar.gz seems to be not supported
-            scan_path = tarball
-        else:
-            extracted_tarball = ObjectCache.get_from_dict(arguments).get_extracted_source_tarball()
-            # depcheck needs to be pointed to a specific file, we can't just scan whole directory
-            egg_info, pkg_info, metadata = None, None, None
-            for root, dirs, files in os.walk(extracted_tarball):
-                if root.endswith('.egg-info'):
-                    egg_info = root
-                if 'PKG-INFO' in files:
-                    pkg_info = os.path.join(root, 'PKG-INFO')
-                if 'METADATA' in files:
-                    metadata = os.path.join(root, 'METADATA')
-
-            scan_path = egg_info or pkg_info or metadata
+        extracted_tarball = ObjectCache.get_from_dict(arguments).get_extracted_source_tarball()
+        # depcheck needs to be pointed to a specific file, we can't just scan whole directory
+        egg_info = pkg_info = metadata = None
+        for root, _, files in os.walk(extracted_tarball):
+            if root.endswith('.egg-info') or root.endswith('.dist-info'):
+                egg_info = root
+            if 'PKG-INFO' in files:
+                pkg_info = os.path.join(root, 'PKG-INFO')
+            if 'METADATA' in files:
+                metadata = os.path.join(root, 'METADATA')
+        scan_path = egg_info or pkg_info or metadata
+        if pkg_info and not egg_info:
+            # Work-around for dependency-check ignoring PKG-INFO outside .dist-info/
+            # https://github.com/jeremylong/DependencyCheck/issues/896
+            egg_info_dir = os.path.join(extracted_tarball, arguments['name'] + '.egg-info')
+            try:
+                os.mkdir(egg_info_dir)
+                copy(pkg_info, egg_info_dir)
+                scan_path = egg_info_dir
+            except os.error:
+                self.log.warning('Failed to copy %s to %s', pkg_info, egg_info_dir)
 
         if not scan_path:
             return {'summary': ['File types not supported by OWASP dependency-check'],

@@ -1,5 +1,6 @@
+datadiff
+flexmock
+pylint
 pytest >= 3 # Needed for compatibility with celery 4.x fixtures
 pytest-timeout
 pytest-rerunfailures
-flexmock
-pylint
