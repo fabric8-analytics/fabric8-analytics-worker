@@ -485,6 +485,12 @@
         encryption: false
         versioned: true
 
+    - name: 'GraphDataBase'
+      import: 'f8a_worker.storages'
+      configuration:
+        gremlin_http_host: 'localhost'
+        gremlin_http_port: '8182'
+
   global:
     trace:
       import: 'f8a_worker.dispatcher.trace'

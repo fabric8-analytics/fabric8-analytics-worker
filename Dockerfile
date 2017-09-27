@@ -6,12 +6,14 @@ ENV LANG=en_US.UTF-8 \
     # home directory
     HOME='/workdir' \
     # place for alembic migrations
-    ALEMBIC_DIR='/alembic'
+    ALEMBIC_DIR='/alembic' \
+    # place for graph schema creations
+    GRAPH_DIR='/graph'
 
 CMD ["/usr/bin/workers.sh"]
 
 # Make sure random user has place to store files
-RUN mkdir -p ${HOME} ${WORKER_DATA_DIR} ${ALEMBIC_DIR}/alembic/ && \
+RUN mkdir -p ${HOME} ${WORKER_DATA_DIR} ${ALEMBIC_DIR}/alembic/ ${GRAPH_DIR} && \
     chmod 777 ${HOME} ${WORKER_DATA_DIR}
 WORKDIR ${HOME}
 
@@ -26,6 +28,7 @@ RUN cd /tmp/f8a_worker && \
 
 COPY alembic.ini hack/run-db-migrations.sh ${ALEMBIC_DIR}/
 COPY alembic/ ${ALEMBIC_DIR}/alembic
+COPY hack/create_graph_schema.py hack/schema.groovy ${GRAPH_DIR}/
 
 # Install f8a_worker
 COPY ./ /tmp/f8a_worker
