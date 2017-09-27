@@ -23,27 +23,21 @@ def test_configuration_is_a_singleton():
     assert id(get_configuration()) == id(get_configuration())
 
 
-def test_get_postgres_conn():
-    c = F8aConfiguration(backends=[
-        ObjectBackend(defaultconf.data),
-        FileBackend(path="/etc/f8a.json", graceful=True),
-    ])
-    assert c.postgres_connection == "postgres://coreapi:coreapi@localhost:5432/coreapi"
-
-
 def test_npm_changes_url():
     c = F8aConfiguration()
     assert c.npmjs_changes_url == \
         "https://skimdb.npmjs.com/registry/" + \
         "_changes?descending=true&include_docs=true&feed=continuous"
 
+def test_get_postgres_conn():
+    os.environ['POSTGRESQL_USER'] = 'user'
+    os.environ['POSTGRESQL_PASSWORD'] = 'pass'
+    os.environ['PGBOUNCER_SERVICE_HOST'] = 'local'
+    os.environ['POSTGRES_PORT'] = 5432
+    os.environ['POSTGRESQL_DATABASE'] = 'db'
 
-def test_get_postgres_conn_with_environ_override():
-    backup = os.environ["F8A_POSTGRES"]
-    os.environ["F8A_POSTGRES"] = "something"
     c = F8aConfiguration()
-    assert c.postgres_connection == "something"
-    os.environ["F8A_POSTGRES"] = backup
+    assert c.postgres_connection == "postgresql://{user}:{pass}@{local}:5432/{db}?sslmode=disable"
 
 
 def test_worker_data_dir_is_unset():

@@ -31,7 +31,6 @@ check bottom of F8aConfiguration
 """
 
 import os
-import re
 import json
 import logging
 from copy import deepcopy
@@ -40,7 +39,6 @@ from urllib.parse import quote
 from f8a_worker import defaultconf
 
 import anymarkup
-
 
 # singleton so we don't access backends multiple times
 configuration = None
@@ -71,7 +69,7 @@ class ConfigurationException(Exception):
 
 
 class ConfigurationEntry(object):
-    def __init__(self, key, path, graceful, env_var_name=None):
+    def __init__(self, key, path, graceful, env_var_name=None, entry_value=None):
         """
         definition of one entry in configuration
 
@@ -79,11 +77,13 @@ class ConfigurationEntry(object):
         :param path: list of str, path to value within merged configuration
         :param graceful: bool, fail if not present?
         :param env_var_name: name of environment variable, used in EnvVarBackend
+        :param entry_value: value of configuration item for SingleItemBackend
         """
         self.key = key
         self.path = path
         self.graceful = graceful
         self.env_var_name = env_var_name
+        self.entry_value = entry_value
 
 
 class Configuration(object):
@@ -126,7 +126,7 @@ class Configuration(object):
             else:
                 return self.get(c.path, graceful=c.graceful)
 
-    def add_configuration_entry(self, key, path, graceful=True, env_var_name=None):
+    def add_configuration_entry(self, key, path, graceful=True, env_var_name=None, entry_value=None):
         """
         definition of one entry in configuration
 
@@ -134,8 +134,9 @@ class Configuration(object):
         :param path: list of str, path to value within merged configuration
         :param graceful: bool, fail if not present?
         :param env_var_name: name of environment variable, used in EnvVarBackend
+        :param entry_value: value of configuration item for SingleItemBackend
         """
-        self.entries[key] = ConfigurationEntry(key, path, graceful, env_var_name=env_var_name)
+        self.entries[key] = ConfigurationEntry(key, path, graceful, env_var_name=env_var_name, entry_value=entry_value)
 
     def get(self, path, graceful=True):
         """
@@ -163,6 +164,7 @@ class ConfigurationBackend(object):
     API for classes which are responsible to return object with configuration from arbitrary sources
     e.g. file, env var, python object, database, URL, written on a paper...
     """
+
     def __init__(self):
         pass
 
@@ -250,24 +252,53 @@ class EnvVarBackend(ObjectBackend):
             d[path[-1]] = val
 
 
-def get_postgres_connection_string(url_encoded_password=True):
-    f8a_postgres = os.environ.get('F8A_POSTGRES')
-    if f8a_postgres:
-        if url_encoded_password:
-            f8a_postgres = re.sub(r'(postgresql://.+:)([^@]+)(@.+)',
-                                  lambda x: '{}{}{}'.format(x.group(1), quote(x.group(2), safe=''), x.group(3)),
-                                  f8a_postgres,
-                                  count=1)
-        return f8a_postgres
+class SingleItemBackend(ConfigurationBackend):
+    """
+    Inject single item from code
+    """
 
-    password = os.environ.get('POSTGRESQL_PASSWORD', '')
-    postgres_env = {'POSTGRESQL_USER': os.environ.get('POSTGRESQL_USER'),
-                    'POSTGRESQL_PASSWORD': quote(password, safe='') if url_encoded_password else password,
-                    'PGBOUNCER_SERVICE_HOST': os.environ.get('PGBOUNCER_SERVICE_HOST'),
-                    'POSTGRESQL_DATABASE': os.environ.get('POSTGRESQL_DATABASE')}
-    return 'postgresql://{POSTGRESQL_USER}:{POSTGRESQL_PASSWORD}@' \
-           '{PGBOUNCER_SERVICE_HOST}:5432/{POSTGRESQL_DATABASE}?' \
-           'sslmode=disable'.format(**postgres_env)
+    def __init__(self):
+        super(SingleItemBackend, self).__init__()
+
+    def load(self, entries_list):
+        result = {}
+        for entry in entries_list:
+            if entry.entry_value is not None:
+                self._inject_item(result, entry.entry_value, entry.path)
+        return result
+
+    def _inject_item(self, result_dict, entry_value, path):
+        """
+        util function: translate value from env var to generic configuration format
+
+        :param result_dict: dict used for merge
+        :param entry_value: value which will be stored in conf
+        :param path: path to variable in merged configuration
+        :return: None
+        """
+        if len(path) <= 0:
+            raise ValueError("path needs to have at least one item")
+
+        d = result_dict
+        for p in path[:-1]:
+            # we could have a custom dict class here, not sure if it's worth it
+            d.setdefault(p, {})
+            d = d[p]
+        d[path[-1]] = entry_value
+
+
+def _get_postgres_connection_string():
+    return 'postgresql://{postgresql_user}:{postgresql_password}@{pgbouncer_service_host}:{postgresql_port}/' \
+           '{postgresql_database}?sslmode=disable'. \
+        format(
+            postgresql_user=os.environ.get('POSTGRESQL_USER'),
+            postgresql_password=quote(
+                os.environ.get('POSTGRESQL_PASSWORD', ''), safe=''),
+            pgbouncer_service_host=os.environ.get(
+                'PGBOUNCER_SERVICE_HOST', 'coreapi-pgbouncer'),
+            postgresql_port=os.environ.get('POSTGRES_PORT', 5432),
+            postgresql_database=os.environ.get('POSTGRESQL_DATABASE')
+        )
 
 
 class F8aConfiguration(Configuration):
@@ -290,7 +321,20 @@ class F8aConfiguration(Configuration):
         super(F8aConfiguration, self).__init__(self.backends)
 
         self.add_configuration_entry(
-            "postgres_connection", ["postgres", "connection_string"], env_var_name="F8A_POSTGRES")
+            "postgres_connection", ["postgres", "connection_string"], entry_value=_get_postgres_connection_string())
+        self.add_configuration_entry(
+            "broker_connection", ["broker", "connection_string"],
+            entry_value="amqp://guest@${rabbit_host}:${rabbit_port}".format(
+                rabbit_host=os.environ.get('RABBIT_HOST', 'coreapi-broker'),
+                rabbit_port=os.environ.get('RABBITMQ_SERVICE_SERVICE_PORT', 5672)
+            ))
+        self.add_configuration_entry(
+            "anitya_url", ["anitya", "url"],
+            entry_value="http://{anitya_host}:{anitya_port}".format(
+                anitya_host=os.environ.get('ANITYA_SERVICE_HOST', 'anitya-server'),
+                anitya_port=os.environ.get('ANITYA_SERVICE_PORT', 5000)
+            ))
+
         self.add_configuration_entry(
             "worker_data_dir", ["worker", "data_dir"], env_var_name="WORKER_DATA_DIR")
         self.add_configuration_entry(
@@ -299,10 +343,6 @@ class F8aConfiguration(Configuration):
         self.add_configuration_entry("coreapi_server_url", ["coreapi_server", "url"])
         self.add_configuration_entry("git_user_name", ["git", "user_name"])
         self.add_configuration_entry("git_user_email", ["git", "user_email"])
-        self.add_configuration_entry(
-            "broker_connection", ["broker", "connection_string"], env_var_name="F8A_CELERY_BROKER")
-        self.add_configuration_entry("anitya_url", ["anitya", "url"], env_var_name="F8A_ANITYA")
-
         self.add_configuration_entry(
             "blackduck_host", ["blackduck", "host"], env_var_name="BLACKDUCK_HOST"
         )
@@ -334,6 +374,8 @@ class F8aConfiguration(Configuration):
             "pulp_password", ["pulp", "password"], env_var_name="PULP_PASSWORD"
         )
 
+        self.backends.append(ObjectBackend)
+
     @staticmethod
     def _default_backends(configuration_override=None):
         """
@@ -345,10 +387,10 @@ class F8aConfiguration(Configuration):
         config_path = os.getenv("F8A_CONFIG_PATH", "/etc/f8a.yaml")
         secrets_path = os.getenv("F8A_SECRETS_PATH", "/var/lib/secrets/secrets.yaml")
         return [
-            ObjectBackend(defaultconf.data),
             FileBackend(path=config_path, graceful=True),
             FileBackend(path=secrets_path, graceful=True),
             EnvVarBackend(),
+            SingleItemBackend(),
             ObjectBackend(configuration_override or {}),
         ]
 
