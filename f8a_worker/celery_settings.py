@@ -3,7 +3,7 @@ import logging
 from urllib.parse import quote
 from celery.signals import setup_logging
 from f8a_worker.defaults import F8AConfiguration as configuration
-from f8a_worker.conf import get_postgres_connection_string, is_local_deployment
+from f8a_worker.conf import is_local_deployment
 
 _logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ def _use_sqs():
 
 class CelerySettings(object):
     _DEFAULT_SQS_REGION = 'us-east-1'
-    _DEFAULT_RESULT_BACKEND = 'db+' + get_postgres_connection_string()
+    _DEFAULT_RESULT_BACKEND = 'db+' + configuration.POSTGRES_CONNECTION
 
     # Generic worker options
     timezone = 'UTC'

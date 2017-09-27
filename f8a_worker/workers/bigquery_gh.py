@@ -169,7 +169,7 @@ class BigQueryTask(SelinonTask):
     def dump_to_rdb(csv_file, csv_header, table_name):
         """Import results from BigQuery into the DB."""
 
-        conn = psycopg2.connect(config.postgres_connection)
+        conn = psycopg2.connect(configuration.POSTGRES_CONNECTION)
         try:
             cur = conn.cursor()
             cur.copy_from(open(csv_file), table_name, sep=',', columns=csv_header)
