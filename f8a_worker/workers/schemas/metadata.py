@@ -203,30 +203,30 @@ class MercatorResult(JSLSchemaBaseWithRelease):
         before_v2_0_0.bug_reporting = jsl.OneOfField([jsl.StringField(), jsl.NullField()])
         before_v2_0_0.code_repository = jsl.OneOfField(
             [jsl.DocumentField(CodeRepository, as_ref=True), jsl.NullField()]
-            )
+        )
         before_v2_0_0.declared_license = jsl.OneOfField(
             [jsl.StringField(), jsl.NullField()]
-            )
+        )
         before_v2_0_0.dependencies = jsl.OneOfField(
             [jsl.ArrayField(jsl.StringField()), jsl.NullField()]
-            )
+        )
         before_v2_0_0.description = jsl.OneOfField([jsl.StringField(), jsl.NullField()])
         before_v2_0_0.devel_dependencies = jsl.OneOfField(
             [jsl.ArrayField(jsl.StringField()), jsl.NullField()]
-            )
+        )
         # engines are NPM thingie and can contain lots of various keys
         # so we just allow pretty much anything in that dict
         before_v2_0_0.engines = jsl.OneOfField(
             [jsl.DictField(additional_properties=True), jsl.NullField()]
-            )
+        )
         before_v2_0_0.files = jsl.OneOfField(
             [jsl.ArrayField(jsl.StringField()), jsl.NullField()]
-            )
+        )
         before_v2_0_0.git_head = jsl.OneOfField([jsl.StringField(), jsl.NullField()])
         before_v2_0_0.homepage = jsl.OneOfField([jsl.StringField(), jsl.NullField()])
         before_v2_0_0.keywords = jsl.OneOfField(
             [jsl.ArrayField(jsl.StringField()), jsl.NullField()]
-            )
+        )
 
         before_v2_0_0.maintainers = jsl.OneOfField(
                 [jsl.ArrayField(jsl.StringField()), jsl.NullField()])
@@ -241,7 +241,7 @@ class MercatorResult(JSLSchemaBaseWithRelease):
 
         before_v2_0_0.scripts = jsl.OneOfField(
             [jsl.DictField(additional_properties=True), jsl.NullField()]
-            )
+        )
         before_v2_0_0.version = jsl.OneOfField([jsl.StringField(), jsl.NullField()])
 
 
@@ -261,5 +261,6 @@ class MercatorResult(JSLSchemaBaseWithRelease):
     with added_in(ROLE_v3_1_0) as since_v3_1:
         since_v3_1.status = jsl.StringField(enum=["success", "error"], required=True)
         since_v3_1.summary = jsl.ArrayField(jsl.StringField(), required=True)
+
 
 THE_SCHEMA = MercatorResult
