@@ -32,12 +32,15 @@ def iter_dependencies_analysis(storage_pool, node_args):
         arguments = []
         for dep in deps:
             if _is_url_dependency(dep):
-                logger.info('skipping URL dependency name "%(ecosystem)s/%(name)s/%(version)s"', dep)
+                logger.info('skipping URL dependency name "%(ecosystem)s/%(name)s/%(version)s"',
+                            dep)
             elif postgres.get_analysis_count(dep['ecosystem'], dep['name'], dep['version']) > 0:
-                logger.info('skipping already analysed dependency "%(ecosystem)s/%(name)s/%(version)s"', dep)
+                logger.info('skipping already analysed dependency '
+                            '"%(ecosystem)s/%(name)s/%(version)s"', dep)
                 continue
             else:
-                new_node_args = _create_analysis_arguments(dep['ecosystem'], dep['name'], dep['version'])
+                new_node_args = _create_analysis_arguments(dep['ecosystem'], dep['name'],
+                                                           dep['version'])
                 if 'recursive_limit' in node_args:
                     new_node_args['recursive_limit'] = node_args['recursive_limit'] - 1
                 arguments.append(new_node_args)
@@ -65,7 +68,8 @@ def iter_dependencies_stack(storage_pool, node_args):
                 version = dep['version']
 
                 if postgres.get_analysis_count(ecosystem, name, version) > 0:
-                    logger.info('skipping already analysed dependency "%s/%s/%s"', ecosystem, name, version)
+                    logger.info('skipping already analysed dependency "%s/%s/%s"', ecosystem,
+                                name, version)
                     continue
 
                 arguments.append(_create_analysis_arguments(ecosystem, name, version))
@@ -88,4 +92,3 @@ def iter_cvedb_updates(storage_pool, node_args):
     except Exception:
         logger.exception("Failed to collect OSS Index updates")
         return []
-
