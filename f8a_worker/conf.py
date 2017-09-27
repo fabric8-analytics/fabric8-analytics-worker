@@ -176,31 +176,6 @@ class ConfigurationBackend(object):
         return {}
 
 
-class FileBackend(ConfigurationBackend):
-    """
-    obtain configuration from a file
-    """
-
-    def __init__(self, path, graceful=False):
-        """
-        :param path: str, path to file
-        :param graceful: bool, fail when file can't be accessed
-        """
-        super(FileBackend, self).__init__()
-        self.path = path
-        self.graceful = graceful
-
-    def load(self, entries_list):
-        try:
-            return anymarkup.parse_file(self.path)
-        except (anymarkup.AnyMarkupError, OSError, IOError) as ex:
-            logger.debug("can't access file %s: %r", self.path, ex)
-            if self.graceful:
-                return {}
-            else:
-                raise ConfigurationException("Can't open file %s" % self.path) from ex
-
-
 class ObjectBackend(ConfigurationBackend):
     """
     obtain configuration from a python object (nested dict)
@@ -293,48 +268,6 @@ class F8aConfiguration(Configuration):
 
         self.add_configuration_entry(
             "postgres_connection", ["postgres", "connection_string"], env_var_name="F8A_POSTGRES")
-        self.add_configuration_entry(
-            "worker_data_dir", ["worker", "data_dir"], env_var_name="WORKER_DATA_DIR")
-        self.add_configuration_entry(
-            "github_token", ["github", "token"], env_var_name="GITHUB_TOKEN")
-        self.add_configuration_entry("npmjs_changes_url", ["npmjs_changes_url"])
-        self.add_configuration_entry("coreapi_server_url", ["coreapi_server", "url"])
-        self.add_configuration_entry("git_user_name", ["git", "user_name"])
-        self.add_configuration_entry("git_user_email", ["git", "user_email"])
-        self.add_configuration_entry(
-            "broker_connection", ["broker", "connection_string"], env_var_name="F8A_CELERY_BROKER")
-        self.add_configuration_entry("anitya_url", ["anitya", "url"], env_var_name="F8A_ANITYA")
-
-        self.add_configuration_entry(
-            "blackduck_host", ["blackduck", "host"], env_var_name="BLACKDUCK_HOST"
-        )
-        self.add_configuration_entry(
-            "blackduck_scheme", ["blackduck", "scheme"], env_var_name="BLACKDUCK_SCHEME"
-        )
-        self.add_configuration_entry(
-            "blackduck_port", ["blackduck", "port"], env_var_name="BLACKDUCK_PORT"
-        )
-        self.add_configuration_entry(
-            "blackduck_username", ["blackduck", "username"], env_var_name="BLACKDUCK_USERNAME"
-        )
-        self.add_configuration_entry(
-            "blackduck_password", ["blackduck", "password"], env_var_name="BLACKDUCK_PASSWORD"
-        )
-        self.add_configuration_entry(
-            "blackduck_path", ["blackduck", "path"], env_var_name="BLACKDUCK_PATH"
-        )
-        self.add_configuration_entry(
-            "bigquery_json_key", ["bigquery", "json_key"], env_var_name="BIGQUERY_JSON_KEY"
-        )
-        self.add_configuration_entry(
-            "pulp_url", ["pulp", "url"], env_var_name="PULP_URL"
-        )
-        self.add_configuration_entry(
-            "pulp_username", ["pulp", "username"], env_var_name="PULP_USERNAME"
-        )
-        self.add_configuration_entry(
-            "pulp_password", ["pulp", "password"], env_var_name="PULP_PASSWORD"
-        )
 
     @staticmethod
     def _default_backends(configuration_override=None):
@@ -355,9 +288,6 @@ class F8aConfiguration(Configuration):
         ]
 
     # these are basically convenience aliases just for sake how to create those
-
-    def get_coreapi_server_url(self):
-        return self.coreapi_server_url
 
 
 def get_configuration(configuration_override=None):

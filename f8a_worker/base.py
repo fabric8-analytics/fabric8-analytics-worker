@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import jsonschema
 from celery.utils.log import get_task_logger
-from f8a_worker.conf import get_configuration
+from f8a_worker.defaults import F8AConfiguration
 from selinon import SelinonTask, FatalTaskError
 from datetime import datetime
 from f8a_worker.schemas import load_worker_schema, set_schema_ref
@@ -20,7 +20,7 @@ class BaseTask(SelinonTask):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.log = get_task_logger(self.__class__.__name__)
-        self.configuration = get_configuration()
+        self.configuration = F8AConfiguration()
 
     @classmethod
     def _strict_assert(cls, assert_cond):

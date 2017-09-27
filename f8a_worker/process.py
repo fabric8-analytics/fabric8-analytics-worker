@@ -13,13 +13,13 @@ from git2json import run_git_log
 from re import compile as re_compile
 from urllib.parse import urljoin, urlparse
 
-from f8a_worker.conf import get_configuration
+from f8a_worker.defaults import F8AConfiguration
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.errors import TaskError
 from f8a_worker.utils import cwd, TimedCommand, compute_digest, MavenCoordinates, url2git_repo
 
 logger = logging.getLogger(__name__)
-configuration = get_configuration()
+configuration = F8AConfiguration()
 
 
 class Git(object):
@@ -39,8 +39,8 @@ class Git(object):
         """
         configure git
         """
-        user_name = configuration.git_user_name
-        user_email = configuration.git_user_email
+        user_name = configuration.GIT_USER_NAME
+        user_email = configuration.GIT_USER_EMAIL
         if not TimedCommand.get_command_output(["git", "config", "--get", "user.name"]):
             TimedCommand.get_command_output(["git", "config", "--global", "user.name", user_name])
         if not TimedCommand.get_command_output(["git", "config", "--get", "user.email"]):

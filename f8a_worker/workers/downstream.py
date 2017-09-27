@@ -7,7 +7,6 @@ import json
 import os
 
 from f8a_worker.base import BaseTask
-from f8a_worker.conf import get_configuration
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.errors import TaskError
 from f8a_worker.models import Ecosystem
@@ -15,8 +14,6 @@ from f8a_worker.pulp import Pulp
 from f8a_worker.schemas import SchemaRef
 from f8a_worker.utils import TimedCommand, MavenCoordinates
 from f8a_worker.workers.anitya import RH_MVN_DISTRO_NAME, RH_MVN_GA_REPO, RH_RPM_DISTRO_NAME
-
-config = get_configuration()
 
 
 # Test hook: the worker tests mock this out,
@@ -76,12 +73,12 @@ class DownstreamUsageTask(BaseTask):
             raise ValueError('Don\'t know how to add ecosystem {e} with backend {b} to Anitya'.
                              format(e=ecosystem, b=eco_model.backend))
         api_path = '/api/by_ecosystem/{e}/{p}/'.format(e=ecosystem, p=package)
-        anitya_url = config.anitya_url
+        anitya_url = self.configuration.ANITYA_URL
         try:
             return _query_anitya_url(anitya_url, api_path)
         except (requests.HTTPError, requests.ConnectionError):
             msg = 'Failed to contact Anitya server at {}'
-            self.log.exception(msg.format(config.anitya_url))
+            self.log.exception(msg.format(self.configuration.ANITYA_URL))
         return None
 
     def _get_cdn_metadata(self, srpm_filename):

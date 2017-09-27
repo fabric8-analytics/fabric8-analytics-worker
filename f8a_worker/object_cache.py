@@ -4,7 +4,7 @@ import os
 import shutil
 import logging
 from selinon import StoragePool
-from f8a_worker.conf import get_configuration
+from f8a_worker.defaults import F8AConfiguration as configuration
 from f8a_worker.process import Archive
 from f8a_worker.models import EcosystemBackend, Ecosystem
 
@@ -258,7 +258,7 @@ class ObjectCache(object):
     >>> extracted_tarball_path = epv_cache.get_extracted_source_tarball()
     """
     _cache = {}
-    _base_cache_dir = get_configuration().worker_data_dir
+    _base_cache_dir = configuration.WORKER_DATA_DIR
 
     def __init__(self):
         raise NotImplementedError()

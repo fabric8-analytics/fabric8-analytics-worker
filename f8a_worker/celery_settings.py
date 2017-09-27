@@ -2,10 +2,10 @@ import os
 import logging
 from urllib.parse import quote
 from celery.signals import setup_logging
-from f8a_worker.conf import get_configuration, get_postgres_connection_string, is_local_deployment
+from f8a_worker.defaults import F8AConfiguration as configuration
+from f8a_worker.conf import get_postgres_connection_string, is_local_deployment
 
 _logger = logging.getLogger(__name__)
-configuration = get_configuration()
 
 
 def _use_sqs():
@@ -68,7 +68,7 @@ class CelerySettings(object):
         _logger.debug('AWS broker transport options: %s', broker_transport_options)
     else:
         # Fallback to default Broker configuration (e.g. RabbitMQ)
-        broker_url = configuration.broker_connection
+        broker_url = configuration.BROKER_CONNECTION
         task_serializer = 'json'
         result_serializer = 'json'
         accept_content = ['json']
