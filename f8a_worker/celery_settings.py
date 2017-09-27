@@ -3,7 +3,6 @@ import logging
 from urllib.parse import quote
 from celery.signals import setup_logging
 from f8a_worker.defaults import F8AConfiguration as configuration
-from f8a_worker.conf import is_local_deployment
 
 _logger = logging.getLogger(__name__)
 
@@ -85,7 +84,7 @@ class CelerySettings(object):
 @setup_logging.connect
 def configure_logging(**kwargs):
     """Set up logging for worker."""
-    level = 'DEBUG' if is_local_deployment() else 'INFO'
+    level = 'DEBUG' if configuration.is_local_deployment() else 'INFO'
 
     handlers = {
         'default': {

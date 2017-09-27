@@ -7,7 +7,7 @@ import boto3
 import botocore
 from selinon import DataStorage
 from selinon import StoragePool
-from f8a_worker.conf import is_local_deployment
+from f8a_worker.defaults import F8AConfiguration as configuration
 
 
 class AmazonS3(DataStorage):
@@ -41,7 +41,7 @@ class AmazonS3(DataStorage):
         self.versioned = self._DEFAULT_VERSIONED if versioned is None else versioned
 
         # if we run locally, make connection properties configurable
-        if is_local_deployment():
+        if configuration.is_local_deployment():
             self._endpoint_url = os.getenv('S3_ENDPOINT_URL') or \
                                  endpoint_url or \
                                  self._DEFAULT_LOCAL_ENDPOINT
@@ -90,13 +90,13 @@ class AmazonS3(DataStorage):
                                    CreateBucketConfiguration={
                                        'LocationConstraint': self.region_name
                                    })
-        if self.versioned and not is_local_deployment():
+        if self.versioned and not configuration.is_local_deployment():
             # Do not enable versioning when running locally.
             # Our S3 alternatives are not capable to handle it.
             self._s3.BucketVersioning(self.bucket_name).enable()
 
         bucket_tag = os.environ.get('DEPLOYMENT_PREFIX')
-        if tagged and bucket_tag and not is_local_deployment():
+        if tagged and bucket_tag and not configuration.is_local_deployment():
             self._s3.BucketTagging(self.bucket_name).put(
                 Tagging={
                     'TagSet': [
@@ -171,7 +171,7 @@ class AmazonS3(DataStorage):
 
         response = self._s3.Object(self.bucket_name, object_key).put(**put_kwargs)
 
-        if 'VersionId' not in response and is_local_deployment() and self.versioned:
+        if 'VersionId' not in response and configuration.is_local_deployment() and self.versioned:
             # If we run local deployment, our local S3 alternative does not
             # support versioning. Return a fake one.
             return self._get_fake_version_id()
@@ -211,7 +211,7 @@ class AmazonS3(DataStorage):
                                  "bucket '{}' is not configured to be versioned".format(
                                      object_key, self.bucket_name))
 
-        if is_local_deployment():
+        if configuration.is_local_deployment():
             return self._get_fake_version_id()
 
         return self._s3.Object(self.bucket_name, object_key).version_id

@@ -42,11 +42,11 @@ class F8AConfiguration(object):
                pgbouncer_port=environ.get('PGBOUNCER_SERVICE_PORT', '5432'),
                database=environ.get('POSTGRESQL_DATABASE'))
 
-    LOCAL_DEPLOYMENT = environ.get('F8A_UNCLOUDED_MODE', '0').lower() in ('1', 'true', 'yes')
     WORKER_DATA_DIR = environ.get('WORKER_DATA_DIR', 'not-set')
 
-    def is_local_deployment(self):
+    @classmethod
+    def is_local_deployment(cls):
         """
         :return: True if we are running locally
         """
-        return self.LOCAL_DEPLOYMENT
+        return environ.get('F8A_UNCLOUDED_MODE', '0').lower() in ('1', 'true', 'yes')
