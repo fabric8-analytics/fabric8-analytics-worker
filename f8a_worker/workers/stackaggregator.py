@@ -161,7 +161,7 @@ class StackAggregatorTask(BaseTask):
                 else:
                     self.log.error("Failed retrieving dependency data.")
                     continue
-            except:
+            except Exception:
                 self.log.exception("Error retrieving dependency data.")
                 continue
 
