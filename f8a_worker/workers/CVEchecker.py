@@ -4,7 +4,7 @@ from glob import glob
 import os
 from re import compile as re_compile
 import requests
-from shutil import rmtree
+from shutil import rmtree, copy
 from tempfile import gettempdir
 from selinon import StoragePool
 from f8a_worker.base import BaseTask
@@ -243,6 +243,16 @@ class CVEcheckerTask(BaseTask):
             if 'METADATA' in files:
                 metadata = os.path.join(root, 'METADATA')
         scan_path = egg_info or pkg_info or metadata
+        if pkg_info and not egg_info:
+            # Work-around for dependency-check ignoring PKG-INFO outside .dist-info/
+            # https://github.com/jeremylong/DependencyCheck/issues/896
+            egg_info_dir = os.path.join(extracted_tarball, arguments['name'] + '.egg-info')
+            try:
+                os.mkdir(egg_info_dir)
+                copy(pkg_info, egg_info_dir)
+                scan_path = egg_info_dir
+            except os.error:
+                self.log.warning('Failed to copy %s to %s', pkg_info, egg_info_dir)
 
         if not scan_path:
             return {'summary': ['File types not supported by OWASP dependency-check'],
