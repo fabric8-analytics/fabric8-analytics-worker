@@ -62,9 +62,6 @@ class TestCVEchecker(object):
         #        "id": "CVE-2015-6420",
         #        "references": [
         #            "http://www.securityfocus.com/bid/78872",
-        #            "http://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-20151209-java-deserialization",
-        #            "https://h20566.www2.hpe.com/portal/site/hpsc/public/kb/docDisplay?docId=emr_na-c05376917",
-        #            "https://h20566.www2.hpe.com/portal/site/hpsc/public/kb/docDisplay?docId=emr_na-c05390722"
         #            ],
         #        "severity": "High"
         #        }
@@ -82,11 +79,11 @@ class TestCVEchecker(object):
         assert results['summary'] == ['CVE-2015-6420']
 
     def test_python_mako(self):
-        egg_info_dir = os.path.join(
+        extracted = os.path.join(
                         os.path.dirname(
-                         os.path.abspath(__file__)), '..', 'data', 'Mako.egg-info')
+                         os.path.abspath(__file__)), '..', 'data', 'pypi', 'Mako-0.3.3')
         args = {'ecosystem': 'pypi', 'name': 'mako', 'version': '0.3.3'}
-        flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(egg_info_dir)
+        flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(extracted)
         task = CVEcheckerTask.create_test_instance(task_name='source_licenses')
         results = task.execute(arguments=args)
 
@@ -104,7 +101,6 @@ class TestCVEchecker(object):
         #            "references": [
         #                "http://www.makotemplates.org/CHANGES",
         #                "http://bugs.python.org/issue9061",
-        #                "http://lists.opensuse.org/opensuse-security-announce/2010-08/msg00001.html"
         #            ],
         #            "severity": "Medium"
         #        }
@@ -120,6 +116,45 @@ class TestCVEchecker(object):
         assert detail['severity'] == 'Medium'
         assert results['status'] == 'success'
         assert results['summary'] == ['CVE-2010-2480']
+
+    def test_python_requests(self):
+        """ To make sure that python CPE suppression works (issue#131) """
+        extracted = os.path.join(
+                        os.path.dirname(
+                         os.path.abspath(__file__)), '..', 'data', 'pypi', 'requests-2.5.3')
+        args = {'ecosystem': 'pypi', 'name': 'requests', 'version': '2.5.3'}
+        flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(extracted)
+        task = CVEcheckerTask.create_test_instance(task_name='source_licenses')
+        results = task.execute(arguments=args)
+
+        assert isinstance(results, dict)
+        assert set(results.keys()) == {'details', 'status', 'summary'}
+        details = results.get('details')
+        #  "details": [
+        #    {
+        #        "cvss": {
+        #            "score": 6.8,
+        #            "vector": "AV:N/AC:M/Au:?/C:P/I:P/A:P"
+        #        },
+        #        "description": "The resolve_redirects function in sessions.py ...",
+        #        "id": "CVE-2015-2296",
+        #        "references": [
+        #            "http://advisories.mageia.org/MGASA-2015-0120.html"
+        #        ],
+        #        "severity": "Medium"
+        #    }
+
+        assert isinstance(details, list) and len(details) == 1
+        detail = details[0]
+        assert set(detail.keys()) == {'cvss', 'description', 'id', 'references', 'severity'}
+        cvss = detail['cvss']
+        assert cvss['score'] == 6.8
+        assert cvss['vector'] == 'AV:N/AC:M/Au:?/C:P/I:P/A:P'
+        assert detail['id'] == 'CVE-2015-2296'
+        assert 'http://advisories.mageia.org/MGASA-2015-0120.html' in detail['references']
+        assert detail['severity'] == 'Medium'
+        assert results['status'] == 'success'
+        assert results['summary'] == ['CVE-2015-2296']
 
     @pytest.mark.usefixtures('nuget')
     def test_nuget_system_net_http(self):

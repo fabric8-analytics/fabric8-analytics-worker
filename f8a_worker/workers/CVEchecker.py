@@ -151,6 +151,10 @@ class CVEcheckerTask(BaseTask):
                        '--out', report_path]
             if experimental:
                 command.extend(['--enableExperimental'])
+            for suppress_xml in glob(os.path.join(os.environ['OWASP_DEP_CHECK_SUPPRESS_PATH'],
+                                                  '*.xml')):
+                command.extend(['--suppress', suppress_xml])
+
             output = []
             try:
                 self.log.debug('Running OWASP Dependency-Check to scan %s for vulnerabilities' %
