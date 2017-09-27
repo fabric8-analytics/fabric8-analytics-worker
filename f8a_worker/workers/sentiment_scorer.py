@@ -291,8 +291,8 @@ class UserStackSentimentScoringTask(BaseTask):
             for elm in resolved:
                 arg_instances.append((ecosystem, elm['package']))
 
-            sentiment_results = Parallel(n_jobs=4, verbose=1, backend="threading")\  # noqa
-            (map(delayed(sentiment_analysis), arg_instances))
+            sentiment_results = Parallel(n_jobs=4, verbose=1, backend="threading")\
+                (map(delayed(sentiment_analysis), arg_instances))
 
             for res in sentiment_results:
                 temp_sentiment_output[res['package_name']] = res
@@ -321,8 +321,8 @@ class RecoPkgSentimentScoringTask(BaseTask):
             for pkg in recommendation['companion']:
                 arg_instances.append((pkg['ecosystem'], pkg['name']))
 
-            sentiment_results = Parallel(n_jobs=4, verbose=1, backend="threading")\  # noqa
-            (map(delayed(sentiment_analysis), arg_instances))
+            sentiment_results = Parallel(n_jobs=4, verbose=1, backend="threading")\
+                (map(delayed(sentiment_analysis), arg_instances))
 
             for res in sentiment_results:
                 temp_sentiment_output[res['package_name']] = res
