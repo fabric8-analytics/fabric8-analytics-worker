@@ -18,7 +18,8 @@ class AmazonS3(DataStorage):
     _DEFAULT_VERSIONED = True
 
     def __init__(self, aws_access_key_id=None, aws_secret_access_key=None, bucket_name=None,
-                 region_name=None, endpoint_url=None, use_ssl=False, encryption=None, versioned=None):
+                 region_name=None, endpoint_url=None, use_ssl=False, encryption=None,
+                 versioned=None):
         # Priority for configuration options:
         #   1. environment variables
         #   2. arguments passed to constructor
@@ -48,7 +49,8 @@ class AmazonS3(DataStorage):
             self.encryption = False
 
         if self._aws_access_key_id is None or self._aws_secret_access_key is None:
-            raise ValueError("AWS configuration not provided correctly, both key id and key is needed")
+            raise ValueError("AWS configuration not provided correctly, "
+                             "both key id and key is needed")
 
     @staticmethod
     def dict2blob(dictionary):
@@ -170,7 +172,8 @@ class AmazonS3(DataStorage):
         response = self._s3.Object(self.bucket_name, object_key).put(**put_kwargs)
 
         if 'VersionId' not in response and is_local_deployment() and self.versioned:
-            # If we run local deployment, our local S3 alternative does not support versioning. Return a fake one.
+            # If we run local deployment, our local S3 alternative does not
+            # support versioning. Return a fake one.
             return self._get_fake_version_id()
 
         return response.get('VersionId')
@@ -205,7 +208,8 @@ class AmazonS3(DataStorage):
         """
         if not self.versioned:
             raise AttributeError("Cannot retrieve version of object '{}': "
-                                 "bucket '{}' is not configured to be versioned".format(object_key, self.bucket_name))
+                                 "bucket '{}' is not configured to be versioned".format(
+                                     object_key, self.bucket_name))
 
         if is_local_deployment():
             return self._get_fake_version_id()
@@ -227,6 +231,7 @@ class AmazonS3(DataStorage):
         elif flow_name == 'bayesianPackageAnalysisFlow':
             postgres = StoragePool.get_connected_storage('PackagePostgres')
         else:
-            raise RuntimeError("Unable to store error, error storing not defined for flow '%s'" % flow_name)
+            raise RuntimeError("Unable to store error, error storing not defined for flow '%s'" %
+                               flow_name)
 
         return postgres.store_error(node_args, flow_name, task_name, task_id, exc_info)
