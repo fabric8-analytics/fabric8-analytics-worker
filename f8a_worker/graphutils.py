@@ -7,12 +7,13 @@ from f8a_worker.utils import get_session_retry
 
 logger = logging.getLogger(__name__)
 
-GREMLIN_SERVER_URL_REST = "http://{host}:{port}".format\
-                           (host=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_HOST", "localhost"),
-                            port=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_PORT", "8182"))
+GREMLIN_SERVER_URL_REST = "http://{host}:{port}".format(
+    host=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_HOST", "localhost"),
+    port=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_PORT", "8182"))
 
-LICENSE_SCORING_URL_REST = "http://{host}:{port}".format(host=os.environ.get("LICENSE_SERVICE_HOST"),
-                                                         port=os.environ.get("LICENSE_SERVICE_PORT"))
+LICENSE_SCORING_URL_REST = "http://{host}:{port}".format(
+    host=os.environ.get("LICENSE_SERVICE_HOST"),
+    port=os.environ.get("LICENSE_SERVICE_PORT"))
 
 
 def get_stack_usage_data_graph(components):
@@ -39,7 +40,8 @@ def get_stack_usage_data_graph(components):
 
     result = {}
     if components_with_usage_data > 0:
-        result['average_usage'] = "%.2f" % round(total_dependents_count / components_with_usage_data, 2)
+        result['average_usage'] = "%.2f" % round(total_dependents_count /
+                                                 components_with_usage_data, 2)
     else:
         result['average_usage'] = 'NA'
     result['low_public_usage_components'] = low_usage_component_count
@@ -115,7 +117,8 @@ def extract_component_details(component):
 
     code_metrics = {
         "code_lines": component.get("version", {}).get("cm_loc", [-1])[0],
-        "average_cyclomatic_complexity": component.get("version", {}).get("cm_avg_cyclomatic_complexity", [-1])[0],
+        "average_cyclomatic_complexity":
+            component.get("version", {}).get("cm_avg_cyclomatic_complexity", [-1])[0],
         "total_files": component.get("version", {}).get("cm_num_files", [-1])[0]
     }
 
@@ -221,8 +224,9 @@ def create_package_dict(graph_results, alt_dict=None):
                 'version': version,
                 'licenses': epv['ver'].get('licenses', []),
                 'sentiment': {"overall_score": 0, "magnitude": 0, 'latest_comment': 'N/A'},
-                'latest_version': select_latest_version(epv['pkg'].get('libio_latest_version', [''])[0],
-                                                        epv['pkg'].get('latest_version', [''])[0]),
+                'latest_version': select_latest_version(
+                    epv['pkg'].get('libio_latest_version', [''])[0],
+                    epv['pkg'].get('latest_version', [''])[0]),
                 'security': [],
                 'osio_user_count': osio_user_count,
                 'topic_list': epv['pkg'].get('pgm_topics', [])
@@ -233,7 +237,8 @@ def create_package_dict(graph_results, alt_dict=None):
                 'used_by': [],
                 'total_releases': epv['pkg'].get('libio_total_releases', [-1])[0],
                 'latest_release_duration': str(datetime.datetime.fromtimestamp(
-                                               epv['pkg'].get('libio_latest_release', [1496302486.0])[0])),
+                                               epv['pkg'].get('libio_latest_release',
+                                                              [1496302486.0])[0])),
                 'first_release_date': 'N/A',
                 'forks_count': epv['pkg'].get('gh_forks', [-1])[0],
                 'stargazers_count': epv['pkg'].get('gh_stargazers', [-1])[0],
@@ -273,7 +278,8 @@ def create_package_dict(graph_results, alt_dict=None):
             github_dict['used_by'] = used_by_list
             pkg_dict['github'] = github_dict
             pkg_dict['code_metrics'] = {
-                "average_cyclomatic_complexity": epv['ver'].get('cm_avg_cyclomatic_complexity', [-1])[0],
+                "average_cyclomatic_complexity":
+                    epv['ver'].get('cm_avg_cyclomatic_complexity', [-1])[0],
                 "code_lines": epv['ver'].get('cm_loc', [-1])[0],
                 "total_files": epv['ver'].get('cm_num_files', [-1])[0]
             }

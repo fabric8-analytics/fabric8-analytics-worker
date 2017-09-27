@@ -47,7 +47,8 @@ class Git(object):
             TimedCommand.get_command_output(["git", "config", "--global", "user.email", user_email])
         # Use 'true' as external program to ask for credentials, i.e. don't ask
         # Better would be GIT_TERMINAL_PROMPT=0, but that requires git >= 2.3
-        TimedCommand.get_command_output(["git", "config", "--global", "core.askpass", "/usr/bin/true"])
+        TimedCommand.get_command_output(["git", "config", "--global", "core.askpass",
+                                         "/usr/bin/true"])
 
     @classmethod
     def clone(cls, url, path, depth=None, branch=None):
@@ -100,7 +101,7 @@ class Git(object):
 
     def log(self):
         """Parse git log history and return its content in a dictionary
-        
+
         :return: a dict representing git log entries
         """
         return list(parse_commits(run_git_log(os.path.join(self.repo_path, '.git'))))
@@ -241,7 +242,8 @@ class IndianaJones(object):
     def get_revision(target_directory):
         """ Get digest of last commit """
         with cwd(target_directory):
-            return TimedCommand.get_command_output(['git', 'rev-parse', 'HEAD'], graceful=False).pop()
+            return TimedCommand.get_command_output(['git', 'rev-parse', 'HEAD'],
+                                                   graceful=False).pop()
 
     @staticmethod
     def fetch_artifact(ecosystem=None,
@@ -295,7 +297,8 @@ class IndianaJones(object):
 
             # $ npm config get cache
             # /root/.npm
-            cache_path = TimedCommand.get_command_output(['npm', 'config', 'get', 'cache'], graceful=False).pop()
+            cache_path = TimedCommand.get_command_output(['npm', 'config', 'get', 'cache'],
+                                                         graceful=False).pop()
 
             # add package to cache:
             # /root/.npm/express/
@@ -356,9 +359,11 @@ class IndianaJones(object):
 
             if not version:
                 # if version is None we need to glob for the version that was downloaded
-                artifact_path = os.path.abspath(glob.glob(os.path.join(target_dir, artifact + '*')).pop())
+                artifact_path = os.path.abspath(glob.glob(os.path.join(
+                    target_dir, artifact + '*')).pop())
             else:
-                artifact_path = os.path.join(target_dir, '{n}-{v}.gem'.format(n=artifact, v=version))
+                artifact_path = os.path.join(target_dir, '{n}-{v}.gem'.format(
+                    n=artifact, v=version))
 
             digest = compute_digest(artifact_path)
             Archive.extract(artifact_path, target_dir)
@@ -374,7 +379,8 @@ class IndianaJones(object):
             logger.info("downloading maven package %s", artifact_coords.to_str())
 
             if not artifact_coords.is_valid():
-                raise ValueError("Invalid Maven coordinates: {a}".format(a=artifact_coords.to_str()))
+                raise ValueError("Invalid Maven coordinates: {a}".format(
+                    a=artifact_coords.to_str()))
 
             artifact_url = urljoin(maven_url, artifact_coords.to_repo_url())
             local_filename = IndianaJones.download_file(artifact_url, target_dir)

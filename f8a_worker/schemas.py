@@ -92,15 +92,15 @@ class SchemaRef(namedtuple("SchemaRef", "name version")):
 
     def next_addition(self):
         model, revision, addition = self._split_version_info()
-        return self._replace_version_info(model, revision, addition+1)
+        return self._replace_version_info(model, revision, addition + 1)
 
     def next_revision(self):
         model, revision, addition = self._split_version_info()
-        return self._replace_version_info(model, revision+1, addition)
+        return self._replace_version_info(model, revision + 1, addition)
 
     def next_model(self):
         model, revision, addition = self._split_version_info()
-        return self._replace_version_info(model+1, revision, addition)
+        return self._replace_version_info(model + 1, revision, addition)
 
 
 class SchemaLookupError(LookupError):

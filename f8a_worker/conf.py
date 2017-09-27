@@ -255,16 +255,18 @@ def get_postgres_connection_string(url_encoded_password=True):
     if f8a_postgres:
         if url_encoded_password:
             f8a_postgres = re.sub(r'(postgresql://.+:)([^@]+)(@.+)',
-                                  lambda x: '{}{}{}'.format(x.group(1), quote(x.group(2), safe=''), x.group(3)),
+                                  lambda x: '{}{}{}'.format(x.group(1), quote(x.group(2), safe=''),
+                                                            x.group(3)),
                                   f8a_postgres,
                                   count=1)
         return f8a_postgres
 
     password = os.environ.get('POSTGRESQL_PASSWORD', '')
-    postgres_env = {'POSTGRESQL_USER': os.environ.get('POSTGRESQL_USER'),
-                    'POSTGRESQL_PASSWORD': quote(password, safe='') if url_encoded_password else password,
-                    'PGBOUNCER_SERVICE_HOST': os.environ.get('PGBOUNCER_SERVICE_HOST'),
-                    'POSTGRESQL_DATABASE': os.environ.get('POSTGRESQL_DATABASE')}
+    postgres_env = {
+        'POSTGRESQL_USER': os.environ.get('POSTGRESQL_USER'),
+        'POSTGRESQL_PASSWORD': quote(password, safe='') if url_encoded_password else password,
+        'PGBOUNCER_SERVICE_HOST': os.environ.get('PGBOUNCER_SERVICE_HOST'),
+        'POSTGRESQL_DATABASE': os.environ.get('POSTGRESQL_DATABASE')}
     return 'postgresql://{POSTGRESQL_USER}:{POSTGRESQL_PASSWORD}@' \
            '{PGBOUNCER_SERVICE_HOST}:5432/{POSTGRESQL_DATABASE}?' \
            'sslmode=disable'.format(**postgres_env)

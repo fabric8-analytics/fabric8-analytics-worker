@@ -442,7 +442,8 @@ class PypiDependencyParser(DependencyParser):
                 return spec.operator, spec.version
 
         def _get_pip_spec(requirements):
-            "In Pip 8+ there's no `specs` field and we have to dig the information from the `specifier` field"
+            '''In Pip 8+ there's no `specs` field and we have to dig the
+            information from the `specifier` field'''
             if hasattr(requirements, 'specs'):
                 return requirements.specs
             elif hasattr(requirements, 'specifier'):
@@ -565,6 +566,7 @@ class NpmDependencyParser(DependencyParser):
             result.append(Dependency(name, specs))
 
         return result
+
 
 RubyGemsDependencyParser = NpmDependencyParser
 

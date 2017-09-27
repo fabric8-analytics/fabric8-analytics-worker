@@ -13,6 +13,8 @@ configuration = get_configuration()
 # Red Hat Engineering products, so we cache those lookups
 # TODO: Make this properly configurable
 _RED_HAT_PRODUCT_API = 'http://servicejava.corp.qa.redhat.com/svcrest/product/v3/engproducts/'
+
+
 @functools.lru_cache()
 def _get_product_name(product_id, service_api=_RED_HAT_PRODUCT_API):
     query_url = _RED_HAT_PRODUCT_API + product_id
@@ -20,7 +22,7 @@ def _get_product_name(product_id, service_api=_RED_HAT_PRODUCT_API):
     response.raise_for_status()
     data = response.json()['engProducts'][0]
     if data['status'] != 'ACTIVE':
-        return None # Hide inactive products
+        return None  # Hide inactive products
     return data['name']
 
 
