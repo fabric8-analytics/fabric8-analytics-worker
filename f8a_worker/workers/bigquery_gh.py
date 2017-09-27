@@ -28,7 +28,7 @@ SELECT
   COUNT(name) AS count
 FROM (
   SELECT
-    SPLIT( RTRIM( LTRIM( JSON_EXTRACT(content, '$.dependencies'), '{{' ), '}}' ), ',') AS name_version
+    SPLIT(RTRIM(LTRIM(JSON_EXTRACT(content, '$.dependencies'), '{{' ), '}}' ), ',') AS name_version
   FROM
     [{project_id}:{dataset}.github_package_jsons])
 GROUP BY
@@ -100,7 +100,8 @@ class BigQueryTask(SelinonTask):
                          allow_large_results=True,
                          write_disposition=JOB_WRITE_TRUNCATE)
 
-        results = bq.execute_query(query_dependents_count.format(project_id=bq.project_id, dataset=dataset))
+        results = bq.execute_query(query_dependents_count.format(project_id=bq.project_id,
+                                                                 dataset=dataset))
         if results:
             self.store_results(results, 'package_gh_usage')
         else:
@@ -113,10 +114,13 @@ class BigQueryTask(SelinonTask):
                          allow_large_results=True,
                          write_disposition=JOB_WRITE_TRUNCATE)
 
-        # TODO: figure out how to automatically upload the file containing UDFs to the Google Cloud Storage
+        # TODO: figure out how to automatically upload the file containing UDFs
+        # to the Google Cloud Storage
         # TODO: make the bucket name configurable
-        results = bq.execute_query(query_str=shrinkwrap_refs.format(project_id=bq.project_id, dataset=dataset),
-                                   udf_uris=["gs://{project_id}.appspot.com/udfs.js".format(project_id=bq.project_id)])
+        results = bq.execute_query(query_str=shrinkwrap_refs.format(project_id=bq.project_id,
+                                                                    dataset=dataset),
+                                   udf_uris=["gs://{project_id}.appspot.com/udfs.js".format(
+                                       project_id=bq.project_id)])
         if results:
             self.process_results(results, percentile_rank=True)
             self.store_results(results, 'component_gh_usage')
@@ -126,7 +130,8 @@ class BigQueryTask(SelinonTask):
     @classmethod
     def store_results(cls, results, table_name):
         """Store results from BigQuery in our DB."""
-        # TODO: implement store() method in S3BigQuery for this and assign S3BigQuery to this task in nodes.yml
+        # TODO: implement store() method in S3BigQuery for this and assign
+        # S3BigQuery to this task in nodes.yml
         csv_file = None
         try:
             csv_file, csv_header = cls.prepare_csv_file(results)
@@ -184,22 +189,28 @@ class BigQueryProject(object):
         :param json_key: path to the JSON key containing BigQuery credentials
         """
         if not os.path.isfile(json_key):
-            raise ValueError('BigQuery JSON key is missing, cannot continue... (path={f})'.format(f=json_key))
+            raise ValueError('BigQuery JSON key is missing, cannot continue... (path={f})'.format(
+                f=json_key))
         self._json_key = json_key
         self._client = get_client(json_key_file=self._json_key, readonly=False)
         self.project_id = self._extract_project_id()
 
-    def execute_query(self, query_str, dest_dataset=None, dest_table=None, allow_large_results=False,
-                      write_disposition=JOB_WRITE_EMPTY, timeout=300, udf_uris=None):
+    def execute_query(self, query_str, dest_dataset=None, dest_table=None,
+                      allow_large_results=False, write_disposition=JOB_WRITE_EMPTY, timeout=300,
+                      udf_uris=None):
         """Execute query in BigQuery.
 
         :param query_str: query string to execute
         :param dest_dataset: name of the dataset
         :param dest_table: name of the destination table
-        :param allow_large_results: if True, allows arbitrarily large results to be written to the destination table
-        :param write_disposition: specifies the action that occurs if the destination table already exists, see `bigquery.JOB_WRITE_*` constants.
-        :param timeout: time (in seconds) how long to wait for a job to finish before raising bigquery.errors.BigQueryTimeoutException
-        :param udf_uris: list of resources to load from a Google Cloud Storage URI (e.g.: ['gs://bucket/path']).
+        :param allow_large_results: if True, allows arbitrarily large results
+               to be written to the destination table
+        :param write_disposition: specifies the action that occurs if the
+               destination table already exists, see `bigquery.JOB_WRITE_*` constants.
+        :param timeout: time (in seconds) how long to wait for a job to finish
+               before raising bigquery.errors.BigQueryTimeoutException
+        :param udf_uris: list of resources to load from a Google Cloud Storage
+               URI (e.g.: ['gs://bucket/path']).
         :return: response from BigQuery
         """
 
@@ -224,9 +235,10 @@ class BigQueryProject(object):
                 job_resource = self._client.wait_for_job(job, timeout=timeout)
                 logger.debug('BigQuery job has finished: {r}'.format(r=job_resource))
                 if not permanent_table:
-                    # python-BigQuery library only supports UDFs in combination with storing results
-                    # to a temporary/permanent table. If it's just a temporary table, we want to return
-                    # actual results.
+                    # python-BigQuery library only supports UDFs in combination
+                    # with storing results to a temporary/permanent table. If
+                    # it's just a temporary table, we want to return actual
+                    # results.
                     results = self._client.get_query_rows(job['jobReference']['jobId'])
                     return results
                 return job_resource
@@ -235,7 +247,8 @@ class BigQueryProject(object):
                 logger.debug("BigQuery has returned {n} results.".format(n=len(results)))
                 return results
         except BigQueryTimeoutException:
-            logger.error("BigQuery job hasn't finished in {t} seconds.".format(t=timeout), exc_info=True)
+            logger.error("BigQuery job hasn't finished in {t} seconds.".format(t=timeout),
+                         exc_info=True)
             raise
 
     def _create_dataset(self, dataset_name):

@@ -195,11 +195,13 @@ class Analysis(Base):
         s = Session.object_session(self)
         if s:
             # to avoid cyclic import
-            from f8a_worker.utils import get_package_dependents_count, get_component_percentile_rank, usage_rank2str
+            from f8a_worker.utils import (get_package_dependents_count,
+                                          get_component_percentile_rank, usage_rank2str)
 
-            count = get_package_dependents_count(self.version.package.ecosystem._backend, self.version.package.name, s)
-            # TODO: This obviously doesn't belong here. It's getting crowded and unorganized at the top-level,
-            # refactoring is needed.
+            count = get_package_dependents_count(self.version.package.ecosystem._backend,
+                                                 self.version.package.name, s)
+            # TODO: This obviously doesn't belong here. It's getting crowded
+            # and unorganized at the top-level, refactoring is needed.
             rank = get_component_percentile_rank(self.version.package.ecosystem._backend,
                                                  self.version.package.name,
                                                  self.version.identifier,
@@ -300,7 +302,8 @@ class PackageAnalysis(Base):
     def raw_analyses(self):
         s = Session.object_session(self)
         if s:
-            return s.query(PackageWorkerResult).filter(PackageWorkerResult.package_analysis_id == self.id)
+            return s.query(PackageWorkerResult).filter(
+                PackageWorkerResult.package_analysis_id == self.id)
         return []
 
 
@@ -349,6 +352,7 @@ class APIRequests(Base):
     recommendation = Column(JSON, nullable=True)
     request_digest = Column(String(128), nullable=True)
 
+
 class PackageGHUsage(Base):
     """Table for storing package results from BigQuery."""
     __tablename__ = 'package_gh_usage'
@@ -358,7 +362,8 @@ class PackageGHUsage(Base):
     name = Column(String(255), nullable=False)
     # number of dependent projects found on GitHub
     count = Column(Integer, nullable=False)
-    ecosystem_backend = Column(ENUM(*[b.name for b in EcosystemBackend], name='ecosystem_backend_enum', create_type=False))
+    ecosystem_backend = Column(ENUM(*[b.name for b in EcosystemBackend],
+                                    name='ecosystem_backend_enum', create_type=False))
     timestamp = Column(DateTime, nullable=False, server_default=func.localtimestamp())
 
 
@@ -375,7 +380,8 @@ class ComponentGHUsage(Base):
     count = Column(Integer, nullable=False)
     # percentage of components that are used less or equally often as (name, version)
     percentile_rank = Column(Integer, nullable=False)
-    ecosystem_backend = Column(ENUM(*[b.name for b in EcosystemBackend], name='ecosystem_backend_enum', create_type=False))
+    ecosystem_backend = Column(ENUM(*[b.name for b in EcosystemBackend],
+                               name='ecosystem_backend_enum', create_type=False))
     timestamp = Column(DateTime, nullable=False, server_default=func.localtimestamp())
 
 

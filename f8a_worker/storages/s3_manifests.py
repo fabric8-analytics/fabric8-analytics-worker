@@ -14,6 +14,7 @@ class S3Manifests(AmazonS3):
 
         for manifest in result['manifest']:
             assert 'content' in manifest
-            self.store_blob(manifest['content'].encode(), self._construct_object_key(node_args, manifest))
+            self.store_blob(manifest['content'].encode(),
+                            self._construct_object_key(node_args, manifest))
 
         return "{}:{}".format(self.bucket_name, node_args['external_request_id'])

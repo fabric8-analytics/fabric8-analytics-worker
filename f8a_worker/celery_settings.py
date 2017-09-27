@@ -18,15 +18,19 @@ def _use_sqs():
     res = int(key_id) + int(access_key)
 
     if res == 1:
-        raise RuntimeError("In order to use AWS SQS you have to provide both 'AWS_SQS_ACCESS_KEY_ID' and "
+        raise RuntimeError("In order to use AWS SQS you have to provide both "
+                           "'AWS_SQS_ACCESS_KEY_ID' and "
                            "'AWS_SQS_SECRET_ACCESS_KEY' environment variables")
 
-    # Make sure we do not pass these env variables - according to Celery docs they can be used only with 'sqs://'
+    # Make sure we do not pass these env variables - according to Celery docs
+    # they can be used only with 'sqs://'
     if "AWS_ACCESS_KEY_ID" in os.environ:
-        raise RuntimeError("Do not use AWS_ACCESS_KEY_ID in order to access SQS, use 'AWS_SQS_ACCESS_KEY_ID'")
+        raise RuntimeError("Do not use AWS_ACCESS_KEY_ID in order to access SQS, "
+                           "use 'AWS_SQS_ACCESS_KEY_ID'")
 
     if "AWS_SECRET_ACCESS_KEY" in os.environ:
-        raise RuntimeError("Do not use AWS_SECRET_ACCESS_KEY in order to access SQS, use 'AWS_SQS_SECRET_ACCESS_KEY'")
+        raise RuntimeError("Do not use AWS_SECRET_ACCESS_KEY in order to access SQS, "
+                           "use 'AWS_SQS_SECRET_ACCESS_KEY'")
 
     return res != 0
 
@@ -56,7 +60,8 @@ class CelerySettings(object):
             # number of seconds for polling, the more frequent we poll, the more money we pay
             'polling_interval': 2,
             # 'queue_name_prefix': 'bayesian-',
-            # see amazon_endpoints.js based on http://docs.aws.amazon.com/general/latest/gr/rande.html#sqs_region
+            # see amazon_endpoints.js based on
+            # http://docs.aws.amazon.com/general/latest/gr/rande.html#sqs_region
             'region': os.environ.get('AWS_SQS_REGION', _DEFAULT_SQS_REGION)
         }
 
@@ -100,7 +105,8 @@ def configure_logging(**kwargs):
         },
     }
 
-    # If you would like to track some library, place it's handler here with appropriate entry - see celery as an example
+    # If you would like to track some library, place it's handler here with
+    # appropriate entry - see celery as an example
     loggers = {
         '': {
             'handlers': ['default'],
@@ -152,4 +158,3 @@ def configure_logging(**kwargs):
         },
         'handlers': handlers
     })
-

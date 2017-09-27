@@ -9,6 +9,7 @@ ROLE_TITLE = jsl.roles.Var({
     ROLE_v1_0_0: "OSCrypto catcher v1-0-0"
 })
 
+
 class CryptoAlgoDetail(jsl.Document):
     class Options(object):
         definition_id = "cryptoalgo_detail"
@@ -21,12 +22,14 @@ class CryptoAlgoDetail(jsl.Document):
     sample_file = jsl.StringField()
     samples_lines = jsl.NumberField()
 
+
 class CryptoAlgorithmRecord(jsl.Document):
     class Options(object):
         definition_id = "cryptoalgo_record"
 
     count = jsl.NumberField(required=True)
     name = jsl.StringField(required=True)
+
 
 class CryptoCheckSummary(jsl.Document):
     class Options(object):
@@ -41,12 +44,13 @@ class CryptoCheckSummary(jsl.Document):
              required=True
     )
 
+
 class CryptoCheckResult(JSLSchemaBaseWithRelease):
     class Options(object):
         definition_id = "crypto_algorithms_result"
         description = "Result of OSCryptoChecker worker"
 
-    status = jsl.StringField(enum = ["success", "error"], required=True)
+    status = jsl.StringField(enum=["success", "error"], required=True)
     details = jsl.ArrayField(
             jsl.DocumentField(CryptoAlgoDetail, as_ref=True),
             required=True
@@ -56,5 +60,6 @@ class CryptoCheckResult(JSLSchemaBaseWithRelease):
             as_ref=True,
             required=True
     )
+
 
 THE_SCHEMA = CryptoCheckResult

@@ -144,4 +144,5 @@ class LicenseScanResult(SuccessfulLicenseScan, FailedLicenseScan):
         definition_id = "source_licenses"
         inheritance_mode = jsl.ONE_OF
 
+
 THE_SCHEMA = LicenseScanResult

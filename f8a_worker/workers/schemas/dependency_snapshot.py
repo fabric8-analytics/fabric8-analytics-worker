@@ -8,6 +8,7 @@ ROLE_TITLE = jsl.roles.Var({
     ROLE_v1_0_0: "Dependency snapshot v1-0-0"
 })
 
+
 class Dependency(jsl.Document):
     class Options(object):
         definition_id = 'dependency_object'

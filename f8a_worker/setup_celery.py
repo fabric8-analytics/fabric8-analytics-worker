@@ -40,7 +40,7 @@ def get_dispatcher_config_files():
 
 def init_selinon(app=None):
     """Init Selinon configuration.
-    
+
     :param app: celery application, if omitted Selinon flow handling tasks will not be registered
     """
     if app is not None:

@@ -80,4 +80,5 @@ class CVECheckResult(JSLSchemaBaseWithRelease):
     )
     summary = jsl.ArrayField(jsl.StringField(), required=True)
 
+
 THE_SCHEMA = CVECheckResult

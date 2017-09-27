@@ -73,7 +73,8 @@ class GithubDetail(jsl.Document):
     subscribers_count = jsl.IntField()
     with removed_in(ROLE_v2_0_0) as until_v2_0_0:
         until_v2_0_0.updated_issues = jsl.DocumentField(GithubUpdatedIssues, as_ref=True)
-        until_v2_0_0.updated_pull_requests = jsl.DocumentField(GithubUpdatedPullRequests, as_ref=True)
+        until_v2_0_0.updated_pull_requests = jsl.DocumentField(GithubUpdatedPullRequests,
+                                                               as_ref=True)
     with added_in(ROLE_v1_0_2) as since_v1_0_2:
         since_v1_0_2.contributors_count = jsl.IntField()
     with jsl.Scope(ROLE_v1_0_3) as v1_0_3:

@@ -27,7 +27,8 @@ class OSCryptoCatcherTask(BaseTask):
                    'details': []}
 
         try:
-            oscc = TimedCommand.get_command_output(['oscryptocatcher', '--subdir-in-result', cache_path],
+            oscc = TimedCommand.get_command_output(['oscryptocatcher', '--subdir-in-result',
+                                                    cache_path],
                                                    graceful=False, is_json=True)
 
             self.log.debug("oscryptocatcher %s output: %s", cache_path, oscc)

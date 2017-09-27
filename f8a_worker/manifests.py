@@ -25,12 +25,15 @@ def get_manifest_descriptor_by_filename(filename):
 
 
 class ManifestDescriptor(object):
-    def __init__(self, filename, ecosystem, has_resolved_deps=False, has_recursive_deps=False, validator=lambda x: False):
+    def __init__(self, filename, ecosystem, has_resolved_deps=False, has_recursive_deps=False,
+                 validator=lambda x: False):
         """
         :param filename: a typical filename
         :param ecosystem: ecosystem to which this manifest belongs to
-        :param has_resolved_deps: indication whether manifest contains exact versions of dependencies
-        :param has_recursive_deps: indication whether dependencies in this manifest file are recursive or not
+        :param has_resolved_deps: indication whether manifest contains exact
+        versions of dependencies
+        :param has_recursive_deps: indication whether dependencies in this
+        manifest file are recursive or not
         :param validator: function that can be used to validate this manifest file
         """
         self.filename = filename
@@ -72,7 +75,17 @@ def python_validator(data):
         return False
     return True
 
-register_manifest_descriptor(ManifestDescriptor('package.json', 'npm', has_resolved_deps=False, has_recursive_deps=False, validator=json_validator))
-register_manifest_descriptor(ManifestDescriptor('npm-shrinkwrap.json', 'npm', has_resolved_deps=True, has_recursive_deps=True, validator=json_validator))
-register_manifest_descriptor(ManifestDescriptor('pom.xml', 'maven', has_resolved_deps=True, has_recursive_deps=False, validator=xml_validator))
-register_manifest_descriptor(ManifestDescriptor('requirements.txt', 'pypi', has_resolved_deps=False, has_recursive_deps=False, validator=python_validator))
+
+register_manifest_descriptor(ManifestDescriptor('package.json', 'npm', has_resolved_deps=False,
+                                                has_recursive_deps=False, validator=json_validator))
+
+register_manifest_descriptor(ManifestDescriptor('npm-shrinkwrap.json', 'npm',
+                                                has_resolved_deps=True, has_recursive_deps=True,
+                                                validator=json_validator))
+
+register_manifest_descriptor(ManifestDescriptor('pom.xml', 'maven', has_resolved_deps=True,
+                                                has_recursive_deps=False, validator=xml_validator))
+
+register_manifest_descriptor(ManifestDescriptor('requirements.txt', 'pypi',
+                                                has_resolved_deps=False, has_recursive_deps=False,
+                                                validator=python_validator))

@@ -77,7 +77,8 @@ class LicenseCheckTask(BaseTask):
             tc = TimedCommand(command)
             status, output, error = tc.run(is_json=True, timeout=1200)
             if status != 0:
-                raise FatalTaskError("Error (%s) during running command %s: %r" % (str(status), command, error))
+                raise FatalTaskError("Error (%s) during running command %s: %r" %
+                                     (str(status), command, error))
 
         details = LicenseCheckTask.process_output(output)
         result_data['details'] = details

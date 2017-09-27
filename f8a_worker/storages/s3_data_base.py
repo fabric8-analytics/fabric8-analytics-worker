@@ -12,7 +12,8 @@ class S3DataBase(AmazonS3):
         # remove entries we don't want to keep
         result.pop('access_count', None)
         # do not keep track of tasks that were used for Selinon's Dispatcher book-keeping
-        analyses_list = set(old_file_content.get('analyses', [])) | set(result.get('analyses', {}).keys())
+        analyses_list = (set(old_file_content.get('analyses', [])) |
+                         set(result.get('analyses', {}).keys()))
         analyses_list = [a for a in analyses_list if not a[0].isupper()]
 
         content = result
@@ -27,7 +28,7 @@ class S3DataBase(AmazonS3):
     @staticmethod
     def _construct_base_file_name(arguments):
         """Construct location of EPV in the bucket.
-        
+
         :param arguments: arguments as passed to the flow
         :return: str, EPV location in the bucket
         """
@@ -36,12 +37,13 @@ class S3DataBase(AmazonS3):
     @classmethod
     def _construct_task_result_object_key(cls, arguments, task_name):
         """Construct object key on S3 for a task_result.
-        
+
         :param arguments: arguments as passed to the flow
         :param task_name: name of the task for which the key should be constructed
         :return: fully qualified path to the task result"""
         base_file_name = cls._construct_base_file_name(arguments)
-        return "{base_file_name}/{task_name}.json".format(base_file_name=base_file_name, task_name=task_name)
+        return "{base_file_name}/{task_name}.json".format(base_file_name=base_file_name,
+                                                          task_name=task_name)
 
     def store_base_file_record(self, arguments, result):
         """Add info about analyses available.

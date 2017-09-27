@@ -33,10 +33,12 @@ class PackagePostgres(PostgresBase):
         return PackageWorkerResult(
             worker=task_name,
             worker_id=task_id,
-            package_analysis_id=node_args.get('document_id') if isinstance(node_args, dict) else None,
+            package_analysis_id=(node_args.get('document_id')
+                                 if isinstance(node_args, dict) else None),
             task_result=result,
             error=error,
-            external_request_id=node_args.get('external_request_id') if isinstance(node_args, dict) else None
+            external_request_id=(node_args.get('external_request_id')
+                                 if isinstance(node_args, dict) else None)
         )
 
     def get_analysis_by_id(self, analysis_id):
@@ -171,8 +173,8 @@ class PackagePostgres(PostgresBase):
             return None
 
         if not self.is_real_task_result(entry.task_result):
-            # This can be confusing as we do not retrieve directly version that is referenced but we rather replace
-            # it with the latest.
+            # This can be confusing as we do not retrieve directly version that
+            # is referenced but we rather replace it with the latest.
             return self.s3.retrieve_task_result(ecosystem, package, task_name)
 
         return entry.task_result
@@ -184,7 +186,8 @@ class PackagePostgres(PostgresBase):
         :param package: name of the package
         :param task_name: name of task for which the latest result should be obtained
         :param error: if False, avoid returning entries that track errors
-        :param real: if False, do not check results that are stored on S3 but rather return Postgres entry
+        :param real: if False, do not check results that are stored on S3 but
+        rather return Postgres entry
         """
         # TODO: we should store date timestamps directly in PackageWorkerResult
         if not self.is_connected():

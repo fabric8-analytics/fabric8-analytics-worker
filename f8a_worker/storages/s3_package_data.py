@@ -7,7 +7,7 @@ class S3PackageData(S3DataBase):
     @staticmethod
     def _construct_base_file_name(arguments):
         """Construct location of EPV in the bucket.
-        
+
         :param arguments: arguments as passed to the flow
         :return: str, ecosystem-package location in the bucket
         """

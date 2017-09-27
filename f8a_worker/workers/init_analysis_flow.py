@@ -24,11 +24,13 @@ class InitAnalysisFlow(BaseTask):
         v = Version.get_or_create(db, package_id=p.id, identifier=arguments['version'])
 
         if not arguments.get('force'):
-            # TODO: this is OK for now, but if we will scale and there will be 2+ workers running this task
-            # they can potentially schedule two flows of a same type at the same time
+            # TODO: this is OK for now, but if we will scale and there will be
+            # 2+ workers running this task they can potentially schedule two
+            # flows of a same type at the same time
             if db.query(Analysis).filter(Analysis.version_id == v.id).count() > 0:
-                # we need to propagate flags that were passed to flow, but not E/P/V - this way we are sure that for
-                # example graph import is scheduled (arguments['force_graph_sync'] == True)
+                # we need to propagate flags that were passed to flow, but not
+                # E/P/V - this way we are sure that for example graph import is
+                # scheduled (arguments['force_graph_sync'] == True)
                 arguments.pop('name')
                 arguments.pop('version')
                 arguments.pop('ecosystem')
@@ -51,16 +53,16 @@ class InitAnalysisFlow(BaseTask):
             if ecosystem.is_backed_by(EcosystemBackend.maven):
                 if not epv_cache.has_source_jar():
                     try:
-                        source_jar_path = self._download_source_jar(cache_path, ecosystem, arguments)
+                        source_jar_path = self._download_source_jar(cache_path, ecosystem,
+                                                                    arguments)
                         epv_cache.put_source_jar(source_jar_path)
                     except Exception as e:
                         self.log.info(
-                            'Failed to fetch source jar for maven artifact "{e}/{p}/{v}": {err}'.format(
-                                e=arguments.get('ecosystem'),
-                                p=arguments.get('name'),
-                                v=arguments.get('version'),
-                                err=str(e)
-                            )
+                            'Failed to fetch source jar for maven artifact "{e}/{p}/{v}": {err}'.
+                            format(e=arguments.get('ecosystem'),
+                                   p=arguments.get('name'),
+                                   v=arguments.get('version'),
+                                   err=str(e))
                         )
 
                 if not epv_cache.has_pom_xml():

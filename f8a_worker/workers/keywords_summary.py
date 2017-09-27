@@ -27,7 +27,8 @@ class KeywordsSummaryTask(BaseTask):
 
         for version in postgres.get_analysed_versions(ecosystem, name):
             self.log.debug("Retrieving results of 'keywords_tagging' for version '%s'", version)
-            task_result = postgres.get_latest_task_result(ecosystem, name, version, 'keywords_tagging')
+            task_result = postgres.get_latest_task_result(ecosystem, name, version,
+                                                          'keywords_tagging')
             if task_result:
                 result[version] = task_result.get('details', {})
 
@@ -46,7 +47,8 @@ class KeywordsSummaryTask(BaseTask):
         readme_kw = {kw: s * self._README_PRIORITY
                      for kw, s in keywords.get('package', {}).get('README', {}).items()}
         repository_description_kw = {kw: s * self._REPOSITORY_DESCRIPTION_PRIORITY
-                                     for kw, s in keywords.get('package', {}).get('repository_description', {}).items()}
+                                     for kw, s in keywords.get('package', {}).get(
+                                         'repository_description', {}).items()}
         # No weight on GitHub topics, assign priority directly (weight is 1)
         gh_topics = {kw: self._GH_TOPICS_PRIORITY
                      for kw in keywords.get('package', {}).get('gh_topics', [])}
@@ -56,11 +58,13 @@ class KeywordsSummaryTask(BaseTask):
         all_version_kw = {}
         for version_kw in keywords.get('versions', {}).values():
             for keyword, score in version_kw.get('description', {}).items():
-                all_version_kw[keyword] = all_version_kw.get(keyword, 0) + (score * self._DESCRIPTION_PRIORITY)
+                all_version_kw[keyword] = all_version_kw.get(keyword, 0) + \
+                                          (score * self._DESCRIPTION_PRIORITY)
 
             for keyword in version_kw.get('keywords', []) or []:
                 # keywords are not weighted when aggregation is done, assign 1 explicitly
-                all_version_kw[keyword] = all_version_kw.get(keyword, 0) + (1 * self._KEYWORDS_PRIORITY)
+                all_version_kw[keyword] = all_version_kw.get(keyword, 0) + \
+                                          (1 * self._KEYWORDS_PRIORITY)
 
         result = {}
         for keyword, score in readme_kw.items():
@@ -88,8 +92,11 @@ class KeywordsSummaryTask(BaseTask):
 
         result = {
             '_all': dict(
-                package=self._get_package_level_keywords(arguments['ecosystem'], arguments['name']),
-                versions=self._get_package_version_level_keywords(arguments['ecosystem'], arguments['name'])
+                package=self._get_package_level_keywords(arguments['ecosystem'],
+                                                         arguments['name']),
+
+                versions=self._get_package_version_level_keywords(arguments['ecosystem'],
+                                                                  arguments['name'])
             )
         }
 

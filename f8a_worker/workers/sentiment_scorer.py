@@ -74,14 +74,15 @@ class GooglePublicDataStore(ExternalDataStore):
         return aggregated_text
 
     def get_stack_overflow_data(self, search_keyword, search_tag, num_months, max_len=90000):
-        logger.info('Started to collect data from stackoverflow for package: {}'.format(search_keyword))
-        min_date = datetime.date.today() - datetime.timedelta(num_months*365/12)
+        logger.info('Started to collect data from stackoverflow for package: {}'.format(
+            search_keyword))
+        min_date = datetime.date.today() - datetime.timedelta(num_months * 365 / 12)
         min_timestamp = min_date.strftime("%Y-%m-%d %H:%M:%S")
         sql_for_questions = \
             """
             SELECT   body, creation_date, tags
             FROM     {table_name}
-            WHERE    body like '%{search_keyword}%' 
+            WHERE    body like '%{search_keyword}%'
             AND      tags like '%{search_tag}%'
             AND      creation_date >= '{min_timestamp}'
             """.format(table_name="`bigquery-public-data.stackoverflow.posts_questions`",
@@ -94,7 +95,7 @@ class GooglePublicDataStore(ExternalDataStore):
             """
             SELECT   body, creation_date, tags
             FROM     {table_name}
-            WHERE    body like '%{search_keyword}%' 
+            WHERE    body like '%{search_keyword}%'
             AND      creation_date >= '{min_timestamp}'
             """.format(table_name="`bigquery-public-data.stackoverflow.posts_answers`",
                        search_keyword=search_keyword,
@@ -108,7 +109,8 @@ class GooglePublicDataStore(ExternalDataStore):
 
         # output_data = output[0] + output[1]
         output_data = questions + answers
-        logger.info('Successfully collected data from stackoverflow for package: {}'.format(search_keyword))
+        logger.info('Successfully collected data from stackoverflow for package: {}'.format(
+            search_keyword))
         return output_data[:max_len] if len(output_data) > max_len else output_data
 
 
@@ -278,18 +280,20 @@ class UserStackSentimentScoringTask(BaseTask):
         aggregated = self.parent_task_result('GraphAggregatorTask')
 
         sentiment_output = []
-        
+
         for result in aggregated['result']:
             arg_instances = []
             temp_sentiment_output = {}
             resolved = result['details'][0]['_resolved']
             ecosystem = result['details'][0]['ecosystem']
-            manifest_file_path = result['details'][0].get('manifest_file_path', 'File path not available')
+            manifest_file_path = result['details'][0].get('manifest_file_path',
+                                                          'File path not available')
             for elm in resolved:
                 arg_instances.append((ecosystem, elm['package']))
 
             sentiment_results = Parallel(n_jobs=4, verbose=1, backend="threading")\
                 (map(delayed(sentiment_analysis), arg_instances))
+
             for res in sentiment_results:
                 temp_sentiment_output[res['package_name']] = res
             temp_sentiment_output['manifest_file_path'] = manifest_file_path
@@ -319,6 +323,7 @@ class RecoPkgSentimentScoringTask(BaseTask):
 
             sentiment_results = Parallel(n_jobs=4, verbose=1, backend="threading")\
                 (map(delayed(sentiment_analysis), arg_instances))
+
             for res in sentiment_results:
                 temp_sentiment_output[res['package_name']] = res
             temp_sentiment_output['manifest_file_path'] = manifest_file_path

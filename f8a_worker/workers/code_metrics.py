@@ -22,16 +22,19 @@ class CodeMetricsTask(BaseTask):
         :param json_output: True if output should be parsed
         :return: status, output, error triplet
         """
-        self.log.debug("Executing command, timeout={timeout}: {cmd}".format(timeout=self._CLI_TIMEOUT, cmd=command))
+        self.log.debug("Executing command, timeout={timeout}: {cmd}".format(
+            timeout=self._CLI_TIMEOUT, cmd=command))
         cmd = TimedCommand(command)
         status, output, error = cmd.run(timeout=self._CLI_TIMEOUT)
         self.log.debug("status: %d, output: %s, error: %s", status, output, error)
 
         if status != 0:
-            self.log.warning("Executing command failed, return value: %d, stderr: '%s' ", status, error)
+            self.log.warning("Executing command failed, return value: %d, stderr: '%s' ", status,
+                             error)
 
-        # Some tools such as complexity-report write zero bytes to output (they are propagated from sources like
-        # for npm/glob/7.0.3). This caused failures when pushing results to Postgres as Postgres cannot store
+        # Some tools such as complexity-report write zero bytes to output (they
+        # are propagated from sources like for npm/glob/7.0.3). This caused
+        # failures when pushing results to Postgres as Postgres cannot store
         # null bytes in results. Let's be safe here.
         output = list(line.replace('\\u0000', '\\\\0') for line in output)
 
@@ -45,8 +48,9 @@ class CodeMetricsTask(BaseTask):
         return status, output, error
 
     def _get_generic_result(self, source_path):
-        """Get core result of CodeMetricsTask task that is based on cloc tool, this output is later enriched with
-        output of tools based on languages that were found by cloc
+        """Get core result of CodeMetricsTask task that is based on cloc tool,
+        this output is later enriched with output of tools based on languages
+        that were found by cloc
 
         :param source_path: path to sources where analyzed artefact resists
         :return: tuple where generic information with ecosystem specific dict
@@ -58,7 +62,8 @@ class CodeMetricsTask(BaseTask):
             # Let the whole task fail
             raise RuntimeError("Running cloc command failed: '%s'" % error)
 
-        # cloc places generic summary here, we will maintain it in top level so remove misleading key
+        # cloc places generic summary here, we will maintain it in top level so
+        # remove misleading key
         header = {
             'total_files': output['header'].pop('n_files'),
             'total_lines': output['header'].pop('n_lines')
@@ -137,8 +142,9 @@ class CodeMetricsTask(BaseTask):
             'packages': {}
         }
 
-        # The output of JavaNCSS is an XML, which is parsed using anymarkup. This can introduce some pitfalls here
-        # if there is found exactly one item of a type. E.g.:
+        # The output of JavaNCSS is an XML, which is parsed using anymarkup.
+        # This can introduce some pitfalls here if there is found exactly one
+        # item of a type. E.g.:
         #
         #  <functions>
         #    <function>...<function/>
@@ -151,8 +157,8 @@ class CodeMetricsTask(BaseTask):
         #    <function>...<function/>
         #  <functions>
         #
-        # Is parsed as object 'functions' containing a *list of objects* 'function'. Thus the isinstance(.., list)
-        # checks.
+        # Is parsed as object 'functions' containing a *list of objects*
+        # 'function'. Thus the isinstance(.., list) checks.
 
         # Parse functions section
         if 'functions' in output:
@@ -168,8 +174,9 @@ class CodeMetricsTask(BaseTask):
                     functions['function'] = [functions['function']]
 
                 for function in functions['function']:
-                    result['functions']['function'].append(DataNormalizer.transform_keys(function,
-                                                                                         wanted_function_keys))
+                    result['functions']['function'].append(DataNormalizer.transform_keys(
+                        function,
+                        wanted_function_keys))
 
             function_averages = functions.get('function_averages', {})
 
@@ -191,8 +198,8 @@ class CodeMetricsTask(BaseTask):
                     objects['object'] = [objects['object']]
 
                 for obj in objects['object']:
-                    result['objects']['object'].append(DataNormalizer.transform_keys(obj,
-                                                                                     wanted_objects_keys))
+                    result['objects']['object'].append(DataNormalizer.transform_keys(
+                       obj, wanted_objects_keys))
 
             object_averages = objects.get('averages', {})
 
@@ -301,10 +308,12 @@ class CodeMetricsTask(BaseTask):
 
         return result
 
-    # A table that carries functions that should be called based on language that was found by cloc, keys has to match
-    # keys in cloc output. Each handler expect one argument - path to the source where sources sit, the result is
-    # a dict. When you write new analyzer handlers, make sure that there are no key collisions with new ones as results
-    # are aggregated under "metrics" key.
+    # A table that carries functions that should be called based on language
+    # that was found by cloc, keys has to match keys in cloc output. Each
+    # handler expect one argument - path to the source where sources sit, the
+    # result is a dict. When you write new analyzer handlers, make sure that
+    # there are no key collisions with new ones as results are aggregated under
+    # "metrics" key.
     # See 'Recognized languages' section at http://cloc.sourceforge.net/
     _LANGUAGE_ANALYZER_HANDLERS = {
         "JavaScript": [
@@ -340,8 +349,9 @@ class CodeMetricsTask(BaseTask):
 
                 language_stats[language]['metrics'].update(metrics_data)
 
-        # we don't want to have possibly unique keys and we want to avoid enumerating all languages that are
-        # supported by cloc - convert a dict to a list of language-specific entries
+        # we don't want to have possibly unique keys and we want to avoid
+        # enumerating all languages that are supported by cloc - convert a dict
+        # to a list of language-specific entries
         result = {'languages': []}
         for language in language_stats.keys():
             record = language_stats.get(language)

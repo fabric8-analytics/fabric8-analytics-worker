@@ -27,7 +27,8 @@ def trace_func(event, report):
 
     event_str = Trace.event2str(event)
     report.update({'event': event_str})
-    # It's OK to use 'extra' here as we are using a custom logging formatter, see celery_settings.py for more info
+    # It's OK to use 'extra' here as we are using a custom logging formatter,
+    # see celery_settings.py for more info
     if event in Trace.WARN_EVENTS:
         _logger.warning(json.dumps(report))
     else:

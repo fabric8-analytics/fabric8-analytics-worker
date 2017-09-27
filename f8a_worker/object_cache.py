@@ -10,7 +10,8 @@ from f8a_worker.models import EcosystemBackend, Ecosystem
 
 
 class EPVCache(object):
-    """Object that encapsulates basic operations on EPV artifacts and their items, all operations are done lazily"""
+    """Object that encapsulates basic operations on EPV artifacts and their
+    items, all operations are done lazily"""
     log = logging.getLogger(__name__)
     _POM_XML_NAME = 'pom.xml'
     _SOURCE_JAR_NAME = 'package-source.jar'
@@ -36,8 +37,10 @@ class EPVCache(object):
         self._base_object_key = "{ecosystem}/{name}/{version}".format(ecosystem=ecosystem,
                                                                       name=name,
                                                                       version=version)
-        self._extracted_tarball_dir = os.path.join(self.cache_dir, self._EXTRACTED_SOURCE_TARBALL_DIR)
-        self._extracted_source_jar_dir = os.path.join(self.cache_dir, self._EXTRACTED_SOURCE_JAR_DIR)
+        self._extracted_tarball_dir = os.path.join(self.cache_dir,
+                                                   self._EXTRACTED_SOURCE_TARBALL_DIR)
+        self._extracted_source_jar_dir = os.path.join(self.cache_dir,
+                                                      self._EXTRACTED_SOURCE_JAR_DIR)
         self._pom_xml_path = os.path.join(self.cache_dir, self._POM_XML_NAME)
         self._source_jar_path = os.path.join(self.cache_dir, self._SOURCE_JAR_NAME)
         self._pom_xml_object_key = "{}/{}".format(self._base_object_key, self._POM_XML_NAME)
@@ -53,7 +56,8 @@ class EPVCache(object):
 
     def _retrieve_s3_object(self, object_key, dst_path):
         """Retrieve object stored in S3"""
-        self.log.debug("Retrieving object '%s' from bucket '%s' to '%s'", object_key, self._s3.bucket_name, dst_path)
+        self.log.debug("Retrieving object '%s' from bucket '%s' to '%s'", object_key,
+                       self._s3.bucket_name, dst_path)
         basedir = os.path.dirname(dst_path)
         if not os.path.isdir(basedir):
             os.makedirs(basedir)
@@ -76,8 +80,9 @@ class EPVCache(object):
         """
         :return: True if there is associated meta.json for the given EPV
         """
-        # as this call is done privately and meta.json is stored inside ObjectCache we can assume that we will
-        # need meta info later, so download them directly
+        # as this call is done privately and meta.json is stored inside
+        # ObjectCache we can assume that we will need meta info later, so
+        # download them directly
         return self._get_meta() is not None
 
     def _put_meta(self, tarball_name):
@@ -99,7 +104,8 @@ class EPVCache(object):
         if meta is None:
             raise ValueError("Cannot construct tarball names, is tarball on S3?")
         self._source_tarball_path = os.path.join(self.cache_dir, meta['tarball_name'])
-        self._source_tarball_object_key = "{}/{}".format(self._base_object_key, meta['tarball_name'])
+        self._source_tarball_object_key = "{}/{}".format(self._base_object_key,
+                                                         meta['tarball_name'])
 
     def _get_object_cached(self, object_key, local_path):
         """Retrieve object from S3 if not cached, otherwise use locally cached one
@@ -114,7 +120,8 @@ class EPVCache(object):
 
     def remove_files(self):
         """Remove all files that are cached for the given EPVCache"""
-        self.log.debug("Removing cached files for %s/%s/%s", self.ecosystem, self.name, self.version)
+        self.log.debug("Removing cached files for %s/%s/%s", self.ecosystem, self.name,
+                       self.version)
         shutil.rmtree(self.cache_dir, ignore_errors=True)
 
     def get_source_tarball(self):
@@ -198,8 +205,8 @@ class EPVCache(object):
             try:
                 Archive.extract(source_jar_path, self._extracted_source_jar_dir)
             except Exception:
-                # remove in case of failure so if one catches the exception, the extraction code is correctly
-                # called again
+                # remove in case of failure so if one catches the exception,
+                # the extraction code is correctly called again
                 shutil.rmtree(self._extracted_source_jar_dir, ignore_errors=True)
                 raise
 
@@ -271,8 +278,9 @@ class ObjectCache(object):
     @classmethod
     def get(cls, ecosystem, name, version):
         """Get EPVCache for the given EPV"""
-        # This code just stores info about downloaded objects, once we will want to optimize number of retrievals and
-        # do some caching, remove wipe() call in the base task and implement caching logic here
+        # This code just stores info about downloaded objects, once we will
+        # want to optimize number of retrievals and do some caching, remove
+        # wipe() call in the base task and implement caching logic here
         key = (ecosystem, name, version)
         if key not in cls._cache:
             cache_dir = cls._cache_dir(ecosystem, name, version)

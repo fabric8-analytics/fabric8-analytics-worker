@@ -19,8 +19,10 @@ class BookkeeperTask(BaseTask):
             company = arguments.get('data').get('user_profile').get('company', 'Not Provided')
 
             # Create User Node if it does not exist
-            qstring = "user = g.V().has('userid','" + email + "').tryNext().orElseGet{graph.addVertex(" \
-                      "'vertex_label','User','userid','" + email + "', 'company','" + company + "')}; g.V(user).as('u')"
+            qstring = "user = g.V().has('userid','" + email + \
+                      "').tryNext().orElseGet{graph.addVertex(" \
+                      "'vertex_label','User','userid','" + email + "', 'company','" + company + \
+                      "')}; g.V(user).as('u')"
 
             for epvs in resolved:
                 if epvs['package'] is None or epvs['version'] is None:
@@ -28,21 +30,27 @@ class BookkeeperTask(BaseTask):
                     continue
 
                 # Create Version Node if it does not exist
-                qstring += ".coalesce(g.V().has('pecosystem','" + ecosystem + "')." \
-                            "has('pname','" + epvs['package'] + "')." \
-                            "has('version','" + epvs['version'] + "'), addV().property('vertex_label','Version', " \
-                            "'pecosystem','" + ecosystem + "','pname', '" + epvs['package'] + "', " \
-                            "'version', '" + epvs['version'] + "')).as('ver_" + epvs['package'] + "')"
+                qstring += ".coalesce(g.V().has('pecosystem','" + ecosystem + "')." + \
+                           "has('pname','" + epvs['package'] + "')." + \
+                           "has('version','" + epvs['version'] + \
+                           "'), addV().property('vertex_label','Version', " + \
+                           "'pecosystem','" + ecosystem + "','pname', '" + epvs['package'] + \
+                           "', " \
+                           "'version', '" + epvs['version'] + "')).as('ver_" + epvs['package'] + \
+                           "')"
                 # Check if "user -> uses -> version" edge exists else create one
                 qstring += ".coalesce(inE('uses').where(outV().as('u')), " \
                            "addE('uses').from('u').to('ver_" + epvs['package'] + "')" \
-                           ".coalesce(inV().has('osio_usage_count').sack(assign).by('osio_usage_count')." \
-                           "sack(sum).by(constant(1)).property('osio_usage_count', sack()), inV()." \
+                           ".coalesce(inV().has('osio_usage_count').sack(assign)." \
+                           "by('osio_usage_count')." \
+                           "sack(sum).by(constant(1))." \
+                           "property('osio_usage_count', sack()), inV()." \
                            "property('osio_usage_count', 1)))"
 
             payload = {'gremlin': qstring}
             try:
-                graph_req = get_session_retry().post(GREMLIN_SERVER_URL_REST, data=json.dumps(payload))
+                graph_req = get_session_retry().post(GREMLIN_SERVER_URL_REST,
+                                                     data=json.dumps(payload))
                 if graph_req.status_code != 200:
                     self.log.error("Failed creating book-keeping record in graph")
                     continue
@@ -55,9 +63,11 @@ class BookkeeperTask(BaseTask):
         self._strict_assert(arguments.get('data'))
 
         aggregated = ''
-        if arguments['data'].get('api_name') == 'stack_analyses' and 'email' in arguments['data'].get('user_profile', {}):
+        if arguments['data'].get('api_name') == 'stack_analyses' and \
+           'email' in arguments['data'].get('user_profile', {}):
             aggregated = self.parent_task_result('GraphAggregatorTask')
             self.store_user_node(arguments, aggregated)
 
         postgres = StoragePool.get_connected_storage('BayesianPostgres')
-        postgres.store_api_requests(arguments.get('external_request_id'), arguments.get('data'), aggregated)
+        postgres.store_api_requests(arguments.get('external_request_id'),
+                                    arguments.get('data'), aggregated)

@@ -272,12 +272,15 @@ class BlackDuckHub(object):
         if isinstance(release_id, BlackDuckRelease):
             release_id = release_id.id
 
-        req = self._api_get('api/projects/{p}/versions/{i}/vulnerable-bom-components'.format(i=release_id,
-                                                                                             p=release.project))
+        req = self._api_get('api/projects/{p}/versions/{i}/vulnerable-bom-components'.format(
+            i=release_id,
+            p=release.project))
+
         if req.status_code == 200:
             return req.json()
         else:
-            raise BlackDuckException('Unable to fetch release information ' + release_id + " " + release.project)
+            raise BlackDuckException('Unable to fetch release information ' + release_id + " " +
+                                     release.project)
 
     @needs_session
     def get_release_code_locations(self, release_id):

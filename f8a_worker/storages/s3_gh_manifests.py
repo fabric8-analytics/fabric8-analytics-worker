@@ -11,7 +11,8 @@ class S3GitHubManifestMetadata(AmazonS3):
 
     @staticmethod
     def get_object_key_path(ecosystem, repo_name):
-        return "{ecosystem}/{repo_name}".format(ecosystem=ecosystem, repo_name=repo_name.replace('/', ':'))
+        return "{ecosystem}/{repo_name}".format(ecosystem=ecosystem,
+                                                repo_name=repo_name.replace('/', ':'))
 
     def store(self, node_args, flow_name, task_name, task_id, result):
         assert 'ecosystem' in node_args
