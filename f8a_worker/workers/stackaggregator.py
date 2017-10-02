@@ -154,29 +154,23 @@ class StackAggregatorTask(BaseTask):
             try:
                 graph_req = get_session_retry().post(GREMLIN_SERVER_URL_REST,
                                                      data=json.dumps(payload))
-
                 if graph_req.status_code == 200:
                     graph_resp = graph_req.json()
-                    if 'result' not in graph_resp:
-                        continue
-                    if len(graph_resp['result']['data']) == 0:
-                        continue
-                    result.append(graph_resp["result"])
+                    if graph_resp.get('result', {}).get('data'):
+                        result.append(graph_resp["result"])
                 else:
                     self.log.error("Failed retrieving dependency data.")
                     continue
-            except:
-                self.log.error("Error retrieving dependency data.")
+            except Exception:
+                self.log.exception("Error retrieving dependency data.")
                 continue
 
         return {"result": result}
 
     def execute(self, arguments=None):
-        finished = []
         stack_data = []
-        aggregated = self.parent_task_result('GraphAggregatorTask')
 
-        for result in aggregated['result']:
+        for result in self.parent_task_result('GraphAggregatorTask')['result']:
             resolved = result['details'][0]['_resolved']
             ecosystem = result['details'][0]['ecosystem']
             manifest = result['details'][0]['manifest_file']
