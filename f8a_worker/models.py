@@ -10,7 +10,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.session import Session
 from sqlalchemy.pool import NullPool
 
-from f8a_worker.defaults import F8AConfiguration as configuration
+from f8a_worker.defaults import configuration
 from f8a_worker.enums import EcosystemBackend
 
 

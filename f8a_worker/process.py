@@ -13,13 +13,12 @@ from git2json import run_git_log
 from re import compile as re_compile
 from urllib.parse import urljoin, urlparse
 
-from f8a_worker.defaults import F8AConfiguration
+from f8a_worker.defaults import configuration
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.errors import TaskError
 from f8a_worker.utils import cwd, TimedCommand, compute_digest, MavenCoordinates, url2git_repo
 
 logger = logging.getLogger(__name__)
-configuration = F8AConfiguration()
 
 
 class Git(object):

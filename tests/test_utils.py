@@ -13,7 +13,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 Base = declarative_base()
 
-from f8a_worker.defaults import F8AConfiguration as configuration
+from f8a_worker.defaults import configuration
 from f8a_worker.errors import TaskError
 from f8a_worker import utils  # so that we can mock functions from here
 from f8a_worker.utils import (get_all_files_from,

@@ -50,3 +50,5 @@ class F8AConfiguration(object):
         :return: True if we are running locally
         """
         return environ.get('F8A_UNCLOUDED_MODE', '0').lower() in ('1', 'true', 'yes')
+
+configuration = F8AConfiguration()

@@ -14,7 +14,7 @@ from bigquery import get_client, JOB_WRITE_TRUNCATE, JOB_WRITE_EMPTY
 from bigquery.errors import BigQueryTimeoutException
 from selinon import StoragePool
 
-from f8a_worker.defaults import F8AConfiguration as configuration
+from f8a_worker.defaults import configuration
 from f8a_worker.storages import AmazonS3
 
 logger = get_task_logger(__name__)

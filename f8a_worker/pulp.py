@@ -2,7 +2,7 @@ import logging
 import requests
 import functools
 
-from f8a_worker.defaults import F8AConfiguration as configuration
+from f8a_worker.defaults import configuration
 
 logger = logging.getLogger(__name__)
 

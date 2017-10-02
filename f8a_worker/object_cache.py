@@ -4,7 +4,7 @@ import os
 import shutil
 import logging
 from selinon import StoragePool
-from f8a_worker.defaults import F8AConfiguration as configuration
+from f8a_worker.defaults import configuration
 from f8a_worker.process import Archive
 from f8a_worker.models import EcosystemBackend, Ecosystem
 

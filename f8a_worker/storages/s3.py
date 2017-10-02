@@ -7,7 +7,7 @@ import boto3
 import botocore
 from selinon import DataStorage
 from selinon import StoragePool
-from f8a_worker.defaults import F8AConfiguration as configuration
+from f8a_worker.defaults import configuration
 
 
 class AmazonS3(DataStorage):

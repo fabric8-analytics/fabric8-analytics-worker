@@ -2,7 +2,7 @@ import os
 import logging
 from urllib.parse import quote
 from celery.signals import setup_logging
-from f8a_worker.defaults import F8AConfiguration as configuration
+from f8a_worker.defaults import configuration
 
 _logger = logging.getLogger(__name__)
 
