@@ -275,6 +275,174 @@ class IndianaJones(object):
                                                    graceful=False).pop()
 
     @staticmethod
+    def fetch_maven_artifact(name, version, target_dir):
+        git = Git.create_git(target_dir)
+        artifact_coords = MavenCoordinates.from_str(name)
+        if not version:
+            raise ValueError("No version provided for '%s'" % artifact_coords.to_str())
+        # lxml can't handle HTTPS URLs
+        maven_url = "http://repo1.maven.org/maven2/"
+        artifact_coords.version = version
+        logger.info("downloading maven package %s", artifact_coords.to_str())
+
+        if not artifact_coords.is_valid():
+            raise ValueError("Invalid Maven coordinates: {a}".format(
+                a=artifact_coords.to_str()))
+
+        artifact_url = urljoin(maven_url, artifact_coords.to_repo_url())
+        local_filename = IndianaJones.download_file(artifact_url, target_dir)
+        if local_filename is None:
+            raise RuntimeError("Unable to download: %s" % artifact_url)
+        artifact_path = os.path.join(target_dir,
+                                     os.path.split(artifact_coords.to_repo_url())[1])
+        digest = compute_digest(artifact_path)
+        if artifact_coords.packaging != 'pom':
+            Archive.extract(artifact_path, target_dir)
+        git.add_and_commit_everything()
+        return digest, artifact_path
+
+    @staticmethod
+    def fetch_npm_artifact(name, version, target_dir):
+        git = Git.create_git(target_dir)
+
+        # $ npm config get cache
+        # /root/.npm
+        cache_path = TimedCommand.get_command_output(['npm', 'config', 'get', 'cache'],
+                                                     graceful=False).pop()
+
+        # add package to cache:
+        # /root/.npm/express/
+        # └── 4.13.4
+        #      ├── package
+        #      │   ├── History.md
+        #      │   ├── index.js
+        #      │   ├── lib
+        #      │   ├── LICENSE
+        #      │   ├── package.json
+        #      │   └── Readme.md
+        #      └── package.tgz
+        # 3 directories, 6 files
+        name_ver = name
+        if version:
+            name_ver = "{}@{}".format(name, version)
+        # make sure the artifact is not in the cache yet
+        TimedCommand.get_command_output(['npm', 'cache', 'clean', name], graceful=False)
+        logger.info("downloading npm module %s", name_ver)
+        npm_command = ['npm', 'cache', 'add', name_ver]
+        TimedCommand.get_command_output(npm_command, graceful=False)
+
+        # copy tarball to workpath
+        tarball_name = "package.tgz"
+        glob_path = os.path.join(cache_path, name, "*")
+        cache_abs_path = os.path.abspath(glob.glob(glob_path).pop())
+        artifact_path = os.path.join(cache_abs_path, tarball_name)
+        logger.debug("[cache] tarball path = %s", artifact_path)
+        artifact_path = shutil.copy(artifact_path, target_dir)
+
+        logger.debug("[workdir] tarball path = %s", artifact_path)
+        # Prior to npm-2.x.x (Fedora 24)
+        # npm client was repackaging modules on download. It modified file permissions inside
+        # package.tgz so they matched UID/GID of a user running npm command. Therefore its
+        # digest was different then of a tarball downloaded directly from registry.npmjs.org.
+        digest = compute_digest(artifact_path)
+        Archive.extract(artifact_path, target_dir)
+
+        # copy package/package.json over the extracted one,
+        # because it contains (since npm >= 2.x.x) more information.
+        npm_package_json = os.path.join(cache_abs_path, 'package', 'package.json')
+        shutil.copy(npm_package_json, target_dir)
+        # copy package/npm-shrinkwrap.json to target_dir
+        npm_shrinkwrap_json = os.path.join(target_dir, 'package', 'npm-shrinkwrap.json')
+        if os.path.isfile(npm_shrinkwrap_json):
+            shutil.copy(npm_shrinkwrap_json, target_dir)
+        git.add_and_commit_everything()
+        return digest, artifact_path
+
+    @staticmethod
+    def fetch_nuget_artifact(name, version, target_dir):
+        git = Git.create_git(target_dir)
+        nuget_url = 'https://api.nuget.org/packages/'
+        file_url = '{url}{name}.{version}.nupkg'.format(url=nuget_url,
+                                                        name=name.lower(),
+                                                        version=version.lower())
+        local_filename = IndianaJones.download_file(file_url, target_dir)
+        if local_filename is None:
+            raise RuntimeError("Unable to download: %s" % file_url)
+        artifact_path = os.path.join(target_dir, local_filename)
+        digest = compute_digest(artifact_path)
+        Archive.extract(artifact_path, target_dir)
+        git.add_and_commit_everything()
+        return digest, artifact_path
+
+    @staticmethod
+    def fetch_pypi_artifact(name, version, target_dir):
+        git = Git.create_git(target_dir)
+        # NOTE: we can't download Python packages via pip, because it runs setup.py
+        #  even with `pip download`. Therefore we could always get syntax errors
+        #  because of older/newer syntax.
+        res = requests.get('https://pypi.python.org/pypi/{n}/json'.format(n=name))
+        res.raise_for_status()
+        if not version:
+            version = res.json()['info']['version']
+        release_files = res.json().get('releases', {}).get(version, [])
+        if not release_files:
+            raise RuntimeError("No release files for version %s" % version)
+
+        # sort releases by order in which we'd like to download:
+        #  1) sdist
+        #  2) wheels
+        #  3) eggs
+        #  4) anything else (creepy stuff)
+        def release_key(rel):
+            return {'sdist': 0, 'bdist_wheel': 1, 'bdist_egg': 2}.get(rel['packagetype'], 3)
+
+        release_files = list(sorted(release_files, key=release_key))
+        file_url = release_files[0]['url']
+        local_filename = IndianaJones.download_file(file_url, target_dir)
+        if local_filename is None:
+            raise RuntimeError("Unable to download: %s" % file_url)
+        artifact_path = os.path.join(target_dir, local_filename)
+        digest = compute_digest(artifact_path)
+        Archive.extract(artifact_path, target_dir)
+        git.add_and_commit_everything()
+        return digest, artifact_path
+
+    @staticmethod
+    def fetch_rubygems_artifact(name, version, target_dir):
+        git = Git.create_git(target_dir)
+        logger.info("downloading rubygems package %s-%s", name, version)
+        version_arg = []
+        if version:
+            version_arg = ['--version', version]
+        gem_command = ['gem', 'fetch', name]
+        gem_command.extend(version_arg)
+        with cwd(target_dir):
+            TimedCommand.get_command_output(gem_command, graceful=False)
+
+        if not version:
+            # if version is None we need to glob for the version that was downloaded
+            artifact_path = os.path.abspath(glob.glob(os.path.join(
+                target_dir, name + '*')).pop())
+        else:
+            artifact_path = os.path.join(target_dir, '{n}-{v}.gem'.format(
+                n=name, v=version))
+
+        digest = compute_digest(artifact_path)
+        Archive.extract(artifact_path, target_dir)
+        git.add_and_commit_everything()
+        return digest, artifact_path
+
+    @staticmethod
+    def fetch_scm_artifact(name, version, target_dir):
+        git_url = 'git://' + name
+        git = Git.clone(git_url, target_dir, single_branch=True)
+        git.reset(version, hard=True)
+        filename = git.archive(version)
+        artifact_path = os.path.join(target_dir, filename)
+        digest = compute_digest(artifact_path)
+        return digest, artifact_path
+
+    @staticmethod
     def fetch_artifact(ecosystem=None,
                        artifact=None,
                        version=None,
@@ -293,154 +461,18 @@ class IndianaJones(object):
         artifact_path = None
 
         if ecosystem.is_backed_by(EcosystemBackend.pypi):
-            git = Git.create_git(target_dir)
-            # NOTE: we can't download Python packages via pip, because it runs setup.py
-            #  even with `pip download`. Therefore we could always get syntax errors
-            #  because of older/newer syntax.
-            res = requests.get('https://pypi.python.org/pypi/{a}/json'.format(a=artifact))
-            res.raise_for_status()
-            if not version:
-                version = res.json()['info']['version']
-            release_files = res.json().get('releases', {}).get(version, [])
-            if not release_files:
-                raise RuntimeError("No release files for version %s" % version)
-
-            # sort releases by order in which we'd like to download:
-            #  1) sdist
-            #  2) wheels
-            #  3) eggs
-            #  4) anything else (creepy stuff)
-            def release_key(rel):
-                return {'sdist': 0, 'bdist_wheel': 1, 'bdist_egg': 2}.get(rel['packagetype'], 3)
-            release_files = list(sorted(release_files, key=release_key))
-            file_url = release_files[0]['url']
-            local_filename = IndianaJones.download_file(file_url, target_dir)
-            if local_filename is None:
-                raise RuntimeError("Unable to download: %s" % file_url)
-            artifact_path = os.path.join(target_dir, local_filename)
-            digest = compute_digest(artifact_path)
-            Archive.extract(artifact_path, target_dir)
-            git.add_and_commit_everything()
+            digest, artifact_path = IndianaJones.fetch_pypi_artifact(artifact, version, target_dir)
         elif ecosystem.is_backed_by(EcosystemBackend.npm):
-            git = Git.create_git(target_dir)
-
-            # $ npm config get cache
-            # /root/.npm
-            cache_path = TimedCommand.get_command_output(['npm', 'config', 'get', 'cache'],
-                                                         graceful=False).pop()
-
-            # add package to cache:
-            # /root/.npm/express/
-            # └── 4.13.4
-            #      ├── package
-            #      │   ├── History.md
-            #      │   ├── index.js
-            #      │   ├── lib
-            #      │   ├── LICENSE
-            #      │   ├── package.json
-            #      │   └── Readme.md
-            #      └── package.tgz
-            # 3 directories, 6 files
-            name_ver = artifact
-            if version:
-                name_ver = "{}@{}".format(artifact, version)
-            # make sure the artifact is not in the cache yet
-            TimedCommand.get_command_output(['npm', 'cache', 'clean', artifact], graceful=False)
-            logger.info("downloading npm module %s", name_ver)
-            npm_command = ['npm', 'cache', 'add', name_ver]
-            TimedCommand.get_command_output(npm_command, graceful=False)
-
-            # copy tarball to workpath
-            tarball_name = "package.tgz"
-            glob_path = os.path.join(cache_path, artifact, "*")
-            cache_abs_path = os.path.abspath(glob.glob(glob_path).pop())
-            artifact_path = os.path.join(cache_abs_path, tarball_name)
-            logger.debug("[cache] tarball path = %s", artifact_path)
-            artifact_path = shutil.copy(artifact_path, target_dir)
-
-            logger.debug("[workdir] tarball path = %s", artifact_path)
-            # Prior to npm-2.x.x (Fedora 24)
-            # npm client was repackaging modules on download. It modified file permissions inside
-            # package.tgz so they matched UID/GID of a user running npm command. Therefore its
-            # digest was different then of a tarball downloaded directly from registry.npmjs.org.
-            digest = compute_digest(artifact_path)
-            Archive.extract(artifact_path, target_dir)
-
-            # copy package/package.json over the extracted one,
-            # because it contains (since npm >= 2.x.x) more information.
-            npm_package_json = os.path.join(cache_abs_path, 'package', 'package.json')
-            shutil.copy(npm_package_json, target_dir)
-            # copy package/npm-shrinkwrap.json to target_dir
-            npm_shrinkwrap_json = os.path.join(target_dir, 'package', 'npm-shrinkwrap.json')
-            if os.path.isfile(npm_shrinkwrap_json):
-                shutil.copy(npm_shrinkwrap_json, target_dir)
-            git.add_and_commit_everything()
+            digest, artifact_path = IndianaJones.fetch_npm_artifact(artifact, version, target_dir)
         elif ecosystem.is_backed_by(EcosystemBackend.rubygems):
-            git = Git.create_git(target_dir)
-            logger.info("downloading rubygems package %s-%s", artifact, version)
-            version_arg = []
-            if version:
-                version_arg = ['--version', version]
-            gem_command = ['gem', 'fetch', artifact]
-            gem_command.extend(version_arg)
-            with cwd(target_dir):
-                TimedCommand.get_command_output(gem_command, graceful=False)
-
-            if not version:
-                # if version is None we need to glob for the version that was downloaded
-                artifact_path = os.path.abspath(glob.glob(os.path.join(
-                    target_dir, artifact + '*')).pop())
-            else:
-                artifact_path = os.path.join(target_dir, '{n}-{v}.gem'.format(
-                    n=artifact, v=version))
-
-            digest = compute_digest(artifact_path)
-            Archive.extract(artifact_path, target_dir)
-            git.add_and_commit_everything()
+            digest, artifact_path = IndianaJones.fetch_rubygems_artifact(artifact, version,
+                                                                         target_dir)
         elif ecosystem.is_backed_by(EcosystemBackend.maven):
-            artifact_coords = MavenCoordinates.from_str(artifact)
-            if not version:
-                raise ValueError("No version provided for '%s'" % artifact_coords.to_str())
-            git = Git.create_git(target_dir)
-            # lxml can't handle HTTPS URLs
-            maven_url = "http://repo1.maven.org/maven2/"
-            artifact_coords.version = version
-            logger.info("downloading maven package %s", artifact_coords.to_str())
-
-            if not artifact_coords.is_valid():
-                raise ValueError("Invalid Maven coordinates: {a}".format(
-                    a=artifact_coords.to_str()))
-
-            artifact_url = urljoin(maven_url, artifact_coords.to_repo_url())
-            local_filename = IndianaJones.download_file(artifact_url, target_dir)
-            if local_filename is None:
-                raise RuntimeError("Unable to download: %s" % artifact_url)
-            artifact_path = os.path.join(target_dir,
-                                         os.path.split(artifact_coords.to_repo_url())[1])
-            digest = compute_digest(artifact_path)
-            if artifact_coords.packaging != 'pom':
-                Archive.extract(artifact_path, target_dir)
-            git.add_and_commit_everything()
-        elif ecosystem.is_backed_by(EcosystemBackend.scm):
-            # git_url = urljoin('git://', artifact)
-            git_url = 'git://' + artifact
-            git = Git.clone(git_url, target_dir, single_branch=True)
-            git.reset(version, hard=True)
-            filename = git.archive(version)
-            artifact_path = os.path.join(target_dir, filename)
-            digest = compute_digest(artifact_path)
+            digest, artifact_path = IndianaJones.fetch_maven_artifact(artifact, version, target_dir)
         elif ecosystem.is_backed_by(EcosystemBackend.nuget):
-            git = Git.create_git(target_dir)
-            file_url = '{url}{artifact}.{version}.nupkg'.format(url=ecosystem.fetch_url,
-                                                                artifact=artifact.lower(),
-                                                                version=version.lower())
-            local_filename = IndianaJones.download_file(file_url, target_dir)
-            if local_filename is None:
-                raise RuntimeError("Unable to download: %s" % file_url)
-            artifact_path = os.path.join(target_dir, local_filename)
-            digest = compute_digest(artifact_path)
-            Archive.extract(artifact_path, target_dir)
-            git.add_and_commit_everything()
+            digest, artifact_path = IndianaJones.fetch_nuget_artifact(artifact, version, target_dir)
+        elif ecosystem.is_backed_by(EcosystemBackend.scm):
+            digest, artifact_path = IndianaJones.fetch_scm_artifact(artifact, version, target_dir)
         elif parsed:
             if parsed[0] == 'git' or parsed[2].endswith('.git'):
                 git = Git.clone(artifact, target_dir)
