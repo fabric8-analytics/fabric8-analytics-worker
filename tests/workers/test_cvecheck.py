@@ -222,4 +222,3 @@ class TestCVEchecker(object):
             assert detail['description']
             assert detail['references']
             assert set(detail['cvss'].keys()) == {'score', 'vector'}
-
