@@ -208,8 +208,8 @@ class AmazonS3(DataStorage):
         """
         if not self.versioned:
             raise AttributeError("Cannot retrieve version of object '{}': "
-                                 "bucket '{}' is not configured to be versioned".format(
-                object_key, self.bucket_name))
+                                 "bucket '{}' is not configured to be versioned".
+                                 format(object_key, self.bucket_name))
 
         if configuration.is_local_deployment():
             return self._get_fake_version_id()
