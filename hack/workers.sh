@@ -16,7 +16,6 @@ DISPATCHER_YAML_FILES_DIR="/usr/lib/python3.4/site-packages/f8a_worker/dispatche
 WORKER_NAME="${WORKER_NAME:-bayesian}"
 
 DIR=$(dirname "${BASH_SOURCE[0]}")
-source $DIR/env.sh
 
 # Report versions of all core components
 selinonlib-cli version
