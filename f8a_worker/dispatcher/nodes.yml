@@ -370,10 +370,8 @@
     - name: 'AmazonS3'
       import: 'f8a_worker.storages'
       configuration: &configurationS3
-        # aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
-        aws_access_key_id: 'AKIAJGEXYKVEI2YKOJOQ'
-        # aws_secret_access_key: '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'
-        aws_secret_access_key: 'gOE7slHtoXKONS+wWLC2BODGfwRg2qB1r0KlLS5v'
+        aws_access_key_id: 'GNV3SAHAHA3DOT99GQII'
+        aws_secret_access_key: 'ZmvMwngonaDK5ymlCd6ptaalDdJsCn3aSSxASPaZ'
         bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-unknown'
         region_name: 'us-east-1'
         encryption: false
