@@ -43,3 +43,5 @@ RUN sh /tmp/install_tagger.sh
 RUN mkdir -p /tmp/install_deps/patches/
 COPY hack/patches/* /tmp/install_deps/patches/
 RUN /tmp/install_deps/patches/apply_patches.sh
+
+RUN yum install -y golang; pip install git+https://github.com/gofed/gofedlib.git
