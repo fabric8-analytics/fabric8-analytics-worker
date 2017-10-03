@@ -11,12 +11,10 @@ def _use_sqs():
     """
     :return: True if worker should use Amazon SQS
     """
-    key_id = len(os.environ.get('AWS_SQS_ACCESS_KEY_ID', '')) > 0
-    access_key = len(os.environ.get('AWS_SQS_SECRET_ACCESS_KEY', '')) > 0
+    has_key_id = configuration.AWS_SQS_ACCESS_KEY_ID is not None
+    has_access_key = configuration.AWS_SQS_SECRET_ACCESS_KEY is not None
 
-    res = int(key_id) + int(access_key)
-
-    if res == 1:
+    if has_key_id != has_access_key:
         raise RuntimeError("In order to use AWS SQS you have to provide both "
                            "'AWS_SQS_ACCESS_KEY_ID' and "
                            "'AWS_SQS_SECRET_ACCESS_KEY' environment variables")
@@ -31,7 +29,7 @@ def _use_sqs():
         raise RuntimeError("Do not use AWS_SECRET_ACCESS_KEY in order to access SQS, "
                            "use 'AWS_SQS_SECRET_ACCESS_KEY'")
 
-    return res != 0
+    return has_key_id and has_access_key
 
 
 class CelerySettings(object):
@@ -41,7 +39,7 @@ class CelerySettings(object):
     # Generic worker options
     timezone = 'UTC'
     task_acks_late = True
-    result_backend = os.environ.get('CELERY_RESULT_BACKEND') or _DEFAULT_RESULT_BACKEND
+    result_backend = configuration.CELERY_RESULT_BACKEND or _DEFAULT_RESULT_BACKEND
 
     # do not retry on connection errors, rather let OpenShift kill the worker
     broker_connection_retry = False
@@ -49,8 +47,8 @@ class CelerySettings(object):
     # Set up message broker
     if _use_sqs():
         broker_url = 'sqs://{aws_access_key_id}:{aws_secret_access_key}@'.format(
-            aws_access_key_id=quote(os.environ['AWS_SQS_ACCESS_KEY_ID'], safe=''),
-            aws_secret_access_key=quote(os.environ['AWS_SQS_SECRET_ACCESS_KEY'], safe=''),
+            aws_access_key_id=quote(configuration.AWS_SQS_ACCESS_KEY_ID, safe=''),
+            aws_secret_access_key=quote(configuration.AWS_SQS_SECRET_ACCESS_KEY, safe=''),
         )
         broker_transport_options = {
             # number of seconds to wait for the worker to acknowledge the task before the message is
@@ -61,7 +59,7 @@ class CelerySettings(object):
             # 'queue_name_prefix': 'bayesian-',
             # see amazon_endpoints.js based on
             # http://docs.aws.amazon.com/general/latest/gr/rande.html#sqs_region
-            'region': os.environ.get('AWS_SQS_REGION', _DEFAULT_SQS_REGION)
+            'region': configuration.AWS_SQS_REGION or _DEFAULT_SQS_REGION
         }
 
         _logger.debug('AWS broker transport options: %s', broker_transport_options)

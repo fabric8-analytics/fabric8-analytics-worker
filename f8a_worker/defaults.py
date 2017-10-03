@@ -6,10 +6,12 @@ from urllib.parse import quote
 class F8AConfiguration(object):
     BIGQUERY_JSON_KEY = environ.get('GITHUB_CONSUMER_KEY', 'not-set')
 
+    # Pulp configuration
     PULP_URL = environ.get('PULP_URL', 'not-set')
     PULP_USERNAME = environ.get('PULP_USERNAME', 'not-set')
     PULP_PASSWORD = environ.get('PULP_PASSWORD', 'not-set')
 
+    # BlackDuck configuration
     BLACKDUCK_HOST = environ.get('BLACKDUCK_HOST', 'not-set')
     BLACKDUCK_SCHEME = environ.get('BLACKDUCK_SCHEME', 'not-set')
     BLACKDUCK_PORT = environ.get('BLACKDUCK_PORT', 'not-set')
@@ -44,11 +46,56 @@ class F8AConfiguration(object):
 
     WORKER_DATA_DIR = environ.get('WORKER_DATA_DIR', 'not-set')
 
+    # Scancode configuration
+    SCANCODE_LICENSE_SCORE = environ.get('SCANCODE_LICENSE_SCORE', '20')  # scancode's default is 0
+    SCANCODE_TIMEOUT = environ.get('SCANCODE_TIMEOUT', '120')  # scancode's default is 120
+    SCANCODE_PROCESSES = environ.get('SCANCODE_PROCESSES', '1')  # scancode's default is 1
+    SCANCODE_PATH = environ.get('SCANCODE_PATH', '/opt/scancode-toolkit/')
+    SCANCODE_IGNORE = ['*.pyc', '*.so', '*.dll', '*.rar', '*.jar',
+                       '*.zip', '*.tar', '*.tar.gz', '*.tar.xz']  # don't scan binaries
+
+    # AWS S3
+    AWS_S3_REGION = environ.get('AWS_S3_REGION')
+    AWS_S3_ACCESS_KEY_ID = environ.get('AWS_S3_ACCESS_KEY_ID')
+    AWS_S3_SECRET_ACCESS_KEY = environ.get('AWS_S3_SECRET_ACCESS_KEY')
+
+    S3_ENDPOINT_URL = environ.get('S3_ENDPOINT_URL')
+    DEPLOYMENT_PREFIX = environ.get('DEPLOYMENT_PREFIX')
+    BAYESIAN_SYNC_S3 = int(environ.get('BAYESIAN_SYNC_S3', 0)) == 1
+
+    # AWS SQS
+    AWS_SQS_ACCESS_KEY_ID = environ.get('AWS_SQS_ACCESS_KEY_ID')
+    AWS_SQS_SECRET_ACCESS_KEY = environ.get('AWS_SQS_SECRET_ACCESS_KEY')
+    CELERY_RESULT_BACKEND = environ.get('CELERY_RESULT_BACKEND')
+    AWS_SQS_REGION = environ.get('AWS_SQS_REGION')
+
+    # TODO: Add default value for JAVANCSS_PATH and OWASP_DEP_CHECK_PATH
+    JAVANCSS_PATH = environ.get('JAVANCSS_PATH')
+    OWASP_DEP_CHECK_PATH = environ.get('OWASP_DEP_CHECK_PATH')
+
+    # Graph stuff
+    try:
+        USAGE_THRESHOLD = int(environ.get("LOW_USAGE_THRESHOLD", "5000"))
+    except (TypeError, ValueError):
+        # low usage threshold is set to default 5000 as the env variable value is non numeric
+        USAGE_THRESHOLD = 5000
+
+    try:
+        POPULARITY_THRESHOLD = int(environ.get("LOW_POPULARITY_THRESHOLD", "5000"))
+    except (TypeError, ValueError):
+        # low usage threshold is set to default 5000 as the env variable value is non numeric
+        POPULARITY_THRESHOLD = 5000
+
+    BAYESIAN_GREMLIN_HTTP_SERVICE_HOST = environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_HOST",
+                                                     "localhost")
+    BAYESIAN_GREMLIN_HTTP_SERVICE_PORT = environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_PORT", "8182")
+
     @classmethod
     def is_local_deployment(cls):
         """
         :return: True if we are running locally
         """
         return environ.get('F8A_UNCLOUDED_MODE', '0').lower() in ('1', 'true', 'yes')
+
 
 configuration = F8AConfiguration()

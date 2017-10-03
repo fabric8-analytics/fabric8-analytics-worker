@@ -446,7 +446,7 @@ class DataNormalizer(object):
                 try:
                     # Get file from 'LicenseUrl' and let LicenseCheckTask decide what license it is
                     if IndianaJones.download_file(data['LicenseUrl'], tmpdir):
-                        scancode_results = LicenseCheckTask.run_scancode(tmpdir)
+                        scancode_results = LicenseCheckTask().run_scancode(tmpdir)
                         if scancode_results.get('summary', {}).get('sure_licenses'):
                             transformed['declared_licenses'] =\
                                 scancode_results['summary']['sure_licenses']

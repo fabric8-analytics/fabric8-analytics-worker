@@ -2,7 +2,7 @@
 Uses ScanCode toolkit to detect licences in source code.
 """
 
-from os import getenv, path
+from os import path
 from f8a_worker.utils import TimedCommand, username
 from f8a_worker.base import BaseTask
 from f8a_worker.schemas import SchemaRef
@@ -14,12 +14,6 @@ class LicenseCheckTask(BaseTask):
     """ Check licences of all files of a package """
     _analysis_name = 'source_licenses'
     schema_ref = SchemaRef(_analysis_name, '3-0-0')
-
-    SCANCODE_LICENSE_SCORE = getenv('SCANCODE_LICENSE_SCORE', '20')  # scancode's default is 0
-    SCANCODE_TIMEOUT = getenv('SCANCODE_TIMEOUT', '120')  # scancode's default is 120
-    SCANCODE_PROCESSES = getenv('SCANCODE_PROCESSES', '1')  # scancode's default is 1
-    SCANCODE_IGNORE = ['*.pyc', '*.so', '*.dll', '*.rar', '*.jar',
-                       '*.zip', '*.tar', '*.tar.gz', '*.tar.xz']  # don't scan binaries
 
     @staticmethod
     def process_output(data):
@@ -49,29 +43,28 @@ class LicenseCheckTask(BaseTask):
         del data['scancode_options']
         return data
 
-    @staticmethod
-    def run_scancode(scan_path):
+    def run_scancode(self, scan_path):
         result_data = {'status': 'unknown',
                        'summary': {},
                        'details': {}}
-        command = [path.join(getenv('SCANCODE_PATH', '/opt/scancode-toolkit/'),
+        command = [path.join(self.configuration.SCANCODE_PATH,
                              'scancode'),
                    # Scan for licenses
                    '--license',
                    # Do not return license matches with scores lower than this score
-                   '--license-score', LicenseCheckTask.SCANCODE_LICENSE_SCORE,
+                   '--license-score', self.configuration.SCANCODE_LICENSE_SCORE,
                    # Files without findings are omitted
                    '--only-findings',
                    # Use n parallel processes
-                   '--processes', LicenseCheckTask.SCANCODE_PROCESSES,
+                   '--processes', self.configuration.SCANCODE_PROCESSES,
                    # Do not print summary or progress messages
                    '--quiet',
                    # Strip the root directory segment of all paths
                    '--strip-root',
                    # Stop scanning a file if scanning takes longer than a timeout in seconds
-                   '--timeout', LicenseCheckTask.SCANCODE_TIMEOUT,
+                   '--timeout', self.configuration.SCANCODE_TIMEOUT,
                    scan_path]
-        for ignore_pattern in LicenseCheckTask.SCANCODE_IGNORE:
+        for ignore_pattern in self.configuration.SCANCODE_IGNORE:
             command += ['--ignore', '{}'.format(ignore_pattern)]
         with username():
             tc = TimedCommand(command)

@@ -4,6 +4,7 @@ import json
 import datetime
 import semantic_version as sv
 from f8a_worker.utils import get_session_retry
+from f8a_worker.defaults import configuration
 
 logger = logging.getLogger(__name__)
 
@@ -20,16 +21,11 @@ def get_stack_usage_data_graph(components):
     components_with_usage_data = 0
     total_dependents_count = 0
     rh_distributed_comp_count = 0
-    try:
-        usage_threshold = int(os.getenv("LOW_USAGE_THRESHOLD", "5000"))
-    except (TypeError, ValueError):
-        # low usage threshold is set to default 5000 as the env variable value is non numeric
-        usage_threshold = 5000
     low_usage_component_count = 0
     for dep in components:
         dependents_count = int(dep.get("package_dependents_count", "-1"))
         if dependents_count > 0:
-            if dependents_count < usage_threshold:
+            if dependents_count < configuration.USAGE_THRESHOLD:
                 low_usage_component_count += 1
             total_dependents_count += dependents_count
             components_with_usage_data += 1
@@ -56,11 +52,6 @@ def get_stack_popularity_data_graph(components):
     total_stargazers = 0
     total_forks = 0
     less_popular_components = 0
-    try:
-        popularity_threshold = int(os.getenv("LOW_POPULARITY_THRESHOLD", "5000"))
-    except (TypeError, ValueError):
-        # low usage threshold is set to default 5000 as the env variable value is non numeric
-        popularity_threshold = 5000
 
     for dep in components:
         gh_data = dep.get("github_details", {})
@@ -74,7 +65,7 @@ def get_stack_popularity_data_graph(components):
             if stargazers_count > 0:
                 total_stargazers += stargazers_count
                 components_with_stargazers += 1
-                if stargazers_count < popularity_threshold:
+                if stargazers_count < configuration.POPULARITY_THRESHOLD:
                     less_popular_components += 1
 
     result = {}

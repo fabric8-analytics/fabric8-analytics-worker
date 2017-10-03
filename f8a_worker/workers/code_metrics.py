@@ -256,7 +256,7 @@ class CodeMetricsTask(BaseTask):
         :param source_path: path to source codes
         :return normalized output
         """
-        javancss_path = os.path.join(os.environ['JAVANCSS_PATH'], 'bin', 'javancss')
+        javancss_path = os.path.join(self.configuration.JAVANCSS_PATH, 'bin', 'javancss')
         command = [javancss_path, '-all', '-xml', source_path]
         status, output, error = self._run_analyzer(command, json_output=False)
 
