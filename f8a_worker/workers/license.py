@@ -7,6 +7,7 @@ from f8a_worker.utils import TimedCommand, username
 from f8a_worker.base import BaseTask
 from f8a_worker.schemas import SchemaRef
 from f8a_worker.object_cache import ObjectCache
+from f8a_worker.defaults import configuration
 from selinon import FatalTaskError
 
 
@@ -43,28 +44,29 @@ class LicenseCheckTask(BaseTask):
         del data['scancode_options']
         return data
 
-    def run_scancode(self, scan_path):
+    @staticmethod
+    def run_scancode(scan_path):
         result_data = {'status': 'unknown',
                        'summary': {},
                        'details': {}}
-        command = [path.join(self.configuration.SCANCODE_PATH,
+        command = [path.join(configuration.SCANCODE_PATH,
                              'scancode'),
                    # Scan for licenses
                    '--license',
                    # Do not return license matches with scores lower than this score
-                   '--license-score', self.configuration.SCANCODE_LICENSE_SCORE,
+                   '--license-score', configuration.SCANCODE_LICENSE_SCORE,
                    # Files without findings are omitted
                    '--only-findings',
                    # Use n parallel processes
-                   '--processes', self.configuration.SCANCODE_PROCESSES,
+                   '--processes', configuration.SCANCODE_PROCESSES,
                    # Do not print summary or progress messages
                    '--quiet',
                    # Strip the root directory segment of all paths
                    '--strip-root',
                    # Stop scanning a file if scanning takes longer than a timeout in seconds
-                   '--timeout', self.configuration.SCANCODE_TIMEOUT,
+                   '--timeout', configuration.SCANCODE_TIMEOUT,
                    scan_path]
-        for ignore_pattern in self.configuration.SCANCODE_IGNORE:
+        for ignore_pattern in configuration.SCANCODE_IGNORE:
             command += ['--ignore', '{}'.format(ignore_pattern)]
         with username():
             tc = TimedCommand(command)
