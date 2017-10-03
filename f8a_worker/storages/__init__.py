@@ -15,3 +15,4 @@ from .s3_gh_manifests import S3GitHubManifestMetadata
 from .s3_userprofilestore import S3UserProfileStore
 from .s3_description_repository import S3RepositoryDescription
 from .s3_keywords_summary import S3KeywordsSummary
+from .s3_userintent import S3UserIntent
