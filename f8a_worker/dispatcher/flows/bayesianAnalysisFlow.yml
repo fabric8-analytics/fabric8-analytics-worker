@@ -156,11 +156,17 @@
             - 'metadata'
           to: 'anitya'
           condition:
-            not:
-              name: 'argsFieldEqual'
-              args:
-                key: 'ecosystem'
-                value: 'nuget'
+            or:
+              - not:
+                  name: 'argsFieldEqual'
+                  args:
+                    key: 'ecosystem'
+                    value: 'nuget'
+              - not:
+                  name: 'argsFieldEqual'
+                  args:
+                    key: 'ecosystem'
+                    value: 'go'
         - from:
             - 'anitya'
             - 'digests'
