@@ -81,6 +81,7 @@ class InitAnalysisFlow(BaseTask):
     @staticmethod
     def _download_source_jar(target, ecosystem, arguments):
         artifact_coords = MavenCoordinates.from_str(arguments['name'])
+        artifact_coords.packaging = 'jar'  # source is always jar even for war/aar etc.
         sources_classifiers = ['sources', 'src']
 
         if artifact_coords.classifier not in sources_classifiers:

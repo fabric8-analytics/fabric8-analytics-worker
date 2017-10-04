@@ -192,7 +192,7 @@ class Archive(object):
     def extract(target, dest):
         """ Detects archive type and extracts it """
         tar = Archive.TarMatcher.search(target)
-        if target.endswith(('.zip', '.whl', '.egg', '.jar', '.nupkg')):
+        if target.endswith(('.zip', '.whl', '.egg', '.jar', '.war', '.aar', '.nupkg')):
             return Archive.extract_zip(target, dest)
         elif target.endswith('.gem'):
             return Archive.extract_gem(target, dest)
@@ -280,24 +280,30 @@ class IndianaJones(object):
         artifact_coords = MavenCoordinates.from_str(name)
         if not version:
             raise ValueError("No version provided for '%s'" % artifact_coords.to_str())
-        # lxml can't handle HTTPS URLs
-        maven_url = "http://repo1.maven.org/maven2/"
         artifact_coords.version = version
-        logger.info("downloading maven package %s", artifact_coords.to_str())
-
         if not artifact_coords.is_valid():
             raise ValueError("Invalid Maven coordinates: {a}".format(
                 a=artifact_coords.to_str()))
 
+        # lxml can't handle HTTPS URLs
+        maven_url = "http://repo1.maven.org/maven2/"
         artifact_url = urljoin(maven_url, artifact_coords.to_repo_url())
-        local_filename = IndianaJones.download_file(artifact_url, target_dir)
-        if local_filename is None:
+        local_filepath = IndianaJones.download_file(artifact_url, target_dir)
+        if local_filepath is None:
             raise RuntimeError("Unable to download: %s" % artifact_url)
-        artifact_path = os.path.join(target_dir,
-                                     os.path.split(artifact_coords.to_repo_url())[1])
+
+        local_filename = os.path.split(local_filepath)[1]
+        artifact_path = os.path.join(target_dir, local_filename)
         digest = compute_digest(artifact_path)
         if artifact_coords.packaging != 'pom':
             Archive.extract(artifact_path, target_dir)
+            if artifact_coords.packaging == 'aar':
+                # 'aar' archive contains classes.jar, extract it too into target_dir
+                classes_jar_path = os.path.join(target_dir, "classes.jar")
+                if os.path.isfile(classes_jar_path):
+                    Archive.extract(classes_jar_path, target_dir)
+                    os.remove(classes_jar_path)
+
         git.add_and_commit_everything()
         return digest, artifact_path
 
