@@ -5,7 +5,7 @@ import pytest
 import selinon
 from sqlalchemy.exc import IntegrityError
 
-from f8a_worker.conf import get_postgres_connection_string
+from f8a_worker.defaults import configuration
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.models import (Ecosystem, Package, Version, Analysis, WorkerResult,
                                create_db_scoped_session)
@@ -31,7 +31,7 @@ class TestBayesianPostgres:
         self.s.add(self.a2)
         self.s.commit()
 
-        self.bp = BayesianPostgres(connection_string=get_postgres_connection_string())
+        self.bp = BayesianPostgres(connection_string=configuration.POSTGRES_CONNECTION)
 
     def test_retrieve_normal(self):
         wid = 'x'

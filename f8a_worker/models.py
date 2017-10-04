@@ -10,10 +10,8 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.session import Session
 from sqlalchemy.pool import NullPool
 
-from f8a_worker.conf import get_configuration
+from f8a_worker.defaults import configuration
 from f8a_worker.enums import EcosystemBackend
-
-configuration = get_configuration()
 
 
 def create_db_scoped_session(connection_string=None):
@@ -21,7 +19,7 @@ def create_db_scoped_session(connection_string=None):
     #  and only really uses connections while writing results
     return scoped_session(
         sessionmaker(bind=create_engine(
-            connection_string or configuration.postgres_connection,
+            connection_string or configuration.POSTGRES_CONNECTION,
             poolclass=NullPool)))
 
 

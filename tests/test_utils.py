@@ -13,7 +13,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 Base = declarative_base()
 
-from f8a_worker.conf import get_configuration, get_postgres_connection_string
+from f8a_worker.defaults import configuration
 from f8a_worker.errors import TaskError
 from f8a_worker import utils  # so that we can mock functions from here
 from f8a_worker.utils import (get_all_files_from,
@@ -27,8 +27,6 @@ from f8a_worker.utils import (get_all_files_from,
                               DownstreamMapCache,
                               parse_gh_repo,
                               url2git_repo)
-
-configuration = get_configuration()
 
 
 class TestUtilFunctions(object):
@@ -179,14 +177,14 @@ class TestGetAnityaProject(object):
     def test_basic(self):
         resp = flexmock(json=lambda: {'a': 'b'},
                         raise_for_status=lambda: None)
-        url = configuration.anitya_url + '/api/by_ecosystem/foo/bar'
+        url = configuration.ANITYA_URL + '/api/by_ecosystem/foo/bar'
         flexmock(requests).should_receive('get').with_args(url).and_return(resp)
         assert get_latest_upstream_details('foo', 'bar') == {'a': 'b'}
 
     def test_bad_status(self):
         resp = flexmock(json=lambda: {'a': 'b'})
         resp.should_receive('raise_for_status').and_raise(Exception())
-        url = configuration.anitya_url + '/api/by_ecosystem/foo/bar'
+        url = configuration.ANITYA_URL + '/api/by_ecosystem/foo/bar'
         flexmock(requests).should_receive('get').with_args(url).and_return(resp)
         with pytest.raises(Exception):
             get_latest_upstream_details('foo', 'bar')
@@ -215,8 +213,7 @@ class TestDownstreamMapCache(object):
             key = Column(String(255), primary_key=True)
             value = Column(String(512), nullable=False)
 
-        connection_string = get_postgres_connection_string()
-        engine = create_engine(connection_string)
+        engine = create_engine(configuration.POSTGRES_CONNECTION)
         session = sessionmaker(bind=engine)()
         Base.metadata.create_all(engine)
         r = DownstreamMapCache(session)

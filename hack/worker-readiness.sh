@@ -1,7 +1,5 @@
 #!/bin/bash
 
-export F8A_POSTGRES=postgresql://${POSTGRESQL_USER}:${POSTGRESQL_PASSWORD}@${PGBOUNCER_SERVICE_HOST:-coreapi-pgbouncer}:${PGBOUNCER_SERVICE_PORT:-5432}/${POSTGRESQL_DATABASE}
-
 set -ex
 
 pushd ${ALEMBIC_DIR}

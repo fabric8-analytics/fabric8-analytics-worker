@@ -20,7 +20,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import desc
 
-from f8a_worker.conf import get_configuration
+from f8a_worker.defaults import configuration
 from f8a_worker.errors import TaskError
 from f8a_worker.models import (Analysis, Ecosystem, Package, Version,
                                PackageGHUsage, ComponentGHUsage, DownstreamMap)
@@ -28,7 +28,6 @@ from f8a_worker.models import (Analysis, Ecosystem, Package, Version,
 from selinon import StoragePool
 
 logger = logging.getLogger(__name__)
-configuration = get_configuration()
 
 
 def get_package_dependents_count(ecosystem_backend, package, db_session=None):
@@ -502,7 +501,7 @@ class MavenCoordinates(object):
 
 def get_latest_upstream_details(ecosystem, package):
     """Returns dict representation of Anitya project"""
-    url = configuration.anitya_url + '/api/by_ecosystem/{e}/{p}'.\
+    url = configuration.ANITYA_URL + '/api/by_ecosystem/{e}/{p}'.\
         format(e=ecosystem, p=package)
 
     res = requests.get(url)

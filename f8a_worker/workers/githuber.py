@@ -99,7 +99,7 @@ class GithubTask(BaseTask):
                 # Not a GitHub hosted project
                 return result_data
 
-        token = self.configuration.github_token
+        token = self.configuration.GITHUB_TOKEN
         if not token:
             if self._rate_limit_exceeded(github.Github()):
                 self.log.error("No Github API token provided (GITHUB_TOKEN env variable), "

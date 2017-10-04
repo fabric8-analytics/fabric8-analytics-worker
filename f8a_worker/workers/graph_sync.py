@@ -5,7 +5,6 @@ from f8a_worker.utils import get_latest_analysis
 from celery.utils.log import get_task_logger
 
 import json
-from os import environ
 from requests import post
 
 
@@ -17,8 +16,8 @@ class GraphSyncTask(BaseTask):
         name = arguments.get['name']
         version = arguments.get['version']
 
-        host = environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_HOST", "localhost")
-        port = environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_PORT", "8182")
+        host = self.configuration.BAYESIAN_GREMLIN_HTTP_SERVICE_HOST
+        port = self.configuration.BAYESIAN_GREMLIN_HTTP_SERVICE_PORT
         url = "http://{host}:{port}".format(host=host, port=port)
         # retry until the package data is avaiable in the graphDB
         qstring = "g.V().has('pecosystem','" + ecosystem + "').has('pname','" + name + \

@@ -2,10 +2,9 @@ import logging
 import requests
 import functools
 
-from f8a_worker.conf import get_configuration
+from f8a_worker.defaults import configuration
 
 logger = logging.getLogger(__name__)
-configuration = get_configuration()
 
 # We treat the fact product names are stored elsewhere as an
 # implementation detail of the Pulp CDN.
@@ -47,11 +46,11 @@ class Pulp(object):
                                    It takes 25 seconds, but for rpms which are in many repositories
                                    querying them individually may take even few times longer.
         """
-        self.pulp_url = pulp_url or configuration.pulp_url
+        self.pulp_url = pulp_url or configuration.PULP_URL
         if not self.pulp_url:
             raise ValueError('No Pulp url specified')
-        self.auth = pulp_auth or (configuration.pulp_username,
-                                  configuration.pulp_password)
+        self.auth = pulp_auth or (configuration.PULP_USERNAME,
+                                  configuration.PULP_PASSWORD)
         self.verify = verify or '/etc/pki/tls/certs/ca-bundle.crt'
         self.cache_repositories = cache_repositories
         self.repositories = None

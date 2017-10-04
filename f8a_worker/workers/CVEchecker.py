@@ -133,7 +133,8 @@ class CVEcheckerTask(BaseTask):
                 rmtree(dcdir)
 
         s3 = StoragePool.get_connected_storage('S3VulnDB')
-        depcheck = os.path.join(os.environ['OWASP_DEP_CHECK_PATH'], 'bin', 'dependency-check.sh')
+        depcheck = os.path.join(self.configuration.OWASP_DEP_CHECK_PATH, 'bin',
+                                'dependency-check.sh')
         with tempdir() as temp_data_dir:
             retrieved = s3.retrieve_depcheck_db_if_exists(temp_data_dir)
             if not retrieved:

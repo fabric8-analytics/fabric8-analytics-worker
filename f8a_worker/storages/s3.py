@@ -7,7 +7,7 @@ import boto3
 import botocore
 from selinon import DataStorage
 from selinon import StoragePool
-from f8a_worker.conf import is_local_deployment
+from f8a_worker.defaults import configuration
 
 
 class AmazonS3(DataStorage):
@@ -27,11 +27,12 @@ class AmazonS3(DataStorage):
         super().__init__()
         self._s3 = None
 
-        self.region_name = os.getenv('AWS_S3_REGION', region_name) or self._DEFAULT_REGION_NAME
+        self.region_name = configuration.AWS_S3_REGION or region_name or self._DEFAULT_REGION_NAME
         self.bucket_name = bucket_name or self._DEFAULT_BUCKET_NAME
         self.bucket_name = self.bucket_name.format(**os.environ)
-        self._aws_access_key_id = os.getenv('AWS_S3_ACCESS_KEY_ID', aws_access_key_id)
-        self._aws_secret_access_key = os.getenv('AWS_S3_SECRET_ACCESS_KEY', aws_secret_access_key)
+        self._aws_access_key_id = configuration.AWS_S3_ACCESS_KEY_ID or aws_access_key_id
+        self._aws_secret_access_key = \
+            configuration.AWS_S3_SECRET_ACCESS_KEY or aws_secret_access_key
 
         # let boto3 decide if we don't have local development proper values
         self._endpoint_url = None
@@ -41,9 +42,8 @@ class AmazonS3(DataStorage):
         self.versioned = self._DEFAULT_VERSIONED if versioned is None else versioned
 
         # if we run locally, make connection properties configurable
-        if is_local_deployment():
-            self._endpoint_url = os.getenv('S3_ENDPOINT_URL') or \
-                                 endpoint_url or \
+        if configuration.is_local_deployment():
+            self._endpoint_url = configuration.S3_ENDPOINT_URL or endpoint_url or \
                                  self._DEFAULT_LOCAL_ENDPOINT
             self._use_ssl = use_ssl
             self.encryption = False
@@ -90,13 +90,13 @@ class AmazonS3(DataStorage):
                                    CreateBucketConfiguration={
                                        'LocationConstraint': self.region_name
                                    })
-        if self.versioned and not is_local_deployment():
+        if self.versioned and not configuration.is_local_deployment():
             # Do not enable versioning when running locally.
             # Our S3 alternatives are not capable to handle it.
             self._s3.BucketVersioning(self.bucket_name).enable()
 
-        bucket_tag = os.environ.get('DEPLOYMENT_PREFIX')
-        if tagged and bucket_tag and not is_local_deployment():
+        bucket_tag = configuration.DEPLOYMENT_PREFIX
+        if tagged and bucket_tag and not configuration.is_local_deployment():
             self._s3.BucketTagging(self.bucket_name).put(
                 Tagging={
                     'TagSet': [
@@ -171,7 +171,7 @@ class AmazonS3(DataStorage):
 
         response = self._s3.Object(self.bucket_name, object_key).put(**put_kwargs)
 
-        if 'VersionId' not in response and is_local_deployment() and self.versioned:
+        if 'VersionId' not in response and configuration.is_local_deployment() and self.versioned:
             # If we run local deployment, our local S3 alternative does not
             # support versioning. Return a fake one.
             return self._get_fake_version_id()
@@ -208,10 +208,10 @@ class AmazonS3(DataStorage):
         """
         if not self.versioned:
             raise AttributeError("Cannot retrieve version of object '{}': "
-                                 "bucket '{}' is not configured to be versioned".format(
-                                     object_key, self.bucket_name))
+                                 "bucket '{}' is not configured to be versioned".
+                                 format(object_key, self.bucket_name))
 
-        if is_local_deployment():
+        if configuration.is_local_deployment():
             return self._get_fake_version_id()
 
         return self._s3.Object(self.bucket_name, object_key).version_id
@@ -220,7 +220,7 @@ class AmazonS3(DataStorage):
     def is_enabled():
         """:return: True if S3 sync is enabled, False otherwise."""
         try:
-            return int(os.environ.get('BAYESIAN_SYNC_S3', 0)) == 1
+            return configuration.BAYESIAN_SYNC_S3
         except ValueError:
             return False
 

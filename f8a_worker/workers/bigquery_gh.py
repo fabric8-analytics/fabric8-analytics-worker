@@ -14,12 +14,10 @@ from bigquery import get_client, JOB_WRITE_TRUNCATE, JOB_WRITE_EMPTY
 from bigquery.errors import BigQueryTimeoutException
 from selinon import StoragePool
 
-from f8a_worker.conf import get_configuration
+from f8a_worker.defaults import configuration
 from f8a_worker.storages import AmazonS3
 
 logger = get_task_logger(__name__)
-config = get_configuration()
-
 
 # get all dependencies from all package.json files on GitHub and count their occurrences
 query_dependents_count = """
@@ -86,7 +84,7 @@ class BigQueryTask(SelinonTask):
         """Get package usage information from BigQuery's public GitHub dataset."""
 
         dataset = 'bayesian'
-        json_key = config.bigquery_json_key
+        json_key = configuration.BIGQUERY_JSON_KEY
         try:
             bq = BigQueryProject(json_key=json_key)
         except ValueError as e:
@@ -171,7 +169,7 @@ class BigQueryTask(SelinonTask):
     def dump_to_rdb(csv_file, csv_header, table_name):
         """Import results from BigQuery into the DB."""
 
-        conn = psycopg2.connect(config.postgres_connection)
+        conn = psycopg2.connect(configuration.POSTGRES_CONNECTION)
         try:
             cur = conn.cursor()
             cur.copy_from(open(csv_file), table_name, sep=',', columns=csv_header)

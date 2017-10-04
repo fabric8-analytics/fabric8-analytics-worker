@@ -10,10 +10,8 @@ import semantic_version as sv
 from f8a_worker.graphutils import (GREMLIN_SERVER_URL_REST, create_package_dict,
                                    select_latest_version)
 from f8a_worker.base import BaseTask
-from f8a_worker.conf import get_configuration
 from f8a_worker.utils import get_session_retry
 
-config = get_configuration()
 
 danger_word_list = ["drop\(\)", "V\(\)", "count\(\)"]
 remove = '|'.join(danger_word_list)

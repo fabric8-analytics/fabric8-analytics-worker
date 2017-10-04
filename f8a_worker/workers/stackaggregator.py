@@ -10,15 +10,12 @@ import os
 import json
 import requests
 
-from f8a_worker.conf import get_configuration
 from f8a_worker.solver import get_ecosystem_parser
 from f8a_worker.base import BaseTask
 from f8a_worker.graphutils import (get_stack_usage_data_graph, get_stack_popularity_data_graph,
                                    aggregate_stack_data, GREMLIN_SERVER_URL_REST)
 from f8a_worker.workers.mercator import MercatorTask
 from f8a_worker.utils import get_session_retry
-
-config = get_configuration()
 
 
 class StackAggregatorTask(BaseTask):
@@ -29,12 +26,6 @@ class StackAggregatorTask(BaseTask):
         components_with_usage_data = 0
         total_dependents_count = 0
         rh_distributed_comp_count = 0
-        try:
-            usage_threshold = int(os.getenv("LOW_USAGE_THRESHOLD", "5000"))
-        except (TypeError, ValueError):
-            # low usage threshold is set to default 5000 as the env variable value is non numeric
-            usage_threshold = 5000
-
         low_usage_component_count = 0
 
         for dep in components:
@@ -46,7 +37,7 @@ class StackAggregatorTask(BaseTask):
                                "package_dependents_count.")
             else:
                 if dependents_count > 0:
-                    if dependents_count < usage_threshold:
+                    if dependents_count < self.configuration.USAGE_THRESHOLD:
                         low_usage_component_count += 1
                     total_dependents_count += dependents_count
                     components_with_usage_data += 1
@@ -75,12 +66,6 @@ class StackAggregatorTask(BaseTask):
         total_forks = 0
         less_popular_components = 0
 
-        try:
-            popularity_threshold = int(os.getenv("LOW_POPULARITY_THRESHOLD", "5000"))
-        except (TypeError, ValueError):
-            # low usage threshold is set to default 5000 as the env variable value is non numeric
-            popularity_threshold = 5000
-
         for dep in components:
             gh_data = dep.get("github_details", {}).get("details", {})
             if gh_data:
@@ -96,7 +81,7 @@ class StackAggregatorTask(BaseTask):
                 if stargazers_count > 0:
                     total_stargazers += stargazers_count
                     components_with_stargazers += 1
-                    if stargazers_count < popularity_threshold:
+                    if stargazers_count < self.configuration.POPULARITY_THRESHOLD:
                         less_popular_components += 1
 
         result = {}

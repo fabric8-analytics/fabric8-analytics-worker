@@ -36,7 +36,7 @@ class InitAnalysisFlow(BaseTask):
                 arguments.pop('ecosystem')
                 return arguments
 
-        cache_path = mkdtemp(dir=self.configuration.worker_data_dir)
+        cache_path = mkdtemp(dir=self.configuration.WORKER_DATA_DIR)
         epv_cache = ObjectCache.get_from_dict(arguments)
         ecosystem = Ecosystem.by_name(db, arguments['ecosystem'])
 
