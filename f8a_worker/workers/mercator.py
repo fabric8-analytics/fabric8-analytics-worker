@@ -25,7 +25,6 @@ sample output:
 
 import os
 import json
-from itertools import chain
 
 from f8a_worker.base import BaseTask
 from f8a_worker.data_normalizer import DataNormalizer
@@ -196,8 +195,9 @@ class MercatorTask(BaseTask):
         mercator_target = arguments.get('cache_sources_path', cache_path)
 
         if arguments['ecosystem'] == 'go':
+            # no Go support in Mercator-go yet, we handle it separately here
             tc = TimedCommand(['gofedlib-cli', '--dependencies-main', '--dependencies-packages', mercator_target])
-            status, data, err = tc.run(timeout=timeout, is_json=True)
+            status, data, err = tc.run(timeout=timeout)
         else:
             tc = TimedCommand(['mercator', mercator_target])
             update_env = {'MERCATOR_JAVA_RESOLVE_POMS': 'true'} if resolve_poms else {}
@@ -213,15 +213,11 @@ class MercatorTask(BaseTask):
             # TODO: attempt static setup.py parsing with mercator
             items = [self._merge_python_items(mercator_target, data)]
         elif arguments['ecosystem'] == 'go':
-            # items = json.loads(data[0])
-            json_data = data
-            deps = []
-            for x in json_data.values():
-                deps.extend(x)
-
-            result_data['details'] = [{'dependencies': deps}]
-            self.log.debug('gofedlib found %i dependencies', len(result_data['details']['dependencies']))
-            return result_data
+            result = {'result': json.loads(data[0])}
+            result['ecosystem'] = 'gofedlib'  # data normalized expects this
+            items = [result]
+            self.log.debug('gofedlib found %i dependencies', len(result['result'].get('deps-main', []))
+                           + len(result['result'].get('deps-packages', [])))
         else:
             if outermost_only:
                 # process only root level manifests (or the ones closest to the root level)
