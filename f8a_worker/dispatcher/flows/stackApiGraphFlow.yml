@@ -1,6 +1,6 @@
 ---
   flow-definitions:
-    - name: 'stackApiGraphFlow'
+    - name: 'stackApiGraphV2Flow'
       queue: '{DEPLOYMENT_PREFIX}_api_stackApiGraphFlow_v0'
       sampling:
         name: 'constant'
@@ -8,11 +8,16 @@
           retry: 10
       edges:
         - from:
-          to:
-            - 'GraphAggregatorTask'
-            - 'ManifestKeeperTask'
+          to: 'GraphAggregatorTask'
         - from:
-            - 'GraphAggregatorTask'
+          to: 'ManifestKeeperTask'
+        - from: 'GraphAggregatorTask'
+          to: 'stack_aggregator_v2'
+        - from: 'GraphAggregatorTask'
+          to: 'BookkeeperTask'
+        - from: 'GraphAggregatorTask'
+          to: 'recommendation_v2'
+        - from:
+            - 'recommendation_v2'
           to:
-            - 'recommendation'
-            - 'stack_aggregator'
+            - 'reco_pkg_sentiment_scorer'
