@@ -179,11 +179,13 @@ class CVEcheckerTask(BaseTask):
             _clean_dep_check_tmp()
 
         results = []
-        dependencies = report_dict.get('analysis', {}).get('dependencies', {}).get('dependency', [])
+        dependencies = report_dict.get('analysis', {}).get('dependencies')  # value can be None
+        dependencies = dependencies.get('dependency', []) if dependencies else []
         if not isinstance(dependencies, list):
             dependencies = [dependencies]
         for dependency in dependencies:
-            vulnerabilities = dependency.get('vulnerabilities', {}).get('vulnerability', [])
+            vulnerabilities = dependency.get('vulnerabilities')  # value can be None
+            vulnerabilities = vulnerabilities.get('vulnerability', []) if vulnerabilities else []
             if not isinstance(vulnerabilities, list):
                 vulnerabilities = [vulnerabilities]
             for vulnerability in vulnerabilities:
