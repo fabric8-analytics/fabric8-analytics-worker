@@ -221,8 +221,6 @@ objects:
           # this won't get used if running with SQS
           - name: RABBITMQ_SERVICE_SERVICE_HOST
             value: bayesian-broker
-          - name: SCANCODE_PROCESSES
-            value: "2"
           image: "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${IMAGE_TAG}"
           name: bayesian-worker
           readinessProbe:
