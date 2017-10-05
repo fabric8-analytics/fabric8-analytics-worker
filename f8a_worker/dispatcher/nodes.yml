@@ -473,6 +473,15 @@
         encryption: false
         versioned: true
 
+    - name: 'S3UserIntent'
+      import: 'f8a_worker.storages'
+      configuration:
+        <<: *configurationS3
+        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-user-intent'
+        region_name: 'us-east-1'
+        encryption: false
+        versioned: true
+
   global:
     trace:
       import: 'f8a_worker.dispatcher.trace'
