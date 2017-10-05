@@ -27,3 +27,22 @@ class S3Data(S3DataBase):
         """
         object_key = self._construct_task_result_object_key(locals(), task_name)
         return self.retrieve_dict(object_key)
+
+    def list_available_versions(self, arguments):
+        """List all available versions for the given package."""
+        object_key = '{ecosystem}/{name}/'.format(**arguments)
+        bucket = self._s3.Bucket(self.bucket_name)
+        objects = bucket.objects.filter(Prefix=object_key)
+
+        versions = []
+        for obj in objects:
+            if not obj.key.endswith('.json'):
+                continue
+
+            # This simple trick will remove duplicates (subdirs containing task results)
+            version_parts = obj.key[len(object_key):-len('.json')].split('/', 1)
+            print(version_parts)
+            if len(version_parts) == 1:
+                versions.append(version_parts[0])
+
+        return versions
