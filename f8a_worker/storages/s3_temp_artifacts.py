@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from . import AmazonS3
-from f8a_worker.conf import is_local_deployment
+from f8a_worker.defaults import F8AConfiguration
 
 
 class S3TempArtifacts(AmazonS3):
@@ -39,6 +39,6 @@ class S3TempArtifacts(AmazonS3):
         super()._create_bucket(tagged=tagged)
 
         # minio doesn't support lifecycle management
-        if not is_local_deployment():
+        if not F8AConfiguration.is_local_deployment():
             self._s3.meta.client.put_bucket_lifecycle_configuration(Bucket=self.bucket_name,
                                                                     LifecycleConfiguration=self.default_expiration_rule)
