@@ -25,6 +25,3 @@ scipy
 boto
 boto3
 semantic_version
-# sentiment analysis
-google-cloud
-joblib
