@@ -13,8 +13,7 @@ from f8a_worker.graphutils import (GREMLIN_SERVER_URL_REST, create_package_dict,
                                    select_latest_version, LICENSE_SCORING_URL_REST)
 from f8a_worker.base import BaseTask
 from f8a_worker.utils import get_session_retry
-from f8a_worker.workers.stackaggregator_v2 import perform_license_analysis, get_dependency_data, aggregate_stack_data, \
-    extract_user_stack_package_licenses
+from f8a_worker.workers.stackaggregator_v2 import extract_user_stack_package_licenses
 
 
 danger_word_list = ["drop\(\)", "V\(\)", "count\(\)"]
@@ -665,27 +664,19 @@ def invoke_license_analysis_service(user_stack_packages, alternate_packages, com
 def apply_license_filter(user_stack_components, epv_list_alt, epv_list_com):
     license_score_list_alt = []
     for epv in epv_list_alt:
-        name = epv.get('pkg', {}).get('name', [''])[0]
-        version = epv.get('ver', {}).get('version', [''])[0]
-        licenses = epv.get('ver', {}).get('version', {}).get('licenses', [])
-
         license_scoring_input = {
-            'package': name,
-            'version': version,
-            'licenses': licenses
+            'package': epv.get('pkg', {}).get('name', [''])[0],
+            'version': epv.get('ver', {}).get('version', [''])[0],
+            'licenses': epv.get('ver', {}).get('version', {}).get('licenses', [])
         }
         license_score_list_alt.append(license_scoring_input)
 
     license_score_list_com = []
     for epv in epv_list_com:
-        name = epv.get('pkg', {}).get('name', [''])[0]
-        version = epv.get('ver', {}).get('version', [''])[0]
-        licenses = epv.get('ver', {}).get('version', {}).get('licenses', [])
-
         license_scoring_input = {
-            'package': name,
-            'version': version,
-            'licenses': licenses
+            'package': epv.get('pkg', {}).get('name', [''])[0],
+            'version': epv.get('ver', {}).get('version', [''])[0],
+            'licenses': epv.get('ver', {}).get('version', {}).get('licenses', [])
         }
         license_score_list_com.append(license_scoring_input)
 
@@ -694,8 +685,7 @@ def apply_license_filter(user_stack_components, epv_list_alt, epv_list_com):
                                                 license_score_list_alt,
                                                 license_score_list_com)
 
-    conflict_packages_alt = []
-    conflict_packages_com = []
+    conflict_packages_alt = conflict_packages_com = []
     if la_output['status'] == 'Successful' and la_output['license_filter'] is not None:
         license_filter = la_output.get('license_filter', {})
         conflict_packages_alt = license_filter.get('alternate_packages', {}).get('conflict_packages', [])
