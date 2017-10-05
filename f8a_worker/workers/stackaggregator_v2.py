@@ -10,6 +10,7 @@ import json
 import datetime
 
 import logging
+import requests
 
 from f8a_worker.base import BaseTask
 from f8a_worker.graphutils import (GREMLIN_SERVER_URL_REST, LICENSE_SCORING_URL_REST,
@@ -17,6 +18,7 @@ from f8a_worker.graphutils import (GREMLIN_SERVER_URL_REST, LICENSE_SCORING_URL_
 from f8a_worker.utils import get_session_retry
 
 _logger = logging.getLogger(__name__)
+
 
 def extract_component_details(component):
     github_details = {
@@ -222,16 +224,18 @@ def perform_license_analysis(license_score_list, dependencies):
     payload = {
         "packages": license_score_list
     }
-
-    stack_license = []
-    stack_license_status = None
-    license_conflict_packages = {}
-
+    resp = {}
+    flag_stack_license_exception = False
     try:
-        license_req = get_session_retry().post(license_url, data=json.dumps(payload))
-        resp = license_req.json()
-    except:
+        lic_response = get_session_retry().post(license_url, data=json.dumps(payload))
+        lic_response.raise_for_status()  # raise exception for bad http-status codes
+        resp = lic_response.json()
+    except requests.exceptions.RequestException as e:
+        msg = "Unexpected error happened while invoking license analysis!\n{}".format(e)
+        _logger.error(msg)
+
         flag_stack_license_exception = True
+        pass
 
     stack_license = []
     stack_license_status = None
@@ -263,6 +267,7 @@ def perform_license_analysis(license_score_list, dependencies):
     }
     return output, dependencies
 
+
 def extract_user_stack_package_licenses(resolved, ecosystem):
     user_stack = get_dependency_data(resolved, ecosystem)
     list_package_licenses = []
@@ -279,6 +284,7 @@ def extract_user_stack_package_licenses(resolved, ecosystem):
                 list_package_licenses.append(license_scoring_input)
 
     return list_package_licenses
+
 
 def aggregate_stack_data(stack, manifest_file, ecosystem, deps, manifest_file_path):
     dependencies = []
@@ -323,12 +329,19 @@ def aggregate_stack_data(stack, manifest_file, ecosystem, deps, manifest_file_pa
     }
     return data
 
+
 def get_dependency_data(resolved, ecosystem):
     result = []
     for elem in resolved:
-        qstring = "g.V().has('pecosystem','"+ecosystem+"').has('pname','"+elem["package"]+"')." \
-                  "has('version','"+elem["version"]+"')." \
-                  "as('version').in('has_version').as('package').select('version','package').by(valueMap());"
+        if elem["package"] is None or elem["version"] is None:
+            _logger.warning("Either component name or component version is missing")
+            continue
+
+        qstring = \
+            "g.V().has('pecosystem', '{}').has('pname', '{}').has('version', '{}')" + \
+            ".as('version').in('has_version').as('package')" + \
+            ".select('version','package').by(valueMap());"\
+            .format(ecosystem, elem["package"], elem["version"])
         payload = {'gremlin': qstring}
 
         try:
@@ -345,8 +358,8 @@ def get_dependency_data(resolved, ecosystem):
             else:
                 _logger.error("Failed retrieving dependency data.")
                 continue
-        except:
-            _logger.error("Error retrieving dependency data.")
+        except Exception as e:
+            _logger.error("Error retrieving dependency data!\n {}".format(e))
             continue
 
     return {"result": result}
