@@ -172,15 +172,10 @@
             - 'digests'
           to: 'redhat_downstream'
           condition:
-            or:
-              - name: 'envEqual'
-                args:
-                  env: 'OPENSHIFT_DEPLOYMENT'
-                  value: '0'
-              - name: 'argsFieldEqual'
-                args:
-                  key: 'ecosystem'
-                  value: 'maven'
+            name: 'argsFieldEqual'
+            args:
+              key: 'ecosystem'
+              value: 'maven'
         - from:
           to: 'blackduck_executor'
           condition:
