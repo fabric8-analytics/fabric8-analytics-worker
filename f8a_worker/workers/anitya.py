@@ -3,7 +3,6 @@ Adds project to Anitya, which will keep track of its latest version.
 """
 import requests
 
-from f8a_worker.conf import get_configuration
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.errors import TaskError
 from f8a_worker.utils import DownstreamMapCache, MavenCoordinates
@@ -14,8 +13,6 @@ RH_RPM_DISTRO_NAME = 'rh-dist-git'
 # name of "Maven" distro for Anitya
 RH_MVN_DISTRO_NAME = 'rh-mvn'
 RH_MVN_GA_REPO = 'https://maven.repository.redhat.com/ga'
-
-configuration = get_configuration()
 
 
 class AnityaTask(BaseTask):
@@ -52,7 +49,7 @@ class AnityaTask(BaseTask):
         if homepage is not None:
             return homepage
         else:
-            return configuration.anitya_url + \
+            return self.configuration.ANITYA_URL + \
                 '/api/by_ecosystem/{e}/{p}'.format(e=ecosystem, p=package)
 
     def _get_artifact_hash(self, algorithm=None):
@@ -69,7 +66,7 @@ class AnityaTask(BaseTask):
         if backend is None:
             raise ValueError('Don\'t know how to add ecosystem {e} with backend {b} to Anitya'.
                              format(e=ecosystem, b=eco_model.backend))
-        url = configuration.anitya_url + '/api/by_ecosystem/' + backend
+        url = self.configuration.ANITYA_URL + '/api/by_ecosystem/' + backend
         data = {'ecosystem': backend, 'name': package, 'homepage': homepage, 'check_release': True}
         if backend == 'maven':
             # for Maven, Anitya needs to know "version_url", which is groupId:artifactId
@@ -79,12 +76,12 @@ class AnityaTask(BaseTask):
         return requests.post(url, json=data)
 
     def _add_downstream_mapping(self, ecosystem, upstream_project, distribution, package_name):
-        anitya_url = configuration.anitya_url
+        anitya_url = self.configuration.ANITYA_URL
         url = anitya_url + '/api/downstreams/{e}/{p}/'.format(e=ecosystem, p=upstream_project)
         downstream_data = {'distro': distribution, 'package_name': package_name}
         self.log.debug('Adding Anitya mapping: %s for %s/%s' % (downstream_data,
-                                                              ecosystem,
-                                                              upstream_project))
+                                                                ecosystem,
+                                                                upstream_project))
         return requests.post(url, json=downstream_data)
 
     def _get_downstream_rpm_pkgs(self, ecosystem, name):
@@ -155,13 +152,13 @@ class AnityaTask(BaseTask):
         res = self._create_anitya_project(eco, pkg, homepage)
         if res.status_code == 200:
             self.log.info('Project {e}/{p} had already been registered to Anitya'.
-                        format(e=eco, p=pkg))
+                          format(e=eco, p=pkg))
         elif res.status_code == 201:
             self.log.info('Project {e}/{p} was successfully registered to Anitya'.
-                        format(e=eco, p=pkg))
+                          format(e=eco, p=pkg))
         else:
             self.log.error('Failed to create Anitya project {e}/{p}. Anitya response: {r}'.
-                         format(e=eco, p=pkg, r=res.text))
+                           format(e=eco, p=pkg, r=res.text))
             return None
             # TODO: When we move to a proper workflow manager, we'll want to raise TaskError
             #  here instead of just logging an error. Right now we don't want a problem
@@ -180,10 +177,10 @@ class AnityaTask(BaseTask):
                 res = self._add_downstream_mapping(eco, pkg, distro, package_name)
                 if res.status_code == 200:
                     self.log.info('Downstream mapping %s/%s has already been added to project %s' %
-                                (distro, package_name, pkg))
+                                  (distro, package_name, pkg))
                 elif res.status_code == 201:
                     self.log.info('Downstream mapping %s/%s was added to project %s' %
-                                (distro, package_name, pkg))
+                                  (distro, package_name, pkg))
                 else:
                     raise TaskError('Failed to add downstream mapping %s/%s to project %s' %
                                     (distro, package_name, pkg))

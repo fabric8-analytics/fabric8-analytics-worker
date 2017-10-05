@@ -4,7 +4,6 @@
 
 set -e
 DIR=$(dirname "${BASH_SOURCE[0]}")
-source $DIR/env.sh
 
 NODE_NAME="celery@${HOSTNAME}"
 BROKER_URL=`python3 -c "from f8a_worker.celery_settings import CelerySettings; print(CelerySettings.broker_url)"`

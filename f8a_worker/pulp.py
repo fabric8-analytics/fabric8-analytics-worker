@@ -2,10 +2,9 @@ import logging
 import requests
 import functools
 
-from f8a_worker.conf import get_configuration
+from f8a_worker.defaults import configuration
 
 logger = logging.getLogger(__name__)
-configuration = get_configuration()
 
 # We treat the fact product names are stored elsewhere as an
 # implementation detail of the Pulp CDN.
@@ -13,6 +12,8 @@ configuration = get_configuration()
 # Red Hat Engineering products, so we cache those lookups
 # TODO: Make this properly configurable
 _RED_HAT_PRODUCT_API = 'http://servicejava.corp.qa.redhat.com/svcrest/product/v3/engproducts/'
+
+
 @functools.lru_cache()
 def _get_product_name(product_id, service_api=_RED_HAT_PRODUCT_API):
     query_url = _RED_HAT_PRODUCT_API + product_id
@@ -20,7 +21,7 @@ def _get_product_name(product_id, service_api=_RED_HAT_PRODUCT_API):
     response.raise_for_status()
     data = response.json()['engProducts'][0]
     if data['status'] != 'ACTIVE':
-        return None # Hide inactive products
+        return None  # Hide inactive products
     return data['name']
 
 
@@ -45,11 +46,11 @@ class Pulp(object):
                                    It takes 25 seconds, but for rpms which are in many repositories
                                    querying them individually may take even few times longer.
         """
-        self.pulp_url = pulp_url or configuration.pulp_url
+        self.pulp_url = pulp_url or configuration.PULP_URL
         if not self.pulp_url:
             raise ValueError('No Pulp url specified')
-        self.auth = pulp_auth or (configuration.pulp_username,
-                                  configuration.pulp_password)
+        self.auth = pulp_auth or (configuration.PULP_USERNAME,
+                                  configuration.PULP_PASSWORD)
         self.verify = verify or '/etc/pki/tls/certs/ca-bundle.crt'
         self.cache_repositories = cache_repositories
         self.repositories = None

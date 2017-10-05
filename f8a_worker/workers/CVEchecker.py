@@ -4,7 +4,7 @@ from glob import glob
 import os
 from re import compile as re_compile
 import requests
-from shutil import rmtree
+from shutil import rmtree, copy
 from tempfile import gettempdir
 from selinon import StoragePool
 from f8a_worker.base import BaseTask
@@ -101,7 +101,7 @@ class CVEcheckerTask(BaseTask):
 
     def _query_ossindex(self, arguments):
         """ Query OSS Index REST API """
-        entries = []
+        entries = {}
         solver = get_ecosystem_solver(self.storage.get_ecosystem(arguments['ecosystem']),
                                       with_parser=OSSIndexDependencyParser())
         for package in self._query_ossindex_package(arguments['ecosystem'], arguments['name']):
@@ -111,16 +111,18 @@ class CVEcheckerTask(BaseTask):
                         affected_versions = solver.solve(["{} {}".format(arguments['name'],
                                                                          version_string)],
                                                          all_versions=True)
-                    except:
+                    except Exception:
                         self.log.exception("Failed to resolve %r for %s:%s", version_string,
                                            arguments['ecosystem'], arguments['name'])
                         continue
                     if arguments['version'] in affected_versions.get(arguments['name'], []):
-                        entries.append(self._filter_ossindex_fields(vulnerability))
+                        entry = self._filter_ossindex_fields(vulnerability)
+                        if entry.get('id'):
+                            entries[entry['id']] = entry
 
-        return {'summary': [e['id'] for e in entries if e['id']],
+        return {'summary': list(entries.keys()),
                 'status': 'success',
-                'details': entries}
+                'details': list(entries.values())}
 
     def _npm_scan(self, arguments):
         return self._query_ossindex(arguments)
@@ -131,7 +133,8 @@ class CVEcheckerTask(BaseTask):
                 rmtree(dcdir)
 
         s3 = StoragePool.get_connected_storage('S3VulnDB')
-        depcheck = os.path.join(os.environ['OWASP_DEP_CHECK_PATH'], 'bin', 'dependency-check.sh')
+        depcheck = os.path.join(self.configuration.OWASP_DEP_CHECK_PATH, 'bin',
+                                'dependency-check.sh')
         with tempdir() as temp_data_dir:
             retrieved = s3.retrieve_depcheck_db_if_exists(temp_data_dir)
             if not retrieved:
@@ -149,6 +152,10 @@ class CVEcheckerTask(BaseTask):
                        '--out', report_path]
             if experimental:
                 command.extend(['--enableExperimental'])
+            for suppress_xml in glob(os.path.join(os.environ['OWASP_DEP_CHECK_SUPPRESS_PATH'],
+                                                  '*.xml')):
+                command.extend(['--suppress', suppress_xml])
+
             output = []
             try:
                 self.log.debug('Running OWASP Dependency-Check to scan %s for vulnerabilities' %
@@ -172,11 +179,13 @@ class CVEcheckerTask(BaseTask):
             _clean_dep_check_tmp()
 
         results = []
-        dependencies = report_dict.get('analysis', {}).get('dependencies', {}).get('dependency', [])
+        dependencies = report_dict.get('analysis', {}).get('dependencies')  # value can be None
+        dependencies = dependencies.get('dependency', []) if dependencies else []
         if not isinstance(dependencies, list):
             dependencies = [dependencies]
         for dependency in dependencies:
-            vulnerabilities = dependency.get('vulnerabilities', {}).get('vulnerability', [])
+            vulnerabilities = dependency.get('vulnerabilities')  # value can be None
+            vulnerabilities = vulnerabilities.get('vulnerability', []) if vulnerabilities else []
             if not isinstance(vulnerabilities, list):
                 vulnerabilities = [vulnerabilities]
             for vulnerability in vulnerabilities:
@@ -192,8 +201,8 @@ class CVEcheckerTask(BaseTask):
                 i = i[0] if i else '?'
                 a = vulnerability.get('cvssAvailabilityImpact')
                 a = a[0] if a else '?'
-                vector = "AV:{AV}/AC:{AC}/Au:{Au}/C:{C}/I:{I}/A:{A}".\
-                    format(AV=av, AC=ac, Au=au, C=c, I=i, A=a)
+                vector = "AV:{AV}/AC:{AC}/Au:{Au}/C:{C}/I:{Integrity}/A:{A}".\
+                    format(AV=av, AC=ac, Au=au, C=c, Integrity=i, A=a)
                 result = {
                     'cvss': {
                         'score': vulnerability.get('cvssScore'),
@@ -224,24 +233,29 @@ class CVEcheckerTask(BaseTask):
         """
         Run OWASP dependency-check experimental analyzer for Python artifacts
 
-        https://jeremylong.github.io/DependencyCheck/analyzers/python-analyzer.html
+        https://jeremylong.github.io/DependencyCheck/analyzers/python.html
         """
-        tarball = ObjectCache.get_from_dict(arguments).get_source_tarball()
-        if tarball.endswith('zip') or tarball.endswith('.whl'):  # tar.gz seems to be not supported
-            scan_path = tarball
-        else:
-            extracted_tarball = ObjectCache.get_from_dict(arguments).get_extracted_source_tarball()
-            # depcheck needs to be pointed to a specific file, we can't just scan whole directory
-            egg_info, pkg_info, metadata = None, None, None
-            for root, dirs, files in os.walk(extracted_tarball):
-                if root.endswith('.egg-info'):
-                    egg_info = root
-                if 'PKG-INFO' in files:
-                    pkg_info = os.path.join(root, 'PKG-INFO')
-                if 'METADATA' in files:
-                    metadata = os.path.join(root, 'METADATA')
-
-            scan_path = egg_info or pkg_info or metadata
+        extracted_tarball = ObjectCache.get_from_dict(arguments).get_extracted_source_tarball()
+        # depcheck needs to be pointed to a specific file, we can't just scan whole directory
+        egg_info = pkg_info = metadata = None
+        for root, _, files in os.walk(extracted_tarball):
+            if root.endswith('.egg-info') or root.endswith('.dist-info'):
+                egg_info = root
+            if 'PKG-INFO' in files:
+                pkg_info = os.path.join(root, 'PKG-INFO')
+            if 'METADATA' in files:
+                metadata = os.path.join(root, 'METADATA')
+        scan_path = egg_info or pkg_info or metadata
+        if pkg_info and not egg_info:
+            # Work-around for dependency-check ignoring PKG-INFO outside .dist-info/
+            # https://github.com/jeremylong/DependencyCheck/issues/896
+            egg_info_dir = os.path.join(extracted_tarball, arguments['name'] + '.egg-info')
+            try:
+                os.mkdir(egg_info_dir)
+                copy(pkg_info, egg_info_dir)
+                scan_path = egg_info_dir
+            except os.error:
+                self.log.warning('Failed to copy %s to %s', pkg_info, egg_info_dir)
 
         if not scan_path:
             return {'summary': ['File types not supported by OWASP dependency-check'],

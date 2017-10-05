@@ -8,7 +8,8 @@ from f8a_worker.base import BaseTask
 
 class GitHubManifestMetadataResultCollector(BaseTask):
     """
-    Collect all results that were computed, upload them to S3 and store version reference to results in WorkerResult
+    Collect all results that were computed, upload them to S3 and store version
+    reference to results in WorkerResult
     """
 
     GITHUB_CONTENT_URL = 'http://raw.githubusercontent.com/'
@@ -34,7 +35,8 @@ class GitHubManifestMetadataResultCollector(BaseTask):
                 for detail in task_result.get('details', []):
                     if detail.get('path', None):
                         manifest_url = urllib.parse.urljoin(self.GITHUB_CONTENT_URL,
-                                                            arguments['repo_name'] + '/' + detail['path'])
+                                                            arguments['repo_name'] + '/' +
+                                                            detail['path'])
                         manifest_name = detail['path'].split('/', 1)[1]
                         response = requests.get(manifest_url)
                         if response.status_code == 200:

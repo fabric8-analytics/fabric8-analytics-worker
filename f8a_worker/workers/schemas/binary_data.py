@@ -8,6 +8,7 @@ ROLE_TITLE = jsl.roles.Var({
     ROLE_v1_0_0: "Binary Data v1-0-0"
 })
 
+
 class BinwalkDetail(jsl.Document):
     class Options(object):
         definition_id = "binwalk_details"

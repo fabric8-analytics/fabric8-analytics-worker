@@ -25,7 +25,9 @@ def test_blackduck_project():
     assert project.name == 'foobar'
     assert project.id == 'aaaaa11111'
     assert project.canonical_release_id == 'abcdef123456'
-    assert project.urls == {'keyWithUrl': 'foo', 'anotherKeyWithUrl': 'bar', 'yetAnotherKeyWithUrl': 'baz'}
+    assert project.urls == {'keyWithUrl': 'foo',
+                            'anotherKeyWithUrl': 'bar',
+                            'yetAnotherKeyWithUrl': 'baz'}
 
 
 def test_blackduck_release():

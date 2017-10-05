@@ -3,7 +3,13 @@ separate_files="setup.py"
 fail=0
 
 function prepare_venv() {
-    virtualenv -p python3 venv && source venv/bin/activate && python3 `which pip3` install pycodestyle
+    VIRTUALENV=`which virtualenv`
+    if [ $? -eq 1 ]; then
+        # python34 which is in CentOS does not have virtualenv binary
+        VIRTUALENV=`which virtualenv-3`
+    fi
+
+    ${VIRTUALENV} -p python3 venv && source venv/bin/activate && python3 `which pip3` install pycodestyle
 }
 
 echo "----------------------------------------------------"
@@ -60,6 +66,5 @@ then
     echo "All checks passed"
 else
     echo "Linter fail, $fail source files need to be fixed"
-    # let's return 0 in all cases not to break CI (ATM :)
-    # exit 1
+    exit 1
 fi

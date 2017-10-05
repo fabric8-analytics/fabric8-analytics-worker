@@ -19,8 +19,8 @@ class KeywordsTaggingTask(BaseTask):
     _analysis_name = 'keywords_tagging'
     # schema_ref = SchemaRef(_analysis_name, '1-0-0')
 
-    # keywords.yaml files are ecosystem specific, keep them for _UPDATE_TIME - once _UPDATE_TIME expires update
-    # them directly from GitHub
+    # keywords.yaml files are ecosystem specific, keep them for _UPDATE_TIME -
+    # once _UPDATE_TIME expires update them directly from GitHub
     _keywords_yaml = {}
     _keywords_yaml_update = {}
     _UPDATE_TIME = timedelta(minutes=30)
@@ -31,7 +31,8 @@ class KeywordsTaggingTask(BaseTask):
     _STOPWORDS_URL = 'https://raw.githubusercontent.com/fabric8-analytics/' \
                      'fabric8-analytics-tags/master/stopwords.txt'
 
-    # Configuration of f8a_tagger lookup function - additional options. See f8a_tagger implementation for more details
+    # Configuration of f8a_tagger lookup function - additional options. See
+    # f8a_tagger implementation for more details
     _LOOKUP_CONF = {
         'lemmatize': True,
         'stemmer': 'EnglishStemmer',
@@ -51,7 +52,8 @@ class KeywordsTaggingTask(BaseTask):
 
             response = requests.get(self._TAGS_URL.format(ecosystem=ecosystem))
             if response.status_code != 200:
-                raise RuntimeError("Unable to download keywords.yaml file for ecosystem '%s', HTTP status code is %s"
+                raise RuntimeError("Unable to download keywords.yaml file for ecosystem '%s', "
+                                   "HTTP status code is %s"
                                    % (ecosystem, response.status_code))
 
             if ecosystem in self._keywords_yaml:
@@ -95,7 +97,8 @@ class KeywordsTaggingTask(BaseTask):
         return self._stopwords_txt
 
     def _get_config_files(self, ecosystem):
-        """Download keywords.yaml and stopwords.txt files if update time expires, otherwise use cached ones.
+        """Download keywords.yaml and stopwords.txt files if update time
+        expires, otherwise use cached ones.
 
         :param ecosystem: ecosystem for which config files should be retrieved
         :return: tuple with keywords.yaml and stopwords.txt file as stored on GitHub
@@ -105,7 +108,8 @@ class KeywordsTaggingTask(BaseTask):
         return keywords_yaml, stopwords_txt
 
     def _package_level_keywords(self, keywords_file_name, stopwords_file_name, arguments):
-        # Keep f8a_tagger import local as other components dependent on f8a_worker do not require it installed.
+        # Keep f8a_tagger import local as other components dependent on
+        # f8a_worker do not require it installed.
         from f8a_tagger import lookup_readme as keywords_lookup_readme
         from f8a_tagger import lookup_text as keywords_lookup_text
 
@@ -134,13 +138,16 @@ class KeywordsTaggingTask(BaseTask):
 
         s3_rd = StoragePool.get_connected_storage('S3RepositoryDescription')
         try:
-            description = s3_rd.retrieve_repository_description(arguments['ecosystem'], arguments['name'])
+            description = s3_rd.retrieve_repository_description(arguments['ecosystem'],
+                                                                arguments['name'])
             if description:
                 self.log.debug("Computing keywords on description from repository")
-                details['repository_description'] = keywords_lookup_text(description,
-                                                                         keywords_file=keywords_file_name,
-                                                                         stopwords_file=stopwords_file_name,
-                                                                         **self._LOOKUP_CONF)
+                details['repository_description'] = keywords_lookup_text(
+                    description,
+                    keywords_file=keywords_file_name,
+                    stopwords_file=stopwords_file_name,
+                    **self._LOOKUP_CONF)
+
         except Exception as exc:
             self.log.info("Failed to retrieve repository description: %s", str(exc))
 
@@ -156,7 +163,8 @@ class KeywordsTaggingTask(BaseTask):
         return details
 
     def _package_version_level_keywords(self, keywords_file_name, stopwords_file_name, arguments):
-        # Keep f8a_tagger import local as other components dependent on f8a_worker do not require it installed.
+        # Keep f8a_tagger import local as other components dependent on
+        # f8a_worker do not require it installed.
         from f8a_tagger import lookup_text as keywords_lookup_text
 
         details = {}
@@ -186,9 +194,11 @@ class KeywordsTaggingTask(BaseTask):
         keywords_file_name, stopwords_file_name = self._get_config_files(arguments['ecosystem'])
 
         if self.task_name == 'package_keywords_tagging':
-            details = self._package_level_keywords(keywords_file_name, stopwords_file_name, arguments)
+            details = self._package_level_keywords(keywords_file_name, stopwords_file_name,
+                                                   arguments)
         elif self.task_name == 'keywords_tagging':
-            details = self._package_version_level_keywords(keywords_file_name, stopwords_file_name, arguments)
+            details = self._package_version_level_keywords(keywords_file_name, stopwords_file_name,
+                                                           arguments)
         else:
             raise FatalTaskError("Unable to decide which keywords should be aggregated")
 

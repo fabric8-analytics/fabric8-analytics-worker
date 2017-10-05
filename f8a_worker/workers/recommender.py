@@ -9,14 +9,12 @@ import re
 import logging
 import semantic_version as sv
 
-from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST, create_package_dict, select_latest_version, \
-    LICENSE_SCORING_URL_REST
+from f8a_worker.graphutils import (GREMLIN_SERVER_URL_REST, create_package_dict,
+                                   select_latest_version, LICENSE_SCORING_URL_REST)
 from f8a_worker.base import BaseTask
-from f8a_worker.conf import get_configuration
 from f8a_worker.utils import get_session_retry
 from f8a_worker.workers.stackaggregator_v2 import extract_user_stack_package_licenses
 
-config = get_configuration()
 
 danger_word_list = ["drop\(\)", "V\(\)", "count\(\)"]
 remove = '|'.join(danger_word_list)
@@ -25,6 +23,7 @@ pattern_to_save = '[^\w\*\.Xx\-\>\=\<\~\^\|\/\:]'
 pattern_n2_remove = re.compile(pattern_to_save)
 
 _logger = logging.getLogger(__name__)
+
 
 class SimilarStack(object):
     def __init__(self, stack_id, usage_score=None, source=None,
@@ -72,12 +71,13 @@ class GraphDB:
         try:
             response = get_session_retry().post(self._bayesian_graph_url, data=json.dumps(payload))
             if response.status_code != 200:
-                _logger.error ("HTTP error {}. Error retrieving Gremlin data.".format(response.status_code))
+                _logger.error("HTTP error {}. Error retrieving Gremlin data.".format(
+                    response.status_code))
                 return None
             else:
                 json_response = response.json()
                 return json_response
-        except:
+        except Exception:
             _logger.error("Failed retrieving Gremlin data.")
             return None
 
@@ -129,7 +129,7 @@ class GraphDB:
             }
         }
         json_response = self.execute_gremlin_dsl(payload)
-       
+
         if json_response is None:
             return []
 
@@ -140,7 +140,8 @@ class GraphDB:
             list_stack_names.append(sname)
 
         # Get total counts of components in reference stacks
-        str_gremlin = "g.V().has('vertex_label','Stack').has('sname',within(list_stack_names)).as('stk')" \
+        str_gremlin = "g.V().has('vertex_label','Stack').has('sname',within(list_stack_names))" \
+                      ".as('stk')" \
                       ".out('has_dependency').select('stk').values('sname').groupCount()"
 
         payload = {
@@ -150,7 +151,7 @@ class GraphDB:
             }
         }
         json_response = self.execute_gremlin_dsl(payload)
-        if len(json_response.get("result",[{}]).get("data",[{}])[0].items()) > 0:
+        if len(json_response.get("result", [{}]).get("data", [{}])[0].items()) > 0:
             if json_response is not None:
                 ref_stack_full_components = self.get_response_data(json_response, data_default=[])
             ref_stk = {}
@@ -158,7 +159,8 @@ class GraphDB:
             # Calculate similarity score of all reference stacks vs. input stack
             for key, val in ref_stack_matching_components[0].items():
                 if key in ref_stack_full_components[0]:
-                    denominator = float(max(ref_stack_full_components[0].get(key), len(list_packages)))
+                    denominator = float(max(ref_stack_full_components[0].get(key),
+                                        len(list_packages)))
                     ref_stk[key] = float(val) / denominator
 
             # Get the name of reference stack with topmost similarity score
@@ -215,7 +217,7 @@ class GraphDB:
             'usage': float(ref_stack.get('usage', ['0.0'])[0]),
             'application_description':
                 "Generated Stack: " + ref_stack.get('sname', [''])[0]
-            }
+        }
         return ref_stack_map
 
     def get_package_info(self, component):
@@ -224,7 +226,8 @@ class GraphDB:
                     'version_spec': {'spec': component.get('version', ['Error'])[0]},
                     'loc': float(component.get('cm_loc', [0.0])[0]),
                     'num_files': float(component.get('cm_num_files', [0.0])[0]),
-                    'code_complexity': float(component.get('cm_avg_cyclomatic_complexity', [0.0])[0]),
+                    'code_complexity': float(component.get('cm_avg_cyclomatic_complexity',
+                                             [0.0])[0]),
                     'redistributed_by_redhat': component.get('shipped_as_downstream', [False])[0]
                 }
         return package
@@ -269,7 +272,8 @@ class GraphDB:
         Also remove EPVs with CVEs and ones not present in Graph
         """
         input_packages = [package for package in input_list]
-        str_query = "g.V().has('ecosystem',ecosystem).has('name',within(input_packages)).as('pkg').out('has_version')" \
+        str_query = "g.V().has('ecosystem',ecosystem).has('name',within(input_packages))" \
+                    ".as('pkg').out('has_version')" \
                     ".hasNot('cve_ids').as('ver').select('pkg','ver').by(valueMap()).dedup()"
         payload = {
             'gremlin': str_query,
@@ -301,16 +305,20 @@ class GraphDB:
         for epv in epv_list:
             name = epv.get('pkg', {}).get('name', [''])[0]
             version = epv.get('ver', {}).get('version', [''])[0]
-            # needed for maven version like 1.5.2.RELEASE to be converted to 1.5.2-RELEASE for semantic version to work'
+            # needed for maven version like 1.5.2.RELEASE to be converted to
+            # 1.5.2-RELEASE for semantic version to work'
             semversion = version.replace('.', '-', 3)
             semversion = semversion.replace('-', '.', 2)
             if name and version:
-                # Select Latest Version and add to filter_list if latest version is > current version
-                latest_version = select_latest_version(epv.get('pkg').get('libio_latest_version', [''])[0],
-                                                       epv.get('pkg').get('latest_version', [''])[0])
+                # Select Latest Version and add to filter_list if
+                # latest version is > current version
+                latest_version = select_latest_version(
+                    epv.get('pkg').get('libio_latest_version', [''])[0],
+                    epv.get('pkg').get('latest_version', [''])[0])
                 if latest_version and latest_version == version:
                     try:
-                        if sv.SpecItem('>=' + input_stack.get(name, '0.0.0')).match(sv.Version(semversion)):
+                        if sv.SpecItem('>=' + input_stack.get(name, '0.0.0')).match(
+                           sv.Version(semversion)):
                             pkg_dict[name]['latest_version'] = latest_version
                             new_dict[name]['latest_version'] = epv.get('ver')
                             new_dict[name]['pkg'] = epv.get('pkg')
@@ -318,14 +326,17 @@ class GraphDB:
                     except ValueError:
                         pass
 
-                # Check for Dependency Count Attribute. Add Max deps count version if version > current version
+                # Check for Dependency Count Attribute. Add Max deps count version
+                # if version > current version
                 deps_count = epv.get('ver').get('dependents_count', [-1])[0]
                 if deps_count > 0:
                     if 'deps_count' not in pkg_dict[name] or \
                        deps_count > pkg_dict[name].get('deps_count', {}).get('deps_count', 0):
                         try:
-                            if sv.SpecItem('>=' + input_stack.get(name, '0.0.0')).match(sv.Version(semversion)):
-                                pkg_dict[name]['deps_count'] = {"version": version, "deps_count": deps_count}
+                            if sv.SpecItem('>=' + input_stack.get(name, '0.0.0')).match(
+                               sv.Version(semversion)):
+                                pkg_dict[name]['deps_count'] = {"version": version,
+                                                                "deps_count": deps_count}
                                 new_dict[name]['deps_count'] = epv.get('ver')
                                 new_dict[name]['pkg'] = epv.get('pkg')
 
@@ -337,11 +348,14 @@ class GraphDB:
                 gh_release_date = epv.get('ver').get('gh_release_date', [0])[0]
                 if gh_release_date > 0.0:
                     if 'gh_release_date' not in pkg_dict[name] or \
-                       gh_release_date > pkg_dict[name].get('gh_release_date', {}).get('gh_release_date', 0):
+                       gh_release_date > \
+                       pkg_dict[name].get('gh_release_date', {}).get('gh_release_date', 0):
                         try:
-                            if sv.SpecItem('>=' + input_stack.get(name, '0.0.0')).match(sv.Version(semversion)):
-                                pkg_dict[name]['gh_release_date'] = {"version": version,
-                                                                     "gh_release_date": gh_release_date}
+                            if sv.SpecItem('>=' + input_stack.get(name, '0.0.0')).match(
+                               sv.Version(semversion)):
+                                pkg_dict[name]['gh_release_date'] = {
+                                    "version": version,
+                                    "gh_release_date": gh_release_date}
                                 new_dict[name]['gh_release_date'] = epv.get('ver')
                                 new_dict[name]['pkg'] = epv.get('pkg')
                                 filtered_comp_list.append(name)
@@ -365,7 +379,8 @@ class GraphDB:
         for package, version in input_list.items():
             if package is not None:
                 payload = {
-                    'gremlin': "g.V().has('pecosystem',ecosystem).has('pname',pkg).has('version',version).valueMap();",
+                    'gremlin': "g.V().has('pecosystem',ecosystem).has('pname',pkg)." +
+                               "has('version',version).valueMap();",
                     'bindings': {
                         "ecosystem": GraphDB.str_value_cleaner(ecosystem),
                         "pkg": GraphDB.str_value_cleaner(package),
@@ -383,7 +398,8 @@ class GraphDB:
                             'version': version,
                             'loc': float(data.get('cm_loc', ['0'])[0]),
                             'num_files': float(data.get('cm_num_files', ['0'])[0]),
-                            'code_complexity': float(data.get('cm_avg_cyclomatic_complexity', ['0'])[0])
+                            'code_complexity': float(data.get('cm_avg_cyclomatic_complexity',
+                                                              ['0'])[0])
                         }
                     )
         return input_stack_list
@@ -432,7 +448,8 @@ class RelativeSimilarity:
         return sim
 
     def get_refstack_component_list(self, ref_stack):
-        """Breaks down reference stack elements into two separate lists of package names and corresponding version"""
+        """Breaks down reference stack elements into two separate lists of
+        package names and corresponding version"""
         refstack_component_list = []
         corresponding_version = []
         ref_stack_deps = ref_stack["dependencies"]
@@ -453,7 +470,8 @@ class RelativeSimilarity:
 
     def getp_value_graph(self, component_name, input_stack, ref_stack):
         """
-        Returns the actual distance between input stack EPV and reference stack EPV based on some vectors.
+        Returns the actual distance between input stack EPV and reference stack
+        EPV based on some vectors.
         It uses relative_similarity to arrive at the distance.
         """
         input_data = [0, 0, 0]
@@ -473,8 +491,9 @@ class RelativeSimilarity:
 
     def downstream_boosting(self, missing_packages, ref_stack, denominator):
         """
-        Boost the similarity score if a component is missing from input stack but is part of our reference stack,
-        and at the same time is also distributed by redhat.
+        Boost the similarity score if a component is missing from input stack
+        but is part of our reference stack, and at the same time is also
+        distributed by Red Hat.
         """
         additional_downstream = 0.0
         missing_downstream_component = []
@@ -486,28 +505,31 @@ class RelativeSimilarity:
                             additional_downstream += 1.0
                             missing_downstream_component.append({package: ver})
 
-        return additional_downstream/denominator, missing_downstream_component
+        return additional_downstream / denominator, missing_downstream_component
 
     def compute_modified_jaccard_similarity(self, len_input_stack, len_ref_stack, vcount):
         """For two stacks A and B, it returns Count(A intersection B) / max(Count(A, B))"""
-        return vcount/max(len_ref_stack, len_input_stack)
+        return vcount / max(len_ref_stack, len_input_stack)
 
     def filter_package(self, input_stack, ref_stacks):
         """
-        Filters reference stack and process only those which has a higher value of intersection of components
+        Filters reference stack and process only those which has a higher value
+        of intersection of components
         (Input Stack vs. Reference Stack) based on some configuration param
         """
         input_set = set(list(input_stack.keys()))
         jaccard_threshold = self.jaccard_threshold
         filtered_ref_stacks = []
         for ref_stack in ref_stacks:
-            refstack_component_list, corresponding_version = self.get_refstack_component_list(ref_stack)
+            refstack_component_list, corresponding_version = \
+                self.get_refstack_component_list(ref_stack)
             refstack_component_set = set(refstack_component_list)
             vcount = len(input_set.intersection(refstack_component_set))
             # Get similarity of input stack w.r.t reference stack
-            original_score = RelativeSimilarity().compute_modified_jaccard_similarity(len(input_set),
-                                                                len(refstack_component_list),
-                                                                vcount)
+            original_score = RelativeSimilarity().compute_modified_jaccard_similarity(
+                len(input_set),
+                len(refstack_component_list),
+                vcount)
             if original_score > self.jaccard_threshold:
                 filtered_ref_stacks.append(ref_stack)
         return filtered_ref_stacks
@@ -520,8 +542,10 @@ class RelativeSimilarity:
             missing_packages = []
             version_mismatch = []
             vcount = 0
-            refstack_component_list, corresponding_version = self.get_refstack_component_list(ref_stack)
-            for component, ref_stack_component_version in zip(refstack_component_list, corresponding_version):
+            refstack_component_list, corresponding_version = \
+                self.get_refstack_component_list(ref_stack)
+            for component, ref_stack_component_version in zip(refstack_component_list,
+                                                              corresponding_version):
                 if component in input_stack:
                     input_component_version = input_stack[component]
                     if self.is_same_version(ref_stack_component_version, input_component_version):
@@ -532,12 +556,15 @@ class RelativeSimilarity:
                 else:
                     missing_packages.append({component: ref_stack_component_version})
 
-            original_score = self.compute_modified_jaccard_similarity(len(input_set), len(refstack_component_list), vcount)
+            original_score = self.compute_modified_jaccard_similarity(len(input_set),
+                                                                      len(refstack_component_list),
+                                                                      vcount)
 
             # Get Downstream Boosting
             # We do not do downstream boosting at the moment
-            # boosted_score, missing_downstream_component =  self.downstream_boosting(missing_packages,ref_stack,
-            #                                                                        max(len(input_set),len(refstack_component_list)))
+            # boosted_score, missing_downstream_component =  self.downstream_boosting(
+            #    missing_packages,ref_stack,
+            #    max(len(input_set),len(refstack_component_list)))
             # downstream_score = original_score + boosted_score
 
             # We give the result no matter what similarity score is
@@ -563,34 +590,38 @@ class RecommendationTask(BaseTask):
         rs = RelativeSimilarity()
 
         for result in arguments.get('result', []):
-            input_stack = {d["package"]: d["version"] for d in result.get("details", [])[0].get("_resolved")}
+            input_stack = {d["package"]: d["version"] for d in result.get("details", [])[0]
+                           .get("_resolved")}
             ecosystem = result["details"][0].get("ecosystem")
             manifest_file_path = result["details"][0].get('manifest_file_path')
 
             # Get Input Stack data
-            input_stack_vectors = GraphDB().get_input_stacks_vectors_from_graph(input_stack, ecosystem)
+            input_stack_vectors = GraphDB().get_input_stacks_vectors_from_graph(input_stack,
+                                                                                ecosystem)
             # Fetch all reference stacks if any one component from input is present
             ref_stacks = GraphDB().get_reference_stacks_from_graph(input_stack.keys())
 
             if len(ref_stacks) > 0:
-                # Apply jaccard similarity to consider only stacks having 30% interection of component names
+                # Apply jaccard similarity to consider only stacks having 30%
+                # interection of component names
                 # We only get one top matching reference stack based on components now
                 # filtered_ref_stacks = rs.filter_package(input_stack, ref_stacks)
                 # Calculate similarity of the filtered stacks
-                similar_stacks_list = rs.find_relative_similarity(input_stack, input_stack_vectors, ref_stacks)
+                similar_stacks_list = rs.find_relative_similarity(input_stack, input_stack_vectors,
+                                                                  ref_stacks)
                 similarity_list = self._get_stack_values(similar_stacks_list)
                 recommendations.append({
                     "similar_stacks": similarity_list,
                     "component_level": None,
                     "manifest_file_path": manifest_file_path
-                    })
+                })
             else:
                 recommendations.append({
                     "similar_stacks": [],
                     "component_level": None,
                     "manifest_file_path": manifest_file_path
-                    })
-                
+                })
+
         return {"recommendations": recommendations}
 
     def _get_stack_values(self, similar_stacks_list):
@@ -689,39 +720,44 @@ class RecommendationV2Task(BaseTask):
     description = 'Get Recommendation'
 
     def call_pgm(self, payload):
-        """Calls the PGM model with the normalized manifest information to get the relevant packages"""
+        """Calls the PGM model with the normalized manifest information to get
+        the relevant packages"""
         try:
             # TODO remove hardcodedness for payloads with multiple ecosystems
             if payload and 'ecosystem' in payload[0]:
-                PGM_SERVICE_HOST = os.environ.get("PGM_SERVICE_HOST") + "-" + payload[0]['ecosystem']
-                PGM_URL_REST = "http://{host}:{port}".format(host=PGM_SERVICE_HOST,
-                                                             port=os.environ.get("PGM_SERVICE_PORT"))
+                PGM_SERVICE_HOST = os.environ.get(
+                    "PGM_SERVICE_HOST") + "-" + payload[0]['ecosystem']
+                PGM_URL_REST = "http://{host}:{port}".format(
+                    host=PGM_SERVICE_HOST,
+                    port=os.environ.get("PGM_SERVICE_PORT"))
                 pgm_url = PGM_URL_REST + "/api/v1/schemas/kronos_scoring"
                 response = get_session_retry().post(pgm_url, json=payload)
                 if response.status_code != 200:
-                    self.log.error("HTTP error {}. Error retrieving PGM data.".format(response.status_code))
+                    self.log.error("HTTP error {}. Error retrieving PGM data.".format(
+                        response.status_code))
                     return None
                 else:
                     json_response = response.json()
                     return json_response
             else:
-                self.log.debug('Payload information is not passed in the call, Quitting! PGM\'s call')
-        except:
+                self.log.debug('Payload information is not passed in the call, '
+                               'Quitting! PGM\'s call')
+        except Exception:
             self.log.error("Failed retrieving PGM data.")
             return None
 
     def execute(self, parguments=None):
         arguments = self.parent_task_result('GraphAggregatorTask')
         results = arguments['result']
-        
+
         input_task_for_pgm = []
         recommendations = []
         input_stack = {}
         for result in results:
             temp_input_stack = {d["package"]: d["version"] for d in
-                       result.get("details", [])[0].get("_resolved")}
+                                result.get("details", [])[0].get("_resolved")}
             input_stack.update(temp_input_stack)
-        
+
         for result in results:
             details = result['details'][0]
             resolved = details['_resolved']
@@ -740,8 +776,10 @@ class RecommendationV2Task(BaseTask):
                 'comp_package_count_threshold': int(os.environ.get('MAX_COMPANION_PACKAGES', 5)),
                 'alt_package_count_threshold': int(os.environ.get('MAX_ALTERNATE_PACKAGES', 2)),
                 'outlier_probability_threshold': float(os.environ.get('OUTLIER_THRESHOLD', 0.6)),
-                'unknown_packages_ratio_threshold': float(os.environ.get('UNKNOWN_PACKAGES_THRESHOLD', 0.3)),
-                'user_persona': "1",  #TODO - remove janus hardcoded value completely and assing a cateogory here
+                'unknown_packages_ratio_threshold':
+                    float(os.environ.get('UNKNOWN_PACKAGES_THRESHOLD', 0.3)),
+                'user_persona': "1",  # TODO - remove janus hardcoded value
+                                      # completely and assing a cateogory here
                 'package_list': new_arr
             }
             self.log.debug(json_object)
@@ -750,7 +788,8 @@ class RecommendationV2Task(BaseTask):
             # Call PGM and get the response
             pgm_response = self.call_pgm(input_task_for_pgm)
 
-            # From PGM response process companion and alternate packages and then get Data from Graph
+            # From PGM response process companion and alternate packages and
+            # then get Data from Graph
             # TODO - implement multiple manifest file support for below loop
 
             if pgm_response is not None:
@@ -763,16 +802,19 @@ class RecommendationV2Task(BaseTask):
                         pgm_result['outlier_package_list']
 
                     # Append Topics for User Stack
-                    recommendation['input_stack_topics'] = pgm_result.get('package_to_topic_dict', {})
+                    recommendation['input_stack_topics'] = pgm_result.get('package_to_topic_dict',
+                                                                          {})
 
                     for pkg in pgm_result['companion_packages']:
                         companion_packages.append(pkg['package_name'])
 
                     # Get Companion Packages from Graph
-                    comp_packages_graph = GraphDB().get_version_information(companion_packages, ecosystem)
+                    comp_packages_graph = GraphDB().get_version_information(companion_packages,
+                                                                            ecosystem)
 
                     # Apply Version Filters
-                    filtered_comp_packages_graph, filtered_list = GraphDB().filter_versions(comp_packages_graph, input_stack)
+                    filtered_comp_packages_graph, filtered_list = GraphDB().filter_versions(
+                        comp_packages_graph, input_stack)
 
                     filtered_companion_packages = set(companion_packages).difference(set(filtered_list))
                     _logger.info("Companion Packages Filtered for external_request_id {} {}"
@@ -780,7 +822,8 @@ class RecommendationV2Task(BaseTask):
 
                     # Get the topmost alternate package for each input package
 
-                    # Create intermediate dict to Only Get Top 1 companion packages for the time being.
+                    # Create intermediate dict to Only Get Top 1 companion
+                    # packages for the time being.
                     temp_dict = {}
                     for pkg_name, contents in pgm_result['alternate_packages'].items():
                         pkg = {}
@@ -792,7 +835,8 @@ class RecommendationV2Task(BaseTask):
                     alternate_packages = []
                     for pkg_name, contents in temp_dict.items():
                         # For each input package
-                        # Get only the topmost alternate package from a set of packages based on similarity score
+                        # Get only the topmost alternate package from a set of
+                        # packages based on similarity score
                         top_dict = dict(Counter(contents).most_common(1))
                         for alt_pkg, sim_score in top_dict.items():
                             final_dict[alt_pkg] = {
@@ -803,10 +847,12 @@ class RecommendationV2Task(BaseTask):
                             alternate_packages.append(alt_pkg)
 
                     # Get Alternate Packages from Graph
-                    alt_packages_graph = GraphDB().get_version_information(alternate_packages, ecosystem)
+                    alt_packages_graph = GraphDB().get_version_information(
+                        alternate_packages, ecosystem)
 
                     # Apply Version Filters
-                    filtered_alt_packages_graph, filtered_list = GraphDB().filter_versions(alt_packages_graph, input_stack)
+                    filtered_alt_packages_graph, filtered_list = GraphDB().filter_versions(
+                        alt_packages_graph, input_stack)
 
                     filtered_alternate_packages = set(alternate_packages).difference(set(filtered_list))
                     _logger.info("Alternate Packages Filtered for external_request_id {} {}"

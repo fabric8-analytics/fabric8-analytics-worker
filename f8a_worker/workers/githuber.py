@@ -9,7 +9,7 @@ from f8a_worker.schemas import SchemaRef
 from f8a_worker.base import BaseTask
 from f8a_worker.utils import parse_gh_repo
 
-REPO_PROPS = ('forks_count', 'subscribers_count',  'stargazers_count', 'open_issues_count')
+REPO_PROPS = ('forks_count', 'subscribers_count', 'stargazers_count', 'open_issues_count')
 
 
 class GithubTask(BaseTask):
@@ -99,7 +99,7 @@ class GithubTask(BaseTask):
                 # Not a GitHub hosted project
                 return result_data
 
-        token = self.configuration.github_token
+        token = self.configuration.GITHUB_TOKEN
         if not token:
             if self._rate_limit_exceeded(github.Github()):
                 self.log.error("No Github API token provided (GITHUB_TOKEN env variable), "
@@ -144,10 +144,12 @@ class GithubTask(BaseTask):
 class GitReadmeCollectorTask(BaseTask):
     """ Store README files stored on Github """
 
-    _GITHUB_README_PATH = 'https://raw.githubusercontent.com/{project}/{repo}/master/README{extension}'
+    _GITHUB_README_PATH = \
+        'https://raw.githubusercontent.com/{project}/{repo}/master/README{extension}'
 
     # Based on https://github.com/github/markup#markups
-    # Markup type to its possible extensions mapping, we use OrderedDict as we check the most used types first
+    # Markup type to its possible extensions mapping, we use OrderedDict as we
+    # check the most used types first
     README_TYPES = OrderedDict((
         ('Markdown', ('md', 'markdown', 'mdown', 'mkdn')),
         ('reStructuredText', ('rst',)),
@@ -172,10 +174,12 @@ class GitReadmeCollectorTask(BaseTask):
             for extension in extensions:
                 if extension:
                     extension = '.' + extension
-                url = self._GITHUB_README_PATH.format(project=project, repo=repo, extension=extension)
+                url = self._GITHUB_README_PATH.format(project=project, repo=repo,
+                                                      extension=extension)
                 response = requests.get(url)
                 if response.status_code != 200:
-                    self.log.debug('No README%s found for type "%s" at "%s"', extension, readme_type, url)
+                    self.log.debug('No README%s found for type "%s" at "%s"', extension,
+                                   readme_type, url)
                     continue
 
                 self.log.debug('README%s found for type "%s" at "%s"', extension, readme_type, url)
@@ -188,6 +192,7 @@ class GitReadmeCollectorTask(BaseTask):
 
         readme = self._get_github_readme(arguments['url'])
         if not readme:
-            self.log.warning("No README file found for '%s/%s'", arguments['ecosystem'], arguments['name'])
+            self.log.warning("No README file found for '%s/%s'", arguments['ecosystem'],
+                             arguments['name'])
 
         return readme

@@ -129,7 +129,6 @@ class ToolchainResponses(jsl.Document):
     del _pulp_document_ref
 
 
-
 class SRPMRecord(jsl.Document):
     class Options(object):
         definition_id = "srpm_record"
@@ -145,13 +144,13 @@ class SRPMRecord(jsl.Document):
     modified_file_count = jsl.NumberField(required=True)
     with added_in(ROLE_v2_0_0) as since_v2_0:
         since_v2_0.published_in = jsl.ArrayField(jsl.StringField())
-    tags = jsl.ArrayField(jsl.StringField()) # Maybe?
-    architectures = jsl.ArrayField(jsl.StringField()) # Maybe?
+    tags = jsl.ArrayField(jsl.StringField())  # Maybe?
+    architectures = jsl.ArrayField(jsl.StringField())  # Maybe?
     hashes = jsl.DictField(properties=OrderedDict((
         ("md5", jsl.StringField()),
         ("sha1", jsl.StringField()),
         ("sha256", jsl.StringField()),
-    ))) # Maybe?
+    )))  # Maybe?
 
 
 class DownstreamUsageSummary(jsl.Document):
@@ -185,12 +184,13 @@ class DownstreamUsageResult(JSLSchemaBaseWithRelease):
         definition_id = "downstream_usage_result"
         description = "Result of DownstreamUsage worker"
 
-    status = jsl.StringField(enum = ["success", "error"], required=True)
+    status = jsl.StringField(enum=["success", "error"], required=True)
     details = jsl.DocumentField(ToolchainResponses, as_ref=True)
     summary = jsl.DocumentField(
         DownstreamUsageSummary,
         as_ref=True,
         required=True
     )
+
 
 THE_SCHEMA = DownstreamUsageResult

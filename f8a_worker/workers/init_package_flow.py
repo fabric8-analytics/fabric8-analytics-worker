@@ -27,7 +27,7 @@ class InitPackageFlow(BaseTask):
 
     def get_upstream_entry(self, db, package, url):
         """Update metadata in upstream entry tracking.
-        
+
         :param db: database session to be used
         :param package: package entry
         :param url: provided URL
@@ -49,13 +49,13 @@ class InitPackageFlow(BaseTask):
                               "substituting with upstream URL '%s'", entry.id, entry.url, url)
                 entry.deactivated_at = now
             else:
-                self.log.info("Reusing already existing and active upstream record with id '%d' and upstream URL '%s'",
-                              entry.id, entry.url)
+                self.log.info("Reusing already existing and active upstream record with id '%d' "
+                              "and upstream URL '%s'", entry.id, entry.url)
                 ret = entry
 
         if ret is None:
-            self.log.info("Creating new upstream record entry for package %s/%s and upstream URL '%s'",
-                          package.ecosystem.name, package.name, url)
+            self.log.info("Creating new upstream record entry for package %s/%s and "
+                          "upstream URL '%s'", package.ecosystem.name, package.name, url)
             ret = Upstream(
                 package_id=package.id,
                 url=url,
@@ -82,11 +82,12 @@ class InitPackageFlow(BaseTask):
         arguments['url'] = upstream.url
 
         if not arguments.get('force'):
-            # can potentially schedule two flows of a same type at the same time as there is no lock,
-            # but let's say it's OK
+            # can potentially schedule two flows of a same type at the same
+            # time as there is no lock, but let's say it's OK
             if upstream.updated_at is not None \
                     and upstream.updated_at - datetime.datetime.now() < self._UPDATE_INTERVAL:
-                self.log.info('Skipping upstream package check as data are considered as recent - last update %s.',
+                self.log.info('Skipping upstream package check as data are considered as recent - '
+                              'last update %s.',
                               upstream.updated_at)
                 # keep track of start, but do not schedule nothing more
                 # discard changes like updates

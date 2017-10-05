@@ -11,9 +11,11 @@ class GraphImporterTask(BaseTask):
     _INGEST_API_URL = "http://{host}:{port}/{endpoint}".format(host=_SERVICE_HOST,
                                                                port=_SERVICE_PORT,
                                                                endpoint=_INGEST_SERVICE_ENDPOINT)
-    _SELECTIVE_API_URL = "http://{host}:{port}/{endpoint}".format(host=_SERVICE_HOST,
-                                                                  port=_SERVICE_PORT,
-                                                                  endpoint=_SELECTIVE_SERVICE_ENDPOINT)
+
+    _SELECTIVE_API_URL = "http://{host}:{port}/{endpoint}".format(
+        host=_SERVICE_HOST,
+        port=_SERVICE_PORT,
+        endpoint=_SELECTIVE_SERVICE_ENDPOINT)
 
     def execute(self, arguments):
         self._strict_assert(arguments.get('ecosystem'))
@@ -28,12 +30,14 @@ class GraphImporterTask(BaseTask):
             }
         ]
 
-        # If we force graph sync, sync all task results, otherwise only finished in this analysis run
+        # If we force graph sync, sync all task results, otherwise only
+        # finished in this analysis run
         if not arguments.get('force_graph_sync'):
             # Tasks that need sync to graph start lowercase.
             param = {
                 'select_ingest': [task_name
-                                  for task_name in self.storage.get_finished_task_names(arguments['document_id'])
+                                  for task_name in self.storage.get_finished_task_names(
+                                      arguments['document_id'])
                                   if task_name[0].islower()],
                 'package_list': package_list
             }

@@ -7,13 +7,14 @@ from f8a_worker.workers import DownstreamUsageTask
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.models import Ecosystem
 from requests import Response
-import json, os
+import json
+import os
 
 example_projects = [
     ('pypi', 'six', 'python-six', '1.9.0'),
     ('npm', 'serve-static', 'nodejs-serve-static', '1.10.0'),
     # TODO: Figure out what's wrong with the Java case
-    #('maven', 'junit', 'junit', '4.12.0'),
+    # ('maven', 'junit', 'junit', '4.12.0'),
     ('rubygems', 'nokogiri', 'rubygem-nokogiri', '1.5.11'),
 ]
 
@@ -140,7 +141,7 @@ class TestDownstreamUsage(object):
             {
                 'package_name': package,
                 'version': version,
-                'release':  dummy_releases[1],
+                'release': dummy_releases[1],
                 'filename': dummy_srpm_names[1],
             },
         ]

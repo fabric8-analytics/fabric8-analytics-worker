@@ -2,7 +2,8 @@
 """
 Extracts ecosystem specific information and transforms it to a common scheme
 
-Scans the cache path for manifest files (package.json, setup.py, *.gemspec, *.jar, Makefile etc.) to extract meta data and transform it a common scheme.
+Scans the cache path for manifest files (package.json, setup.py, *.gemspec, *.jar, Makefile etc.)
+to extract meta data and transform it a common scheme.
 
 Output: information such as: homepage, bug tracking, dependencies
 
@@ -117,7 +118,8 @@ class DataNormalizer(object):
     def _handle_javascript(self, data):
         "Handle Javascript package (package.json) analysis data"
         key_map = ((('license', 'licenses',), 'declared_licenses'),
-                   ('_dependency_tree_lock_file', '_dependency_tree_lock'), ('homepage',), ('version',),
+                   ('_dependency_tree_lock_file', '_dependency_tree_lock'), ('homepage',),
+                   ('version',),
                    ('description',), ('dependencies',), ('devDependencies', 'devel_dependencies'),
                    ('bugs', 'bug_reporting'), ('author',), ('contributors',), ('maintainers',),
                    ('repository', 'code_repository'), ('name',),
@@ -165,8 +167,8 @@ class DataNormalizer(object):
                 else:
                     base[k] = [value]
             # e.g. {"license": {"type": "ISC", "url": "http://opensource.org/licenses/ISC"}}
-            elif isinstance(value, dict) and \
-                "type" in value and isinstance(value["type"], str):
+            elif (isinstance(value, dict) and
+                  "type" in value and isinstance(value["type"], str)):
                 base[k] = [value["type"]]
             # e.g. {"licenses": [{"type": "MIT", "url": "http://..."},
             #                    {"type": "Apache-2.0", "url": "http://..."}]}
@@ -263,8 +265,8 @@ class DataNormalizer(object):
         transformed = self.transform_keys(data, key_map)
         transformed['declared_licenses'] = self._split_keywords(data.get('license'), separator=',')
         transformed['author'] = self._join_name_email(data, 'author', 'author_email')
-        transformed['code_repository'] = self._identify_gh_repo(data.get('url')) or\
-                                         self._identify_gh_repo(data.get('download_url'))
+        transformed['code_repository'] = (self._identify_gh_repo(data.get('url')) or
+                                          self._identify_gh_repo(data.get('download_url')))
         transformed['keywords'] = self._split_keywords(data.get('keywords'))
         return transformed
 
@@ -289,7 +291,8 @@ class DataNormalizer(object):
             for k, v in urls.items():
                 if k.lower() == 'home':
                     homepage = v
-            result = {'author': author, 'homepage': homepage, 'description': data.get('summary', None),
+            result = {'author': author, 'homepage': homepage,
+                      'description': data.get('summary', None),
                       'dependencies': sorted(dependencies), 'name': data.get('name', None),
                       'version': data.get('version', None),
                       'declared_licenses': self._split_keywords(data.get('license'), separator=',')}
@@ -301,8 +304,8 @@ class DataNormalizer(object):
             result['author'] = self._join_name_email(data, 'author', 'author-email')
             result['declared_licenses'] = self._split_keywords(data.get('license'), separator=',')
 
-        result['code_repository'] = self._identify_gh_repo(data.get('home-page')) or \
-                                    self._identify_gh_repo(data.get('download-url'))
+        result['code_repository'] = (self._identify_gh_repo(data.get('home-page')) or
+                                     self._identify_gh_repo(data.get('download-url')))
         result['keywords'] = self._split_keywords(data.get('keywords'))
 
         return result
@@ -328,8 +331,11 @@ class DataNormalizer(object):
         # dependencies with scope 'test' are only needed for testing;
         dev_dependencies_dict = pom.get('dependencies', {}).get('test', {})
 
-        transformed['dependencies'] = [k.rstrip(':') + ' ' + v for k, v in dependencies_dict.items()]
-        transformed['devel_dependencies'] = [k.rstrip(':') + ' ' + v for k, v in dev_dependencies_dict.items()]
+        transformed['dependencies'] = [k.rstrip(':') + ' ' + v
+                                       for k, v in dependencies_dict.items()]
+
+        transformed['devel_dependencies'] = [k.rstrip(':') + ' ' + v
+                                             for k, v in dev_dependencies_dict.items()]
 
         # handle code_repository
         if 'scm_url' in pom:
@@ -438,11 +444,14 @@ class DataNormalizer(object):
             transformed['declared_licenses'] = [data['LicenseUrl']]
             with tempdir() as tmpdir:
                 try:
+                    # Get file from 'LicenseUrl' and let LicenseCheckTask decide what license it is
                     if IndianaJones.download_file(data['LicenseUrl'], tmpdir):
                         scancode_results = LicenseCheckTask.run_scancode(tmpdir)
                         if scancode_results.get('summary', {}).get('sure_licenses'):
-                            transformed['declared_licenses'] = scancode_results['summary']['sure_licenses']
-                except:
+                            transformed['declared_licenses'] =\
+                                scancode_results['summary']['sure_licenses']
+                except Exception:
+                    # Don't raise if IndianaJones or LicenseCheckTask fail
                     pass
 
         # transform

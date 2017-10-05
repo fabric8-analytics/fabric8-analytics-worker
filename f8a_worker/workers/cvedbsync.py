@@ -45,7 +45,7 @@ class CVEDBSyncTask(BaseTask):
                             resolved_versions = ecosystem_solver.\
                                 solve(["{} {}".format(package_name, version_string)],
                                       all_versions=True)
-                        except:
+                        except Exception:
                             self.log.exception("Failed to resolve %r for %s:%s", version_string,
                                                ecosystem, package_name)
                             continue
@@ -63,7 +63,7 @@ class CVEDBSyncTask(BaseTask):
                         'ecosystem': ecosystem,
                         'name': package_name,
                         'version': version
-                        })
+                    })
         msg = "Components to be {prefix}scanned for vulnerabilities: {components}".\
             format(prefix="re-" if only_already_scanned else "",
                    components=to_scan)
@@ -73,11 +73,13 @@ class CVEDBSyncTask(BaseTask):
     def execute(self, arguments):
         """
 
-        :param arguments: optional argument 'only_already_scanned' to run only on already analysed packages
+        :param arguments: optional argument 'only_already_scanned' to run only
+        on already analysed packages
         :return: EPV dict describing which packages should be analysed
         """
         only_already_scanned = arguments.pop('only_already_scanned', True) if arguments else True
-        ignore_modification_time = arguments.pop('ignore_modification_time', False) if arguments else False
+        ignore_modification_time = (arguments.pop('ignore_modification_time', False)
+                                    if arguments else False)
 
         s3 = StoragePool.get_connected_storage('S3VulnDB')
 

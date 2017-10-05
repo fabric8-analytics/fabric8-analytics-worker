@@ -19,7 +19,7 @@ class GitStats(BaseTask):
     @staticmethod
     def _get_log(url):
         """Clone Git repo and get its log.
-  
+
         :param url: url to the git repo
         """
         with tempdir() as tmp_dir:
@@ -137,8 +137,11 @@ class GitStats(BaseTask):
         last_year_timestamp = now - timedelta(days=self._DAYS_PER_YEAR).total_seconds()
         last_month_timestamp = now - timedelta(days=self._DAYS_PER_MONTH).total_seconds()
 
-        last_year_log = [item for item in master_log if item['author']['date'] >= last_year_timestamp]
-        last_month_log = [item for item in master_log if item['author']['date'] >= last_month_timestamp]
+        last_year_log = [item for item in master_log
+                         if item['author']['date'] >= last_year_timestamp]
+
+        last_month_log = [item for item in master_log
+                          if item['author']['date'] >= last_month_timestamp]
 
         master_stats = {}
         records = (

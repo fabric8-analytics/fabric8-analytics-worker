@@ -246,7 +246,7 @@ class NugetReleasesFetcher(ReleasesFetcher):
         page = get(nuget_packages_url + package)
         page = BeautifulSoup(page.text, 'html.parser')
         version_history = page.find(class_="version-history")
-        for version in version_history.find_all(href=re.compile('^' + nuget_packages_url)):
+        for version in version_history.find_all(href=re.compile('/packages/')):
             version_text = version.text.replace('(current version)', '').strip()
             try:
                 semver_version.coerce(version_text)
@@ -442,7 +442,8 @@ class PypiDependencyParser(DependencyParser):
                 return spec.operator, spec.version
 
         def _get_pip_spec(requirements):
-            "In Pip 8+ there's no `specs` field and we have to dig the information from the `specifier` field"
+            '''In Pip 8+ there's no `specs` field and we have to dig the
+            information from the `specifier` field'''
             if hasattr(requirements, 'specs'):
                 return requirements.specs
             elif hasattr(requirements, 'specifier'):
@@ -565,6 +566,7 @@ class NpmDependencyParser(DependencyParser):
             result.append(Dependency(name, specs))
 
         return result
+
 
 RubyGemsDependencyParser = NpmDependencyParser
 

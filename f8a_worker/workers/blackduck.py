@@ -1,13 +1,11 @@
 from f8a_worker.utils import TimedCommand
 from f8a_worker.schemas import SchemaRef
 from f8a_worker.base import BaseTask
-from f8a_worker.conf import get_configuration
 from f8a_worker.blackduck_helpers import BlackDuckHub
 from f8a_worker.object_cache import ObjectCache
 from f8a_worker.errors import TaskError
 from os import listdir, path
 
-config = get_configuration()
 
 class BlackDuckDataNotReady(Exception):
     def __init__(self, project, version):
@@ -33,9 +31,9 @@ class BlackDuckTask(BaseTask):
 
         :return:
         """
-        return "{scheme}://{host}:{port}/".format(scheme=config.blackduck_scheme,
-                                                  host=config.blackduck_host,
-                                                  port=config.blackduck_port)
+        return "{scheme}://{host}:{port}/".format(scheme=self.configuration.BLACKDUCK_SCHEME,
+                                                  host=self.configuration.BLACKDUCK_HOST,
+                                                  port=self.configuration.BLACKDUCK_PORT)
 
     def _is_valid_ecosystem(self, ecosystem_id):
         """
@@ -54,7 +52,7 @@ class BlackDuckTask(BaseTask):
 
         :return: str, path to the CLI root
         """
-        base = config.blackduck_path
+        base = self.configuration.BLACKDUCK_PATH
         dirs = listdir(base)
         if not dirs:
             raise TaskError("Unable to find BlackDuck CLI directory")
@@ -77,10 +75,10 @@ class BlackDuckTask(BaseTask):
                                        rel="bin/scan.cli.sh")
 
         return [binary,
-                "--host", config.blackduck_host,
-                "--port", str(int(config.blackduck_port)),
-                "--scheme", config.blackduck_scheme,
-                "--username", config.blackduck_username,
+                "--host", self.configuration.BLACKDUCK_HOST,
+                "--port", str(int(self.configuration.BLACKDUCK_PORT)),
+                "--scheme", self.configuration.BLACKDUCK_SCHEME,
+                "--username", self.configuration.BLACKDUCK_USERNAME,
                 "--project", project,
                 "--release", version,
                 archive]
@@ -122,7 +120,8 @@ class BlackDuckTask(BaseTask):
         hub_url = self._format_hub_url()
         self.log.debug("hub url: {url}".format(url=hub_url))
         hub = BlackDuckHub(hub_url)
-        hub.connect_session(config.blackduck_username, config.blackduck_password)
+        hub.connect_session(self.configuration.BLACKDUCK_USERNAME,
+                            self.configuration.BLACKDUCK_PASSWORD)
         return hub
 
     def _get_project_name(self, arguments):
@@ -155,16 +154,19 @@ class BlackDuckTask(BaseTask):
                 # No data available, issue a new scan and re-query release data
                 source_tarball_path = ObjectCache.get_from_dict(arguments).get_source_tarball()
                 command = self._prepare_command(project, version, source_tarball_path)
-                self.log.debug("Executing command, timeout={timeout}: {cmd}".format(timeout=self._BLACKDUCK_CLI_TIMEOUT,
-                                                                                    cmd=command))
+                self.log.debug("Executing command, timeout={timeout}: {cmd}".format(
+                    timeout=self._BLACKDUCK_CLI_TIMEOUT,
+                    cmd=command))
                 bd = TimedCommand(command)
-                status, output, error = bd.run(timeout=self._BLACKDUCK_CLI_TIMEOUT,
-                                               update_env={'BD_HUB_PASSWORD': config.blackduck_password})
+                status, output, error = \
+                    bd.run(timeout=self._BLACKDUCK_CLI_TIMEOUT,
+                           update_env={'BD_HUB_PASSWORD': self.configuration.BLACKDUCK_PASSWORD})
                 self.log.debug("status = %s, error = %s", status, error)
                 self.log.debug("output = %s", output)
                 data = self._release_data(hub, project, version)
 
-            self.log.debug("Release data for project {p} {v}: {d}".format(p=project, v=version, d=data))
+            self.log.debug("Release data for project {p} {v}: {d}".format(p=project, v=version,
+                                                                          d=data))
             result_data['details'] = data
             result_data['status'] = 'success' if data else 'error'
         else:

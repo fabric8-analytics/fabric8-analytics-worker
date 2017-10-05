@@ -2,6 +2,10 @@
   flow-definitions:
     - name: 'stackApiGraphFlow'
       queue: '{DEPLOYMENT_PREFIX}_api_stackApiGraphFlow_v0'
+      sampling:
+        name: 'constant'
+        args:
+          retry: 10
       edges:
         - from:
           to:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import jsonschema
 from celery.utils.log import get_task_logger
-from f8a_worker.conf import get_configuration
+from f8a_worker.defaults import configuration
 from selinon import SelinonTask, FatalTaskError
 from datetime import datetime
 from f8a_worker.schemas import load_worker_schema, set_schema_ref
@@ -20,16 +20,18 @@ class BaseTask(SelinonTask):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.log = get_task_logger(self.__class__.__name__)
-        self.configuration = get_configuration()
+        self.configuration = configuration
 
     @classmethod
     def _strict_assert(cls, assert_cond):
-        """Assert on condition, if condition is False, fatal error is raised so task is not retried"""
+        """Assert on condition, if condition is False, fatal error is raised so
+        task is not retried"""
         if not assert_cond:
             raise FatalTaskError("Strict assert failed in task '%s'" % cls.__name__)
 
     def run(self, node_args):
-        # SQS guarantees 'deliver at least once', so there could be multiple messages of a type, give up immediately
+        # SQS guarantees 'deliver at least once', so there could be multiple
+        # messages of a type, give up immediately
         if self.storage and isinstance(self.storage, (BayesianPostgres, PackagePostgres)):
             if self.storage.get_worker_id_count(self.task_id) > 0:
                 raise FatalTaskError("Task with ID '%s' was already processed" % self.task_id)
@@ -65,7 +67,8 @@ class BaseTask(SelinonTask):
         return result
 
     @classmethod
-    def create_test_instance(cls, flow_name=None, task_name=None, parent=None, task_id=None, dispatcher_id=None):
+    def create_test_instance(cls, flow_name=None, task_name=None, parent=None, task_id=None,
+                             dispatcher_id=None):
         # used in tests so we do not do ugly things like this, this correctly done by dispatcher
         return cls(flow_name, task_name or cls.__name__, parent, task_id, dispatcher_id)
 

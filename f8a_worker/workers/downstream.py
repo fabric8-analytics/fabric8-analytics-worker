@@ -7,7 +7,6 @@ import json
 import os
 
 from f8a_worker.base import BaseTask
-from f8a_worker.conf import get_configuration
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.errors import TaskError
 from f8a_worker.models import Ecosystem
@@ -15,8 +14,6 @@ from f8a_worker.pulp import Pulp
 from f8a_worker.schemas import SchemaRef
 from f8a_worker.utils import TimedCommand, MavenCoordinates
 from f8a_worker.workers.anitya import RH_MVN_DISTRO_NAME, RH_MVN_GA_REPO, RH_RPM_DISTRO_NAME
-
-config = get_configuration()
 
 
 # Test hook: the worker tests mock this out,
@@ -76,12 +73,12 @@ class DownstreamUsageTask(BaseTask):
             raise ValueError('Don\'t know how to add ecosystem {e} with backend {b} to Anitya'.
                              format(e=ecosystem, b=eco_model.backend))
         api_path = '/api/by_ecosystem/{e}/{p}/'.format(e=ecosystem, p=package)
-        anitya_url = config.anitya_url
+        anitya_url = self.configuration.ANITYA_URL
         try:
             return _query_anitya_url(anitya_url, api_path)
         except (requests.HTTPError, requests.ConnectionError):
             msg = 'Failed to contact Anitya server at {}'
-            self.log.exception(msg.format(config.anitya_url))
+            self.log.exception(msg.format(self.configuration.ANITYA_URL))
         return None
 
     def _get_cdn_metadata(self, srpm_filename):
@@ -103,7 +100,7 @@ class DownstreamUsageTask(BaseTask):
             dv = downstream
             if 'redhat' in dv:
                 # remove ".redhat-X" or "-redhat-X" suffix
-                dv = dv[:dv.find('redhat')-1]
+                dv = dv[:dv.find('redhat') - 1]
             if dv == upstream:
                 return True
             else:
@@ -165,8 +162,8 @@ class DownstreamUsageTask(BaseTask):
                        'details': tool_responses
                        }
 
-        # bail out early; we need access to internal services or the package is from Maven ecosystem,
-        # otherwise we can't comment on downstream usage
+        # bail out early; we need access to internal services or the package is
+        # from Maven ecosystem, otherwise we can't comment on downstream usage
         is_maven = Ecosystem.by_name(self.storage.session, eco).is_backed_by(EcosystemBackend.maven)
         if not self._is_inside_rh() and not is_maven:
             return result_data
@@ -190,7 +187,7 @@ class DownstreamUsageTask(BaseTask):
                 else:
                     self.log.warning(
                         'Unknown distro {d} for downstream package {o} (package {p}) in Anitya'.
-                                     format(d=entry['distro'], o=entry['package_name'], p=pkg)
+                        format(d=entry['distro'], o=entry['package_name'], p=pkg)
                     )
             self.log.debug('Candidate RPM names from Anitya: {}'.format(anitya_rpm_names))
             self.log.debug('Candidate MVN names from Anitya: {}'.format(anitya_mvn_names))
@@ -212,8 +209,9 @@ class DownstreamUsageTask(BaseTask):
                 args += ['--digest', artifact_hash]
             args += seed_names
 
-            self.log.debug("Executing command, timeout={timeout}: {cmd}".format(timeout=self._BREWUTILS_CLI_TIMEOUT,
-                                                                                cmd=args))
+            self.log.debug("Executing command, timeout={timeout}: {cmd}".format(
+                timeout=self._BREWUTILS_CLI_TIMEOUT,
+                cmd=args))
             tc = TimedCommand(args)
             status, output, error = tc.run(timeout=self._BREWUTILS_CLI_TIMEOUT)
             self.log.debug("status = %s, error = %s", status, error)

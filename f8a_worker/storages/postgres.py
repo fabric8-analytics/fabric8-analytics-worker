@@ -39,18 +39,20 @@ class BayesianPostgres(PostgresBase):
             analysis_id=node_args.get('document_id') if isinstance(node_args, dict) else None,
             task_result=result,
             error=error,
-            external_request_id=node_args.get('external_request_id') if isinstance(node_args, dict) else None
+            external_request_id=(node_args.get('external_request_id')
+                                 if isinstance(node_args, dict) else None)
         )
 
     def get_latest_task_result(self, ecosystem, package, version, task_name):
         """Get latest task result based on task name
-        
+
         :param ecosystem: name of the ecosystem
         :param package: name of the package
         :param version: package version
         :param task_name: name of task for which the latest result should be obtained
         :param error: if False, avoid returning entries that track errors
-        :param real: if False, do not check results that are stored on S3 but rather return Postgres entry
+        :param real: if False, do not check results that are stored on S3 but
+        rather return Postgres entry
         """
         # TODO: we should store date timestamps directly in WorkerResult
         if not self.is_connected():
@@ -84,7 +86,8 @@ class BayesianPostgres(PostgresBase):
         :param package: name of the package
         :param task_name: name of task for which the latest result should be obtained
         :param error: if False, avoid returning entries that track errors
-        :param real: if False, do not check results that are stored on S3 but rather return Postgres entry
+        :param real: if False, do not check results that are stored on S3 but
+        rather return Postgres entry
         """
         # TODO: we should store date timestamps directly in PackageWorkerResult
         if not self.is_connected():
@@ -156,7 +159,8 @@ class BayesianPostgres(PostgresBase):
         :return: worker result count
         """
         try:
-            return PostgresBase.session.query(WorkerResult).filter(WorkerResult.worker_id == worker_id).count()
+            return PostgresBase.session.query(WorkerResult).filter(
+                WorkerResult.worker_id == worker_id).count()
         except SQLAlchemyError:
             PostgresBase.session.rollback()
             raise
@@ -183,7 +187,7 @@ class BayesianPostgres(PostgresBase):
         """Check if a user entry has already been made in api_requests
 
         :param email: str, user's email id
-        :return: First entry in api_requests table with matching email id 
+        :return: First entry in api_requests table with matching email id
         """
         try:
             return PostgresBase.session.query(APIRequests).\
@@ -222,7 +226,7 @@ class BayesianPostgres(PostgresBase):
                 self.store_in_bucket(data.get('user_profile'))
         else:
             self.store_in_bucket(data.get('user_profile'))
-                
+
         req = APIRequests(
             id=external_request_id,
             api_name=data.get('api_name', None),
@@ -255,10 +259,10 @@ class BayesianPostgres(PostgresBase):
         """
         try:
             return chain(*PostgresBase.session.query(Version.identifier).
-                         join(Analysis).join(Package).join(Ecosystem).\
-                         filter(Ecosystem.name == ecosystem).\
-                         filter(Package.name == package).\
-                         filter(Analysis.finished_at.isnot(None)).\
+                         join(Analysis).join(Package).join(Ecosystem).
+                         filter(Ecosystem.name == ecosystem).
+                         filter(Package.name == package).
+                         filter(Analysis.finished_at.isnot(None)).
                          distinct().all())
         except SQLAlchemyError:
             PostgresBase.session.rollback()
