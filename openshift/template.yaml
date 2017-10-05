@@ -96,36 +96,6 @@ objects:
               secretKeyRef:
                 name: worker
                 key: github-token
-          - name: BLACKDUCK_HOST
-            valueFrom:
-              secretKeyRef:
-                name: worker
-                key: blackduck-host
-          - name: BLACKDUCK_PORT
-            valueFrom:
-              secretKeyRef:
-                name: worker
-                key: blackduck-port
-          - name: BLACKDUCK_SCHEME
-            valueFrom:
-              secretKeyRef:
-                name: worker
-                key: blackduck-scheme
-          - name: BLACKDUCK_USERNAME
-            valueFrom:
-              secretKeyRef:
-                name: worker
-                key: blackduck-username
-          - name: BLACKDUCK_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: worker
-                key: blackduck-password
-          - name: BLACKDUCK_PATH
-            valueFrom:
-              secretKeyRef:
-                name: worker
-                key: blackduck-path
           - name: PGBOUNCER_SERVICE_HOST
             value: bayesian-pgbouncer
           - name: PGM_SERVICE_HOST
