@@ -146,21 +146,6 @@ objects:
               secretKeyRef:
                 name: worker
                 key: github-token
-          - name: PULP_URL
-            valueFrom:
-              secretKeyRef:
-                name: worker
-                key: pulp-url
-          - name: PULP_USERNAME
-            valueFrom:
-              secretKeyRef:
-                name: worker
-                key: pulp-username
-          - name: PULP_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: worker
-                key: pulp-password
           - name: BLACKDUCK_HOST
             valueFrom:
               secretKeyRef:
