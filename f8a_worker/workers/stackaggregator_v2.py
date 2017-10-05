@@ -230,10 +230,8 @@ def perform_license_analysis(license_score_list, dependencies):
         lic_response = get_session_retry().post(license_url, data=json.dumps(payload))
         lic_response.raise_for_status()  # raise exception for bad http-status codes
         resp = lic_response.json()
-    except requests.exceptions.RequestException as e:
-        msg = "Unexpected error happened while invoking license analysis!\n{}".format(e)
-        _logger.error(msg)
-
+    except requests.exceptions.RequestException:
+        _logger.exception("Unexpected error happened while invoking license analysis!")
         flag_stack_license_exception = True
         pass
 
@@ -358,8 +356,8 @@ def get_dependency_data(resolved, ecosystem):
             else:
                 _logger.error("Failed retrieving dependency data.")
                 continue
-        except Exception as e:
-            _logger.error("Error retrieving dependency data!\n {}".format(e))
+        except Exception:
+            _logger.exception("Error retrieving dependency data!")
             continue
 
     return {"result": result}

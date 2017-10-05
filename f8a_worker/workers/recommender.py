@@ -657,9 +657,8 @@ def invoke_license_analysis_service(user_stack_packages, alternate_packages, com
         lic_response = get_session_retry().post(license_url, data=json.dumps(payload))
         lic_response.raise_for_status()  # raise exception for bad http-status codes
         json_response = lic_response.json()
-    except requests.exceptions.RequestException as e:
-        msg = "Unexpected error happened while invoking license analysis!\n{}".format(e)
-        _logger.error(msg)
+    except requests.exceptions.RequestException:
+        _logger.exception("Unexpected error happened while invoking license analysis!")
         pass
 
     return json_response
@@ -698,14 +697,14 @@ def apply_license_filter(user_stack_components, epv_list_alt, epv_list_com):
                                               .get('conflict_packages', [])
 
     list_pkg_names_alt = []
-    for epv in epv_list_alt:
+    for epv in epv_list_alt[:]:
         name = epv.get('pkg', {}).get('name', [''])[0]
         if name in conflict_packages_alt:
             list_pkg_names_alt.append(name)
             epv_list_alt.remove(epv)
 
     list_pkg_names_com = []
-    for epv in epv_list_com:
+    for epv in epv_list_com[:]:
         name = epv.get('pkg', {}).get('name', [''])[0]
         if name in conflict_packages_com:
             list_pkg_names_com.append(name)
