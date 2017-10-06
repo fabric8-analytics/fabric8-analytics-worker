@@ -1,5 +1,7 @@
 #!/bin/bash
 
+F8A_POSTGRES=`python3 -c 'from f8a_worker.defaults import configuration; print(configuration.POSTGRES_CONNECTION)'`
+
 set -ex
 
 pushd ${ALEMBIC_DIR}
