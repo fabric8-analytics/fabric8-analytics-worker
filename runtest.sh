@@ -84,16 +84,9 @@ docker run \
     --link=${TESTS3_CONTAINER_NAME} \
     --name ${TESTCVEDB_S3_DUMP_CONTAINER_NAME} ${CVEDB_S3_DUMP_IMAGE_NAME}
 
-
-secrets_file="${here}/hack/secrets.yaml"
-if [ -e ${secrets_file} ]; then
-    secrets_vol="-v ${secrets_file}:/var/lib/secrets/secrets.yaml:ro,Z"
-fi
-
 echo "Starting test suite"
 docker run -t \
   -v "${here}:/f8a_worker:ro,Z" \
-  ${secrets_vol:-} \
   --link=${TESTDB_CONTAINER_NAME} \
   --link=${TESTS3_CONTAINER_NAME} \
   -e PGBOUNCER_SERVICE_HOST=${TESTDB_CONTAINER_NAME} \
