@@ -86,56 +86,6 @@ objects:
               secretKeyRef:
                 name: aws
                 key: s3-secret-access-key
-          - name: GCP_TYPE
-            valueFrom:
-              secretKeyRef:
-                name: google-cloud-key
-                key: gcp_type
-          - name: GCP_PROJECT_ID
-            valueFrom:
-              secretKeyRef:
-                name: google-cloud-key
-                key: gcp_project_id
-          - name: GCP_PRIVATE_KEY_ID
-            valueFrom:
-              secretKeyRef:
-                name: google-cloud-key
-                key: gcp_private_key_id
-          - name: GCP_PRIVATE_KEY
-            valueFrom:
-              secretKeyRef:
-                name: google-cloud-key
-                key: gcp_private_key
-          - name: GCP_CLIENT_EMAIL
-            valueFrom:
-              secretKeyRef:
-                name: google-cloud-key
-                key: gcp_client_email
-          - name: GCP_CLIENT_ID
-            valueFrom:
-              secretKeyRef:
-                name: google-cloud-key
-                key: gcp_client_id
-          - name: GCP_AUTH_URI
-            valueFrom:
-              secretKeyRef:
-                name: google-cloud-key
-                key: gcp_auth_uri
-          - name: GCP_TOKEN_URI
-            valueFrom:
-              secretKeyRef:
-                name: google-cloud-key
-                key: gcp_token_uri
-          - name: GCP_AUTH_PROVIDER_X509_CERT_URL
-            valueFrom:
-              secretKeyRef:
-                name: google-cloud-key
-                key: gcp_auth_provider_x509_cert_url
-          - name: GCP_CLIENT_X509_CERT_URL
-            valueFrom:
-              secretKeyRef:
-                name: google-cloud-key
-                key: gcp_client_x509_cert_url
           - name: BAYESIAN_SYNC_S3
             valueFrom:
               secretKeyRef:
@@ -146,51 +96,6 @@ objects:
               secretKeyRef:
                 name: worker
                 key: github-token
-          - name: PULP_URL
-            valueFrom:
-              secretKeyRef:
-                name: worker
-                key: pulp-url
-          - name: PULP_USERNAME
-            valueFrom:
-              secretKeyRef:
-                name: worker
-                key: pulp-username
-          - name: PULP_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: worker
-                key: pulp-password
-          - name: BLACKDUCK_HOST
-            valueFrom:
-              secretKeyRef:
-                name: worker
-                key: blackduck-host
-          - name: BLACKDUCK_PORT
-            valueFrom:
-              secretKeyRef:
-                name: worker
-                key: blackduck-port
-          - name: BLACKDUCK_SCHEME
-            valueFrom:
-              secretKeyRef:
-                name: worker
-                key: blackduck-scheme
-          - name: BLACKDUCK_USERNAME
-            valueFrom:
-              secretKeyRef:
-                name: worker
-                key: blackduck-username
-          - name: BLACKDUCK_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: worker
-                key: blackduck-password
-          - name: BLACKDUCK_PATH
-            valueFrom:
-              secretKeyRef:
-                name: worker
-                key: blackduck-path
           - name: PGBOUNCER_SERVICE_HOST
             value: bayesian-pgbouncer
           - name: PGM_SERVICE_HOST
