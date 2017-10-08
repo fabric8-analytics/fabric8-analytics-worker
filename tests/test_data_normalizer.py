@@ -292,10 +292,13 @@ class TestDataNormalizer(object):
         ({'ecosystem': 'gofedlib',
           'result': {'deps-main': ['https://github.com/gorilla/sessions', 'https://github.com/gorilla/context'],
                      'deps-packages': ['https://github.com/gorilla/context']}},
-         {'ecosystem': 'gofedlib', 'dependencies': ['github.com/gorilla/sessions', 'github.com/gorilla/context']}),
+         {'ecosystem': 'gofedlib', 'dependencies': ['github.com/gorilla/context', 'github.com/gorilla/sessions']}),
     ])
     def test_transforming_gofedlib_data(self, data, expected):
         transformed_data = self._dataNormalizer.handle_data(data)
         for key, value in expected.items():
             assert key in transformed_data
-            assert transformed_data[key] == value
+            actual_value = transformed_data[key]
+            if isinstance(actual_value, list):
+                actual_value.sort()
+            assert actual_value == value
