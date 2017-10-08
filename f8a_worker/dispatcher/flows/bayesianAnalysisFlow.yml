@@ -28,6 +28,12 @@
         - from:
           to:
             - 'security_issues'
+          condition:
+            not:
+              name: 'argsFieldEqual'
+              args:
+                key: 'ecosystem'
+                value: 'go'
         - from:
           to:
             - 'static_analysis'
