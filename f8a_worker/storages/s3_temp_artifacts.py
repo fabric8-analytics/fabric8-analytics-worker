@@ -25,10 +25,12 @@ class S3TempArtifacts(AmazonS3):
     }
 
     def __init__(self, aws_access_key_id=None, aws_secret_access_key=None, bucket_name=None,
-                 region_name=None, endpoint_url=None, use_ssl=False, encryption=None, versioned=None,
-                 days_to_expire=None):
-        super().__init__(aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key,
-                         bucket_name=bucket_name, region_name=region_name, endpoint_url=endpoint_url, use_ssl=use_ssl,
+                 region_name=None, endpoint_url=None, use_ssl=False, encryption=None,
+                 versioned=None, days_to_expire=None):
+        super().__init__(aws_access_key_id=aws_access_key_id,
+                         aws_secret_access_key=aws_secret_access_key,
+                         bucket_name=bucket_name, region_name=region_name,
+                         endpoint_url=endpoint_url, use_ssl=use_ssl,
                          encryption=encryption, versioned=versioned)
 
         days = int(days_to_expire)
@@ -40,5 +42,6 @@ class S3TempArtifacts(AmazonS3):
 
         # minio doesn't support lifecycle management
         if not F8AConfiguration.is_local_deployment():
-            self._s3.meta.client.put_bucket_lifecycle_configuration(Bucket=self.bucket_name,
-                                                                    LifecycleConfiguration=self.default_expiration_rule)
+            self._s3.meta.client.put_bucket_lifecycle_configuration(
+                Bucket=self.bucket_name,
+                LifecycleConfiguration=self.default_expiration_rule)

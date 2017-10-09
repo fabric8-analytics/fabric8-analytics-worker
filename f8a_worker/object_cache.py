@@ -26,7 +26,8 @@ class EPVCache(object):
         :param name: name for the given EPV
         :param version: version of the given EPV
         :param cache_dir: path to dir on the filesystem that should be used for caching artifacts
-        :param is_temporary: if True, then objects of certain age will be automatically deleted from the underlying storage
+        :param is_temporary: if True, then objects of certain age will be automatically deleted from
+                             the underlying storage
         """
         self.ecosystem = ecosystem
         self.name = name
@@ -287,7 +288,8 @@ class ObjectCache(object):
         if key not in cls._cache:
             cache_dir = cls._cache_dir(ecosystem, name, version)
             # Artifacts bucket used for caching can be expanded based on env variables
-            item = EPVCache(ecosystem, name, version, cache_dir, is_temporary=True if ecosystem == 'go' else False)
+            item = EPVCache(ecosystem, name, version, cache_dir,
+                            is_temporary=True if ecosystem == 'go' else False)
             cls._cache[key] = item
             return item
         else:
