@@ -3,26 +3,25 @@ from os import environ
 from urllib.parse import quote
 
 
-def _make_postgres_string(password=''):
-    """
-    Method creates postgres connection string. It's parametrized, so it's possible to create either
-    quoted or unquoted version of connection string.
-    Note that it's outside of class since there is no simple way how to call it inside the class
-    without class initialization.
-    :param password: password which will be embedded into Postgres connection string
-    :return: fully working postgres connection string
-    """
-    connection = 'postgresql://{user}:{password}@{pgbouncer_host}:{pgbouncer_port}' \
-                 '/{database}?sslmode=disable'. \
-        format(user=environ.get('POSTGRESQL_USER'),
-               password=password,
-               pgbouncer_host=environ.get('PGBOUNCER_SERVICE_HOST', 'coreapi-pgbouncer'),
-               pgbouncer_port=environ.get('PGBOUNCER_SERVICE_PORT', '5432'),
-               database=environ.get('POSTGRESQL_DATABASE'))
-    return connection
-
-
 class F8AConfiguration(object):
+    def _make_postgres_string(password=''):
+        """
+        Method creates postgres connection string. It's parametrized, so it's possible to
+        create either quoted or unquoted version of connection string.
+        Note that it's outside of class since there is no simple way how to call it inside the class
+        without class initialization.
+        :param password: password which will be embedded into Postgres connection string
+        :return: fully working postgres connection string
+        """
+        connection = 'postgresql://{user}:{password}@{pgbouncer_host}:{pgbouncer_port}' \
+                     '/{database}?sslmode=disable'. \
+            format(user=environ.get('POSTGRESQL_USER'),
+                   password=password,
+                   pgbouncer_host=environ.get('PGBOUNCER_SERVICE_HOST', 'coreapi-pgbouncer'),
+                   pgbouncer_port=environ.get('PGBOUNCER_SERVICE_PORT', '5432'),
+                   database=environ.get('POSTGRESQL_DATABASE'))
+        return connection
+
     BIGQUERY_JSON_KEY = environ.get('GITHUB_CONSUMER_KEY', 'not-set')
 
     # Pulp configuration
