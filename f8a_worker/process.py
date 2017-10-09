@@ -291,7 +291,6 @@ class IndianaJones(object):
         parsed = urlparse(artifact)
         digest = None
         artifact_path = None
-        print("Fetch Artifact: ", ecosystem, artifact, version, target_dir)
 
         if ecosystem.is_backed_by(EcosystemBackend.pypi):
             git = Git.create_git(target_dir)
@@ -442,19 +441,6 @@ class IndianaJones(object):
             digest = compute_digest(artifact_path)
             Archive.extract(artifact_path, target_dir)
             git.add_and_commit_everything()
-        # elif ecosystem.is_backed_by(EcosystemBackend.golang):
-        #     print("Golang: Fetching ", ecosystem, artifact, version, target_dir)
-        #     git = Git.create_git(target_dir)
-        #     file_url = '{url}{artifact}.{version}.nupkg'.format(url=ecosystem.fetch_url,
-        #                                                         artifact=artifact.lower(),
-        #                                                         version=version.lower())
-        #     local_filename = IndianaJones.download_file(file_url, target_dir)
-        #     if local_filename is None:
-        #         raise RuntimeError("Unable to download: %s" % file_url)
-        #     artifact_path = os.path.join(target_dir, local_filename)
-        #     digest = compute_digest(artifact_path)
-        #     Archive.extract(artifact_path, target_dir)
-        #     git.add_and_commit_everything()
         elif parsed:
             if parsed[0] == 'git' or parsed[2].endswith('.git'):
                 git = Git.clone(artifact, target_dir)
