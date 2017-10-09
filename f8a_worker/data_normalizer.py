@@ -425,7 +425,8 @@ class DataNormalizer(object):
         return transformed
 
     def _handle_gofedlib(self, data):
-        transformed = {}
+        key_map = (('version',), ('name',), ('code_repository',))
+        transformed = self.transform_keys(data, key_map)
 
         raw_dependencies = set(data.get('deps-main', []) + data.get('deps-packages', []))
         dependencies = []

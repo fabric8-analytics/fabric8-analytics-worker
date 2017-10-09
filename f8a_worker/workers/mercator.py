@@ -214,7 +214,13 @@ class MercatorTask(BaseTask):
             items = [self._merge_python_items(mercator_target, data)]
         elif arguments['ecosystem'] == 'go':
             result = {'result': json.loads(data[0])}
-            result['ecosystem'] = 'gofedlib'  # data normalized expects this
+            # data normalized expects this
+            result['ecosystem'] = 'gofedlib'
+            # we only support git now
+            result['result']['code_repository'] = {'type': 'git',
+                                                   'url': 'https://{name}'.format(name=arguments.get('name'))}
+            result['result']['name'] = arguments.get('name')
+            result['result']['version'] = arguments.get('version')
             items = [result]
             self.log.debug('gofedlib found %i dependencies', len(result['result'].get('deps-main', []))
                            + len(result['result'].get('deps-packages', [])))
