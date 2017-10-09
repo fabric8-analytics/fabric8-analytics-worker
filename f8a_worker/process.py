@@ -163,6 +163,26 @@ class Git(object):
         with cwd(self.repo_path):
             TimedCommand.get_command_output(cmd, graceful=False)
 
+    @staticmethod
+    def ls_remote(repository, refs=None, args=None):
+        """Get output of `git ls-remote <args> <repo> <refs>` command.
+
+        :param repository: str, remote git repository
+        :param refs: list, list of git references
+        :param args: list, list of additional arguments for the command
+        :return: command output
+        """
+        cmd = ["git", "ls-remote"]
+        if args:
+            cmd.extend(args)
+
+        cmd.append(repository)
+
+        if refs:
+            cmd.extend(refs)
+
+        return TimedCommand.get_command_output(cmd, graceful=False)
+
 
 class Archive(object):
     "Extract different kind of archives"

@@ -5,8 +5,8 @@ import flexmock
 from f8a_worker.models import Analysis, Package, Version
 from f8a_worker.solver import\
     (get_ecosystem_solver, Dependency,
-     PypiDependencyParser, NpmDependencyParser, OSSIndexDependencyParser, NugetDependencyParser,
-     MavenReleasesFetcher, NpmReleasesFetcher, NugetReleasesFetcher, F8aReleasesFetcher)
+     PypiDependencyParser, NpmDependencyParser, OSSIndexDependencyParser, NugetDependencyParser, GolangDependencyParser,
+     MavenReleasesFetcher, NpmReleasesFetcher, NugetReleasesFetcher, F8aReleasesFetcher, GolangReleasesFetcher)
 
 
 class TestDependencyParser(object):
@@ -37,6 +37,16 @@ class TestDependencyParser(object):
                 dep_parser.parse(args)
         else:
             assert dep_parser.parse(args) == expected
+
+    @pytest.mark.parametrize('args, expected', [
+        (["github.com/gorilla/mux"],
+         [Dependency("github.com/gorilla/mux", "")]),
+        (["github.com/gorilla/mux 3f19343c7d9ce75569b952758bd236af94956061"],
+         [Dependency("github.com/gorilla/mux", "3f19343c7d9ce75569b952758bd236af94956061")])
+    ])
+    def test_golang_dependency_parser_parse(self, args, expected):
+        dep_parser = GolangDependencyParser()
+        assert dep_parser.parse(args) == expected
 
     @pytest.mark.parametrize('args, expected', [
         (["name >0.6"],
@@ -195,6 +205,20 @@ class TestSolver(object):
                        'NUnit': '3.2.1',
                        'NETStandard.Library': '1.6.0'}
 
+    @pytest.mark.parametrize('dependencies, expected', [
+        ([], {}),
+        (['github.com/msrb/mux'],
+         {'github.com/msrb/mux': 'bdd5a5a1b0b489d297b73eb62b5f6328df198bfc'}),
+        (['github.com/msrb/mux bdd5a5a1b0b489d297b73eb62b5f6328df198bfc'],
+         {'github.com/msrb/mux': 'bdd5a5a1b0b489d297b73eb62b5f6328df198bfc'})
+    ])
+    def test_golang_solver(self, go, dependencies, expected):
+        solver = get_ecosystem_solver(go)
+        solver_result = solver.solve(dependencies)
+        assert len(solver_result) == len(dependencies)
+        for name, version in solver_result.items():
+            assert expected.get(name, '') == version, '"{}" "{}" "{}"'.format(name, version, expected)
+
 
 class TestFetcher(object):
     @pytest.mark.parametrize('package, expected', [
@@ -225,6 +249,16 @@ class TestFetcher(object):
         f = NugetReleasesFetcher(nuget)
         _, releases = f.fetch_releases(package)
         assert set(releases) >= expected
+
+
+    @pytest.mark.parametrize('package, expected', [
+        ('github.com/msrb/mux',
+         {'bdd5a5a1b0b489d297b73eb62b5f6328df198bfc'})
+    ])
+    def test_golang_fetcher(self, go, package, expected):
+        f = GolangReleasesFetcher(go)
+        _, releases = f.fetch_releases(package)
+        assert set(releases) == expected
 
     def test_f8a_fetcher(self, rdb, npm):
         # create initial dataset
