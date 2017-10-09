@@ -61,7 +61,7 @@ class GraphAggregatorTask(BaseTask):
                 # Create instance manually since stack analysis is not handled by dispatcher
                 subtask = MercatorTask.create_test_instance(task_name=self.task_name)
                 arguments['ecosystem'] = manifest['ecosystem']
-                out = subtask.run_mercator(arguments, temp_path, resolve_poms=False)
+                out = subtask.run_mercator(arguments, temp_path)
 
             if not out["details"]:
                 raise FatalTaskError("No metadata found processing manifest file '{}'"
