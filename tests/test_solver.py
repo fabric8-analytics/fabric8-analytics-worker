@@ -5,8 +5,9 @@ import flexmock
 from f8a_worker.models import Analysis, Package, Version
 from f8a_worker.solver import\
     (get_ecosystem_solver, Dependency,
-     PypiDependencyParser, NpmDependencyParser, OSSIndexDependencyParser, NugetDependencyParser, GolangDependencyParser,
-     MavenReleasesFetcher, NpmReleasesFetcher, NugetReleasesFetcher, F8aReleasesFetcher, GolangReleasesFetcher)
+     PypiDependencyParser, NpmDependencyParser, OSSIndexDependencyParser, NugetDependencyParser,
+     GolangDependencyParser, MavenReleasesFetcher, NpmReleasesFetcher, NugetReleasesFetcher,
+     F8aReleasesFetcher, GolangReleasesFetcher)
 
 
 class TestDependencyParser(object):
@@ -217,7 +218,8 @@ class TestSolver(object):
         solver_result = solver.solve(dependencies)
         assert len(solver_result) == len(dependencies)
         for name, version in solver_result.items():
-            assert expected.get(name, '') == version, '"{}" "{}" "{}"'.format(name, version, expected)
+            assert expected.get(name, '') == version, '"{}" "{}" "{}"'.format(
+                name, version, expected)
 
 
 class TestFetcher(object):
@@ -249,7 +251,6 @@ class TestFetcher(object):
         f = NugetReleasesFetcher(nuget)
         _, releases = f.fetch_releases(package)
         assert set(releases) >= expected
-
 
     @pytest.mark.parametrize('package, expected', [
         ('github.com/msrb/mux',
