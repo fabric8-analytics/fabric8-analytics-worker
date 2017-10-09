@@ -4,7 +4,7 @@ from urllib.parse import quote
 
 
 class F8AConfiguration(object):
-    def _make_postgres_string(password=''):
+    def _make_postgres_string(password):
         """
         Method creates postgres connection string. It's parametrized, so it's possible to
         create either quoted or unquoted version of connection string.
