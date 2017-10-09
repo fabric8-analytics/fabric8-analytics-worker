@@ -670,7 +670,7 @@ def apply_license_filter(user_stack_components, epv_list_alt, epv_list_com):
         license_scoring_input = {
             'package': epv.get('pkg', {}).get('name', [''])[0],
             'version': epv.get('ver', {}).get('version', [''])[0],
-            'licenses': epv.get('ver', {}).get('version', {}).get('licenses', [])
+            'licenses': epv.get('ver', {}).get('licenses', [])
         }
         license_score_list_alt.append(license_scoring_input)
 
@@ -679,7 +679,7 @@ def apply_license_filter(user_stack_components, epv_list_alt, epv_list_com):
         license_scoring_input = {
             'package': epv.get('pkg', {}).get('name', [''])[0],
             'version': epv.get('ver', {}).get('version', [''])[0],
-            'licenses': epv.get('ver', {}).get('version', {}).get('licenses', [])
+            'licenses': epv.get('ver', {}).get('licenses', [])
         }
         license_score_list_com.append(license_scoring_input)
 
@@ -716,6 +716,7 @@ def apply_license_filter(user_stack_components, epv_list_alt, epv_list_com):
         'filtered_comp_packages_graph': epv_list_com,
         'filtered_list_pkg_names_com': list_pkg_names_com
     }
+    _logger.info("License Filter output: {}".format(json.dumps(output)))
 
     return output
 

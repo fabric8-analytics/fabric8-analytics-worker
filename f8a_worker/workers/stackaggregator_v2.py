@@ -336,10 +336,10 @@ def get_dependency_data(resolved, ecosystem):
             continue
 
         qstring = \
-            "g.V().has('pecosystem', '{}').has('pname', '{}').has('version', '{}')" + \
+            "g.V().has('pecosystem', '{}').has('pname', '{}').has('version', '{}')" \
+            .format(ecosystem, elem["package"], elem["version"]) + \
             ".as('version').in('has_version').as('package')" + \
-            ".select('version','package').by(valueMap());"\
-            .format(ecosystem, elem["package"], elem["version"])
+            ".select('version','package').by(valueMap());"
         payload = {'gremlin': qstring}
 
         try:
