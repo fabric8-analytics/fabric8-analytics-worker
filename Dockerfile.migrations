@@ -1,5 +1,4 @@
 FROM  registry.devshift.net/bayesian/cucos-worker
-MAINTAINER Slavek Kabrda <slavek@redhat.com>
 
 RUN pip3 install alembic
 
