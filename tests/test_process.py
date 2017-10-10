@@ -101,3 +101,15 @@ class TestIndianaJones(object):
         assert digest == expected_digest
         assert osp.exists(osp.join(str(tmpdir), '{}.{}.nupkg'.format(name.lower(),
                                                                      version)))
+
+    @pytest.mark.parametrize('name, version, expected_digest', [
+        ('github.com/gorilla/mux', '3f19343c7d9ce75569b952758bd236af94956061',
+         '50cc6ce3b58fb23f7f4e5ccf8e24897ba63c628fdc4a52ef4648ecdad7a0a0e9'),
+    ])
+    def test_fetch_go_specific(self, tmpdir, go, name, version, expected_digest):
+        digest, path = IndianaJones.fetch_artifact(go,
+                                                   artifact=name,
+                                                   version=version,
+                                                   target_dir=str(tmpdir))
+        assert digest == expected_digest
+        assert osp.exists(osp.join(str(tmpdir), '{}.tar.gz'.format(version)))
