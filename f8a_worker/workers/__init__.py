@@ -31,5 +31,6 @@ from f8a_worker.workers.stackaggregator import StackAggregatorTask
 from f8a_worker.workers.stackaggregator_v2 import StackAggregatorV2Task
 from f8a_worker.workers.bookkeeper import BookkeeperTask
 from f8a_worker.workers.keywords_tagging import KeywordsTaggingTask
+from f8a_worker.workers.keywords_tagging import PackageKeywordsTaggingTask
 from f8a_worker.workers.repository_description import RepositoryDescCollectorTask
 from f8a_worker.workers.keywords_summary import KeywordsSummaryTask

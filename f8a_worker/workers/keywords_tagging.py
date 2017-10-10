@@ -8,16 +8,12 @@ from datetime import timedelta
 from datetime import datetime
 
 from f8a_worker.base import BaseTask
+from f8a_worker.schemas import SchemaRef
 from selinon import StoragePool
-from selinon import FatalTaskError
-
-# from f8a_worker.schemas import SchemaRef
 
 
-class KeywordsTaggingTask(BaseTask):
-    """Compute tags based on gathered natural text."""
-    _analysis_name = 'keywords_tagging'
-    # schema_ref = SchemaRef(_analysis_name, '1-0-0')
+class KeywordsTaggingTaskBase(BaseTask):
+    """Base task for keywords tagging tasks."""
 
     # keywords.yaml files are ecosystem specific, keep them for _UPDATE_TIME -
     # once _UPDATE_TIME expires update them directly from GitHub
@@ -107,6 +103,55 @@ class KeywordsTaggingTask(BaseTask):
         stopwords_txt = self._get_stopwords_txt()
         return keywords_yaml, stopwords_txt
 
+    def execute(self, arguments):
+        raise NotImplementedError("Please derive from base task for specific tagging tasks")
+
+
+class KeywordsTaggingTask(KeywordsTaggingTaskBase):
+    """Compute tags based on gathered natural text - package-version level keywords."""
+    _analysis_name = 'keywords_tagging'
+    schema_ref = SchemaRef(_analysis_name, '1-0-0')
+
+    def _package_version_level_keywords(self, keywords_file_name, stopwords_file_name, arguments):
+        # Keep f8a_tagger import local as other components dependent on
+        # f8a_worker do not require it installed.
+        from f8a_tagger import lookup_text as keywords_lookup_text
+
+        details = {}
+        if 'metadata' in self.parent.keys():
+            details['description'] = {}
+            metadata = self.parent_task_result('metadata')
+            description = metadata.get('details', [{}])[0].get('description', '')
+            if description:
+                self.log.debug("Computing keywords from description: '%s'", description)
+                details['description'] = keywords_lookup_text(description,
+                                                              keywords_file=keywords_file_name,
+                                                              stopwords_file=stopwords_file_name,
+                                                              **self._LOOKUP_CONF)
+
+            # explicitly gather declared keywords by publisher
+            self.log.debug("Aggregating explicitly stated keywords by publisher")
+            details['keywords'] = metadata.get('details', [{}])[0].get('keywords', [])
+
+        return details
+
+    def execute(self, arguments):
+        self._strict_assert(arguments.get('ecosystem'))
+        self._strict_assert(arguments.get('name'))
+        self._strict_assert(arguments.get('version'))
+
+        keywords_file_name, stopwords_file_name = self._get_config_files(arguments['ecosystem'])
+        details = self._package_version_level_keywords(keywords_file_name, stopwords_file_name,
+                                                       arguments)
+
+        return {'status': 'success', 'summary': [], 'details': details}
+
+
+class PackageKeywordsTaggingTask(KeywordsTaggingTaskBase):
+    """Compute tags based on gathered natural text - strictly package level keywords."""
+    _analysis_name = 'package_keywords_tagging'
+    schema_ref = SchemaRef(_analysis_name, '1-0-0')
+
     def _package_level_keywords(self, keywords_file_name, stopwords_file_name, arguments):
         # Keep f8a_tagger import local as other components dependent on
         # f8a_worker do not require it installed.
@@ -162,44 +207,12 @@ class KeywordsTaggingTask(BaseTask):
 
         return details
 
-    def _package_version_level_keywords(self, keywords_file_name, stopwords_file_name, arguments):
-        # Keep f8a_tagger import local as other components dependent on
-        # f8a_worker do not require it installed.
-        from f8a_tagger import lookup_text as keywords_lookup_text
-
-        details = {}
-        if 'metadata' in self.parent.keys():
-            self._strict_assert(arguments.get('version'))
-
-            details['description'] = []
-            metadata = self.parent_task_result('metadata')
-            description = metadata.get('details', [{}])[0].get('description', '')
-            if description:
-                self.log.debug("Computing keywords from description: '%s'", description)
-                details['description'] = keywords_lookup_text(description,
-                                                              keywords_file=keywords_file_name,
-                                                              stopwords_file=stopwords_file_name,
-                                                              **self._LOOKUP_CONF)
-
-            # explicitly gather declared keywords by publisher
-            self.log.debug("Aggregating explicitly stated keywords by publisher")
-            details['keywords'] = metadata.get('details', [{}])[0].get('keywords')
-
-        return details
-
     def execute(self, arguments):
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
 
         keywords_file_name, stopwords_file_name = self._get_config_files(arguments['ecosystem'])
-
-        if self.task_name == 'package_keywords_tagging':
-            details = self._package_level_keywords(keywords_file_name, stopwords_file_name,
-                                                   arguments)
-        elif self.task_name == 'keywords_tagging':
-            details = self._package_version_level_keywords(keywords_file_name, stopwords_file_name,
-                                                           arguments)
-        else:
-            raise FatalTaskError("Unable to decide which keywords should be aggregated")
+        details = self._package_level_keywords(keywords_file_name, stopwords_file_name,
+                                               arguments)
 
         return {'status': 'success', 'summary': [], 'details': details}
