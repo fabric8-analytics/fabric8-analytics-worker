@@ -428,7 +428,7 @@ class IndianaJones(object):
             git.reset(version, hard=True)
             filename = git.archive(version)
             artifact_path = os.path.join(target_dir, filename)
-
+            digest = compute_digest(artifact_path)
         elif ecosystem.is_backed_by(EcosystemBackend.nuget):
             git = Git.create_git(target_dir)
             file_url = '{url}{artifact}.{version}.nupkg'.format(url=ecosystem.fetch_url,
