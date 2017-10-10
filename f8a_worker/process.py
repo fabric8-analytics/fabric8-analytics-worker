@@ -50,7 +50,7 @@ class Git(object):
                                          "/usr/bin/true"])
 
     @classmethod
-    def clone(cls, url, path, depth=None, branch=None):
+    def clone(cls, url, path, depth=None, branch=None, single_branch=False):
         """
         clone repository provided as url to specific path
 
@@ -69,6 +69,8 @@ class Git(object):
             cmd.extend(["--depth", depth])
         if branch is not None:
             cmd.extend(["--branch", branch])
+        if single_branch:
+            cmd.extend(["--single-branch"])
         try:
             TimedCommand.get_command_output(cmd, graceful=False)
         except TaskError as exc:
@@ -149,9 +151,37 @@ class Git(object):
     def archive(self, basename):
         suffix = "tar.gz"
         filename = basename + "." + suffix
-        TimedCommand.get_command_output(["git", "archive", "--format={}".format(suffix),
-                                        "--output={}".format(filename), "HEAD"])
+        with cwd(self.repo_path):
+            TimedCommand.get_command_output(["git", "archive", "--format={}".format(suffix),
+                                            "--output={}".format(filename), "HEAD"])
         return filename
+
+    def reset(self, revision, hard=False):
+        cmd = ["git", "reset", revision]
+        if hard:
+            cmd.extend(["--hard"])
+        with cwd(self.repo_path):
+            TimedCommand.get_command_output(cmd, graceful=False)
+
+    @staticmethod
+    def ls_remote(repository, refs=None, args=None):
+        """Get output of `git ls-remote <args> <repo> <refs>` command.
+
+        :param repository: str, remote git repository
+        :param refs: list, list of git references
+        :param args: list, list of additional arguments for the command
+        :return: command output
+        """
+        cmd = ["git", "ls-remote"]
+        if args:
+            cmd.extend(args)
+
+        cmd.append(repository)
+
+        if refs:
+            cmd.extend(refs)
+
+        return TimedCommand.get_command_output(cmd, graceful=False)
 
 
 class Archive(object):
@@ -392,9 +422,13 @@ class IndianaJones(object):
                 Archive.extract(artifact_path, target_dir)
             git.add_and_commit_everything()
         elif ecosystem.is_backed_by(EcosystemBackend.scm):
-            git = Git.clone(artifact, target_dir)
-            digest = IndianaJones.get_revision(target_dir)
-            artifact_path = git.archive(artifact)
+            # git_url = urljoin('git://', artifact)
+            git_url = 'git://' + artifact
+            git = Git.clone(git_url, target_dir, single_branch=True)
+            git.reset(version, hard=True)
+            filename = git.archive(version)
+            artifact_path = os.path.join(target_dir, filename)
+
         elif ecosystem.is_backed_by(EcosystemBackend.nuget):
             git = Git.create_git(target_dir)
             file_url = '{url}{artifact}.{version}.nupkg'.format(url=ecosystem.fetch_url,

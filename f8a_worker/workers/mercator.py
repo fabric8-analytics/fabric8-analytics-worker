@@ -24,6 +24,7 @@ sample output:
 """
 
 import os
+import json
 
 from f8a_worker.base import BaseTask
 from f8a_worker.data_normalizer import DataNormalizer
@@ -192,9 +193,18 @@ class MercatorTask(BaseTask):
                        'summary': [],
                        'details': []}
         mercator_target = arguments.get('cache_sources_path', cache_path)
-        tc = TimedCommand(['mercator', mercator_target])
-        update_env = {'MERCATOR_JAVA_RESOLVE_POMS': 'true'} if resolve_poms else {}
-        status, data, err = tc.run(timeout=timeout, is_json=True, update_env=update_env)
+
+        if arguments['ecosystem'] == 'go':
+            # no Go support in Mercator-go yet, we handle it separately here
+            tc = TimedCommand(['gofedlib-cli', '--dependencies-main', '--dependencies-packages',
+                               mercator_target])
+            status, data, err = tc.run(timeout=timeout)
+        else:
+            tc = TimedCommand(['mercator', mercator_target])
+            update_env = {'MERCATOR_JAVA_RESOLVE_POMS': 'true'} if resolve_poms else {}
+            status, data, err = tc.run(timeout=timeout,
+                                       is_json=True,
+                                       update_env=update_env)
         if status != 0:
             self.log.error(err)
             result_data['status'] = 'error'
@@ -203,6 +213,22 @@ class MercatorTask(BaseTask):
         if ecosystem_object.is_backed_by(EcosystemBackend.pypi):
             # TODO: attempt static setup.py parsing with mercator
             items = [self._merge_python_items(mercator_target, data)]
+        elif arguments['ecosystem'] == 'go':
+            result = {'result': json.loads(data[0])}
+            # data normalized expects this
+            result['ecosystem'] = 'gofedlib'
+            # we only support git now
+            result['result']['code_repository'] = {
+                'type': 'git',
+                'url': 'https://{name}'.format(name=arguments.get('name'))
+            }
+
+            result['result']['name'] = arguments.get('name')
+            result['result']['version'] = arguments.get('version')
+            items = [result]
+            main_deps_count = len(result['result'].get('deps-main', []))
+            packages_count = len(result['result'].get('deps-packages', []))
+            self.log.debug('gofedlib found %i dependencies', main_deps_count + packages_count)
         else:
             if outermost_only:
                 # process only root level manifests (or the ones closest to the root level)
@@ -216,8 +242,9 @@ class MercatorTask(BaseTask):
                 # for maven we download both Jar and POM, we consider POM to be *the*
                 #  source of information and don't want to duplicate info by including
                 #  data from pom included in artifact (assuming it's included)
-                items = [data for data in items if data['ecosystem'].lower() == 'java-pom']
-        result_data['details'] = [self._data_normalizer.handle_data(data, keep_path=keep_path)
-                                  for data in items]
+                items = [d for d in items if d['ecosystem'].lower() == 'java-pom']
+
+        result_data['details'] = [self._data_normalizer.handle_data(d, keep_path=keep_path)
+                                  for d in items]
         result_data['status'] = 'success'
         return result_data

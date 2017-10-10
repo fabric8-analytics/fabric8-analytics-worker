@@ -20,19 +20,22 @@ class EPVCache(object):
     # Meta-information about artifact
     _META_JSON_NAME = 'meta.json'
 
-    def __init__(self, ecosystem, name, version, cache_dir):
+    def __init__(self, ecosystem, name, version, cache_dir, is_temporary=False):
         """
         :param ecosystem: ecosystem for the given EPV
         :param name: name for the given EPV
         :param version: version of the given EPV
         :param cache_dir: path to dir on the filesystem that should be used for caching artifacts
+        :param is_temporary: if True, then objects of certain age will be automatically deleted from
+                             the underlying storage
         """
         self.ecosystem = ecosystem
         self.name = name
         self.version = version
         self.cache_dir = cache_dir
         self._eco_obj = None
-        self._s3 = StoragePool.get_connected_storage('S3Artifacts')
+        storage_name = 'S3Artifacts' if not is_temporary else 'S3TempArtifacts'
+        self._s3 = StoragePool.get_connected_storage(storage_name)
         self._postgres = StoragePool.get_connected_storage('BayesianPostgres')
         self._base_object_key = "{ecosystem}/{name}/{version}".format(ecosystem=ecosystem,
                                                                       name=name,
@@ -285,7 +288,8 @@ class ObjectCache(object):
         if key not in cls._cache:
             cache_dir = cls._cache_dir(ecosystem, name, version)
             # Artifacts bucket used for caching can be expanded based on env variables
-            item = EPVCache(ecosystem, name, version, cache_dir)
+            item = EPVCache(ecosystem, name, version, cache_dir,
+                            is_temporary=True if ecosystem == 'go' else False)
             cls._cache[key] = item
             return item
         else:

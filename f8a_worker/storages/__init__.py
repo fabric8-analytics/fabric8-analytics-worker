@@ -4,6 +4,7 @@ from .postgres import BayesianPostgres
 from .package_postgres import PackagePostgres
 from .s3 import AmazonS3
 from .s3_artifacts import S3Artifacts
+from .s3_temp_artifacts import S3TempArtifacts
 from .s3_bigquery import S3BigQuery
 from .s3_data import S3Data
 from .s3_package_data import S3PackageData

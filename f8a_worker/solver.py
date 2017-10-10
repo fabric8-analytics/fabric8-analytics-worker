@@ -17,6 +17,7 @@ from urllib.parse import urljoin
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.models import Analysis, Ecosystem, Package, Version
 from f8a_worker.utils import cwd, tempdir, TimedCommand
+from f8a_worker.process import Git
 
 
 logger = logging.getLogger(__name__)
@@ -296,6 +297,24 @@ class MavenReleasesFetcher(ReleasesFetcher):
         dir_path = "{g}/{a}/".format(g=group_id.replace('.', '/'), a=artifact_id)
         url = urljoin(maven_url, dir_path)
         return package, self.releases_from_maven_org(url)
+
+
+class GolangReleasesFetcher(ReleasesFetcher):
+    def __init__(self, ecosystem):
+        super(GolangReleasesFetcher, self).__init__(ecosystem)
+
+    def fetch_releases(self, package):
+        if not package:
+            raise ValueError('package not specified')
+
+        package = 'git://{p}.git'.format(p=package)
+        output = Git.ls_remote(package, args=['-q'], refs=['HEAD'])
+        version, ref = output[0].split()
+
+        if not version:
+            raise ValueError("Package {} does not have associated versions".format(package))
+
+        return package, [version]
 
 
 class F8aReleasesFetcher(ReleasesFetcher):
@@ -651,6 +670,29 @@ class NoOpDependencyParser(DependencyParser):
         return deps
 
 
+class GolangDependencyParser(DependencyParser):
+    """
+    Dependency parser for Golang.
+    """
+    def parse(self, specs):
+        dependencies = []
+        for spec in specs:
+            spec_list = spec.split(' ')
+            if len(spec_list) > 1:
+                dependencies.append(Dependency(spec_list[0], spec_list[1]))
+            else:
+                dependencies.append(Dependency(spec_list[0], ''))
+        return dependencies
+
+    @staticmethod
+    def compose(deps):
+        return DependencyParser.compose_sep(deps, ' ')
+
+    @staticmethod
+    def restrict_versions(deps):
+        return deps
+
+
 class Solver(object):
     def __init__(self, ecosystem, dep_parser=None, fetcher=None, highest_dependency_version=True):
         self.ecosystem = ecosystem
@@ -749,6 +791,23 @@ class MavenManualSolver(Solver):
         super().__init__(ecosystem,
                          parser,
                          fetcher or MavenReleasesFetcher(ecosystem))
+
+
+class GolangSolver(Solver):
+    def __init__(self, ecosystem, parser=None, fetcher=None):
+        super(GolangSolver, self).__init__(ecosystem,
+                                           parser or GolangDependencyParser(),
+                                           fetcher or GolangReleasesFetcher(ecosystem))
+
+    def solve(self, dependencies):
+        result = {}
+        for dependency in self.dependency_parser.parse(dependencies):
+            if dependency.spec:
+                result[dependency.name] = dependency.spec
+            else:
+                version = self.release_fetcher.fetch_releases(dependency.name)[1][0]
+                result[dependency.name] = version
+        return result
 
 
 class MavenSolver(object):
@@ -854,6 +913,8 @@ def get_ecosystem_solver(ecosystem, with_parser=None, with_fetcher=None):
         return RubyGemsSolver(ecosystem, with_parser, with_fetcher)
     elif ecosystem.is_backed_by(EcosystemBackend.nuget):
         return NugetSolver(ecosystem, with_parser, with_fetcher)
+    elif ecosystem.is_backed_by(EcosystemBackend.scm):
+        return GolangSolver(ecosystem, with_parser, with_fetcher)
 
     raise ValueError('Unknown ecosystem: {}'.format(ecosystem.name))
 
@@ -869,5 +930,7 @@ def get_ecosystem_parser(ecosystem):
         return RubyGemsDependencyParser()
     elif ecosystem.is_backed_by(EcosystemBackend.nuget):
         return NugetDependencyParser()
+    elif ecosystem.is_backed_by(EcosystemBackend.scm):
+        return GolangDependencyParser()
 
     raise ValueError('Unknown ecosystem: {}'.format(ecosystem.name))

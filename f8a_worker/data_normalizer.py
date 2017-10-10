@@ -27,6 +27,7 @@ import argparse
 import json
 from os import path
 from itertools import zip_longest
+from urllib.parse import urlparse
 
 from f8a_worker.utils import parse_gh_repo, tempdir
 
@@ -423,6 +424,21 @@ class DataNormalizer(object):
             transformed['devel_dependencies'] = dev_deps  # development dependencies
         return transformed
 
+    def _handle_gofedlib(self, data):
+        key_map = (('version',), ('name',), ('code_repository',))
+        transformed = self.transform_keys(data, key_map)
+
+        raw_dependencies = set(data.get('deps-main', []) + data.get('deps-packages', []))
+        dependencies = []
+        for dependency in raw_dependencies:
+            scheme = '{}://'.format(urlparse(dependency).scheme)
+            if dependency.startswith(scheme):
+                dependency = dependency.replace(scheme, '', 1)
+            dependencies.append(dependency)
+
+        transformed['dependencies'] = dependencies
+        return transformed
+
     def _handle_dotnet_solution(self, data):
         if not data.get('Metadata'):
             return {}
@@ -505,7 +521,8 @@ class DataNormalizer(object):
                   'npm': self._handle_javascript,
                   'java-pom': self._handle_java,
                   'ruby': self._handle_rubygems,
-                  'dotnetsolution': self._handle_dotnet_solution}
+                  'dotnetsolution': self._handle_dotnet_solution,
+                  'gofedlib': self._handle_gofedlib}
 
         result = switch.get(data['ecosystem'].lower(), _passthrough)(data.get('result', {}))
         if result is None:

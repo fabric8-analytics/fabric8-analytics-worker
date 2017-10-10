@@ -28,6 +28,12 @@
         - from:
           to:
             - 'security_issues'
+          condition:
+            not:
+              name: 'argsFieldEqual'
+              args:
+                key: 'ecosystem'
+                value: 'go'
         - from:
           to:
             - 'static_analysis'
@@ -156,25 +162,26 @@
             - 'metadata'
           to: 'anitya'
           condition:
-            not:
-              name: 'argsFieldEqual'
-              args:
-                key: 'ecosystem'
-                value: 'nuget'
+            or:
+              - not:
+                  name: 'argsFieldEqual'
+                  args:
+                    key: 'ecosystem'
+                    value: 'nuget'
+              - not:
+                  name: 'argsFieldEqual'
+                  args:
+                    key: 'ecosystem'
+                    value: 'go'
         - from:
             - 'anitya'
             - 'digests'
           to: 'redhat_downstream'
           condition:
-            or:
-              - name: 'envEqual'
-                args:
-                  env: 'OPENSHIFT_DEPLOYMENT'
-                  value: '0'
-              - name: 'argsFieldEqual'
-                args:
-                  key: 'ecosystem'
-                  value: 'maven'
+            name: 'argsFieldEqual'
+            args:
+              key: 'ecosystem'
+              value: 'maven'
         - from:
           to: 'blackduck_executor'
           condition:

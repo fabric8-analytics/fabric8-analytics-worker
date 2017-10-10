@@ -75,6 +75,14 @@ def nuget(rdb):
     return nuget
 
 
+@pytest.fixture
+def go(rdb):
+    e = Ecosystem(name='go', backend=EcosystemBackend.scm, fetch_url='')
+    rdb.add(e)
+    rdb.commit()
+    return e
+
+
 @pytest.fixture()
 def dispatcher_setup():
     """ Setup environment for Dispatcher if needed """

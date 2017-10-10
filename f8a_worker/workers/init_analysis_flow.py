@@ -6,7 +6,7 @@ from f8a_worker.object_cache import ObjectCache
 from f8a_worker.base import BaseTask
 from f8a_worker.process import IndianaJones, MavenCoordinates
 from f8a_worker.models import Analysis, EcosystemBackend, Ecosystem, Version, Package
-from f8a_worker.utils import case_sensitivity_transform
+from f8a_worker.utils import normalize_package_name
 
 
 class InitAnalysisFlow(BaseTask):
@@ -16,11 +16,11 @@ class InitAnalysisFlow(BaseTask):
         self._strict_assert(arguments.get('ecosystem'))
 
         # make sure we store package name based on ecosystem package naming case sensitivity
-        arguments['name'] = case_sensitivity_transform(arguments['ecosystem'], arguments['name'])
+        arguments['name'] = normalize_package_name(arguments['ecosystem'], arguments['name'])
 
         db = self.storage.session
-        e = Ecosystem.by_name(db, arguments['ecosystem'])
-        p = Package.get_or_create(db, ecosystem_id=e.id, name=arguments['name'])
+        ecosystem = Ecosystem.by_name(db, arguments['ecosystem'])
+        p = Package.get_or_create(db, ecosystem_id=ecosystem.id, name=arguments['name'])
         v = Version.get_or_create(db, package_id=p.id, identifier=arguments['version'])
 
         if not arguments.get('force'):
@@ -38,7 +38,6 @@ class InitAnalysisFlow(BaseTask):
 
         cache_path = mkdtemp(dir=self.configuration.WORKER_DATA_DIR)
         epv_cache = ObjectCache.get_from_dict(arguments)
-        ecosystem = Ecosystem.by_name(db, arguments['ecosystem'])
 
         try:
             if not epv_cache.has_source_tarball():

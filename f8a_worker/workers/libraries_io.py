@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 from re import compile as re_compile
 from requests import get
+from urllib.parse import quote
 
 from f8a_worker.base import BaseTask
 from f8a_worker.schemas import SchemaRef
@@ -14,15 +15,23 @@ class LibrariesIoTask(BaseTask):
     @staticmethod
     def _get_list_term_description(page, term_name):
         tag = page.find(string=re_compile(r'^\s*{}\s*$'.format(term_name)))
+        if not tag:
+            return None
         return tag.find_next('dd')
 
     def _get_list_term_description_text(self, page, term_name):
         term_description = self._get_list_term_description(page, term_name)
-        return term_description.text.strip()
+        result = 'n/a'
+        if term_description:
+            result = term_description.text.strip()
+        return result
 
     def _get_list_term_description_time(self, page, term_name):
         term_description = self._get_list_term_description(page, term_name)
-        return term_description.find('time').get('datetime')
+        result = 'n/a'
+        if term_description:
+            result = term_description.find('time').get('datetime')
+        return result
 
     def get_releases(self, page):
         latest_version = ''
@@ -68,8 +77,13 @@ class LibrariesIoTask(BaseTask):
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
 
-        url = 'https://libraries.io/{ecosystem}/{name}'.format(ecosystem=arguments['ecosystem'],
-                                                               name=arguments['name'])
+        name = arguments['name']
+        ecosystem = arguments['ecosystem']
+        if ecosystem == 'go':
+            name = quote(name, safe='')
+
+        url = 'https://libraries.io/{ecosystem}/{name}'.format(ecosystem=ecosystem,
+                                                               name=name)
         page = BeautifulSoup(get(url).text, 'html.parser')
         if page.find(text="We can't find whatever it was you were looking for."):
             self.log.warning('%r does not exist' % url)

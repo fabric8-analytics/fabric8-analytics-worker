@@ -284,3 +284,24 @@ class TestDataNormalizer(object):
             transformed_value = sorted(transformed_data[key]) \
                 if isinstance(transformed_data[key], list) else transformed_data[key]
             assert transformed_value == value
+
+    @pytest.mark.parametrize('data, expected', [
+        ({'ecosystem': 'gofedlib', 'result': {
+            'deps-main': [],
+            'deps-packages': ['https://github.com/gorilla/context']}},
+         {'ecosystem': 'gofedlib', 'dependencies': ['github.com/gorilla/context']}),
+        ({'ecosystem': 'gofedlib',
+          'result': {'deps-main': ['https://github.com/gorilla/sessions',
+                                   'https://github.com/gorilla/context'],
+                     'deps-packages': ['https://github.com/gorilla/context']}},
+         {'ecosystem': 'gofedlib', 'dependencies': ['github.com/gorilla/context',
+                                                    'github.com/gorilla/sessions']}),
+    ])
+    def test_transforming_gofedlib_data(self, data, expected):
+        transformed_data = self._dataNormalizer.handle_data(data)
+        for key, value in expected.items():
+            assert key in transformed_data
+            actual_value = transformed_data[key]
+            if isinstance(actual_value, list):
+                actual_value.sort()
+            assert actual_value == value
