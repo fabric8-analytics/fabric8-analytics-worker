@@ -242,7 +242,7 @@ class MercatorTask(BaseTask):
                 # for maven we download both Jar and POM, we consider POM to be *the*
                 #  source of information and don't want to duplicate info by including
                 #  data from pom included in artifact (assuming it's included)
-                items = [d for d in items if data['ecosystem'].lower() == 'java-pom']
+                items = [d for d in items if d['ecosystem'].lower() == 'java-pom']
 
         result_data['details'] = [self._data_normalizer.handle_data(d, keep_path=keep_path)
                                   for d in items]
