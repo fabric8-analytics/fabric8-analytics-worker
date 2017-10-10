@@ -305,7 +305,7 @@ class GolangReleasesFetcher(ReleasesFetcher):
 
     def fetch_releases(self, package):
         if not package:
-            raise ValueError('package')
+            raise ValueError('package not specified')
 
         package = 'git://{p}.git'.format(p=package)
         output = Git.ls_remote(package, args=['-q'], refs=['HEAD'])
