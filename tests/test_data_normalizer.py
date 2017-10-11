@@ -31,7 +31,7 @@ class TestDataNormalizer(object):
 
     @pytest.mark.parametrize('args, expected', [
         ({'keywords': None},
-         None),
+         []),
         ({'keywords': []},
          []),
         ({'keywords': ['x', 'y']},
