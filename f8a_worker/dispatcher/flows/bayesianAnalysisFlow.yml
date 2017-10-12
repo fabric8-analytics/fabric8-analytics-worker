@@ -162,7 +162,7 @@
             - 'metadata'
           to: 'anitya'
           condition:
-            or:
+            and:
               - not:
                   name: 'argsFieldEqual'
                   args:
