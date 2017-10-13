@@ -1,4 +1,5 @@
 import os
+import botocore
 from f8a_worker.errors import TaskError
 from f8a_worker.process import Archive
 from f8a_worker.utils import tempdir
@@ -8,6 +9,9 @@ from . import AmazonS3
 class S3MavenIndex(AmazonS3):
     _INDEX_DIRNAME = 'central-index'
     _INDEX_ARCHIVE = _INDEX_DIRNAME + '.zip'
+
+    _LAST_OFFSET_OBJECT_KEY = 'last_offset.json'
+    _DEFAULT_LAST_OFFSET = 0
 
     def store_index(self, target_dir):
         """ Zip files in target_dir/central-index dir and store to S3 """
@@ -32,3 +36,28 @@ class S3MavenIndex(AmazonS3):
                 return True
 
         return False
+
+    def get_last_offset(self):
+        """Get used offset pointing to maven index checker.
+
+        Last offset is used in jobs service to schedule new releases of maven packages.
+        We need to store offset that was used for the last time in order to keep track
+        where we left off.
+        """
+        try:
+            content = self.retrieve_dict(self._LAST_OFFSET_OBJECT_KEY)
+        except botocore.exceptions.ClientError as exc:
+            if exc.response['Error']['Code'] == 'NoSuchKey':
+                return self._DEFAULT_LAST_OFFSET
+            else:
+                # Some another error, not no such file
+                raise
+
+        return content.get('last_offset', self._DEFAULT_LAST_OFFSET)
+
+    def set_last_offset(self, offset):
+        """Set used offset pointing to maven index checker."""
+        content = {
+            'last_offset': offset
+        }
+        self.store_dict(content, self._LAST_OFFSET_OBJECT_KEY)
