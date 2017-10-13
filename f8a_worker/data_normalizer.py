@@ -244,7 +244,7 @@ class DataNormalizer(object):
     @staticmethod
     def _split_keywords(keywords, separator=None):
         if keywords is None:
-            return None
+            return []
         if isinstance(keywords, list):
             return keywords
         if separator is None:

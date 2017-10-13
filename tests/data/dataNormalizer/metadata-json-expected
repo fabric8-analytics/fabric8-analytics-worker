@@ -22,7 +22,7 @@
     ],
     "description": "OpenStack Command-line Client",
     "homepage": "http://wiki.openstack.org/OpenStackClient",
-    "declared_licenses": null,
+    "declared_licenses": [],
     "name": "python-openstackclient",
     "version": "1.9.0",
     "keywords": [

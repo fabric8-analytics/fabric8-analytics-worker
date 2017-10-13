@@ -296,7 +296,7 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_BookkeeperTask_v0'
     - name: 'package_keywords_tagging'
-      classname: 'KeywordsTaggingTask'
+      classname: 'PackageKeywordsTaggingTask'
       storage_task_name: 'keywords_tagging'
       import: 'f8a_worker.workers'
       max_retry: 0
