@@ -197,6 +197,7 @@ class MercatorTask(BaseTask):
         if arguments['ecosystem'] == 'go':
             # no Go support in Mercator-go yet, we handle it separately here
             tc = TimedCommand(['gofedlib-cli', '--dependencies-main', '--dependencies-packages',
+                               '--dependencies-test', '-s',
                                mercator_target])
             status, data, err = tc.run(timeout=timeout)
         else:
