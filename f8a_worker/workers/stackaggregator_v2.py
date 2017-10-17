@@ -159,14 +159,14 @@ def aggregate_stack_data(stack, manifest_file, ecosystem, deps, manifest_file_pa
             "user_stack_info": {
                 "ecosystem": ecosystem,
                 "analyzed_dependencies_count": len(dependencies),
-                "analyzed_dependencies": deps,
-                "unknown_dependencies_count": 0,
+                "analyzed_dependencies": dependencies,
+                "unknown_dependencies_count": len(deps) - len(dependencies),
                 "unknown_dependencies": [],
                 "recommendation_ready": True,  # based on the percentage of dependencies analysed
                 "total_licenses": len(stack_distinct_licenses),
                 "distinct_licenses": list(stack_distinct_licenses),
                 "stack_license_conflict": stack_license_conflict,
-                "dependencies": dependencies,
+                "dependencies": deps,
                 "license_analysis": license_analysis
             }
     }
@@ -214,7 +214,7 @@ class StackAggregatorV2Task(BaseTask):
         finished = []
         stack_data = []
         aggregated = self.parent_task_result('GraphAggregatorTask')
-        
+
         for result in aggregated['result']:
             resolved = result['details'][0]['_resolved']
             ecosystem = result['details'][0]['ecosystem']
