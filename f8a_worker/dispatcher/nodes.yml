@@ -481,6 +481,15 @@
         region_name: 'us-east-1'
         encryption: false
         versioned: true
+  
+    - name: 'S3ManualTagging'
+        import: 'f8a_worker.storages'
+        configuration:
+          <<: *configurationS3
+          bucket_name: 'manual-github-tags'
+          region_name: 'us-east-1'
+          encryption: false
+          versioned: true
 
     - name: 'S3TempArtifacts'
       import: 'f8a_worker.storages'
