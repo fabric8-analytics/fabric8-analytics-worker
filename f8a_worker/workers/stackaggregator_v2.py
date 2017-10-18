@@ -308,14 +308,12 @@ def aggregate_stack_data(stack, manifest_file, ecosystem, deps, manifest_file_pa
     license_analysis, dependencies = perform_license_analysis(license_score_list, dependencies)
     stack_license_conflict = len(license_analysis.get('f8a_stack_licenses', [])) == 0
 
-    unknown_dependencies = [{
-        'name': package,
-        'version': version} for package, version in {
-            (dependency['package'], dependency['version']) for dependency in deps
-         }.difference({
-             (dependency['name'], dependency['version']) for dependency in dependencies}
-                      )
-    ]
+    all_dependencies = {(dependency['package'], dependency['version']) for dependency in deps}
+    analyzed_dependencies = {(dependency['name'], dependency['version'])
+                             for dependency in dependencies}
+    unknown_dependencies = list()
+    for name, version in all_dependencies.difference(analyzed_dependencies):
+        unknown_dependencies.append({'name': name, 'version': version})
 
     data = {
             "manifest_name": manifest_file,
