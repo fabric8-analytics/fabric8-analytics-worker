@@ -53,7 +53,7 @@ class MercatorTask(BaseTask):
                         # the first named ini-like [section] ends the runtime requirements
                         break
                     elif line:
-                        requires.append(l)
+                        requires.append(line)
         except Exception as e:
             self.log.warning('Failed to process "{p}": {e}'.format(p=path, e=str(e)))
 
