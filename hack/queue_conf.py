@@ -44,7 +44,7 @@ def set_queue_attributes(queue_names):
         response = client.set_queue_attributes(
             QueueUrl=queue_url,
             Attributes={
-                'MessageRetentionPeriod': int(timedelta(days=14).total_seconds())
+                'MessageRetentionPeriod': str(int(timedelta(days=14).total_seconds()))
             }
         )
 
