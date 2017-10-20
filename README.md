@@ -3,7 +3,6 @@
 Fabric8-Analytics Core library and services
 -------------------------------------------
 
-
 This library provides basic infrastructure for development of services and concrete implemementation of services. 
 
 The following libraries are provided:
