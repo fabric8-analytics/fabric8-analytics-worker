@@ -16,6 +16,14 @@ class S3Data(S3DataBase):
         assert 'version' in arguments
         return "{ecosystem}/{name}/{version}".format(**arguments)
 
+    def construct_task_result_object_key(self, ecosystem, name, version, task_name):
+        """Get object key for task result stored on S3."""
+        return self._construct_task_result_object_key({
+            'ecosystem': ecosystem,
+            'name': name,
+            'version': version
+        }, task_name)
+
     def retrieve_task_result(self, ecosystem, name, version, task_name):
         """Retrieve task result stored on S3 for the given EPV.
 

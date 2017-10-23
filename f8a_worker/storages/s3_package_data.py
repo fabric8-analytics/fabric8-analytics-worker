@@ -15,6 +15,13 @@ class S3PackageData(S3DataBase):
         assert 'name' in arguments
         return "{ecosystem}/{name}".format(**arguments)
 
+    def construct_task_result_object_key(self, ecosystem, name, task_name):
+        """Get object key for task result stored on S3."""
+        return self._construct_task_result_object_key({
+            'ecosystem': ecosystem,
+            'name': name,
+        }, task_name)
+
     def retrieve_task_result(self, ecosystem, name, task_name):
         """Retrieve task result stored on S3 for the given EPV.
 
