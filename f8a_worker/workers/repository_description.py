@@ -48,7 +48,9 @@ class RepositoryDescCollectorTask(BaseTask):
         # Remove content that is automatically added by PyPI - this content is
         # on the bottom and keeps info extracted from setup.py. We already keep
         # this data, so remove duplicity in fact.
-        content.find(class_='nodot').decompose()
+        nodot = content.find(class_='nodot')
+        if nodot:
+            nodot.decompose()
         return content.text
 
     _COLLECTOR_HANDLERS = {
