@@ -148,12 +148,26 @@ class Git(object):
         self.add(self.repo_path)
         self.commit(message=message)
 
-    def archive(self, basename):
+    def archive(self, basename, repo_path=None):
+        """
+        Create an archive; simply calls `git archive`.
+
+        :param basename: str, name of the resulting archive, without file extension (suffix)
+        :param repo_path: str, only add files found under this path to the archive;
+                          default: add all files from the repository (.git/ is always excluded)
+        :return: str, filename
+        """
         suffix = "tar.gz"
         filename = basename + "." + suffix
         with cwd(self.repo_path):
-            TimedCommand.get_command_output(["git", "archive", "--format={}".format(suffix),
-                                            "--output={}".format(filename), "HEAD"])
+            cmd = ["git", "archive",
+                   "--format={}".format(suffix),
+                   "--output={}".format(filename),
+                   "HEAD"]
+            if repo_path:
+                cmd.append(repo_path)
+            TimedCommand.get_command_output(cmd)
+
         return filename
 
     def reset(self, revision, hard=False):
@@ -440,13 +454,20 @@ class IndianaJones(object):
 
     @staticmethod
     def fetch_scm_artifact(name, version, target_dir):
-        git_url = 'git://' + name
-        git = Git.clone(git_url, target_dir, single_branch=True)
-        git.reset(version, hard=True)
-        filename = git.archive(version)
-        artifact_path = os.path.join(target_dir, filename)
-        digest = compute_digest(artifact_path)
-        return digest, artifact_path
+        env = dict(os.environ)
+        env['GOPATH'] = target_dir
+        TimedCommand.get_command_output(['go', 'get', '-d', name],
+                                        timeout=300,
+                                        env=env,
+                                        graceful=False)
+        package_dir = os.path.join(target_dir, 'src', name)
+        with cwd(package_dir):
+            git = Git(package_dir)
+            git.reset(version, hard=True)
+            artifact_filename = git.archive(version, repo_path='.')
+            artifact_path = os.path.join(package_dir, artifact_filename)
+            digest = compute_digest(artifact_path)
+            return digest, artifact_path
 
     @staticmethod
     def fetch_artifact(ecosystem=None,
