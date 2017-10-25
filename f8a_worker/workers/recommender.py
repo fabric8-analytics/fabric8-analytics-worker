@@ -689,7 +689,7 @@ def apply_license_filter(user_stack_components, epv_list_alt, epv_list_com):
                                                 license_score_list_com)
 
     conflict_packages_alt = conflict_packages_com = []
-    if la_output['status'] == 'Successful' and la_output['license_filter'] is not None:
+    if la_output.get('status') == 'Successful' and la_output.get('license_filter') is not None:
         license_filter = la_output.get('license_filter', {})
         conflict_packages_alt = license_filter.get('alternate_packages', {})\
                                               .get('conflict_packages', [])
