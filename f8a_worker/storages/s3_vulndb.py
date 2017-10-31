@@ -45,10 +45,6 @@ class S3VulnDB(AmazonS3):
             else:
                 self.store_file(archive_path, self._DEPCHECK_DB_ARCHIVE)
 
-    def store_depcheck_db_if_not_exists(self, data_dir):
-        if not self.object_exists(self._DEPCHECK_DB_ARCHIVE):
-            self.store_depcheck_db(data_dir)
-
     def retrieve_depcheck_db_if_exists(self, data_dir):
         """ Retrieve zipped CVE DB file as stored on S3 and extract"""
         if self.object_exists(self._DEPCHECK_DB_ARCHIVE):

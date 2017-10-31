@@ -1,19 +1,12 @@
-import os
 from selinon import StoragePool
 from f8a_worker.base import BaseTask
 from f8a_worker.solver import get_ecosystem_solver, OSSIndexDependencyParser
-from f8a_worker.utils import TimedCommand, tempdir
+from f8a_worker.utils import tempdir
 from f8a_worker.workers import CVEcheckerTask
 
 
 class CVEDBSyncTask(BaseTask):
     """ Update vulnerability sources """
-
-    def update_dep_check_db(self, data_dir):
-        depcheck = os.path.join(os.environ['OWASP_DEP_CHECK_PATH'], 'bin', 'dependency-check.sh')
-        self.log.debug('Updating OWASP Dependency-Check CVE DB')
-        TimedCommand.get_command_output([depcheck, '--updateonly', '--data', data_dir],
-                                        timeout=1800)
 
     def components_to_scan(self, previous_sync_timestamp, only_already_scanned):
         """
@@ -81,15 +74,11 @@ class CVEDBSyncTask(BaseTask):
         ignore_modification_time = (arguments.pop('ignore_modification_time', False)
                                     if arguments else False)
 
-        s3 = StoragePool.get_connected_storage('S3VulnDB')
-
-        # Update OWASP Dependency-check DB on S3
-        with tempdir() as temp_data_dir:
-            s3.retrieve_depcheck_db_if_exists(temp_data_dir)
-            self.update_dep_check_db(temp_data_dir)
-            s3.store_depcheck_db(temp_data_dir)
+        CVEcheckerTask.update_depcheck_db_on_s3()
+        CVEcheckerTask.update_victims_cve_db_on_s3()
 
         self.log.debug('Updating sync associated metadata')
+        s3 = StoragePool.get_connected_storage('S3VulnDB')
         previous_sync_timestamp = s3.update_sync_date()
         if ignore_modification_time:
             previous_sync_timestamp = 0

@@ -145,6 +145,19 @@ class CVEcheckerTask(BaseTask):
     def _npm_scan(self, arguments):
         return self._query_ossindex(arguments)
 
+    @staticmethod
+    def update_depcheck_db_on_s3():
+        """Update OWASP Dependency-check DB on S3"""
+        s3 = StoragePool.get_connected_storage('S3VulnDB')
+        depcheck = os.path.join(configuration.OWASP_DEP_CHECK_PATH, 'bin',
+                                'dependency-check.sh')
+        with tempdir() as temp_data_dir:
+            s3.retrieve_depcheck_db_if_exists(temp_data_dir)
+            # give DependencyCheck 25 minutes to download the DB
+            TimedCommand.get_command_output([depcheck, '--updateonly', '--data', temp_data_dir],
+                                            timeout=1500)
+            s3.store_depcheck_db(temp_data_dir)
+
     def _run_owasp_dep_check(self, scan_path, experimental=False):
         def _clean_dep_check_tmp():
             for dcdir in glob(os.path.join(gettempdir(), 'dctemp*')):
@@ -154,12 +167,11 @@ class CVEcheckerTask(BaseTask):
         depcheck = os.path.join(self.configuration.OWASP_DEP_CHECK_PATH, 'bin',
                                 'dependency-check.sh')
         with tempdir() as temp_data_dir:
-            retrieved = s3.retrieve_depcheck_db_if_exists(temp_data_dir)
-            if not retrieved:
+            if not s3.retrieve_depcheck_db_if_exists(temp_data_dir):
                 self.log.debug('No cached OWASP Dependency-Check DB, generating fresh now ...')
-                command = [depcheck, '--updateonly', '--data', temp_data_dir]
-                # give DependencyCheck 30 minutes to download the DB
-                TimedCommand.get_command_output(command, graceful=False, timeout=1800)
+                self.update_depcheck_db_on_s3()
+                s3.retrieve_depcheck_db_if_exists(temp_data_dir)
+
             report_path = os.path.join(temp_data_dir, 'report.xml')
             command = [depcheck,
                        '--noupdate',
@@ -191,9 +203,6 @@ class CVEcheckerTask(BaseTask):
                 return {'summary': ['OWASP Dependency-Check scan failed'],
                         'status': 'error',
                         'details': []}
-            # If the CVEDBSyncTask has never been run before, we just had to create the DB ourselves
-            # Make the life easier for other workers and store it to S3
-            s3.store_depcheck_db_if_not_exists(temp_data_dir)
             _clean_dep_check_tmp()
 
         results = []
