@@ -8,8 +8,10 @@ from shutil import rmtree, copy
 from tempfile import gettempdir
 from selinon import StoragePool
 from f8a_worker.base import BaseTask
+from f8a_worker.defaults import configuration
 from f8a_worker.errors import TaskError
 from f8a_worker.object_cache import ObjectCache
+from f8a_worker.process import Git
 from f8a_worker.schemas import SchemaRef
 from f8a_worker.solver import get_ecosystem_solver, OSSIndexDependencyParser
 from f8a_worker.utils import TimedCommand, tempdir
@@ -62,7 +64,23 @@ class CVEcheckerTask(BaseTask):
             },
             'severity': severity
         }
+        return result
 
+    @staticmethod
+    def _filter_victims_db_entry(entry):
+        if 'cve' not in entry:
+            return None
+        _, vector, severity = CVEcheckerTask.get_cve_impact(entry.get('cve'))
+        result = {
+            'id': 'CVE-' + entry['cve'],
+            'description': entry.get('description'),
+            'references': entry.get('references'),
+            'cvss': {
+                'score': entry.get('cvss_v3') or entry.get('cvss_v2'),
+                'vector': vector
+            },
+            'severity': severity
+        }
         return result
 
     @staticmethod
@@ -222,12 +240,61 @@ class CVEcheckerTask(BaseTask):
                 'status': 'success',
                 'details': results}
 
+    @staticmethod
+    def update_victims_cve_db_on_s3():
+        """Update Victims CVE DB on S3"""
+        repo_url = 'https://github.com/victims/victims-cve-db.git'
+        s3 = StoragePool.get_connected_storage('S3VulnDB')
+        with tempdir() as temp_data_dir:
+            victims_db_dir = os.path.join(temp_data_dir, 'victims-cve-db')
+            Git.clone(repo_url, victims_db_dir, depth="1")
+            s3.store_victims_db(temp_data_dir)
+
+    def _run_victims_cve_db_cli(self, arguments):
+        """Run Victims CVE DB CLI"""
+        s3 = StoragePool.get_connected_storage('S3VulnDB')
+        output = []
+
+        with tempdir() as temp_data_dir:
+            victims_db_dir = os.path.join(temp_data_dir, 'victims-cve-db')
+            if not s3.retrieve_victims_db_if_exists(temp_data_dir):
+                self.log.debug('No Victims CVE DB found on S3, cloning from github')
+                self.update_victims_cve_db_on_s3()
+                s3.retrieve_victims_db_if_exists(temp_data_dir)
+
+            try:
+                cli = os.path.join(victims_db_dir, 'victims-cve-db-cli.py')
+                command = [cli, 'search',
+                           '--ecosystem', 'java',
+                           '--name', arguments['name'],
+                           '--version', arguments['version']]
+                output = TimedCommand.get_command_output(command,
+                                                         graceful=False,
+                                                         is_json=True,
+                                                         timeout=60)  # 1 minute
+            except TaskError as e:
+                self.log.exception(e)
+
+        return output
+
     def _maven_scan(self, arguments):
         """
-        Run OWASP dependency-check
+        Run OWASP dependency-check & Victims CVE DB CLI
         """
         jar_path = ObjectCache.get_from_dict(arguments).get_source_tarball()
-        return self._run_owasp_dep_check(jar_path, experimental=False)
+        results = self._run_owasp_dep_check(jar_path, experimental=False)
+        if results.get('status') != 'success':
+            return results
+        # merge with Victims CVE DB results
+        victims_cve_db_results = self._run_victims_cve_db_cli(arguments)
+        for vulnerability in victims_cve_db_results:
+            vulnerability = self._filter_victims_db_entry(vulnerability)
+            if not vulnerability:
+                continue
+            if vulnerability['id'] not in results['summary']:
+                results['summary'].append(vulnerability['id'])
+                results['details'].append(vulnerability)
+        return results
 
     def _python_scan(self, arguments):
         """
