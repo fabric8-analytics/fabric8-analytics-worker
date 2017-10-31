@@ -106,7 +106,8 @@ class TestCVEchecker(object):
             "references": [
                 "http://foxglovesecurity.com/2015/11/06/what-do-weblogic-websphere-jboss-jenkins-"
                 "opennms-and-your-application-have-in-common-this-vulnerability/"],
-            "severity": ""
+            "severity": "",
+            'attribution': 'https://github.com/victims/victims-cve-db, CC BY-SA 4.0, modified'
         }
         ]
         assert_equal(results.get('details'), expected_details)

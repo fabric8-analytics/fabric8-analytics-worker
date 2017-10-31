@@ -20,7 +20,7 @@ from f8a_worker.utils import TimedCommand, tempdir
 class CVEcheckerTask(BaseTask):
     """ Security issues scanner """
     _analysis_name = 'security_issues'
-    schema_ref = SchemaRef(_analysis_name, '3-0-0')
+    schema_ref = SchemaRef(_analysis_name, '3-0-1')
 
     @staticmethod
     def get_cve_impact(id_):
@@ -79,7 +79,8 @@ class CVEcheckerTask(BaseTask):
                 'score': entry.get('cvss_v3') or entry.get('cvss_v2'),
                 'vector': vector
             },
-            'severity': severity
+            'severity': severity,
+            'attribution': "https://github.com/victims/victims-cve-db, CC BY-SA 4.0, modified"
         }
         return result
 

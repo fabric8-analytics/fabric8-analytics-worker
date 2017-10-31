@@ -6,10 +6,12 @@ from f8a_worker.schemas import JSLSchemaBaseWithRelease, added_in, removed_in
 ROLE_v1_0_0 = "v1-0-0"
 ROLE_v2_0_0 = "v2-0-0"
 ROLE_v3_0_0 = "v3-0-0"
+ROLE_v3_0_1 = "v3-0-1"
 ROLE_TITLE = jsl.roles.Var({
     ROLE_v1_0_0: "CVE checker v1-0-0",
     ROLE_v2_0_0: "CVE checker v2-0-0",
-    ROLE_v3_0_0: "CVE checker v3-0-0"
+    ROLE_v3_0_0: "CVE checker v3-0-0",
+    ROLE_v3_0_1: "CVE checker v3-0-1"
 })
 
 
@@ -61,6 +63,9 @@ class CVEDetail(jsl.Document):
         added_in_v3_0_0.cvss = jsl.DocumentField(CVSS, as_ref=True, required=True)
         added_in_v3_0_0.description = jsl.StringField(required=True)
         added_in_v3_0_0.severity = jsl.StringField(required=True)
+
+    with added_in(ROLE_v3_0_1) as added_in_v3_0_1:
+        added_in_v3_0_1.attribution = jsl.StringField(required=False)
 
     id = jsl.StringField(required=True)
     references = jsl.ArrayField(jsl.UriField(), required=True)
