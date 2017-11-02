@@ -105,6 +105,8 @@ class TestIndianaJones(object):
     @pytest.mark.parametrize('name, version, expected_digest', [
         ('github.com/gorilla/mux', '3f19343c7d9ce75569b952758bd236af94956061',
          '50cc6ce3b58fb23f7f4e5ccf8e24897ba63c628fdc4a52ef4648ecdad7a0a0e9'),
+        ('github.com/flynn/flynn/bootstrap', 'v20171027.0',
+         'f928494dcb92b86e31a4b5f3fba8daa9d54e614e8e4dcbe9f47f22cfe05a3be1')
     ])
     def test_fetch_go_specific(self, tmpdir, go, name, version, expected_digest):
         digest, path = IndianaJones.fetch_artifact(go,
