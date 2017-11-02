@@ -278,13 +278,13 @@ def get_command_output(args, graceful=True, is_json=False, **kwargs):
             else:
                 logger.warning("command %s ended with %s\n%s", args, ex.returncode, ex.output)
         else:
-                logger.warning("command %s ended with %s\n%s", args, ex.returncode, ex.output)
+            logger.warning("command %s ended with %s\n%s", args, ex.returncode, ex.output)
 
         if not graceful:
             logger.error("exception is fatal")
             raise TaskError("Error during running command %s: %r" % (args, ex.output))
         else:
-            logger.error("Ignoring because graceful flag is set")
+            logger.debug("Ignoring because graceful flag is set")
         return []
     else:
         if is_json:
