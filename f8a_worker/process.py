@@ -459,7 +459,7 @@ class IndianaJones(object):
         TimedCommand.get_command_output(['go', 'get', '-d', name],
                                         timeout=300,
                                         env=env,
-                                        graceful=False)
+                                        graceful=True)
         package_dir = os.path.join(target_dir, 'src', name)
         with cwd(package_dir):
             git = Git(package_dir)
