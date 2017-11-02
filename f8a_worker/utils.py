@@ -277,8 +277,6 @@ def get_command_output(args, graceful=True, is_json=False, **kwargs):
                                args, ex.returncode, ex.output)
             else:
                 logger.warning("command %s ended with %s\n%s", args, ex.returncode, ex.output)
-        else:
-            logger.warning("command %s ended with %s\n%s", args, ex.returncode, ex.output)
 
         if not graceful:
             logger.error("exception is fatal")
