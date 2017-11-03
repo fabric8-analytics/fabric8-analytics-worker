@@ -244,7 +244,7 @@ class WorkerResult(Base):
     # `external_request_id` provides mapping of particular `worker_result`
     # to externally defined identifier, when `external_request_id` is provided
     # the value of `analysis_id` should be `NULL`
-    external_request_id = Column(String(64))
+    external_request_id = Column(String(64), index=True)
     analysis_id = Column(ForeignKey(Analysis.id), index=True)
     task_result = Column(JSONB)
     error = Column(Boolean, nullable=False, default=False)
