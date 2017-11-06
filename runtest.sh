@@ -98,6 +98,4 @@ docker run -t \
   --name=${CONTAINER_NAME} \
   ${TEST_IMAGE_NAME} ./hack/exec_tests.sh $@ tests/
 
-docker cp ${CONTAINER_NAME}:/tmp/pylint.log tests/pylint.log
-
 echo "Test suite passed \\o/"
