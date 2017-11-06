@@ -148,12 +148,12 @@ class Git(object):
         self.add(self.repo_path)
         self.commit(message=message)
 
-    def archive(self, basename, repo_path=None):
+    def archive(self, basename, sub_path=None):
         """
         Create an archive; simply calls `git archive`.
 
         :param basename: str, name of the resulting archive, without file extension (suffix)
-        :param repo_path: str, only add files found under this path to the archive;
+        :param sub_path: str, only add files found under this path to the archive;
                           default: add all files from the repository (.git/ is always excluded)
         :return: str, filename
         """
@@ -164,8 +164,8 @@ class Git(object):
                    "--format={}".format(suffix),
                    "--output={}".format(filename),
                    "HEAD"]
-            if repo_path:
-                cmd.append(repo_path)
+            if sub_path:
+                cmd.append(sub_path)
             TimedCommand.get_command_output(cmd)
 
         return filename
@@ -464,7 +464,7 @@ class IndianaJones(object):
         with cwd(package_dir):
             git = Git(package_dir)
             git.reset(version, hard=True)
-            artifact_filename = git.archive(version, repo_path='.')
+            artifact_filename = git.archive(version)
             artifact_path = os.path.join(package_dir, artifact_filename)
             digest = compute_digest(artifact_path)
             return digest, artifact_path
