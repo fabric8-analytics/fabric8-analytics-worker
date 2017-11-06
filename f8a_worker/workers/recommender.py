@@ -1,6 +1,7 @@
 from __future__ import division
 import json
 import traceback
+import datetime
 
 import requests
 import os
@@ -794,7 +795,13 @@ class RecommendationV2Task(BaseTask):
             input_task_for_pgm.append(json_object)
 
             # Call PGM and get the response
+            start = datetime.datetime.now()
             pgm_response = self.call_pgm(input_task_for_pgm)
+            elapsed_seconds = (datetime.datetime.now() - start).total_seconds()
+            msg = 'It took {t} seconds to get response from PGM ' \
+                  'for external request {e}.'.format(t=elapsed_seconds,
+                                                     e=parguments.get('external_request_id'))
+            self.log.info(msg)
 
             # From PGM response process companion and alternate packages and
             # then get Data from Graph
