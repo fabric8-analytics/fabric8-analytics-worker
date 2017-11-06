@@ -24,6 +24,7 @@ build_image() {
 tag_push() {
     local target=$1
     local source=$2
+    echo "docker tag ${source} ${target}"
     docker tag ${source} ${target}
     docker push ${target}
 }
@@ -31,11 +32,11 @@ tag_push() {
 push_image() {
     local image_name
     local image_repository
-    local tag
+    local short_commit
     local push_registry
     image_name=$(make get-image-name)
     image_repository=$(make get-image-repository)
-    tag=$(git rev-parse --short=7 HEAD)
+    short_commit=$(git rev-parse --short=7 HEAD)
     push_registry="push.registry.devshift.net"
 
     # login first
@@ -46,8 +47,15 @@ push_image() {
         exit 1
     fi
 
-    tag_push ${push_registry}/${image_repository}:latest ${image_name}
-    tag_push ${push_registry}/${image_repository}:${tag} ${image_name}
+    if [ -n "${ghprbPullId}" ]; then
+        PR_Id="PR_${ghprbPullId}"
+        tag_push ${push_registry}/${image_repository}:${PR_Id} ${image_name}
+        tag_push ${push_registry}/${image_repository}:${short_commit} ${image_name}
+    else
+        tag_push ${push_registry}/${image_repository}:latest ${image_name}
+        tag_push ${push_registry}/${image_repository}:${short_commit} ${image_name}
+    fi
+
     echo 'CICO: Image pushed, ready to update deployed app'
 }
 
