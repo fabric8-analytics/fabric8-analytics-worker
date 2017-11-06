@@ -271,12 +271,8 @@ def get_command_output(args, graceful=True, is_json=False, **kwargs):
         #  (while not mixing it with stdout that is returned if the subprocess succeeds)
         if isinstance(ex, TimeoutExpired):
             logger.warning("command %s timed out:\n%s", args, ex.output)
-        elif isinstance(ex, CalledProcessError):
-            if ex.returncode == 1 and "no Go files in" in ex.output:  # skip this error
-                logger.warning("No Golang source in base path. Command %s ended with %s\n%s",
-                               args, ex.returncode, ex.output)
-            else:
-                logger.warning("command %s ended with %s\n%s", args, ex.returncode, ex.output)
+        else:
+            logger.warning("command %s ended with %s\n%s", args, ex.returncode, ex.output)
 
         if not graceful:
             logger.error("exception is fatal")
