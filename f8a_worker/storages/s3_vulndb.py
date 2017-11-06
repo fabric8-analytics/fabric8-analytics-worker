@@ -10,8 +10,7 @@ from . import AmazonS3
 class S3VulnDB(AmazonS3):
     DEPCHECK_DB_FILENAME = 'dc.h2.db'
     DEPCHECK_DB_ARCHIVE = DEPCHECK_DB_FILENAME + '.zip'
-    VICTIMS_DB_DIR = 'victims-cve-db'
-    VICTIMS_DB_ARCHIVE = VICTIMS_DB_DIR + '.zip'
+    VICTIMS_DB_ARCHIVE = 'victims-cve-db.zip'
 
     METAINFO_OBJECT_KEY = 'meta.json'
 
@@ -55,24 +54,20 @@ class S3VulnDB(AmazonS3):
                 return True
         return False
 
-    def store_victims_db(self, data_dir):
-        """ Zip Victims CVE DB and store to S3 """
-        with tempdir() as archive_dir:
-            archive_path = os.path.join(archive_dir, self.VICTIMS_DB_ARCHIVE)
-            with cwd(data_dir):
-                try:
-                    Archive.zip_file(self.VICTIMS_DB_DIR, archive_path)
-                except TaskError:
-                    pass
-                else:
-                    self.store_file(archive_path, self.VICTIMS_DB_ARCHIVE)
+    def store_victims_db(self, victims_db_dir):
+        """ Zip victims_db_dir/* and store to S3 as VICTIMS_DB_ARCHIVE"""
+        with tempdir() as temp_archive_dir:
+            temp_archive_path = os.path.join(temp_archive_dir, self.VICTIMS_DB_ARCHIVE)
+            with cwd(victims_db_dir):
+                Archive.zip_file('.', temp_archive_path)
+                self.store_file(temp_archive_path, self.VICTIMS_DB_ARCHIVE)
 
-    def retrieve_victims_db_if_exists(self, data_dir):
-        """ Retrieve zipped Victims CVE DB file as stored on S3 and extract"""
+    def retrieve_victims_db_if_exists(self, victims_db_dir):
+        """ Retrieve VICTIMS_DB_ARCHIVE from S3 and extract into victims_db_dir """
         if self.object_exists(self.VICTIMS_DB_ARCHIVE):
-            with tempdir() as archive_dir:
-                archive_path = os.path.join(archive_dir, self.VICTIMS_DB_ARCHIVE)
-                self.retrieve_file(self.VICTIMS_DB_ARCHIVE, archive_path)
-                Archive.extract_zip(archive_path, data_dir)
+            with tempdir() as temp_archive_dir:
+                temp_archive_path = os.path.join(temp_archive_dir, self.VICTIMS_DB_ARCHIVE)
+                self.retrieve_file(self.VICTIMS_DB_ARCHIVE, temp_archive_path)
+                Archive.extract_zip(temp_archive_path, victims_db_dir)
                 return True
         return False

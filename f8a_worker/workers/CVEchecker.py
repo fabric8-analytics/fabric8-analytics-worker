@@ -255,25 +255,23 @@ class CVEcheckerTask(BaseTask):
         """Update Victims CVE DB on S3"""
         repo_url = 'https://github.com/victims/victims-cve-db.git'
         s3 = StoragePool.get_connected_storage('S3VulnDB')
-        with tempdir() as temp_data_dir:
-            victims_db_dir = os.path.join(temp_data_dir, s3.VICTIMS_DB_DIR)
-            Git.clone(repo_url, victims_db_dir, depth="1")
-            s3.store_victims_db(temp_data_dir)
+        with tempdir() as temp_dir:
+            Git.clone(repo_url, temp_dir, depth="1")
+            s3.store_victims_db(temp_dir)
 
     def _run_victims_cve_db_cli(self, arguments):
         """Run Victims CVE DB CLI"""
         s3 = StoragePool.get_connected_storage('S3VulnDB')
         output = []
 
-        with tempdir() as temp_data_dir:
-            victims_db_dir = os.path.join(temp_data_dir, s3.VICTIMS_DB_DIR)
-            if not s3.retrieve_victims_db_if_exists(temp_data_dir):
+        with tempdir() as temp_victims_db_dir:
+            if not s3.retrieve_victims_db_if_exists(temp_victims_db_dir):
                 self.log.debug('No Victims CVE DB found on S3, cloning from github')
                 self.update_victims_cve_db_on_s3()
-                s3.retrieve_victims_db_if_exists(temp_data_dir)
+                s3.retrieve_victims_db_if_exists(temp_victims_db_dir)
 
             try:
-                cli = os.path.join(victims_db_dir, 'victims-cve-db-cli.py')
+                cli = os.path.join(temp_victims_db_dir, 'victims-cve-db-cli.py')
                 command = [cli, 'search',
                            '--ecosystem', 'java',
                            '--name', arguments['name'],
