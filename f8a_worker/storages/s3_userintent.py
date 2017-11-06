@@ -22,4 +22,3 @@ class S3UserIntent(AmazonS3):
         file_name = ecosystem + '/manual_tag_list.json'
         file_data = self.retrieve_dict(file_name)
         return file_data
-
