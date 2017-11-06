@@ -307,8 +307,10 @@ class GolangReleasesFetcher(ReleasesFetcher):
         if not package:
             raise ValueError('package not specified')
 
-        package = 'git://{p}.git'.format(p=package)
-        output = Git.ls_remote(package, args=['-q'], refs=['HEAD'])
+        gh_host, gh_org, gh_proj = package.split("/")[:3]
+        repo_url = 'git://{gh_host}/{gh_org}/{gh_proj}.git'.format(
+            gh_host=gh_host, gh_org=gh_org, gh_proj=gh_proj)
+        output = Git.ls_remote(repo_url, args=['-q'], refs=['HEAD'])
         version, ref = output[0].split()
 
         if not version:
