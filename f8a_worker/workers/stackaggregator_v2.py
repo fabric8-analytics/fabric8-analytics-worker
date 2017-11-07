@@ -48,9 +48,9 @@ def extract_component_details(component):
             }},
         "stargazers_count": component.get("package", {}).get("gh_stargazers", [-1])[0],
         "forks_count": component.get("package", {}).get("gh_forks", [-1])[0],
-        "watchers": 1673,
-        "contributors": 132,
-        "size": "4MB"
+        "open_issues_count": component.get("package", {}).get("gh_open_issues_count", [-1])[0],
+        "contributors": component.get("package", {}).get("gh_contributors_count", [-1])[0],
+        "size": "N/A"
     }
     used_by = component.get("package", {}).get("libio_usedby", [])
     used_by_list = []
