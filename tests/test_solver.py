@@ -252,8 +252,8 @@ class TestFetcher(object):
     @pytest.mark.parametrize('package, expected', [
         ('github.com/msrb/mux',
          {'bdd5a5a1b0b489d297b73eb62b5f6328df198bfc'}),
-        ('github.com/flynn/flynn/bootstrap',
-         {'e0d6f32bfccc50bf65c8a628caed2a2aadb79255'})
+        ('github.com/jpopelka/flynn/bootstrap',
+         {'2811174335f819551ec3de4f21ce75aa3e97be69'})
     ])
     def test_golang_fetcher(self, go, package, expected):
         f = GolangReleasesFetcher(go)
