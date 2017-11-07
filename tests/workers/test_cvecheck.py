@@ -59,7 +59,8 @@ class TestCVEchecker(object):
                     os.path.dirname(
                      os.path.abspath(__file__)), '..', 'data', 'maven',
                                                  'commons-collections-3.2.1.jar')
-        args = {'ecosystem': 'maven', 'name': 'commons-collections', 'version': '3.2.1'}
+        args = {'ecosystem': 'maven', 'name': 'commons-collections:commons-collections',
+                'version': '3.2.1'}
         flexmock(EPVCache).should_receive('get_source_tarball').and_return(jar_path)
         task = CVEcheckerTask.create_test_instance(task_name='source_licenses')
         results = task.execute(arguments=args)
@@ -91,7 +92,24 @@ class TestCVEchecker(object):
                 "http://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/"
                 "cisco-sa-20151209-java-deserialization"
             ],
-            "severity": "High"}]
+            "severity": "High"}, {
+            "cvss": {
+                "score": 7.5,
+                "vector": ""
+            },
+            "description": "It was found that the Apache commons-collections library permitted "
+                           "code execution when deserializing objects involving a specially "
+                           "constructed chain of classes. A remote attacker could use this flaw to "
+                           "execute arbitrary code with the permissions of the application using "
+                           "the commons-collections library.\n",
+            "id": "CVE-2015-7501",
+            "references": [
+                "http://foxglovesecurity.com/2015/11/06/what-do-weblogic-websphere-jboss-jenkins-"
+                "opennms-and-your-application-have-in-common-this-vulnerability/"],
+            "severity": "",
+            'attribution': 'https://github.com/victims/victims-cve-db, CC BY-SA 4.0, modified'
+        }
+        ]
         assert_equal(results.get('details'), expected_details)
 
     def test_python_mako(self):
