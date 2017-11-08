@@ -48,10 +48,12 @@ push_image() {
     fi
 
     if [ -n "${ghprbPullId}" ]; then
-        PR_Id="PR_${ghprbPullId}"
-        tag_push ${push_registry}/${image_repository}:${PR_Id} ${image_name}
-        tag_push ${push_registry}/${image_repository}:${short_commit} ${image_name}
+        # PR build
+        pr_id="SNAPSHOT-PR-${ghprbPullId}"
+        tag_push ${push_registry}/${image_repository}:${pr_id} ${image_name}
+        tag_push ${push_registry}/${image_repository}:${pr_id}-${short_commit} ${image_name}
     else
+        # master branch build
         tag_push ${push_registry}/${image_repository}:latest ${image_name}
         tag_push ${push_registry}/${image_repository}:${short_commit} ${image_name}
     fi
