@@ -85,6 +85,7 @@ class TestCVEchecker(object):
             "id": "CVE-2015-6420",
             "references": [
                 "http://www.securityfocus.com/bid/78872",
+                "https://www.tenable.com/security/research/tra-2017-14",
                 "https://h20566.www2.hpe.com/portal/site/hpsc/public/kb/"
                 "docDisplay?docId=emr_na-c05376917",
                 "https://h20566.www2.hpe.com/portal/site/hpsc/public/kb/"
