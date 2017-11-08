@@ -24,7 +24,6 @@ build_image() {
 tag_push() {
     local target=$1
     local source=$2
-    echo "docker tag ${source} ${target}"
     docker tag ${source} ${target}
     docker push ${target}
 }
