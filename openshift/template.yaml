@@ -151,7 +151,7 @@ objects:
     test: false
     triggers:
     - type: ConfigChange
-    replicas: ${REPLICAS}
+    replicas: ${{REPLICAS}}
 
 
 parameters:
