@@ -76,3 +76,26 @@ about mismatched locations in compiled files. Those can be deleted using:
 ```shell
 (f8a-worker) $ sudo find -name *.pyc -delete
 ```
+
+## Some tips for running tests locally
+
+
+**Reusing an existing virtualenv for multiple test runs**
+
+When a virtualenv already is setup you can run tests like so:
+
+```
+source /path/to/python_env/bin/activate
+NOVENV=1 ./runtest.sh
+```
+
+This will not create a virtualenv every time.
+
+
+**Forcing image builds while testing**
+
+When some changes are made to code that will change the docker image, it is good to rebuild images locally for testing. This can re-build can be forced like so:
+
+```
+REBUILD=1 ./runtest.sh 
+```
