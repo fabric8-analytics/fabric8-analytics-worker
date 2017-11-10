@@ -507,3 +507,4 @@
           import: 'f8a_worker.dispatcher.trace'
           name: 'trace_func'
     predicates_module: 'f8a_worker.dispatcher.predicates'
+    migration_dir: '/usr/lib/python3.4/site-packages/f8a_worker/dispatcher/migration_dir'

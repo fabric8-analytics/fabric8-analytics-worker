@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 from setuptools import setup, find_packages
 
 
@@ -16,6 +17,11 @@ setup(
         'hack/worker-liveness.sh',
         'hack/worker-readiness.sh'
     ],
+    package_data={
+        'f8a_worker': [
+            os.path.join('dispatcher', 'migration_dir', '*.json')
+        ]
+    },
     packages=find_packages(exclude=['tests', 'tests.*']),
     include_package_data=True,
     install_requires=get_requirements(),
