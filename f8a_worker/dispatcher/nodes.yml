@@ -503,6 +503,7 @@
 
   global:
     trace:
-      import: 'f8a_worker.dispatcher.trace'
-      function: 'trace_func'
+      - function:
+          import: 'f8a_worker.dispatcher.trace'
+          name: 'trace_func'
     predicates_module: 'f8a_worker.dispatcher.predicates'
