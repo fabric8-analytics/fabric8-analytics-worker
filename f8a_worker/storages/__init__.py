@@ -2,6 +2,7 @@
 
 from .postgres import BayesianPostgres
 from .package_postgres import PackagePostgres
+from .stack_postgres import StackPostgres
 from .s3 import AmazonS3
 from .s3_artifacts import S3Artifacts
 from .s3_temp_artifacts import S3TempArtifacts

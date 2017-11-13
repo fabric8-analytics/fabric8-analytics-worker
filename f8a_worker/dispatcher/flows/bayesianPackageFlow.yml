@@ -41,8 +41,6 @@
         - from: 'bayesianPackageTaggingFlow'
           to: 'PackageFinalizeTask'
         - from: 'PackageFinalizeTask'
-          to: 'PackageResultCollector'
-        - from: 'PackageResultCollector'
           to: 'PackageGraphImporterTask'
         - from: 'PackageFinalizeTaskError'
           to: 'PackageGraphImporterTask'
