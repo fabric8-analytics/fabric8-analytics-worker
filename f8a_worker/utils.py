@@ -5,6 +5,7 @@ import datetime
 import tempfile
 import shutil
 import signal
+import time
 from os import path as os_path, walk, getcwd, chdir, environ as os_environ, killpg, getpgid
 from threading import Thread
 from subprocess import Popen, PIPE, check_output, CalledProcessError, TimeoutExpired
@@ -690,3 +691,28 @@ def get_user_email(user_profile):
         return user_profile.get('email', default_email)
     else:
         return default_email
+
+
+def get_response(url, headers=None, sleep_time=2, retry_count=10):
+    """
+    Simple wrapper for requests which tries to get response
+    :param url: URL where to do the request
+    :param headers: additional headers for request
+    :param sleep_time: sleep time between retries
+    :param retry_count: number of retries
+    :return: content of response's json
+    """
+    try:
+        for _ in range(retry_count):
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            response = response.json()
+            if response:
+                return response
+            time.sleep(sleep_time)
+        else:
+            raise TaskError("Number of retries exceeded")
+    except requests.exceptions.HTTPError as err:
+        message = "Failed to get results from {url} with {err}".format(url=url, err=err)
+        logger.error(message)
+        raise TaskError(message)

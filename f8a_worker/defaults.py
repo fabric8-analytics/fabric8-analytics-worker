@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
+import logging
+from urllib.parse import quote, urljoin
+
+import random
 from os import environ
-from urllib.parse import quote
+
+from f8a_worker.errors import F8AConfigurationException
+
+logger = logging.getLogger(__name__)
 
 
 class F8AConfiguration(object):
@@ -48,6 +55,7 @@ class F8AConfiguration(object):
     GIT_USER_EMAIL = environ.get('GIT_USER_EMAIL', 'f8a@f8a')
 
     GITHUB_TOKEN = environ.get('GITHUB_TOKEN', 'not-set')
+    GITHUB_API = "https://api.github.com/"
 
     # URL to npmjs couch DB, which returns stream of changes happening in npm registry
     NPMJS_CHANGES_URL = environ.get('NPMJS_CHANGES_URL',
@@ -110,6 +118,41 @@ class F8AConfiguration(object):
         :return: True if we are running locally
         """
         return environ.get('F8A_UNCLOUDED_MODE', '0').lower() in ('1', 'true', 'yes')
+
+    @classmethod
+    def _rate_limit_exceeded(cls, headers):
+        # avoid cyclic import
+        from f8a_worker.utils import get_response
+        response = get_response(urljoin(cls.GITHUB_API, "rate_limit"), headers=headers)
+        remaining_attempts = response.get('rate', {}).get('remaining', 0)
+        return remaining_attempts == 0
+
+    @classmethod
+    def _decide_token_usage(cls):
+        if cls.GITHUB_TOKEN == 'not-set':
+            logger.warning("No Github API token provided (GITHUB_TOKEN env variable), "
+                           "requests will be unauthenticated i.e. limited to 60 per hour")
+            return None
+        else:
+            # there might be more comma-separated tokens, randomly select one
+            return random.choice(cls.GITHUB_TOKEN.split(',')).strip()
+
+    @classmethod
+    def select_random_github_token(cls):
+        """
+        Select and test either no token or randomly chosen
+        :return: token and headers dictionary
+        """
+        token = cls._decide_token_usage()
+        headers = {}
+        if token:
+            headers.update({'Authorization': 'token {token}'.format(token=token)})
+        if cls._rate_limit_exceeded(headers):
+            logger.error("No Github API token provided (GITHUB_TOKEN env variable), "
+                         "and rate limit exceeded! "
+                         "Ending now to not wait endlessly")
+            raise F8AConfigurationException("Limit for unauthorized GitHub access exceeded.")
+        return token, headers
 
 
 configuration = F8AConfiguration()
