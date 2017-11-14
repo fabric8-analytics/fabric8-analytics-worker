@@ -36,6 +36,7 @@ class TestBayesianPostgres(object):
         self.s.commit()
 
         self.bp = BayesianPostgres(connection_string=configuration.POSTGRES_CONNECTION)
+        self.bp.connect()
 
     def test_store(self):
         task_name = 'foo'
@@ -147,6 +148,7 @@ class TestPackagePostgres(object):
         self.s.commit()
 
         self.pp = PackagePostgres(connection_string=configuration.POSTGRES_CONNECTION)
+        self.pp.connect()
 
     def test_get_latest_task_entry(self):
         tn = 'asd'
@@ -186,7 +188,8 @@ class TestStackPostgres(object):
         self.s.add(self.a2)
         self.s.commit()
 
-        self.bp = StackPostgres(connection_string=configuration.POSTGRES_CONNECTION)
+        self.sp = StackPostgres(connection_string=configuration.POSTGRES_CONNECTION)
+        self.sp.connect()
 
     def test_retrieve_normal(self):
         wid = 'x'
@@ -196,19 +199,19 @@ class TestStackPostgres(object):
         self.s.add(wr)
         self.s.commit()
 
-        assert self.bp.retrieve('whatever', w, wid) == tr
+        assert self.sp.retrieve('whatever', w, wid) == tr
 
     def test_store_normal(self):
         tn = 'asd'
         tid = 'sdf'
         res = {'some': 'thing'}
-        self.bp.store(node_args={}, flow_name='blah', task_name=tn, task_id=tid, result=res)
-        assert self.bp.retrieve('doesntmatter', tn, tid) == res
+        self.sp.store(node_args={}, flow_name='blah', task_name=tn, task_id=tid, result=res)
+        assert self.sp.retrieve('doesntmatter', tn, tid) == res
 
     def test_store_already_exists(self):
         tn = 'asd'
         tid = 'sdf'
         res = {'some': 'thing'}
-        self.bp.store(node_args={}, flow_name='blah', task_name=tn, task_id=tid, result=res)
+        self.sp.store(node_args={}, flow_name='blah', task_name=tn, task_id=tid, result=res)
         with pytest.raises(IntegrityError):
-            self.bp.store(node_args={}, flow_name='blah', task_name=tn, task_id=tid, result=res)
+            self.sp.store(node_args={}, flow_name='blah', task_name=tn, task_id=tid, result=res)
