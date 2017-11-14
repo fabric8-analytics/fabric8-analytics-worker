@@ -59,19 +59,10 @@
       failures:
         - nodes: 'bayesianPackageAnalysisFlow'
           fallback: 'bayesianPackageTaggingFlow'
+          condition:
+            <<: *shouldSchedulePackageTaggingCheck
         - nodes: 'bayesianPackageTaggingFlow'
           fallback: 'PackageFinalizeTaskError'
-          # TODO: uncomment once https://github.com/selinon/selinon/pull/29 gets merged
-          #condition:
-          #  or:
-          #    - name: 'argsFieldEqual'
-          #      args:
-          #        key: 'ecosystem'
-          #        value: 'pypi'
-          #    - name: 'argsFieldEqual'
-          #      args:
-          #        key: 'ecosystem'
-          #        value: 'maven'
 
     - <<: *bayesianPackageFlow
       name: 'bayesianApiPackageFlow'
