@@ -44,6 +44,8 @@
           to: 'PackageResultCollector'
         - from: 'PackageResultCollector'
           to: 'PackageGraphImporterTask'
+        - from: 'PackageFinalizeTaskError'
+          to: 'PackageGraphImporterTask'
         - from: 'InitPackageFlow'
           to: 'PackageGraphImporterTask'
           condition:
@@ -57,6 +59,8 @@
       failures:
         - nodes: 'bayesianPackageAnalysisFlow'
           fallback: 'bayesianPackageTaggingFlow'
+        - nodes: 'bayesianPackageTaggingFlow'
+          fallback: 'PackageFinalizeTaskError'
           # TODO: uncomment once https://github.com/selinon/selinon/pull/29 gets merged
           #condition:
           #  or:
