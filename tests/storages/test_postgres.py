@@ -8,13 +8,17 @@ from sqlalchemy.exc import IntegrityError
 from f8a_worker.defaults import configuration
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.models import (Ecosystem, Package, Version, Analysis, WorkerResult,
-                               create_db_scoped_session)
-from f8a_worker.storages.postgres import BayesianPostgres
+                               create_db_scoped_session, PackageAnalysis)
+from f8a_worker.storages import BayesianPostgres
+from f8a_worker.storages import PackagePostgres
+from f8a_worker.storages import StackPostgres
+
 
 from ..conftest import rdb
 
 
-class TestBayesianPostgres:
+@pytest.mark.usefixtures("dispatcher_setup")
+class TestBayesianPostgres(object):
     def setup_method(self, method):
         rdb()
         self.s = create_db_scoped_session()
@@ -33,6 +37,157 @@ class TestBayesianPostgres:
 
         self.bp = BayesianPostgres(connection_string=configuration.POSTGRES_CONNECTION)
 
+    def test_store(self):
+        task_name = 'foo'
+        arguments = {
+            'ecosystem': self.en,
+            'name': self.pn,
+            'version': self.vi
+        }
+        res = {'real': 'result'}
+        version_id = 's3_version_id'
+        worker_id = 'id-1234'
+
+        s3_storage = flexmock()
+        s3_storage.\
+            should_receive('store_task_result').\
+            with_args(arguments, task_name, res).\
+            and_return(version_id)
+
+        flexmock(selinon.StoragePool).\
+            should_receive('get_connected_storage').\
+            with_args('S3Data').\
+            and_return(s3_storage)
+
+        assert self.bp.store(arguments, 'flow_name', task_name, 'id-1234', res) == version_id
+        assert self.bp.get_worker_id_count(worker_id) == 1
+
+    def test_get_latest_task_result(self):
+        tn = 'asd'
+        tid1 = 'tid-1'
+        tid2 = 'tid-2'
+        res = {'some': 'thing'}
+        version_id1 = 's3_version_id_1'
+        version_id2 = 's3_version_id_2'
+        arguments = {
+            'ecosystem': self.en,
+            'name': self.pn,
+            'version': self.vi,
+            'document_id': self.a.id
+        }
+
+        s3_storage = flexmock()
+        s3_storage.\
+            should_receive('store_task_result').\
+            with_args(arguments, tn, res).\
+            and_return(version_id1).and_return(version_id2)
+
+        flexmock(selinon.StoragePool).\
+            should_receive('get_connected_storage').\
+            with_args('S3Data').\
+            and_return(s3_storage)
+
+        assert self.bp.store(arguments,
+                             flow_name='blah',
+                             task_name=tn,
+                             task_id=tid1,
+                             result=res) == version_id1
+        res['later'] = 'aligator'
+        assert self.bp.store(arguments,
+                             flow_name='blah',
+                             task_name=tn,
+                             task_id=tid2,
+                             result=res) == version_id2
+
+        s3_storage.\
+            should_receive('retrieve_task_result').\
+            with_args(arguments['ecosystem'],
+                      arguments['name'],
+                      arguments['version'], tn,
+                      object_version_id=version_id2).\
+            and_return(res)
+
+        assert self.bp.get_latest_task_result(arguments['ecosystem'],
+                                              arguments['name'],
+                                              arguments['version'],
+                                              tn) == res
+
+    def test_store_already_exists(self):
+        tn = 'asd'
+        tid = 'sdf'
+        res = {'some': 'thing'}
+        arguments = {
+            'ecosystem': self.en,
+            'name': self.pn,
+            'version': self.vi,
+            'document_id': self.a.id
+        }
+
+        self.bp.store(arguments, flow_name='blah', task_name=tn, task_id=tid, result=res)
+        with pytest.raises(IntegrityError):
+            self.bp.store(arguments, flow_name='blah', task_name=tn, task_id=tid, result=res)
+
+
+@pytest.mark.usefixtures("dispatcher_setup")
+class TestPackagePostgres(object):
+    def setup_method(self, method):
+        rdb()
+        self.s = create_db_scoped_session()
+        self.en = 'foo'
+        self.pn = 'bar'
+        self.e = Ecosystem(name=self.en, backend=EcosystemBackend.maven)
+        self.p = Package(ecosystem=self.e, name=self.pn)
+        self.a = PackageAnalysis(package=self.p, finished_at=datetime.datetime.now())
+        self.a2 = PackageAnalysis(
+            package=self.p,
+            finished_at=datetime.datetime.now() + datetime.timedelta(seconds=10)
+        )
+        self.s.add(self.a)
+        self.s.add(self.a2)
+        self.s.commit()
+
+        self.pp = PackagePostgres(connection_string=configuration.POSTGRES_CONNECTION)
+
+    def test_get_latest_task_entry(self):
+        tn = 'asd'
+        tid1 = 'tid_1'
+        tid2 = 'tid_2'
+        res = {'some': 'thing'}
+        arguments = {
+            'ecosystem': self.en,
+            'name': self.pn,
+            'document_id': self.a.id
+        }
+        self.pp.store(arguments, flow_name='blah', task_name=tn, task_id=tid1, result=res)
+        res['later'] = 'aligator'
+        self.pp.store(arguments, flow_name='blah', task_name=tn, task_id=tid2, result=res)
+        assert self.pp.get_latest_task_entry(self.en, self.pn, tn).worker_id == tid2
+        assert self.pp.get_latest_task_entry(self.en, self.pn, tn).worker == tn
+
+    def test_get_latest_task_result_no_results(self):
+        assert self.pp.get_latest_task_result(self.en, self.pn, 'asd') is None
+
+
+@pytest.mark.usefixtures("dispatcher_setup")
+class TestStackPostgres(object):
+    def setup_method(self, method):
+        rdb()
+        self.s = create_db_scoped_session()
+        self.en = 'foo'
+        self.pn = 'bar'
+        self.vi = '1.1.1'
+        self.e = Ecosystem(name=self.en, backend=EcosystemBackend.maven)
+        self.p = Package(ecosystem=self.e, name=self.pn)
+        self.v = Version(package=self.p, identifier=self.vi)
+        self.a = Analysis(version=self.v, finished_at=datetime.datetime.now())
+        self.a2 = Analysis(version=self.v,
+                           finished_at=datetime.datetime.now() + datetime.timedelta(seconds=10))
+        self.s.add(self.a)
+        self.s.add(self.a2)
+        self.s.commit()
+
+        self.bp = StackPostgres(connection_string=configuration.POSTGRES_CONNECTION)
+
     def test_retrieve_normal(self):
         wid = 'x'
         w = 'y'
@@ -42,28 +197,6 @@ class TestBayesianPostgres:
         self.s.commit()
 
         assert self.bp.retrieve('whatever', w, wid) == tr
-
-    def test_retrieve_s3(self):
-        wid = 'x'
-        w = 'y'
-        tr = {'version_id': 123}
-        res = {'real': 'result'}
-        wr = WorkerResult(analysis=self.a, worker_id=wid, worker=w, task_result=tr)
-        self.s.add(wr)
-        self.s.commit()
-
-        s3_storage = flexmock()
-        s3_storage.\
-            should_receive('retrieve_task_result').\
-            with_args(self.en, self.pn, self.vi, w).\
-            and_return(res)
-
-        flexmock(selinon.StoragePool).\
-            should_receive('get_connected_storage').\
-            with_args('S3Data').\
-            and_return(s3_storage)
-
-        assert self.bp.retrieve('blahblah', w, wid) == res
 
     def test_store_normal(self):
         tn = 'asd'
@@ -79,31 +212,3 @@ class TestBayesianPostgres:
         self.bp.store(node_args={}, flow_name='blah', task_name=tn, task_id=tid, result=res)
         with pytest.raises(IntegrityError):
             self.bp.store(node_args={}, flow_name='blah', task_name=tn, task_id=tid, result=res)
-
-    def test_get_latest_task_result(self):
-        tn = 'asd'
-        tid = 'sdf'
-        res = {'some': 'thing'}
-        self.bp.store(node_args={'document_id': self.a.id},
-                      flow_name='blah', task_name=tn, task_id=tid, result=res)
-        res['later'] = 'aligator'
-        self.bp.store(node_args={'document_id': self.a2.id},
-                      flow_name='blah', task_name=tn, task_id=tid + '2', result=res)
-        assert self.bp.get_latest_task_result(self.en, self.pn, self.vi, tn) == res
-
-    # TODO: This needs to be run against PackagePostgres, not BayesianPostgres
-    # def test_get_latest_task_entry(self):
-    #     tn = 'asd'
-    #     tid = 'sdf'
-    #     res = {'some': 'thing'}
-    #     self.bp.store(node_args={'document_id': self.a.id},
-    #                   flow_name='blah', task_name=tn, task_id=tid, result=res)
-    #     res['later'] = 'aligator'
-    #     self.bp.store(node_args={'document_id': self.a2.id},
-    #                   flow_name='blah', task_name=tn, task_id=tid + '2', result=res)
-    #     assert self.bp.get_latest_task_entry(self.en, self.pn, tn).task_result == res
-    #     assert self.bp.get_latest_task_entry(self.en, self.pn, tn).worker_id == tid
-    #     assert self.bp.get_latest_task_entry(self.en, self.pn, tn).worker == tn
-
-    def test_get_latest_task_result_no_results(self):
-        assert self.bp.get_latest_task_result(self.en, self.pn, self.vi, 'asd') is None
