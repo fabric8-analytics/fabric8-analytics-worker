@@ -5,7 +5,6 @@ selinonlib
 selinon
 sqlalchemy
 psycopg2
-pygithub
 lxml
 beautifulsoup4
 # We install a patched version from dnf as we cannot use requests from PyPI - we need own certificates
