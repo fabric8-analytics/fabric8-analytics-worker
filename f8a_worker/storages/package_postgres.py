@@ -26,7 +26,7 @@ class PackagePostgres(PostgresBase):
             self._s3 = StoragePool.get_connected_storage('S3PackageData')
         return self._s3
 
-    def _create_result_entry(self, node_args, flow_name, task_name, task_id, error=None):
+    def _create_result_entry(self, node_args, flow_name, task_name, task_id, error=False):
         return PackageWorkerResult(
             worker=task_name,
             worker_id=task_id,
@@ -116,7 +116,7 @@ class PackagePostgres(PostgresBase):
         :param task_name: name of task for which the latest result should be obtained
         :param error: if False, avoid returning entries that track errors
         """
-        # TODO: we should store date timestamps directly in PackageWorkerResult
+        # TODO: we should store t date timestamps directly in PackageWorkerResult
         try:
             entry = PostgresBase.session.query(PackageWorkerResult).\
                 join(PackageAnalysis).join(Package).join(Ecosystem).\
@@ -185,7 +185,6 @@ class PackagePostgres(PostgresBase):
         :param package: name of the package
         :param task_name: name of task for which the latest result should be obtained
         :param error: if False, avoid returning entries that track errors
-        :param real: if False, do not check results that are stored on S3 but
         rather return Postgres entry
         """
         # TODO: we should store date timestamps directly in PackageWorkerResult
