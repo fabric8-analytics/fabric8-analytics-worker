@@ -117,6 +117,9 @@ class PackagePostgres(PostgresBase):
         :param error: if False, avoid returning entries that track errors
         """
         # TODO: we should store t date timestamps directly in PackageWorkerResult
+        if not self.is_connected():
+            self.connect()
+
         try:
             entry = PostgresBase.session.query(PackageWorkerResult).\
                 join(PackageAnalysis).join(Package).join(Ecosystem).\
@@ -124,7 +127,7 @@ class PackagePostgres(PostgresBase):
                 filter(Package.name == package).\
                 filter(Ecosystem.name == ecosystem).\
                 filter(PackageWorkerResult.error.is_(error)).\
-                filter(PackageWorkerResult.s3_version_id).isnot(None).\
+                filter(PackageWorkerResult.s3_version_id.isnot(None)).\
                 order_by(PackageAnalysis.finished_at.desc()).first()
         except SQLAlchemyError:
             PostgresBase.session.rollback()
