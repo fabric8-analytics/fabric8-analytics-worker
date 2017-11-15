@@ -1,8 +1,6 @@
 import datetime
 
-import flexmock
 import pytest
-import selinon
 from sqlalchemy.exc import IntegrityError
 
 from f8a_worker.defaults import configuration
@@ -17,7 +15,6 @@ from f8a_worker.storages import StackPostgres
 from ..conftest import rdb
 
 
-@pytest.mark.usefixtures("dispatcher_setup")
 class TestBayesianPostgres(object):
     def setup_method(self, method):
         rdb()
@@ -35,9 +32,12 @@ class TestBayesianPostgres(object):
         self.s.add(self.a2)
         self.s.commit()
 
-        self.bp = BayesianPostgres(connection_string=configuration.POSTGRES_CONNECTION)
-        self.bp.connect()
+    @classmethod
+    def setup_class(cls):
+        cls.bp = BayesianPostgres(connection_string=configuration.POSTGRES_CONNECTION)
+        cls.bp.connect()
 
+    @pytest.mark.usefixtures("dispatcher_setup")
     def test_store(self):
         task_name = 'foo'
         arguments = {
@@ -46,30 +46,17 @@ class TestBayesianPostgres(object):
             'version': self.vi
         }
         res = {'real': 'result'}
-        version_id = 's3_version_id'
         worker_id = 'id-1234'
 
-        s3_storage = flexmock()
-        s3_storage.\
-            should_receive('store_task_result').\
-            with_args(arguments, task_name, res).\
-            and_return(version_id)
-
-        flexmock(selinon.StoragePool).\
-            should_receive('get_connected_storage').\
-            with_args('S3Data').\
-            and_return(s3_storage)
-
-        assert self.bp.store(arguments, 'flow_name', task_name, 'id-1234', res) == version_id
+        assert self.bp.store(arguments, 'flow_name', task_name, 'id-1234', res) is not None
         assert self.bp.get_worker_id_count(worker_id) == 1
 
+    @pytest.mark.usefixtures("dispatcher_setup")
     def test_get_latest_task_result(self):
         tn = 'asd'
         tid1 = 'tid-1'
         tid2 = 'tid-2'
         res = {'some': 'thing'}
-        version_id1 = 's3_version_id_1'
-        version_id2 = 's3_version_id_2'
         arguments = {
             'ecosystem': self.en,
             'name': self.pn,
@@ -77,42 +64,25 @@ class TestBayesianPostgres(object):
             'document_id': self.a.id
         }
 
-        s3_storage = flexmock()
-        s3_storage.\
-            should_receive('store_task_result').\
-            with_args(arguments, tn, res).\
-            and_return(version_id1).and_return(version_id2)
-
-        flexmock(selinon.StoragePool).\
-            should_receive('get_connected_storage').\
-            with_args('S3Data').\
-            and_return(s3_storage)
-
         assert self.bp.store(arguments,
                              flow_name='blah',
                              task_name=tn,
                              task_id=tid1,
-                             result=res) == version_id1
+                             result=res) is not None
         res['later'] = 'aligator'
         assert self.bp.store(arguments,
                              flow_name='blah',
                              task_name=tn,
                              task_id=tid2,
-                             result=res) == version_id2
+                             result=res) is not None
 
-        s3_storage.\
-            should_receive('retrieve_task_result').\
-            with_args(arguments['ecosystem'],
-                      arguments['name'],
-                      arguments['version'], tn,
-                      object_version_id=version_id2).\
-            and_return(res)
+        retrieved_res = self.bp.get_latest_task_result(arguments['ecosystem'],
+                                                       arguments['name'],
+                                                       arguments['version'],
+                                                       tn)
+        assert res == retrieved_res
 
-        assert self.bp.get_latest_task_result(arguments['ecosystem'],
-                                              arguments['name'],
-                                              arguments['version'],
-                                              tn) == res
-
+    @pytest.mark.usefixtures("dispatcher_setup")
     def test_store_already_exists(self):
         tn = 'asd'
         tid = 'sdf'
@@ -147,9 +117,12 @@ class TestPackagePostgres(object):
         self.s.add(self.a2)
         self.s.commit()
 
-        self.pp = PackagePostgres(connection_string=configuration.POSTGRES_CONNECTION)
-        self.pp.connect()
+    @classmethod
+    def setup_class(cls):
+        cls.pp = PackagePostgres(connection_string=configuration.POSTGRES_CONNECTION)
+        cls.pp.connect()
 
+    @pytest.mark.usefixtures("dispatcher_setup")
     def test_get_latest_task_entry(self):
         tn = 'asd'
         tid1 = 'tid_1'
@@ -163,14 +136,15 @@ class TestPackagePostgres(object):
         self.pp.store(arguments, flow_name='blah', task_name=tn, task_id=tid1, result=res)
         res['later'] = 'aligator'
         self.pp.store(arguments, flow_name='blah', task_name=tn, task_id=tid2, result=res)
-        assert self.pp.get_latest_task_entry(self.en, self.pn, tn).worker_id == tid2
-        assert self.pp.get_latest_task_entry(self.en, self.pn, tn).worker == tn
+        entry = self.pp.get_latest_task_entry(self.en, self.pn, tn)
+        assert entry.worker_id == tid2
+        assert entry.worker == tn
 
+    @pytest.mark.usefixtures("dispatcher_setup")
     def test_get_latest_task_result_no_results(self):
         assert self.pp.get_latest_task_result(self.en, self.pn, 'asd') is None
 
 
-@pytest.mark.usefixtures("dispatcher_setup")
 class TestStackPostgres(object):
     def setup_method(self, method):
         rdb()
@@ -188,9 +162,12 @@ class TestStackPostgres(object):
         self.s.add(self.a2)
         self.s.commit()
 
-        self.sp = StackPostgres(connection_string=configuration.POSTGRES_CONNECTION)
-        self.sp.connect()
+    @classmethod
+    def setup_class(cls):
+        cls.sp = StackPostgres(connection_string=configuration.POSTGRES_CONNECTION)
+        cls.sp.connect()
 
+    @pytest.mark.usefixtures("dispatcher_setup")
     def test_retrieve_normal(self):
         wid = 'x'
         w = 'y'
@@ -201,6 +178,7 @@ class TestStackPostgres(object):
 
         assert self.sp.retrieve('whatever', w, wid) == tr
 
+    @pytest.mark.usefixtures("dispatcher_setup")
     def test_store_normal(self):
         tn = 'asd'
         tid = 'sdf'
@@ -208,6 +186,7 @@ class TestStackPostgres(object):
         self.sp.store(node_args={}, flow_name='blah', task_name=tn, task_id=tid, result=res)
         assert self.sp.retrieve('doesntmatter', tn, tid) == res
 
+    @pytest.mark.usefixtures("dispatcher_setup")
     def test_store_already_exists(self):
         tn = 'asd'
         tid = 'sdf'

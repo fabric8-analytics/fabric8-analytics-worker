@@ -24,6 +24,7 @@ class PostgresBase(DataStorage):
     echo = None
     # Which table should be used for querying in derived classes
     query_table = None
+    session_usage = 0
 
     _CONF_ERROR_MESSAGE = "PostgreSQL configuration mismatch, cannot use same database adapter " \
                           "base for connecting to different PostgreSQL instances"
@@ -31,6 +32,7 @@ class PostgresBase(DataStorage):
     def __init__(self, connection_string, encoding='utf-8', echo=False):
         super().__init__()
 
+        self.session_usage += 1
         connection_string = connection_string.format(**os.environ)
         if PostgresBase.connection_string is None:
             PostgresBase.connection_string = connection_string
@@ -163,3 +165,8 @@ class PostgresBase(DataStorage):
             self.connect()
 
         return Ecosystem.by_name(PostgresBase.session, name)
+
+    def __del__(self):
+        self.session_usage -= 1
+        if self.session_usage == 0 and self.is_connected():
+            self.disconnect()
