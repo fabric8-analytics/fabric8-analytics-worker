@@ -167,6 +167,9 @@ class PostgresBase(DataStorage):
         return Ecosystem.by_name(PostgresBase.session, name)
 
     def __del__(self):
+        print("Destructor is called for %s" % self.__class__.__name__)
         self.session_usage -= 1
         if self.session_usage == 0 and self.is_connected():
+            print("Disconnecting in %s" % self.__class__.__name__)
             self.disconnect()
+        print("Destructor finished for %s" % self.__class__.__name__)
