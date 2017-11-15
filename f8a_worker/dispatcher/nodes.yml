@@ -477,7 +477,7 @@
       import: 'f8a_worker.storages'
       configuration:
         <<: *configurationS3
-        bucket_name: '{DEPLOYMENT_PREFIX}-manual-tags'
+        bucket_name: 'prod-manual-tags'
         region_name: 'us-east-1'
         encryption: false
         versioned: true
