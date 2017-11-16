@@ -8,7 +8,16 @@ ENV LANG=en_US.UTF-8 \
     # place for alembic migrations
     ALEMBIC_DIR='/alembic'
 
-CMD ["/usr/bin/workers.sh"]
+# Install little pcp pmcd server for metrics collection
+# would prefer only pmcd, and not the /bin/pm*tools etc.
+COPY pcp.repo /etc/yum.repos.d/pcp.repo
+RUN yum install -y pcp && yum clean all && \
+    mkdir -p /etc/pcp /var/run/pcp /var/lib/pcp /var/log/pcp  && \
+    chgrp -R root /etc/pcp /var/run/pcp /var/lib/pcp /var/log/pcp && \
+    chmod -R g+rwX /etc/pcp /var/run/pcp /var/lib/pcp /var/log/pcp
+COPY ./worker+pmcd.sh /worker+pmcd.sh
+EXPOSE 44321
+CMD ["/worker+pmcd.sh"]
 
 # Make sure random user has place to store files
 RUN mkdir -p ${HOME} ${WORKER_DATA_DIR} ${ALEMBIC_DIR}/alembic/ && \
