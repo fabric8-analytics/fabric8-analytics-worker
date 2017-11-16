@@ -96,6 +96,6 @@ docker run -t \
   -e F8A_UNCLOUDED_MODE='true' \
   --env-file tests/postgres.env \
   --name=${CONTAINER_NAME} \
-  ${TEST_IMAGE_NAME} ./hack/exec_tests.sh $@ tests/
+  ${TEST_IMAGE_NAME} /f8a_worker/hack/exec_tests.sh $@ /f8a_worker/tests/
 
 echo "Test suite passed \\o/"

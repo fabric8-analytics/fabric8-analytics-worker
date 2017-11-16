@@ -4,3 +4,4 @@ pylint
 pytest >= 3 # Needed for compatibility with celery 4.x fixtures
 pytest-timeout
 pytest-rerunfailures
+pytest-cov
