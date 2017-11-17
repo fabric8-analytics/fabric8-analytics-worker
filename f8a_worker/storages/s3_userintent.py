@@ -19,6 +19,6 @@ class S3UserIntent(AmazonS3):
     def fetch_master_tags(self, ecosystem):
         if not ecosystem:
             raise ValueError("Ecosystem is needed to fetch the master tag list")
-        file_name = ecosystem + '/manual_tag_list.json'
+        file_name = ecosystem + '/master_tag_list.json'
         file_data = self.retrieve_dict(file_name)
         return file_data
