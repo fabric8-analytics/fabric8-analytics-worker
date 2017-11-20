@@ -82,7 +82,7 @@ class GithubTask(BaseTask):
             result_data['status'] = 'error'
             return result_data
 
-        repo_url = (urljoin(self.configuration.GITHUB_API + "repos/", self._repo_name))
+        repo_url = urljoin(self.configuration.GITHUB_API + "repos/", self._repo_name)
         try:
             repo = get_response(repo_url, self._headers)
         except TaskError as e:

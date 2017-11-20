@@ -54,7 +54,7 @@ class F8AConfiguration(object):
     GIT_USER_NAME = environ.get('GIT_USER_NAME', 'f8a')
     GIT_USER_EMAIL = environ.get('GIT_USER_EMAIL', 'f8a@f8a')
 
-    GITHUB_TOKEN = environ.get('GITHUB_TOKEN', 'not-set')
+    GITHUB_TOKEN = environ.get('GITHUB_TOKEN', 'not-set').split(',')
     GITHUB_API = "https://api.github.com/"
 
     # URL to npmjs couch DB, which returns stream of changes happening in npm registry
@@ -129,13 +129,13 @@ class F8AConfiguration(object):
 
     @classmethod
     def _decide_token_usage(cls):
-        if cls.GITHUB_TOKEN == 'not-set':
+        if len(cls.GITHUB_TOKEN) >= 1 and cls.GITHUB_TOKEN[0] == 'not-set':
             logger.warning("No Github API token provided (GITHUB_TOKEN env variable), "
                            "requests will be unauthenticated i.e. limited to 60 per hour")
             return None
         else:
             # there might be more comma-separated tokens, randomly select one
-            return random.choice(cls.GITHUB_TOKEN.split(',')).strip()
+            return random.choice(cls.GITHUB_TOKEN).strip()
 
     @classmethod
     def select_random_github_token(cls):

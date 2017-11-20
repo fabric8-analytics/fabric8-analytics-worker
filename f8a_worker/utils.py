@@ -694,8 +694,8 @@ def get_user_email(user_profile):
 
 
 def get_response(url, headers=None, sleep_time=2, retry_count=10):
-    """
-    Simple wrapper for requests which tries to get response
+    """Simple wrapper for requests which tries to get response.
+
     :param url: URL where to do the request
     :param headers: additional headers for request
     :param sleep_time: sleep time between retries
@@ -715,4 +715,4 @@ def get_response(url, headers=None, sleep_time=2, retry_count=10):
     except requests.exceptions.HTTPError as err:
         message = "Failed to get results from {url} with {err}".format(url=url, err=err)
         logger.error(message)
-        raise TaskError(message)
+        raise TaskError(message) from err
