@@ -94,7 +94,7 @@ This will not create a virtualenv every time.
 
 **Forcing image builds while testing**
 
-When some changes are made to code that will change the docker image, it is good to rebuild images locally for testing. This can re-build can be forced like so: 
+When some changes are made to code that will change the docker image, it is good to rebuild images locally for testing. This can re-build can be forced like so:
 
 ```
 REBUILD=1 ./runtest.sh 
