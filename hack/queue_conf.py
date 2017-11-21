@@ -58,6 +58,7 @@ def print_help():
     print("Set queue attributes for fabric8-worker.\n"
           "Usage: {} COMMA-SEPARATED-LIST-OF-QUEUES".format(sys.argv[0]))
 
+
 if __name__ == '__main__':
     if os.getenv('F8A_UNCLOUDED_MODE') in ('1', 'True', 'true'):
         _logger.warning("Worker started in unclouded mode, "
@@ -73,4 +74,3 @@ if __name__ == '__main__':
         sys.exit(0)
 
     set_queue_attributes(sys.argv[1].split(','))
-
