@@ -9,12 +9,14 @@ ROLE_v1_0_2 = "v1-0-2"
 ROLE_v1_0_3 = "v1-0-3"
 ROLE_v1_0_4 = "v1-0-4"
 ROLE_v2_0_0 = "v2-0-0"
+ROLE_v2_0_1 = "v2-0-1"
 ROLE_TITLE = jsl.roles.Var({
     ROLE_v1_0_0: "Github Results v1-0-0",
     ROLE_v1_0_1: "Github Results v1-0-1",
     ROLE_v1_0_3: "Github Results v1-0-3",
     ROLE_v1_0_4: "Github Results v1-0-4",
     ROLE_v2_0_0: "Github Results v2-0-0",
+    ROLE_v2_0_1: "Github Results v2-0-1",
 })
 
 
@@ -81,6 +83,8 @@ class GithubDetail(jsl.Document):
         v1_0_3.topics = jsl.ArrayField(jsl.StringField(), required=True)
     with added_in(ROLE_v1_0_4) as since_v1_0_4:
         since_v1_0_4.topics = jsl.ArrayField(jsl.StringField())
+    with added_in(ROLE_v2_0_1) as since_v2_0_1:
+        since_v2_0_1.license = jsl.DictField()
 
 
 class GithubResult(JSLSchemaBaseWithRelease):

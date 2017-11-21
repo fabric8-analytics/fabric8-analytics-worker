@@ -39,8 +39,6 @@ oauth2client==3.0.0       # via google-api-python-client
 psycopg2==2.7.1
 pyasn1-modules==0.0.9     # via oauth2client
 pyasn1==0.2.3             # via oauth2client, pyasn1-modules, rsa
-pygithub==1.35
-pyjwt==1.5.2              # via pygithub
 python-dateutil==2.6.1    # via bigquery-python, botocore
 pytz==2017.2              # via celery
 pyyaml==3.12              # via anymarkup, selinonlib

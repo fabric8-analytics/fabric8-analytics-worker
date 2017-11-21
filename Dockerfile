@@ -38,8 +38,3 @@ RUN find ${HOME} -mindepth 1 -delete
 # Do not move this line before HOME clean up, we need downloaded external data baked in resulting image.
 COPY hack/install_tagger.sh /tmp/
 RUN sh /tmp/install_tagger.sh
-
-# Not-yet-upstream-released patches
-RUN mkdir -p /tmp/install_deps/patches/
-COPY hack/patches/* /tmp/install_deps/patches/
-RUN /tmp/install_deps/patches/apply_patches.sh
