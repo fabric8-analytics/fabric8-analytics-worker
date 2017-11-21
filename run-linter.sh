@@ -1,4 +1,4 @@
-directories="alembic f8a_worker tests"
+directories="alembic f8a_worker tests hack"
 separate_files="setup.py"
 fail=0
 
