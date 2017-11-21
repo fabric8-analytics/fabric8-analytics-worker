@@ -307,8 +307,6 @@ class GolangReleasesFetcher(ReleasesFetcher):
         if not package:
             raise ValueError('package not specified')
 
-        print("Input package: %s" % package)
-
         parts = package.split("/")[:3]
         if len(parts) == 3:  # this assumes github.com/org/project like structure
             host, org, proj = parts
@@ -317,7 +315,7 @@ class GolangReleasesFetcher(ReleasesFetcher):
             host, proj = parts
             repo_url = 'https://{host}/{proj}.git'.format(host=host, proj=proj)
         else:
-            raise ValueError("Package {} is not supported for ingestion".format(package))
+            raise ValueError("Package {} is invalid git repository".format(package))
 
         output = Git.ls_remote(repo_url, args=['-q'], refs=['HEAD'])
         version, ref = output[0].split()
