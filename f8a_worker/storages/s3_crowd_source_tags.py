@@ -7,7 +7,7 @@ class S3CrowdSourceTags(AmazonS3):
 
     def _construct_object_key(self, arguments):
         path = self.get_object_key_path(arguments['ecosystem'])
-        return "{path}/package_topic.json".format(path=path)
+        return "{path}/crowd_sourcing_package_topic.json".format(path=path)
 
     @staticmethod
     def get_object_key_path(ecosystem):

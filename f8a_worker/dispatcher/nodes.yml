@@ -459,7 +459,7 @@
       import: 'f8a_worker.storages'
       configuration:
         <<: *configurationS3
-        bucket_name: '{DEPLOYMENT_PREFIX}-cleaned_tags'
+        bucket_name: 'dev-stack-analysis-clean-data'
         region_name: 'us-east-1'
         encryption: false
         versioned: true
