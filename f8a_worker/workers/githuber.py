@@ -99,7 +99,7 @@ class GithubTask(BaseTask):
         if notoriety:
             issues.update(notoriety)
         issues['topics'] = repo.get('topics', [])
-        issues['license'] = repo.get('license', {})
+        issues['license'] = repo.get('license') or {}
 
         # Get Commit Statistics
         last_year_commits = self._get_last_years_commits(repo['url'])
