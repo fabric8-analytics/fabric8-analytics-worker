@@ -57,9 +57,8 @@ class InitAnalysisFlow(BaseTask):
                         epv_cache.put_source_jar(source_jar_path)
                     except Exception as e:
                         self.log.info(
-                            'Failed to fetch source jar for maven artifact "{e}/{p}/{v}": {err}'.
-                            format(e=arguments.get('ecosystem'),
-                                   p=arguments.get('name'),
+                            'Failed to fetch source jar for maven artifact "{n}/{v}": {err}'.
+                            format(n=arguments.get('name'),
                                    v=arguments.get('version'),
                                    err=str(e))
                         )
