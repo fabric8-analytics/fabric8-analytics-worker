@@ -2,7 +2,7 @@ from f8a_worker.blackduck_helpers import BlackDuckProject, BlackDuckRelease
 
 from datetime import datetime
 
-NOW = datetime.now()
+NOW = datetime.utcnow()
 
 _RELEASE_DEF = {
     'version': '0.6.0',

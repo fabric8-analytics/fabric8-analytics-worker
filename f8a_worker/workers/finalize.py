@@ -13,7 +13,7 @@ class FinalizeTask(BaseTask):
         try:
             record = self.storage.session.query(Analysis).\
                 filter(Analysis.id == arguments['document_id']).one()
-            record.finished_at = json_serial(datetime.datetime.now())
+            record.finished_at = json_serial(datetime.datetime.utcnow())
             record.release = '{}:{}:{}'.format(arguments.get('ecosystem'),
                                                arguments.get('name'),
                                                arguments.get('version'))
@@ -35,7 +35,7 @@ class PackageFinalizeTask(BaseTask):
         try:
             record = self.storage.session.query(PackageAnalysis).\
                 filter(PackageAnalysis.id == arguments['document_id']).one()
-            record.finished_at = json_serial(datetime.datetime.now())
+            record.finished_at = json_serial(datetime.datetime.utcnow())
             self.storage.session.commit()
         except SQLAlchemyError:
             self.storage.session.rollback()

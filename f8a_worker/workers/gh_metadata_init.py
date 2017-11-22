@@ -11,7 +11,7 @@ class InitGitHubManifestMetadata(BaseTask):
 
         db = self.storage.session
 
-        a = Analysis(started_at=datetime.datetime.now())
+        a = Analysis(started_at=datetime.datetime.utcnow())
         db.add(a)
         db.commit()
 

@@ -37,7 +37,7 @@ class DependencySnapshotTask(BaseTask):
     def _resolve_dependency(self, ecosystem, dep):
         ret = {'ecosystem': ecosystem.name,
                'declaration': dep,
-               'resolved_at': json_serial(datetime.datetime.now())}
+               'resolved_at': json_serial(datetime.datetime.utcnow())}
 
         # first, if this is a Github dependency, return it right away (we don't resolve these yet)
         if ' ' in dep:

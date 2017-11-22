@@ -34,7 +34,7 @@ class BlackDuckSession(object):
     def __init__(self, token=None, duration=timedelta(hours=24)):
         self._token = token
         self._duration = duration
-        self._created_at = datetime.now()
+        self._created_at = datetime.utcnow()
 
     @property
     def api_token(self):
@@ -51,7 +51,7 @@ class BlackDuckSession(object):
 
         :return: bool, expired or not
         """
-        return (self._created_at + self.duration) < datetime.now()
+        return (self._created_at + self.duration) < datetime.utcnow()
 
 
 class BlackDuckRelease(object):

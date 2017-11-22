@@ -36,13 +36,13 @@ class BaseTask(SelinonTask):
             if self.storage.get_worker_id_count(self.task_id) > 0:
                 raise FatalTaskError("Task with ID '%s' was already processed" % self.task_id)
 
-        start = datetime.now()
+        start = datetime.utcnow()
         try:
             result = self.execute(node_args)
         finally:
             # remove all files that were downloaded for this task
             ObjectCache.wipe()
-        end = datetime.now()
+        end = datetime.utcnow()
 
         if result:
             # Ensure result complies with the defined schema (if any) before saving
