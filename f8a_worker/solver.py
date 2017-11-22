@@ -307,9 +307,16 @@ class GolangReleasesFetcher(ReleasesFetcher):
         if not package:
             raise ValueError('package not specified')
 
-        gh_host, gh_org, gh_proj = package.split("/")[:3]
-        repo_url = 'git://{gh_host}/{gh_org}/{gh_proj}.git'.format(
-            gh_host=gh_host, gh_org=gh_org, gh_proj=gh_proj)
+        parts = package.split("/")[:3]
+        if len(parts) == 3:  # this assumes github.com/org/project like structure
+            host, org, proj = parts
+            repo_url = 'git://{host}/{org}/{proj}.git'.format(host=host, org=org, proj=proj)
+        elif len(parts) == 2 and parts[0] == 'gopkg.in':  # specific to gopkg.in/packages
+            host, proj = parts
+            repo_url = 'https://{host}/{proj}.git'.format(host=host, proj=proj)
+        else:
+            raise ValueError("Package {} is invalid git repository".format(package))
+
         output = Git.ls_remote(repo_url, args=['-q'], refs=['HEAD'])
         version, ref = output[0].split()
 
