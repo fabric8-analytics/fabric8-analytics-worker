@@ -71,7 +71,7 @@ class InitAnalysisFlow(BaseTask):
             # always clean up cache
             shutil.rmtree(cache_path)
 
-        a = Analysis(version=v, access_count=1, started_at=datetime.datetime.now())
+        a = Analysis(version=v, access_count=1, started_at=datetime.datetime.utcnow())
         db.add(a)
         db.commit()
 

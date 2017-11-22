@@ -220,7 +220,7 @@ class BayesianPostgres(PostgresBase):
         profile_digest = hashlib.sha256(profile.encode('utf-8')).hexdigest()
         request_digest = hashlib.sha256(json.dumps(dep_data).encode('utf-8')).hexdigest()
 
-        dt = datetime.datetime.now()
+        dt = datetime.datetime.utcnow()
         if req:
             if profile_digest != req.user_profile_digest:
                 self.store_in_bucket(data.get('user_profile'))

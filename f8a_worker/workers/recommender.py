@@ -795,9 +795,9 @@ class RecommendationV2Task(BaseTask):
             input_task_for_pgm.append(json_object)
 
             # Call PGM and get the response
-            start = datetime.datetime.now()
+            start = datetime.datetime.utcnow()
             pgm_response = self.call_pgm(input_task_for_pgm)
-            elapsed_seconds = (datetime.datetime.now() - start).total_seconds()
+            elapsed_seconds = (datetime.datetime.utcnow() - start).total_seconds()
             msg = 'It took {t} seconds to get response from PGM ' \
                   'for external request {e}.'.format(t=elapsed_seconds,
                                                      e=parguments.get('external_request_id'))

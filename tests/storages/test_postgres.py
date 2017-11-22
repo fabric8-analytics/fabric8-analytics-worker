@@ -24,9 +24,9 @@ class TestBayesianPostgres:
         self.e = Ecosystem(name=self.en, backend=EcosystemBackend.maven)
         self.p = Package(ecosystem=self.e, name=self.pn)
         self.v = Version(package=self.p, identifier=self.vi)
-        self.a = Analysis(version=self.v, finished_at=datetime.datetime.now())
+        self.a = Analysis(version=self.v, finished_at=datetime.datetime.utcnow())
         self.a2 = Analysis(version=self.v,
-                           finished_at=datetime.datetime.now() + datetime.timedelta(seconds=10))
+                           finished_at=datetime.datetime.utcnow() + datetime.timedelta(seconds=10))
         self.s.add(self.a)
         self.s.add(self.a2)
         self.s.commit()

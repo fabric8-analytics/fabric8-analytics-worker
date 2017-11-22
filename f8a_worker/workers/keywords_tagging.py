@@ -43,7 +43,7 @@ class KeywordsTaggingTaskBase(BaseTask):
         :return: filename of downloaded keywords.yaml file
         """
         if self._keywords_yaml.get(ecosystem) is None \
-                or self._keywords_yaml_update[ecosystem] < datetime.now():
+                or self._keywords_yaml_update[ecosystem] < datetime.utcnow():
             self.log.info("Updating keywords.yaml file for ecosystem '%s'", ecosystem)
 
             response = requests.get(self._TAGS_URL.format(ecosystem=ecosystem))
@@ -60,7 +60,7 @@ class KeywordsTaggingTaskBase(BaseTask):
             fp.close()
 
             self._keywords_yaml[ecosystem] = fp.name
-            self._keywords_yaml_update[ecosystem] = datetime.now() + self._UPDATE_TIME
+            self._keywords_yaml_update[ecosystem] = datetime.utcnow() + self._UPDATE_TIME
             self.log.info("Downloaded file keywords.yaml for ecosystem '%s'", ecosystem)
 
         return self._keywords_yaml[ecosystem]
@@ -71,7 +71,7 @@ class KeywordsTaggingTaskBase(BaseTask):
         :return: filename of downloaded stopwords.txt file
         """
         if self._stopwords_txt is None \
-                or self._stopwords_txt_update < datetime.now():
+                or self._stopwords_txt_update < datetime.utcnow():
             self.log.debug("Updating stopwords.txt file")
 
             response = requests.get(self._STOPWORDS_URL)
@@ -87,7 +87,7 @@ class KeywordsTaggingTaskBase(BaseTask):
             fp.close()
 
             self._stopwords_txt = fp.name
-            self._stopwords_txt_update = datetime.now() + self._UPDATE_TIME
+            self._stopwords_txt_update = datetime.utcnow() + self._UPDATE_TIME
             self.log.info("Downloaded stopwords.txt file")
 
         return self._stopwords_txt

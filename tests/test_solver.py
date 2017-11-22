@@ -272,7 +272,7 @@ class TestFetcher(object):
             rdb.commit()
             analysis = Analysis(version=version)
             # Fetcher only selects finished analyses
-            analysis.finished_at = datetime.datetime.now()
+            analysis.finished_at = datetime.datetime.utcnow()
             rdb.add(analysis)
             rdb.commit()
 

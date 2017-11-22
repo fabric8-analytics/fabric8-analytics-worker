@@ -33,7 +33,7 @@ class InitPackageFlow(BaseTask):
         :param url: provided URL
         :return: updated database entry corresponding the current package-level analysis
         """
-        now = datetime.datetime.now()
+        now = datetime.datetime.utcnow()
 
         upstreams = db.query(Upstream)\
             .filter(Upstream.package_id == package.id) \
@@ -85,7 +85,7 @@ class InitPackageFlow(BaseTask):
             # can potentially schedule two flows of a same type at the same
             # time as there is no lock, but let's say it's OK
             if upstream.updated_at is not None \
-                    and upstream.updated_at - datetime.datetime.now() < self._UPDATE_INTERVAL:
+                    and upstream.updated_at - datetime.datetime.utcnow() < self._UPDATE_INTERVAL:
                 self.log.info('Skipping upstream package check as data are considered as recent - '
                               'last update %s.',
                               upstream.updated_at)
@@ -97,13 +97,13 @@ class InitPackageFlow(BaseTask):
         # if this fails, it's actually OK, as there could be concurrency
         package_analysis = PackageAnalysis(
             package_id=package.id,
-            started_at=datetime.datetime.now(),
+            started_at=datetime.datetime.utcnow(),
             finished_at=None
         )
         db.add(package_analysis)
 
         # keep track of updates
-        upstream.updated_at = datetime.datetime.now()
+        upstream.updated_at = datetime.datetime.utcnow()
 
         db.commit()
         arguments['document_id'] = package_analysis.id
