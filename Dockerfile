@@ -1,4 +1,4 @@
-FROM registry.devshift.net/fabric8-analytics/f8a-worker-base:2cfa3f2
+FROM registry.devshift.net/fabric8-analytics/f8a-worker-base:25d334a
 
 ENV LANG=en_US.UTF-8 \
     # place where to download & unpack artifacts
@@ -7,17 +7,6 @@ ENV LANG=en_US.UTF-8 \
     HOME='/workdir' \
     # place for alembic migrations
     ALEMBIC_DIR='/alembic'
-
-# Install little pcp pmcd server for metrics collection
-# would prefer only pmcd, and not the /bin/pm*tools etc.
-COPY pcp.repo /etc/yum.repos.d/pcp.repo
-RUN yum install -y pcp && yum clean all && \
-    mkdir -p /etc/pcp /var/run/pcp /var/lib/pcp /var/log/pcp  && \
-    chgrp -R root /etc/pcp /var/run/pcp /var/lib/pcp /var/log/pcp && \
-    chmod -R g+rwX /etc/pcp /var/run/pcp /var/lib/pcp /var/log/pcp
-COPY ./worker+pmcd.sh /worker+pmcd.sh
-EXPOSE 44321
-CMD ["/worker+pmcd.sh"]
 
 # Make sure random user has place to store files
 RUN mkdir -p ${HOME} ${WORKER_DATA_DIR} ${ALEMBIC_DIR}/alembic/ && \
@@ -38,6 +27,10 @@ COPY alembic/ ${ALEMBIC_DIR}/alembic
 # Install f8a_worker
 COPY ./ /tmp/f8a_worker
 RUN cd /tmp/f8a_worker && pip3 install .
+
+COPY hack/worker+pmcd.sh /usr/bin/
+EXPOSE 44321
+CMD ["/usr/bin/worker+pmcd.sh"]
 
 # Make sure there are no root-owned files and directories in the home directory,
 # as this directory can be used by non-root user at runtime.
