@@ -34,6 +34,42 @@ class S3DataBase(AmazonS3):
         """
         raise NotImplementedError()
 
+    def list_available_task_results(self, arguments):
+        """Get names of all task results stored on S3."""
+        object_key = self._construct_base_file_name(arguments)
+        bucket = self._s3.Bucket(self.bucket_name)
+        objects = bucket.objects.filter(Prefix=object_key)
+
+        # TODO: this will return way too many results, we should optimize this by using tags or RDS for example
+        task_names = []
+        for obj in objects:
+            if not obj.key.endswith('.json'):
+                continue
+
+            task_name = obj.key[len(object_key) + 1:-len('.json')].split('/', 1)[0]
+            if task_name:
+                task_names.append(task_name)
+
+        return task_names
+
+    def list_available_names(self, ecosystem, prefix=None):
+        """Get all available names under given ecosystem."""
+        object_key = '{}/{}'.format(ecosystem, prefix or '')
+        bucket = self._s3.Bucket(self.bucket_name)
+        objects = bucket.objects.filter(Prefix=object_key)
+
+        names = set()
+        # TODO: this will return way too many results, we should optimize this by using tags or RDS for example
+        for entry in objects:
+            name = entry.key[len(ecosystem) + 1:].split('/', 1)[0]
+
+            if name.endswith('.json'):
+                name = name[:-len('.json')]
+
+            names.add(name)
+
+        return list(names)
+
     @classmethod
     def _construct_task_result_object_key(cls, arguments, task_name):
         """Construct object key on S3 for a task_result.
