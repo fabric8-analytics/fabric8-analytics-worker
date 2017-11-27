@@ -49,8 +49,8 @@ rsa==3.4.2                # via oauth2client
 s3transfer==0.1.10        # via boto3
 scikit-learn==0.18.2
 scipy==0.19.1
-selinon==0.1.0rc5
-selinonlib==0.1.0rc5
+selinon==0.1.0rc8
+selinonlib==0.1.0rc8
 semantic-version==2.6.0
 six==1.10.0               # via anymarkup-core, configobj, google-api-python-client, oauth2client, python-dateutil
 sqlalchemy==1.1.11
