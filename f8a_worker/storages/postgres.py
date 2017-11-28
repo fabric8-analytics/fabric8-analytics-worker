@@ -29,21 +29,26 @@ class BayesianPostgres(PostgresBase):
             self._s3 = StoragePool.get_connected_storage('S3Data')
         return self._s3
 
-    def _create_result_entry(self, node_args, flow_name, task_name, task_id, result, error=None):
-        if error is None and isinstance(result, dict):
-            error = result.get('status') == 'error'
-
+    def _create_result_entry(self, node_args, flow_name, task_name, task_id, error=False):
         return WorkerResult(
             worker=task_name,
             worker_id=task_id,
             analysis_id=node_args.get('document_id') if isinstance(node_args, dict) else None,
-            task_result=result,
             error=error,
             external_request_id=(node_args.get('external_request_id')
                                  if isinstance(node_args, dict) else None)
         )
 
-    def get_latest_task_result(self, ecosystem, package, version, task_name):
+    def _retrieve_task_result(self, record):
+        return self.s3.retrieve_task_result(
+            record.ecosystem.name,
+            record.package.name,
+            record.version.identifier,
+            record.worker,
+            record.s3_version_id
+        )
+
+    def get_latest_task_result(self, ecosystem, package, version, task_name, error=False):
         """Get latest task result based on task name
 
         :param ecosystem: name of the ecosystem
@@ -51,7 +56,6 @@ class BayesianPostgres(PostgresBase):
         :param version: package version
         :param task_name: name of task for which the latest result should be obtained
         :param error: if False, avoid returning entries that track errors
-        :param real: if False, do not check results that are stored on S3 but
         rather return Postgres entry
         """
         # TODO: we should store date timestamps directly in WorkerResult
@@ -59,13 +63,14 @@ class BayesianPostgres(PostgresBase):
             self.connect()
 
         try:
-            entry = PostgresBase.session.query(WorkerResult.task_result).\
+            entry = PostgresBase.session.query(WorkerResult).\
                 join(Analysis).join(Version).join(Package).join(Ecosystem).\
                 filter(WorkerResult.worker == task_name).\
                 filter(Package.name == package).\
                 filter(Version.identifier == version).\
                 filter(Ecosystem.name == ecosystem).\
-                filter(WorkerResult.error.is_(False)).\
+                filter(WorkerResult.error.is_(error)).\
+                filter(WorkerResult.s3_version_id.isnot(None)).\
                 order_by(Analysis.finished_at.desc()).first()
         except SQLAlchemyError:
             PostgresBase.session.rollback()
@@ -74,10 +79,13 @@ class BayesianPostgres(PostgresBase):
         if not entry:
             return None
 
-        if not self.is_real_task_result(entry.task_result):
-            return self.s3.retrieve_task_result(ecosystem, package, version, task_name)
-
-        return entry.task_result
+        return self.s3.retrieve_task_result(
+            ecosystem,
+            package,
+            version,
+            task_name,
+            object_version_id=entry.s3_version_id
+        )
 
     def get_latest_task_entry(self, ecosystem, package, version, task_name, error=False):
         """Get latest task result based on task name

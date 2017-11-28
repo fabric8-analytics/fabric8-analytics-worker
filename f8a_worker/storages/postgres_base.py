@@ -24,6 +24,7 @@ class PostgresBase(DataStorage):
     echo = None
     # Which table should be used for querying in derived classes
     query_table = None
+    session_usage = 0
 
     _CONF_ERROR_MESSAGE = "PostgreSQL configuration mismatch, cannot use same database adapter " \
                           "base for connecting to different PostgreSQL instances"
@@ -31,6 +32,7 @@ class PostgresBase(DataStorage):
     def __init__(self, connection_string, encoding='utf-8', echo=False):
         super().__init__()
 
+        self.session_usage += 1
         connection_string = connection_string.format(**os.environ)
         if PostgresBase.connection_string is None:
             PostgresBase.connection_string = connection_string
@@ -50,6 +52,10 @@ class PostgresBase(DataStorage):
 
         # Assign what S3 storage should be used in derived classes
         self._s3 = None
+
+    @property
+    def s3(self):
+        raise NotImplementedError()
 
     def is_connected(self):
         return PostgresBase.session is not None
@@ -89,20 +95,12 @@ class PostgresBase(DataStorage):
 
         assert record.worker == task_name
 
-        task_result = record.task_result
-        if not self.is_real_task_result(task_result):
-            # we synced results to S3, retrieve them from there
-            # We do not care about some specific version, so no time-based collisions possible
-            return self.s3.retrieve_task_result(
-                record.ecosystem.name,
-                record.package.name,
-                record.version.identifier,
-                task_name
-            )
+        return self._retrieve_task_result(record)
 
-        return task_result
+    def _retrieve_task_result(self, record):
+        raise NotImplementedError()
 
-    def _create_result_entry(self, node_args, flow_name, task_name, task_id, result, error=False):
+    def _create_result_entry(self, node_args, flow_name, task_name, task_id, error=False):
         raise NotImplementedError()
 
     def store(self, node_args, flow_name, task_name, task_id, result):
@@ -110,13 +108,29 @@ class PostgresBase(DataStorage):
         if not self.is_connected():
             self.connect()
 
-        res = self._create_result_entry(node_args, flow_name, task_name, task_id, result)
+        res = self._create_result_entry(
+            node_args,
+            flow_name,
+            task_name,
+            task_id,
+            error=result.get('status') == 'error'
+        )
         try:
             PostgresBase.session.add(res)
             PostgresBase.session.commit()
         except SQLAlchemyError:
             PostgresBase.session.rollback()
             raise
+
+        res.s3_version_id = self.s3.store_task_result(node_args, task_name, result)
+        try:
+            PostgresBase.session.add(res)
+            PostgresBase.session.commit()
+        except SQLAlchemyError:
+            PostgresBase.session.rollback()
+            raise
+
+        return res.s3_version_id
 
     def store_error(self, node_args, flow_name, task_name, task_id, exc_info):
         #
@@ -138,8 +152,7 @@ class PostgresBase(DataStorage):
         if not self.is_connected():
             self.connect()
 
-        res = self._create_result_entry(node_args, flow_name, task_name, task_id, result=None,
-                                        error=True)
+        res = self._create_result_entry(node_args, flow_name, task_name, task_id, error=True)
         try:
             PostgresBase.session.add(res)
             PostgresBase.session.commit()
@@ -153,8 +166,10 @@ class PostgresBase(DataStorage):
 
         return Ecosystem.by_name(PostgresBase.session, name)
 
-    @staticmethod
-    def is_real_task_result(task_result):
-        """Check that the task result is not just S3 object version reference."""
-        return task_result and (len(task_result.keys()) != 1 or
-                                'version_id' not in task_result.keys())
+    def __del__(self):
+        print("Destructor is called for %s" % self.__class__.__name__)
+        self.session_usage -= 1
+        if self.session_usage == 0 and self.is_connected():
+            print("Disconnecting in %s" % self.__class__.__name__)
+            self.disconnect()
+        print("Destructor finished for %s" % self.__class__.__name__)
