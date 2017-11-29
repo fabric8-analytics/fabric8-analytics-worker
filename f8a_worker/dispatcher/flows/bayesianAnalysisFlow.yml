@@ -36,21 +36,6 @@
                 value: 'go'
         - from:
           to:
-            - 'static_analysis'
-          condition:
-            name: 'alwaysFalse'
-        - from:
-          to:
-            - 'crypto_algorithms'
-          condition:
-            name: 'alwaysFalse'
-        - from:
-          to:
-            - 'code_metrics'
-          condition:
-            name: 'alwaysFalse'
-        - from:
-          to:
             - 'source_licenses'
           condition:
             not:
@@ -60,20 +45,10 @@
                 value: 'nuget'
         - from:
           to:
-            - 'binary_data'
-          condition:
-            name: 'alwaysFalse'
-        - from:
-          to:
             - 'metadata'
         - from:
           to:
             - 'digests'
-        - from:
-          to:
-            - 'languages'
-          condition:
-            name: 'alwaysFalse'
         - from: 'metadata'
           to: 'keywords_tagging'
           condition:
@@ -182,19 +157,3 @@
             args:
               key: 'ecosystem'
               value: 'maven'
-        - from:
-          to: 'blackduck_executor'
-          condition:
-            name: 'alwaysFalse'
-          #condition:
-          #  or:
-          #    - name: 'argsFieldEqual'
-          #      args:
-          #        key: 'ecosystem'
-          #        value: 'npm'
-          #    - name: 'argsFieldEqual'
-          #      args:
-          #        key: 'ecosystem'
-          #        value: 'maven'
-        - from: 'blackduck_executor'
-          to: 'blackduck'

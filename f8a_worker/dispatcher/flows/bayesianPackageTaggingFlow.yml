@@ -9,14 +9,3 @@
       edges:
         - from:
           to: 'package_keywords_tagging'
-          # TODO: remove once https://github.com/selinon/selinon/pull/29 gets merged
-          condition:
-            or:
-              - name: 'argsFieldEqual'
-                args:
-                  key: 'ecosystem'
-                  value: 'pypi'
-              - name: 'argsFieldEqual'
-                args:
-                  key: 'ecosystem'
-                  value: 'maven'
