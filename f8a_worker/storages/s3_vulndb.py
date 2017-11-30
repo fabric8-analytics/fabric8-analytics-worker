@@ -19,7 +19,7 @@ class S3VulnDB(AmazonS3):
 
         :return: timestamp of the previous sync
         """
-        datetime_now = datetime.utcnow(timezone.utc)
+        datetime_now = datetime.utcnow()
         if self.object_exists(self.METAINFO_OBJECT_KEY):
             content = self.retrieve_dict(self.METAINFO_OBJECT_KEY)
             previous_sync_datetime = datetime_parser.parse(content['updated'])
