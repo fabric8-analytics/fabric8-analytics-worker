@@ -19,11 +19,9 @@ class GithubTask(BaseTask):
     _repo_name = None
     _repo_url = None
 
-    # application/vnd.github.mercy-preview+json is enabling topics
-    # application/vnd.github.drax-preview+json is enabling license
     _headers = {
-        'Accept': 'application/vnd.github.mercy-preview+json, '
-                  'application/vnd.github.drax-preview+json'
+        'Accept': 'application/vnd.github.mercy-preview+json, '  # for topics
+                  'application/vnd.github.v3+json'  # recommended by GitHub for License API
     }
 
     @classmethod
