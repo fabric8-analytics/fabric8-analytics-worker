@@ -31,7 +31,6 @@ class TestGithuber(object):
                                                  'name': 'BSD 3-clause "New" or "Revised" License',
                                                  'spdx_id': 'BSD-3-Clause',
                                                  'url':
-                                                     'https://api.github.com/licenses/bsd-3-clause',
-                                                 'featured': False}
+                                                     'https://api.github.com/licenses/bsd-3-clause'}
         assert isinstance(results['details']['last_year_commits']['sum'], int)
         assert results['status'] == 'success'
