@@ -106,6 +106,10 @@ class PostgresBase(DataStorage):
         raise NotImplementedError()
 
     def store(self, node_args, flow_name, task_name, task_id, result):
+        if not result:
+            # Do not store empty results
+            return
+
         # Sanity checks
         if not self.is_connected():
             self.connect()

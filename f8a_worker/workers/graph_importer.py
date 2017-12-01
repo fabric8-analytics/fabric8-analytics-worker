@@ -1,55 +1,42 @@
 from f8a_worker.base import BaseTask
-import requests
-from os import environ
+from selinon import StoragePool
+from selinon import FatalTaskError
 
 
 class GraphImporterTask(BaseTask):
-    _SERVICE_HOST = environ.get("BAYESIAN_DATA_IMPORTER_SERVICE_HOST", "bayesian-data-importer")
-    _SERVICE_PORT = environ.get("BAYESIAN_DATA_IMPORTER_SERVICE_PORT", "9192")
-    _INGEST_SERVICE_ENDPOINT = "api/v1/ingest_to_graph"
-    _SELECTIVE_SERVICE_ENDPOINT = "api/v1/selective_ingest"
-    _INGEST_API_URL = "http://{host}:{port}/{endpoint}".format(host=_SERVICE_HOST,
-                                                               port=_SERVICE_PORT,
-                                                               endpoint=_INGEST_SERVICE_ENDPOINT)
+    """Sync data from S3 to graph database."""
 
-    _SELECTIVE_API_URL = "http://{host}:{port}/{endpoint}".format(
-        host=_SERVICE_HOST,
-        port=_SERVICE_PORT,
-        endpoint=_SELECTIVE_SERVICE_ENDPOINT)
+    add_audit_info = False
 
     def execute(self, arguments):
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('document_id'))
 
-        package_list = [
-            {
-                        'ecosystem': arguments['ecosystem'],
-                        'name': arguments['name'],
-                        'version': arguments.get('version')
-            }
-        ]
+        if self.task_name not in ('PackageGraphImporterTask', 'GraphImporterTask'):
+            raise FatalTaskError("Unknown task name - cannot distinguish package vs. version level data")
 
-        # If we force graph sync, sync all task results, otherwise only
-        # finished in this analysis run
-        if not arguments.get('force_graph_sync'):
-            # Tasks that need sync to graph start lowercase.
-            param = {
-                'select_ingest': [task_name
-                                  for task_name in self.storage.get_finished_task_names(
-                                      arguments['document_id'])
-                                  if task_name[0].islower()],
-                'package_list': package_list
-            }
-            endpoint = self._SELECTIVE_API_URL
+        version_level = self.task_name == 'GraphImporterTask'
+
+        postgres = StoragePool.get_connected_storage('BayesianPostgres' if version_level else 'PackagePostgres')
+        s3 = StoragePool.get_connected_storage('S3Data' if version_level else 'S3PackageData')
+        gremlin = StoragePool.get_connected_storage('GremlinHttp' if version_level else 'PackageGremlinHttp')
+
+        adapter_kwargs = {
+            'ecosystem': arguments['ecosystem'],
+            'name': arguments['name']
+        }
+        if version_level:
+            self._strict_assert(arguments.get('version'))
+            adapter_kwargs['version'] = arguments['version']
+
+        if arguments.get('force_graph_sync'):
+            tasks_to_sync = s3.list_available_task_results(arguments)
+            self.log.info("Force sync of all task results available on S3: %s", tasks_to_sync)
         else:
-            param = package_list
-            endpoint = self._INGEST_API_URL
+            tasks_to_sync = postgres.get_finished_task_names(arguments['document_id'])
+            self.log.info("Syncing results of tasks in the current run: %s", tasks_to_sync)
 
-        self.log.info("Invoke graph importer at url: '%s' for %s", endpoint, param)
-        response = requests.post(endpoint, json=param)
-
-        if response.status_code != 200:
-            raise RuntimeError("Failed to invoke graph import at '%s' for %s" % (endpoint, param))
-
-        self.log.info("Graph import succeeded with response: %s", response.text)
+        for task_name in tasks_to_sync:
+            task_result = s3.retrieve_task_result(task_name=task_name, **adapter_kwargs)
+            gremlin.store_task_result(task_name=task_name, task_result=task_result, **adapter_kwargs)
