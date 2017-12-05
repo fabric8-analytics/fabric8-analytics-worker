@@ -17,5 +17,5 @@ class S3CrowdSourceTags(AmazonS3):
         assert 'ecosystem' in node_args
 
         object_key = self._construct_object_key(node_args)
-        self.store_dict(result[1], object_key)
+        self.store_dict(result, object_key)
         return
