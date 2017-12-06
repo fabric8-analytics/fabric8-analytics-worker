@@ -137,7 +137,7 @@ def extract_component_details(component):
             "vulnerabilities": cves
         }
 
-    licenses = component.get("version", {}).get("licenses", [])
+    licenses = component.get("version", {}).get("declared_licenses", [])
     name = component.get("version", {}).get("pname", [""])[0]
     version = component.get("version", {}).get("version", [""])[0]
     ecosystem = component.get("version", {}).get("pecosystem", [""])[0]
@@ -213,7 +213,7 @@ def create_package_dict(graph_results, alt_dict=None):
                 'ecosystem': ecosystem,
                 'name': name,
                 'version': version,
-                'licenses': epv['ver'].get('licenses', []),
+                'licenses': epv['ver'].get('declared_licenses', []),
                 'latest_version': select_latest_version(
                     epv['pkg'].get('libio_latest_version', [''])[0],
                     epv['pkg'].get('latest_version', [''])[0]),

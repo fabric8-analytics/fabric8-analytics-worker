@@ -78,7 +78,7 @@ def extract_component_details(component):
         }
         cves.append(component_cve)
 
-    licenses = component.get("version", {}).get("licenses", [])
+    licenses = component.get("version", {}).get("declared_licenses", [])
     name = component.get("version", {}).get("pname", [""])[0]
     version = component.get("version", {}).get("version", [""])[0]
     ecosystem = component.get("version", {}).get("pecosystem", [""])[0]
