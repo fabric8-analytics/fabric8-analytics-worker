@@ -202,26 +202,29 @@ class TestCVEchecker(object):
         assert results['status'] == 'success'
         assert results['summary'] == ['CVE-2017-14696', 'CVE-2017-14695', 'CVE-2017-12791']
         # http://www.cvedetails.com/version/222059/Saltstack-Salt-2016.11.6.html
-        expected_details = [{
-            "cvss": {
-                "score": 5.0,
-                "vector": "AV:N/AC:L/Au:?/C:?/I:?/A:P"
+
+        expected_details = [
+            {
+                "cvss": {
+                    "score": 5.0,
+                    "vector": "AV:N/AC:L/Au:?/C:?/I:?/A:P"
+                },
+                "description": "SaltStack Salt before 2016.3.8, 2016.11.x before 2016.11.8, "
+                               "and 2017.7.x before 2017.7.2 allows remote attackers to cause "
+                               "a denial of service via a crafted authentication request.",
+                "id": "CVE-2017-14696",
+                "references": [
+                    "https://github.com/saltstack/salt/commit/"
+                    "5f8b5e1a0f23fe0f2be5b3c3e04199b57a53db5b",
+                    "https://docs.saltstack.com/en/latest/topics/releases/2016.11.8.html",
+                    "https://docs.saltstack.com/en/latest/topics/releases/2016.3.8.html",
+                    "http://lists.opensuse.org/opensuse-updates/2017-10/msg00073.html",
+                    "http://lists.opensuse.org/opensuse-updates/2017-10/msg00075.html",
+                    "https://bugzilla.redhat.com/show_bug.cgi?id=1500742",
+                    "https://docs.saltstack.com/en/latest/topics/releases/2017.7.2.html"
+                ],
+                "severity": "Medium"
             },
-            "description": "SaltStack Salt before 2016.3.8, 2016.11.x before 2016.11.8, "
-                           "and 2017.7.x before 2017.7.2 allows remote attackers to cause "
-                           "a denial of service via a crafted authentication request.",
-            "id": "CVE-2017-14696",
-            "references": [
-                "https://github.com/saltstack/salt/commit/5f8b5e1a0f23fe0f2be5b3c3e04199b57a53db5b",
-                "https://docs.saltstack.com/en/latest/topics/releases/2016.11.8.html",
-                "https://docs.saltstack.com/en/latest/topics/releases/2016.3.8.html",
-                "http://lists.opensuse.org/opensuse-updates/2017-10/msg00073.html",
-                "http://lists.opensuse.org/opensuse-updates/2017-10/msg00075.html",
-                "https://bugzilla.redhat.com/show_bug.cgi?id=1500742",
-                "https://docs.saltstack.com/en/latest/topics/releases/2017.7.2.html"
-            ],
-            "severity": "Medium"
-        },
             {
                 "cvss": {
                     "score": 7.5,
@@ -239,7 +242,8 @@ class TestCVEchecker(object):
                     "https://docs.saltstack.com/en/latest/topics/releases/2016.3.8.html",
                     "http://lists.opensuse.org/opensuse-updates/2017-10/msg00073.html",
                     "https://bugzilla.redhat.com/show_bug.cgi?id=1500748",
-                    "https://github.com/saltstack/salt/commit/80d90307b07b3703428ecbb7c8bb468e28a9ae6d",
+                    "https://github.com/saltstack/salt/commit/"
+                    "80d90307b07b3703428ecbb7c8bb468e28a9ae6d",
                     "http://lists.opensuse.org/opensuse-updates/2017-10/msg00075.html",
                     "https://docs.saltstack.com/en/latest/topics/releases/2017.7.2.html"
                 ],
@@ -263,8 +267,10 @@ class TestCVEchecker(object):
                     "https://docs.saltstack.com/en/latest/topics/releases/2017.7.1.html",
                     "https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=872399"
                 ],
-                "severity": "High"}]
 
+                "severity": "High"
+            }
+        ]
         assert_equal(results.get('details'), expected_details)
 
     @pytest.mark.usefixtures('nuget')
