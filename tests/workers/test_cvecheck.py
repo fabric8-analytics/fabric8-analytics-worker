@@ -85,6 +85,7 @@ class TestCVEchecker(object):
             "id": "CVE-2015-6420",
             "references": [
                 "http://www.securityfocus.com/bid/78872",
+                "https://www.tenable.com/security/research/tra-2017-23",
                 "https://www.tenable.com/security/research/tra-2017-14",
                 "https://h20566.www2.hpe.com/portal/site/hpsc/public/kb/"
                 "docDisplay?docId=emr_na-c05376917",
@@ -96,7 +97,7 @@ class TestCVEchecker(object):
             "severity": "High"}, {
             "cvss": {
                 "score": 7.5,
-                "vector": ""
+                "vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
             },
             "description": "It was found that the Apache commons-collections library permitted "
                            "code execution when deserializing objects involving a specially "
@@ -107,7 +108,7 @@ class TestCVEchecker(object):
             "references": [
                 "http://foxglovesecurity.com/2015/11/06/what-do-weblogic-websphere-jboss-jenkins-"
                 "opennms-and-your-application-have-in-common-this-vulnerability/"],
-            "severity": "",
+            "severity": "critical",
             'attribution': 'https://github.com/victims/victims-cve-db, CC BY-SA 4.0, modified'
         }
         ]
