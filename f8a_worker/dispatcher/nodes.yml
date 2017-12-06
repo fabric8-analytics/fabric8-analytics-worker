@@ -202,6 +202,12 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_RecommendationV2Task_v0'
       storage: 'BayesianPostgres'
+    - name: 'StackAnalyzerTask'
+      classname: 'StackAnalyzerTask'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_StackAnalyzerTask_v0'
+      storage: 'BayesianPostgres'
     - name: 'InitAnalysisFlow'
       import: 'f8a_worker.workers'
       max_retry: 0
@@ -330,6 +336,7 @@
     - 'bigQueryFlow'
     - 'stackApiGraphFlow'
     - 'stackApiGraphV2Flow'
+    - 'stackAnalyzerFlow'
     - 'livenessFlow'
     - 'cveCheckFlow'
     - 'bayesianPackageFlow'
