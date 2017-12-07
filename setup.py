@@ -12,8 +12,10 @@ setup(
     name='f8a_worker',
     version='0.2',
     scripts=[
-        'hack/workers.sh',
         'hack/queue_conf.py',
+        'hack/workers.sh',
+        'hack/worker-queues-env.sh',
+        'hack/worker-pre-hook.sh',
         'hack/worker-liveness.sh',
         'hack/worker-readiness.sh'
     ],

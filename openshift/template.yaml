@@ -23,7 +23,7 @@ objects:
           failurePolicy: Retry
           execNewPod:
             containerName: bayesian-worker
-            command: ["/alembic/run-db-migrations.sh"]
+            command: ["worker-pre-hook.sh"]
     template:
       metadata:
         labels:
