@@ -202,10 +202,6 @@ class TestCVEchecker(object):
         assert results['status'] == 'success'
         assert results['summary'] == ['CVE-2017-14696', 'CVE-2017-14695', 'CVE-2017-12791']
         # http://www.cvedetails.com/version/222059/Saltstack-Salt-2016.11.6.html
-<<<<<<< HEAD
-=======
-
->>>>>>> 728905a8fb78db347e113395e0cff850361c706d
         expected_details = [
             {
                 "cvss": {
@@ -270,12 +266,6 @@ class TestCVEchecker(object):
                     "https://docs.saltstack.com/en/latest/topics/releases/2017.7.1.html",
                     "https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=872399"
                 ],
-<<<<<<< HEAD
-                "severity": "High"
-            }
-        ]
-=======
->>>>>>> 728905a8fb78db347e113395e0cff850361c706d
 
                 "severity": "High"
             }
