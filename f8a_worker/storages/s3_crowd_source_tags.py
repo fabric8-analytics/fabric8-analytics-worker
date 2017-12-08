@@ -11,7 +11,7 @@ class S3CrowdSourceTags(AmazonS3):
 
     @staticmethod
     def get_object_key_path(ecosystem):
-        return "{ecosystem}".format(ecosystem=ecosystem) + "github/data_input_raw_package_list/"
+        return "{ecosystem}/github/data_input_raw_package_list/".format(ecosystem=ecosystem)
 
     def store(self, node_args, flow_name, task_name, task_id, result):
         assert 'ecosystem' in node_args
