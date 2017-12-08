@@ -455,6 +455,15 @@
         encryption: false
         versioned: true
 
+    - name: 'S3CrowdSourceTags'
+      import: 'f8a_worker.storages'
+      configuration:
+        <<: *configurationS3
+        bucket_name: 'dev-stack-analysis-clean-data'
+        region_name: 'us-east-1'
+        encryption: false
+        versioned: true
+
     - name: 'S3RepositoryDescription'
       import: 'f8a_worker.storages'
       configuration:
@@ -481,7 +490,7 @@
         region_name: 'us-east-1'
         encryption: false
         versioned: true
-  
+
     - name: 'S3ManualTagging'
       import: 'f8a_worker.storages'
       configuration:
