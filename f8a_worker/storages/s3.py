@@ -154,13 +154,19 @@ class AmazonS3(DataStorage):
         :param object_key: object key under which the file should be stored
         :return: object version or None if versioning is off
         """
-        with open(file_path, 'rb') as f:
-            return self.store_blob(f.read(), object_key)
+
+        f = None
+        try:
+            f = open(file_path, 'rb')
+            return self.store_blob(f, object_key)
+        finally:
+            if f is not None:
+                f.close()
 
     def store_blob(self, blob, object_key):
         """ Store blob on S3
 
-        :param blob: bytes to be stored
+        :param blob: bytes or stream to be stored
         :param object_key: object key under which the blob should be stored
         :return: object version or None if versioning is off
         """
