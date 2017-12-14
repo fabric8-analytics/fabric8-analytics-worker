@@ -1,4 +1,4 @@
-Worker definition in Bayesian
+Worker definition in fabric8-analytics
 -----------------------------
 
 Worker node is a self-contained unit encapsulating particular type of workload
@@ -8,7 +8,7 @@ control is established by message passing through a message bus, but these
 infrastructure details are outside of the scope of this document.
 
 ## Overview
-Tasks are currently abstracted via [Celery](https://celeryproject.org), which
+Tasks are currently abstracted via [Celery](http://www.celeryproject.org), which
 is a distributed task queue implemented on top of many different message
 passing mechanisms (AMQP, ZeroMQ, Redis, ORM mapping ...) and different
 storage backends for (non-complimentary) message persistence. Celery makes
@@ -19,14 +19,13 @@ function/method:
 @app.task
 def add_task(x, y):
     return x + y
-
 ```
 
 For the project purposes, there was developed project
 [Selinon](https://github.com/selinon) that is written on top of Celery and
 provides fine grained control of task flows. Configuration of the whole workflow
 is done in simple YAML configuration files (see [dispatcher configuration
-files](...)) which model time or data dependencies between tasks. You can
+files](../dispatcher/)) which model time or data dependencies between tasks. You can
 easily visualize flows by prepared script in `hack/visualize_flows.sh`. Make
 sure you have Selinon installed using `hack/update_selinon.sh` - Selinon has
 no releases now as it is still under development, so you have to install
@@ -75,7 +74,7 @@ at our disposal. The failed task can be automatically rescheduled after
 predefined time period, if it makes sense.
 
 For up2date list of all currently implemented tasks see
-[nodes.yml](https://github.com/fabric8-analytics/fabric8-analytics-worker/blob/master/f8a_worker/dispatcher/nodes.yml)
+[nodes.yml](../dispatcher/nodes.yml)
 Selinon configuration file that states all flow nodes available in the system.
 
 ## Utility workers
@@ -86,7 +85,7 @@ Workers that assist other workers but don't provide exposed data.
 
 * [digester.py](digester.py) - Computes various digests of all files found in target cache path
 
-* [init.py](init.py) - This task initializes whole analysis
+* [init_analysis_flow.py](init_analysis_flow.py) - This task initializes whole analysis
 
 * [linguist.py](linguist.py) - GitHub's tool to figure out what language is used in code
 
@@ -102,7 +101,7 @@ Workers that provide data exposed to the user.
 
 * [githuber.py](githuber.py) - Gets popularity and issues data from Github
 
-* [licenser.py](licenser.py) - Check licences of all files of a package
+* [license.py](license.py) - Check licences of all files of a package
 
 * [mercator.py](mercator.py) - Extracts ecosystem specific information and transforms it to a common scheme
 
