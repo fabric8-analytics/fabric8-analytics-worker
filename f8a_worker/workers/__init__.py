@@ -29,6 +29,7 @@ from f8a_worker.workers.recommender import RecommendationTask, RecommendationV2T
 from f8a_worker.workers.result_collector import ResultCollector, PackageResultCollector
 from f8a_worker.workers.stackaggregator import StackAggregatorTask
 from f8a_worker.workers.stackaggregator_v2 import StackAggregatorV2Task
+from f8a_worker.workers.stackanalyzer import StackAnalyzerTask
 from f8a_worker.workers.bookkeeper import BookkeeperTask
 from f8a_worker.workers.keywords_tagging import KeywordsTaggingTask
 from f8a_worker.workers.keywords_tagging import PackageKeywordsTaggingTask

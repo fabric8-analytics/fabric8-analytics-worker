@@ -1,0 +1,11 @@
+---
+  flow-definitions:
+    - name: 'stackAnalyzerFlow'
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_StackAnalyzerTask_v0'
+      edges:
+        - from:
+          to: 'StackAnalyzerTask'
+#        - from: 'StackAnalyzerTask'
+#          to: 'BookkeeperTask'
+#        - from: 'StackAnalyzerTask'
+#          to: 'ManifestKeeperTask'

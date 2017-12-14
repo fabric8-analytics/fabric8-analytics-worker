@@ -266,10 +266,10 @@ class TestCVEchecker(object):
                     "https://docs.saltstack.com/en/latest/topics/releases/2017.7.1.html",
                     "https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=872399"
                 ],
+
                 "severity": "High"
             }
         ]
-
         assert_equal(results.get('details'), expected_details)
 
     @pytest.mark.usefixtures('nuget')
