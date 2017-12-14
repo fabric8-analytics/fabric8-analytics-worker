@@ -797,6 +797,8 @@ class RecommendationV2Task(BaseTask):
             # Call PGM and get the response
             start = datetime.datetime.utcnow()
             pgm_response = self.call_pgm(input_task_for_pgm)
+            self.log.info('##### PGM Response %r' % pgm_response)
+
             elapsed_seconds = (datetime.datetime.utcnow() - start).total_seconds()
             msg = 'It took {t} seconds to get response from PGM ' \
                   'for external request {e}.'.format(t=elapsed_seconds,
@@ -826,7 +828,7 @@ class RecommendationV2Task(BaseTask):
                     # Get Companion Packages from Graph
                     comp_packages_graph = GraphDB().get_version_information(companion_packages,
                                                                             ecosystem)
-
+                    self.log.info('######## Companion Packages from Graph\n %r' % comp_packages_graph)
                     # Apply Version Filters
                     filtered_comp_packages_graph, filtered_list = GraphDB().filter_versions(
                         comp_packages_graph, input_stack)
@@ -866,6 +868,7 @@ class RecommendationV2Task(BaseTask):
                     # Get Alternate Packages from Graph
                     alt_packages_graph = GraphDB().get_version_information(
                         alternate_packages, ecosystem)
+                    self.log.info('######## Alternate Packages from Graph\n %r' % alt_packages_graph)
 
                     # Apply Version Filters
                     filtered_alt_packages_graph, filtered_list = GraphDB().filter_versions(
@@ -879,9 +882,11 @@ class RecommendationV2Task(BaseTask):
 
                     # apply license based filters
                     list_user_stack_comp = extract_user_stack_package_licenses(resolved, ecosystem)
+                    self.log.info('######### USER STACK COMPONENTS: %r' % list_user_stack_comp)
                     license_filter_output = apply_license_filter(list_user_stack_comp,
                                                                  filtered_alt_packages_graph,
                                                                  filtered_comp_packages_graph)
+                    self.log.info('######### FILTERED LICENSES \n %r' % license_filter_output)
 
                     lic_filtered_alt_graph = license_filter_output['filtered_alt_packages_graph']
                     lic_filtered_comp_graph = license_filter_output['filtered_comp_packages_graph']
