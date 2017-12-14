@@ -1,25 +1,9 @@
 #!/usr/bin/python3
+
 """
-Extracts ecosystem specific information and transforms it to a common scheme
+Code to transform data from Mercator [1] into a common scheme.
 
-Scans the cache path for manifest files (package.json, setup.py, *.gemspec, *.jar, Makefile etc.)
-to extract meta data and transform it a common scheme.
-
-Output: information such as: homepage, bug tracking, dependencies
-
-sample output:
-{'author': 'Aaron Patterson <aaronp@rubyforge.org>, Mike Dalessio '
-           '<mike.dalessio@gmail.com>, Yoko Harada <yokolet@gmail.com>',
- 'declared_licenses': ['MIT'],
- 'dependencies': ['mini_portile2 ~>2.0.0.rc2'],
- 'description': 'Nokogiri is an HTML, XML, SAX, and Reader parser.',
- 'devel_dependencies': ['rdoc ~>4.0',
-                        'hoe-bundler >=1.1',
-                        'hoe-debugging ~>1.2.1',
-                        'hoe ~>3.14'],
- 'homepage': 'http://nokogiri.org',
- 'name': 'nokogiri',
- 'version': '1.6.7.2'}
+[1] https://github.com/fabric8-analytics/mercator-go
 """
 
 import sys
@@ -33,13 +17,16 @@ from f8a_worker.utils import parse_gh_repo, tempdir
 
 
 # TODO: we need to unify the output from different ecosystems
+
 class DataNormalizer(object):
+    """Transforms data from Mercator into a common scheme."""
+
     description = 'Collects `Release` specific information from Mercator'
 
     @staticmethod
     def transform_keys(data, keymap, lower=True):
-        """
-         Collect known keys and/or rename existing keys
+        """Collect known keys and/or rename existing keys.
+
         :param data: dictionary, mercator output
         :param keymap: n-tuple of 2-tuples
             each 2-tuple can have one of these forms:
@@ -71,8 +58,10 @@ class DataNormalizer(object):
 
     @staticmethod
     def _join_name_email(name_email_dict, name_key='name', email_key='email'):
-        """ # {'name':'A', 'email':'B@C.com'} -> 'A <B@C.com>' """
+        """Join name and email values into a string.
 
+        # {'name':'A', 'email':'B@C.com'} -> 'A <B@C.com>'
+        """
         if not isinstance(name_email_dict, dict):
             return name_email_dict
 
@@ -85,9 +74,9 @@ class DataNormalizer(object):
 
     @staticmethod
     def _are_tests_implemented(data):
-        """
-        Say whether a package implements tests based on metadata info only isn't much reliable,
-        but we have some indicators.
+        """Say whether a package implements tests.
+
+        Metadata info only isn't much reliable, but we have some indicators.
         """
         # NPM - package.json: metadata can contain 'scripts'.'test'
         if 'scripts' in data:  # added by _handle_javascript()
@@ -117,7 +106,7 @@ class DataNormalizer(object):
         return False
 
     def _handle_javascript(self, data):
-        "Handle Javascript package (package.json) analysis data"
+        """Handle Javascript package (package.json) analysis data."""
         key_map = ((('license', 'licenses',), 'declared_licenses'),
                    ('_dependency_tree_lock_file', '_dependency_tree_lock'), ('homepage',),
                    ('version',),
@@ -207,7 +196,7 @@ class DataNormalizer(object):
                     base['engines'][name] = version_spec.replace(' ', '')
 
         def _process_level(level, collect):
-            "Process a `level` of dependency tree and store data in `collect`"
+            """Process a `level` of dependency tree and store data in `collect`."""
             for name, data in level.items():
                 deps = []
                 item = {
@@ -234,15 +223,17 @@ class DataNormalizer(object):
 
     @staticmethod
     def _identify_gh_repo(homepage):
-        """Returns code repository dict filled with homepage, if homepage is GH repo
-        (None otherwise)
-        """
+        """Return code repository dict filled with homepage."""
         if parse_gh_repo(homepage):
             return {'url': homepage, 'type': 'git'}
         return None
 
     @staticmethod
     def _split_keywords(keywords, separator=None):
+        """Split keywords (string) with separator.
+
+        If separator is not specified, use either colon or whitespace.
+        """
         if keywords is None:
             return []
         if isinstance(keywords, list):
@@ -254,7 +245,7 @@ class DataNormalizer(object):
         return keywords
 
     def _handle_python(self, data):
-        """ setup.py """
+        """Handle setup.py."""
         if 'error' in data:
             # mercator by default (MERCATOR_INTERPRET_SETUP_PY=false) doesn't interpret setup.py
             return {}
@@ -272,7 +263,7 @@ class DataNormalizer(object):
         return transformed
 
     def _handle_python_dist(self, data):
-        """ PKG-INFO """
+        """Handle PKG-INFO."""
         details = data.get('extensions', {}).get('python.details', None)
         if details is not None:
             contacts = details.get('contacts', [])
@@ -509,6 +500,7 @@ class DataNormalizer(object):
         return transformed
 
     def handle_data(self, data, keep_path=False):
+        """Run corresponding handler based on ecosystem."""
         def _passthrough(unused):
             # log.debug('ecosystem %s not handled', data['ecosystem'])
             pass
@@ -535,7 +527,7 @@ class DataNormalizer(object):
 
     @staticmethod
     def get_outermost_items(list_):
-        "Sort by the depth of the path so the outermost come first"
+        """Sort by the depth of the path so the outermost come first."""
         sorted_list = sorted(list_, key=lambda a: len(a['path'].split(path.sep)))
         if sorted_list:
             outermost_len = len(sorted_list[0]['path'].split(path.sep))
@@ -545,7 +537,7 @@ class DataNormalizer(object):
 
     @staticmethod
     def _sanitize_data(data):
-        # make sure deps are never 'null'
+        """Make sure deps are never 'null'."""
         if 'dependencies' in data and data['dependencies'] is None:
             data['dependencies'] = []
         if 'devel_dependencies' in data and data['devel_dependencies'] is None:
@@ -555,6 +547,7 @@ class DataNormalizer(object):
 
     @staticmethod
     def _dict2json(o, pretty=True):
+        """Serialize dictionary to json."""
         kwargs = {}
         if pretty:
             kwargs['sort_keys'] = True,
@@ -564,6 +557,7 @@ class DataNormalizer(object):
         return json.dumps(o, **kwargs)
 
     def main(self):
+        """Read Mercator produced data from stdin and process."""
         parser = argparse.ArgumentParser(sys.argv[0],
                                          description='Data normalizer for mercator')
         parser.add_argument('--restricted', dest='restricted', action='store_true',
