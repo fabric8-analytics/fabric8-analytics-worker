@@ -5,11 +5,11 @@
       edges:
         - from:
           to: 'GraphAggregatorTask'
-        - from:
-          to: 'ManifestKeeperTask'
+        #- from:
+        #  to: 'ManifestKeeperTask'
         - from: 'GraphAggregatorTask'
           to: 'stack_aggregator_v2'
-        - from: 'GraphAggregatorTask'
-          to: 'BookkeeperTask'
+        #- from: 'GraphAggregatorTask'
+        #  to: 'BookkeeperTask'
         - from: 'GraphAggregatorTask'
           to: 'recommendation_v2'
