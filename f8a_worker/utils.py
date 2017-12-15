@@ -382,10 +382,12 @@ class ThreadPool(object):
                 self.queue.task_done()
 
     def __enter__(self):
+        """Enter context manager."""
         self.start()
         return self
 
     def __exit__(self, type, value, traceback):
+        """Exit context manager."""
         self.join()
 
 
