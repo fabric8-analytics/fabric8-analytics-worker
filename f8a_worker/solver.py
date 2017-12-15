@@ -1,3 +1,5 @@
+"""Classes for resolving dependencies as specified in each ecosystem."""
+
 import anymarkup
 from bs4 import BeautifulSoup
 from collections import defaultdict
@@ -24,28 +26,29 @@ logger = logging.getLogger(__name__)
 
 
 class SolverException(Exception):
+    """Exception to be raised in Solver."""
+
     pass
 
 
 class Tokens(object):
-    """ Comparison token representation """
+    """Comparison token representation."""
+
     operators = ['>=', '<=', '==', '>', '<', '=', '!=']
     (GTE, LTE, EQ1, GT, LT, EQ2, NEQ) = range(len(operators))
 
 
 def compare_version(a, b):
-    """
-    Compare two version strings
+    """Compare two version strings.
 
     :param a: str
     :param b: str
     :return: -1 / 0 / 1
     """
-
     def _range(q):
-        """
-        Convert a version string to array of integers:
-           "1.2.3" -> [1, 2, 3]
+        """Convert a version string to array of integers.
+
+        "1.2.3" -> [1, 2, 3]
 
         :param q: str
         :return: List[int]
@@ -60,8 +63,7 @@ def compare_version(a, b):
         return r
 
     def _append_zeros(x, num_zeros):
-        """
-        Append `num_zeros` zeros to a copy of `x` and return it
+        """Append `num_zeros` zeros to a copy of `x` and return it.
 
         :param x: List[int]
         :param num_zeros: int
@@ -73,8 +75,7 @@ def compare_version(a, b):
         return nx
 
     def _cardinal(x, y):
-        """
-        Make both input lists be of same cardinality
+        """Make both input lists be of same cardinality.
 
         :param x: List[int]
         :param y: List[int]
@@ -94,25 +95,32 @@ def compare_version(a, b):
 
 
 class ReleasesFetcher(object):
+    """Base class for fetching releases."""
+
     def __init__(self, ecosystem):
+        """Initialize ecosystem."""
         self._ecosystem = ecosystem
 
     @property
     def ecosystem(self):
+        """Get ecosystem property."""
         return self._ecosystem
 
     def fetch_releases(self, package):
-        return None, None
+        """Abstract method for getting list of releases versions."""
+        raise NotImplementedError
 
 
 class PypiReleasesFetcher(ReleasesFetcher):
+    """Releases fetcher for Pypi."""
+
     def __init__(self, ecosystem):
+        """Initialize instance."""
         super(PypiReleasesFetcher, self).__init__(ecosystem)
         self._rpc = ServerProxy(self.ecosystem.fetch_url)
 
     def _search_package_name(self, package):
-        """
-        Case insensitive search
+        """Case insensitive search.
 
         :param package: str, Name of the package
         :return:
@@ -138,9 +146,10 @@ class PypiReleasesFetcher(ReleasesFetcher):
         raise ValueError("Package {} not found".format(package))
 
     def fetch_releases(self, package):
-        """ XML-RPC API Documentation: https://wiki.python.org/moin/PyPIXmlRpc
+        """Fetch package releases versions.
 
-            Signature: package_releases(package_name, show_hidden=False)
+        XML-RPC API Documentation: https://wiki.python.org/moin/PyPIXmlRpc
+        Signature: package_releases(package_name, show_hidden=False)
         """
         if not package:
             raise ValueError("package")
@@ -157,13 +166,16 @@ class PypiReleasesFetcher(ReleasesFetcher):
 
 
 class NpmReleasesFetcher(ReleasesFetcher):
+    """Releases fetcher for NPM."""
+
     def __init__(self, ecosystem):
+        """Initialize instance."""
         super(NpmReleasesFetcher, self).__init__(ecosystem)
 
     def fetch_releases(self, package):
-        """
-        Example output from the NPM endpoint:
+        """Fetch package releases versions.
 
+        Example output from the NPM endpoint:
         {
             ...
             versions: {
@@ -189,10 +201,14 @@ class NpmReleasesFetcher(ReleasesFetcher):
 
 
 class RubyGemsReleasesFetcher(ReleasesFetcher):
+    """Releases fetcher for Rubygems."""
+
     def __init__(self, ecosystem):
+        """Initialize instance."""
         super(RubyGemsReleasesFetcher, self).__init__(ecosystem)
 
     def _search_package_name(self, package):
+        """Search package on rubygems.org."""
         url = '{url}/search.json?query={pkg}'.format(url=self.ecosystem.fetch_url,
                                                      pkg=package)
         r = get(url)
@@ -206,9 +222,9 @@ class RubyGemsReleasesFetcher(ReleasesFetcher):
         raise ValueError("Package {} not found".format(package))
 
     def fetch_releases(self, package):
-        """
-        Example output from the RubyGems endpoint
+        """Fetch package releases versions.
 
+        Example output from the RubyGems endpoint
         [
            {
              "number": "1.0.0",
@@ -234,14 +250,15 @@ class RubyGemsReleasesFetcher(ReleasesFetcher):
 
 
 class NugetReleasesFetcher(ReleasesFetcher):
+    """Releases fetcher for Nuget."""
+
     def __init__(self, ecosystem):
+        """Initialize instance."""
         super(NugetReleasesFetcher, self).__init__(ecosystem)
 
     @staticmethod
     def scrape_versions_from_nuget_org(package, sort_by_downloads=False):
-        """
-        Scrape 'Version History' from https://www.nuget.org/packages/<package>
-        """
+        """Scrape 'Version History' from https://www.nuget.org/packages/<package>."""
         releases = []
         nuget_packages_url = 'https://www.nuget.org/packages/'
         page = get(nuget_packages_url + package)
@@ -261,6 +278,7 @@ class NugetReleasesFetcher(ReleasesFetcher):
         return package, [p[0] for p in reversed(releases)]
 
     def fetch_releases(self, package):
+        """Fetch package releases versions."""
         if not package:
             raise ValueError("package not specified")
 
@@ -273,11 +291,18 @@ class NugetReleasesFetcher(ReleasesFetcher):
 
 
 class MavenReleasesFetcher(ReleasesFetcher):
+    """Releases fetcher for Maven."""
+
     def __init__(self, ecosystem):
+        """Initialize instance."""
         super().__init__(ecosystem)
 
     @staticmethod
-    def releases_from_maven_org(url):
+    def releases_from_maven_org(group_id, artifact_id):
+        """Fetch releases versions for group_id/artifact_id from maven.org."""
+        maven_url = "http://repo1.maven.org/maven2/"
+        dir_path = "{g}/{a}/".format(g=group_id.replace('.', '/'), a=artifact_id)
+        url = urljoin(maven_url, dir_path)
         releases = []
         page = BeautifulSoup(get(url).text, 'html.parser')
         for link in page.find_all('a'):
@@ -286,6 +311,7 @@ class MavenReleasesFetcher(ReleasesFetcher):
         return releases
 
     def fetch_releases(self, package):
+        """Fetch package releases versions."""
         if not package:
             raise ValueError("package not specified")
         try:
@@ -293,17 +319,18 @@ class MavenReleasesFetcher(ReleasesFetcher):
         except ValueError as exc:
             raise ValueError("Invalid Maven coordinates: {a}".format(a=package)) from exc
 
-        maven_url = "http://repo1.maven.org/maven2/"
-        dir_path = "{g}/{a}/".format(g=group_id.replace('.', '/'), a=artifact_id)
-        url = urljoin(maven_url, dir_path)
-        return package, self.releases_from_maven_org(url)
+        return package, self.releases_from_maven_org(group_id, artifact_id)
 
 
 class GolangReleasesFetcher(ReleasesFetcher):
+    """Releases fetcher for Golang."""
+
     def __init__(self, ecosystem):
+        """Initialize instance."""
         super(GolangReleasesFetcher, self).__init__(ecosystem)
 
     def fetch_releases(self, package):
+        """Fetch package releases versions."""
         if not package:
             raise ValueError('package not specified')
 
@@ -327,14 +354,15 @@ class GolangReleasesFetcher(ReleasesFetcher):
 
 
 class F8aReleasesFetcher(ReleasesFetcher):
+    """Releases fetcher for internal database."""
+
     def __init__(self, ecosystem, database):
+        """Initialize instance."""
         super(F8aReleasesFetcher, self).__init__(ecosystem)
         self.database = database
 
     def fetch_releases(self, package):
-        """
-        Fetch analysed versions for specific ecosystem + package from f8a
-        """
+        """Fetch analysed versions for specific ecosystem + package from f8a."""
         query = self.database.query(Version).\
             join(Analysis).join(Package).join(Ecosystem).\
             filter(Package.name == package,
@@ -345,7 +373,10 @@ class F8aReleasesFetcher(ReleasesFetcher):
 
 
 class Dependency(object):
+    """A Dependency consists of (package) name and version spec."""
+
     def __init__(self, name, spec):
+        """Initialize instance."""
         self._name = name
         # spec is a list where each item is either 2-tuple (operator, version) or list of these
         # example: [[('>=', '0.6.0'), ('<', '0.7.0')], ('>', '1.0.0')] means:
@@ -354,24 +385,28 @@ class Dependency(object):
 
     @property
     def name(self):
+        """Get name property."""
         return self._name
 
     @property
     def spec(self):
+        """Get version spec property."""
         return self._spec
 
     def __contains__(self, item):
+        """Implement 'in' operator."""
         return self.check(item)
 
     def __repr__(self):
+        """Return string representation of this instance."""
         return "{} {}".format(self.name, self.spec)
 
     def __eq__(self, other):
+        """Implement '==' operator."""
         return self.name == other.name and self.spec == other.spec
 
     def check(self, version):
-        """
-        Check if `version` fits into our dependency specification
+        """Check if `version` fits into our dependency specification.
 
         :param version: str
         :return: bool
@@ -411,14 +446,18 @@ class Dependency(object):
 
 
 class DependencyParser(object):
+    """Base class for Dependency parsing."""
+
     def parse(self, specs):
+        """Abstract method for Dependency parsing."""
         pass
 
     @staticmethod
     def compose_sep(deps, separator):
-        """
-        Opposite of parse()
+        """Opposite of parse().
+
         :param deps: list of Dependency()
+        :param separator: when joining dependencies, use this separator
         :return: dict of {name: version spec}
         """
         result = {}
@@ -431,15 +470,15 @@ class DependencyParser(object):
 
 
 class PypiDependencyParser(DependencyParser):
+    """Pypi Dependency parsing."""
+
     @staticmethod
     def _parse_python(spec):
-        """
-        Parse PyPI specification of a single dependency
+        """Parse PyPI specification of a single dependency.
 
         :param spec: str, for example "Django>=1.5,<1.8"
         :return: [Django [[('>=', '1.5'), ('<', '1.8')]]]
         """
-
         def _extract_op_version(spec):
             # https://www.python.org/dev/peps/pep-0440/#compatible-release
             if spec.operator == '~=':
@@ -470,8 +509,7 @@ class PypiDependencyParser(DependencyParser):
                 return spec.operator, spec.version
 
         def _get_pip_spec(requirements):
-            '''In Pip 8+ there's no `specs` field and we have to dig the
-            information from the `specifier` field'''
+            """There's no `specs` field In Pip 8+, take info from `specifier` field."""
             if hasattr(requirements, 'specs'):
                 return requirements.specs
             elif hasattr(requirements, 'specifier'):
@@ -493,28 +531,33 @@ class PypiDependencyParser(DependencyParser):
         return dependency
 
     def parse(self, specs):
+        """Parse specs."""
         return [self._parse_python(s) for s in specs]
 
     @staticmethod
     def compose(deps):
+        """Compose deps."""
         return DependencyParser.compose_sep(deps, ',')
 
     @staticmethod
     def restrict_versions(deps):
+        """Not implemented."""
         return deps  # TODO
 
 
 class NpmDependencyParser(DependencyParser):
+    """NPM Dependency parsing."""
+
     @staticmethod
     def _parse_npm_tokens(spec):
+        """Parse npm tokens."""
         for token in Tokens.operators:
             if token in spec:
                 return token, spec.split(token)[1]
         return spec,
 
     def _parse_npm(self, name, spec):
-        """
-        Parse NPM specification of a single dependency
+        """Parse NPM specification of a single dependency.
 
         :param name: str
         :param spec: str
@@ -540,6 +583,7 @@ class NpmDependencyParser(DependencyParser):
         return Dependency(name, ret)
 
     def parse(self, specs):
+        """Transform list of dependencies (strings) to list of Dependency."""
         deps = []
         for spec in specs:
             name, ver = spec.split(' ', 1)
@@ -551,12 +595,12 @@ class NpmDependencyParser(DependencyParser):
 
     @staticmethod
     def compose(deps):
+        """Oposite of parse()."""
         return DependencyParser.compose_sep(deps, ' ')
 
     @staticmethod
     def restrict_versions(deps):
-        """
-        From list of semver ranges select only the most restricting ones for each operator.
+        """From list of semver ranges select only the most restricting ones for each operator.
 
         :param deps:  list of Dependency(), example:
                            [node [('>=', '0.6.0')], node [('<', '1.0.0')], node [('>=', '0.8.0')]]
@@ -600,9 +644,10 @@ RubyGemsDependencyParser = NpmDependencyParser
 
 
 class OSSIndexDependencyParser(NpmDependencyParser):
+    """Parse OSS Index version specification."""
+
     def _parse_npm(self, name, spec):
-        """ Parse OSS Index version specification.
-            It's similar to NPM semver, with few tweaks. """
+        """Parse OSS Index version specification. It's similar to NPM semver, with few tweaks."""
         # sometimes there's '|' instead of  '||', but the meaning seems to be the same
         spec = spec.replace(' | ', ' || ')
         # remove superfluous brackets
@@ -611,8 +656,15 @@ class OSSIndexDependencyParser(NpmDependencyParser):
 
 
 class NugetDependencyParser(object):
-    # https://docs.microsoft.com/en-us/nuget/create-packages/dependency-versions#version-ranges
+    """Nuget version specification parsing."""
+
     def parse(self, specs):
+        """Transform list of dependencies (strings) to list of Dependency.
+
+        https://docs.microsoft.com/en-us/nuget/create-packages/dependency-versions#version-ranges
+        :param specs:  list of dependencies (strings)
+        :return: list of Dependency
+        """
         deps = []
         for spec in specs:
             name, version_range = spec.split(' ', 1)
@@ -664,26 +716,28 @@ class NugetDependencyParser(object):
 
 
 class NoOpDependencyParser(DependencyParser):
-    """
-    Dummy dependency parser for ecosystems that don't support version ranges.
-    """
+    """Dummy dependency parser for ecosystems that don't support version ranges."""
+
     def parse(self, specs):
+        """Transform list of dependencies (strings) to list of Dependency."""
         return [Dependency(*x.split(' ')) for x in specs]
 
     @staticmethod
     def compose(deps):
+        """Opposite of parse()."""
         return DependencyParser.compose_sep(deps, ' ')
 
     @staticmethod
     def restrict_versions(deps):
+        """Not implemented."""
         return deps
 
 
 class GolangDependencyParser(DependencyParser):
-    """
-    Dependency parser for Golang.
-    """
+    """Dependency parser for Golang."""
+
     def parse(self, specs):
+        """Transform list of dependencies (strings) to list of Dependency."""
         dependencies = []
         for spec in specs:
             spec_list = spec.split(' ')
@@ -695,15 +749,20 @@ class GolangDependencyParser(DependencyParser):
 
     @staticmethod
     def compose(deps):
+        """Opposite of parse()."""
         return DependencyParser.compose_sep(deps, ' ')
 
     @staticmethod
     def restrict_versions(deps):
+        """Not implemented."""
         return deps
 
 
 class Solver(object):
+    """Base class for resolving dependencies."""
+
     def __init__(self, ecosystem, dep_parser=None, fetcher=None, highest_dependency_version=True):
+        """Initialize instance."""
         self.ecosystem = ecosystem
         self._dependency_parser = dep_parser
         self._release_fetcher = fetcher
@@ -711,22 +770,22 @@ class Solver(object):
 
     @property
     def dependency_parser(self):
+        """Return DependencyParser instance used by this solver."""
         return self._dependency_parser
 
     @property
     def release_fetcher(self):
+        """Return ReleasesFetcher instance used by this solver."""
         return self._release_fetcher
 
     def solve(self, dependencies, graceful=True, all_versions=False):
-        """
-        Solve `dependencies` against upstream repository
+        """Solve `dependencies` against upstream repository.
 
         :param dependencies: List, List of dependencies in native format
         :param graceful: bool, Print info output to stdout
         :param all_versions: bool, Return all matched versions instead of the latest
         :return: Dict[str, str], Matched versions
         """
-
         solved = {}
         for dep in self.dependency_parser.parse(dependencies):
             logger.debug("Fetching releases for: {}".format(dep))
@@ -763,29 +822,44 @@ class Solver(object):
 
 
 class PypiSolver(Solver):
+    """Pypi dependencies solver."""
+
     def __init__(self, ecosystem, parser=None, fetcher=None):
+        """Initialize instance."""
         super(PypiSolver, self).__init__(ecosystem,
                                          parser or PypiDependencyParser(),
                                          fetcher or PypiReleasesFetcher(ecosystem))
 
 
 class NpmSolver(Solver):
+    """Npm dependencies solver."""
+
     def __init__(self, ecosystem, parser=None, fetcher=None):
+        """Initialize instance."""
         super(NpmSolver, self).__init__(ecosystem,
                                         parser or NpmDependencyParser(),
                                         fetcher or NpmReleasesFetcher(ecosystem))
 
 
 class RubyGemsSolver(Solver):
+    """Rubygems dependencies solver."""
+
     def __init__(self, ecosystem, parser=None, fetcher=None):
+        """Initialize instance."""
         super(RubyGemsSolver, self).__init__(ecosystem,
                                              parser or RubyGemsDependencyParser(),
                                              fetcher or RubyGemsReleasesFetcher(ecosystem))
 
 
 class NugetSolver(Solver):
-    # https://docs.microsoft.com/en-us/nuget/release-notes/nuget-2.8#-dependencyversion-switch
+    """Nuget dependencies solver.
+
+    Nuget is a bit specific because it by default resolves version specs to lowest possible version.
+    https://docs.microsoft.com/en-us/nuget/release-notes/nuget-2.8#-dependencyversion-switch
+    """
+
     def __init__(self, ecosystem, parser=None, fetcher=None):
+        """Initialize instance."""
         super(NugetSolver, self).__init__(ecosystem,
                                           parser or NugetDependencyParser(),
                                           fetcher or NugetReleasesFetcher(ecosystem),
@@ -793,22 +867,29 @@ class NugetSolver(Solver):
 
 
 class MavenManualSolver(Solver):
-    """ If you need to resolve all versions or use specific DependencyParser.
-        Otherwise use MavenSolver (below).
+    """Use this only if you need to resolve all versions or use specific DependencyParser.
+
+    Otherwise use MavenSolver (below).
     """
+
     def __init__(self, ecosystem, parser, fetcher=None):
+        """Initialize instance."""
         super().__init__(ecosystem,
                          parser,
                          fetcher or MavenReleasesFetcher(ecosystem))
 
 
 class GolangSolver(Solver):
+    """Golang dependencies solver."""
+
     def __init__(self, ecosystem, parser=None, fetcher=None):
+        """Initialize instance."""
         super(GolangSolver, self).__init__(ecosystem,
                                            parser or GolangDependencyParser(),
                                            fetcher or GolangReleasesFetcher(ecosystem))
 
     def solve(self, dependencies):
+        """Solve `dependencies` against upstream repository."""
         result = {}
         for dependency in self.dependency_parser.parse(dependencies):
             if dependency.spec:
@@ -820,8 +901,8 @@ class GolangSolver(Solver):
 
 
 class MavenSolver(object):
-    """
-    Doesn't inherit from Solver, because we don't use its solve().
+    """Doesn't inherit from Solver, because we don't use its solve().
+
     We also don't need a DependencyParser nor a ReleasesFetcher for Maven.
     'mvn versions:resolve-ranges' does all the dirty work for us.
     Resolves only to one version, so if you need solve(all_versions=True), use MavenManualSolver
@@ -829,9 +910,11 @@ class MavenSolver(object):
 
     @staticmethod
     def _generate_pom_xml(to_solve):
-        """
-        Create pom.xml with dependencies from to_solve and run 'mvn versions:resolve-ranges',
+        """Create pom.xml with dependencies from to_solve.
+
+        And run 'mvn versions:resolve-ranges',
         which resolves the version ranges (overwrites the pom.xml).
+
         :param to_solve: {"groupId:artifactId": "version-range"}
         """
         project = etree.Element('project')
@@ -852,8 +935,8 @@ class MavenSolver(object):
 
     @staticmethod
     def _dependencies_from_pom_xml():
-        """
-        Extract dependencies from pom.xml in current directory
+        """Extract dependencies from pom.xml in current directory.
+
         :return: {"groupId:artifactId": "version"}
         """
         solved = {}
@@ -869,8 +952,8 @@ class MavenSolver(object):
 
     @staticmethod
     def _resolve_versions(to_solve):
-        """
-        Resolve version ranges in to_solve
+        """Resolve version ranges in to_solve.
+
         :param to_solve: {"groupId:artifactId": "version-range"}
         :return: {"groupId:artifactId": "version"}
         """
@@ -883,10 +966,12 @@ class MavenSolver(object):
 
     @staticmethod
     def is_version_range(ver_spec):
+        """Check whether ver_spec contains version range."""
         # http://maven.apache.org/enforcer/enforcer-rules/versionRanges.html
         return re.search('[,()\[\]]', ver_spec) is not None
 
     def solve(self, dependencies):
+        """Solve version ranges in dependencies."""
         already_solved = {}
         to_solve = {}
         for dependency in dependencies:
@@ -901,8 +986,7 @@ class MavenSolver(object):
 
 
 def get_ecosystem_solver(ecosystem, with_parser=None, with_fetcher=None):
-    """
-    Get `Solver` instance for particular ecosystem
+    """Get Solver subclass instance for particular ecosystem.
 
     :param ecosystem: Ecosystem
     :param with_parser: DependencyParser instance
@@ -929,6 +1013,7 @@ def get_ecosystem_solver(ecosystem, with_parser=None, with_fetcher=None):
 
 
 def get_ecosystem_parser(ecosystem):
+    """Get DependencyParser subclass instance for particular ecosystem."""
     if ecosystem.is_backed_by(EcosystemBackend.maven):
         return NoOpDependencyParser()
     elif ecosystem.is_backed_by(EcosystemBackend.npm):
