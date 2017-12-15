@@ -1,4 +1,4 @@
-FROM registry.devshift.net/fabric8-analytics/f8a-worker-base:0538e79
+FROM registry.devshift.net/fabric8-analytics/f8a-worker-base:d9e95d5
 
 ENV LANG=en_US.UTF-8 \
     # place where to download & unpack artifacts
