@@ -18,6 +18,9 @@ fast-docker-build:
 fast-docker-build-tests: fast-docker-build
 	docker build -t worker-tests -f Dockerfile.tests .
 
+fast-docker-build-sam: fast-docker-build-sam
+	docker build .
+
 test: fast-docker-build-tests
 	./runtest.sh
 
