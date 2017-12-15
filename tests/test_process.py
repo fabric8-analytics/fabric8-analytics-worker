@@ -1,3 +1,5 @@
+"""Tests covering code in process.py."""
+
 import glob
 import os
 import os.path as osp
@@ -8,7 +10,10 @@ from f8a_worker.process import Git, IndianaJones
 
 
 class TestGit(object):
+    """Test Git class."""
+
     def test_git_add_and_commit_everything_with_dotgit(self, tmpdir):
+        """Test Git.add_and_commit_everything()."""
         # if there's a .git file somewhere in the archive, we don't want it to fail adding
         subprocess.check_output(['git', 'init', str(tmpdir)], universal_newlines=True)
         d = os.path.join(str(tmpdir), 'foo')
@@ -23,6 +28,8 @@ class TestGit(object):
 
 
 class TestIndianaJones(object):
+    """Test IndianaJones class."""
+
     @pytest.mark.parametrize("name, version, expected_digest", [
         # Prior to npm-2.x.x (Fedora 24)
         # npm client was repackaging modules on download. It modified file permissions inside
@@ -36,6 +43,7 @@ class TestIndianaJones(object):
         ("abbrev", "1.0.4", "8dc0f480571a4a19e74f1abd4f31f6a70f94953d1ccafa16ed1a544a19a6f3a8")
     ])
     def test_fetch_npm_specific(self, tmpdir, npm, name, version, expected_digest):
+        """Test fetching of npm artifact."""
         cache_path = subprocess.check_output(["npm", "config", "get", "cache"],
                                              universal_newlines=True).strip()
         assert ".npm" in cache_path
@@ -54,6 +62,7 @@ class TestIndianaJones(object):
         ('six', '1.0.0', 'ca79c14c8cb5e58912d185f0e07ca9c687e232b7c68c4b73bf1c83ef5979333e'),
     ])
     def test_fetch_pypi_specific(self, tmpdir, pypi, name, version, expected_digest):
+        """Test fetching of pypi artifact."""
         digest, path = IndianaJones.fetch_artifact(pypi,
                                                    artifact=name,
                                                    version=version,
@@ -68,6 +77,7 @@ class TestIndianaJones(object):
         ('permutation', '0.1.7', 'e715cccaccb8e2d1450fbdda85bbe84963a32e9bf612db278cbb3d6781267638')
     ])
     def test_fetch_rubygems_specific(self, tmpdir, rubygems, name, version, expected_digest):
+        """Test fetching of rubygems artifact."""
         digest, path = IndianaJones.fetch_artifact(rubygems,
                                                    artifact=name,
                                                    version=version,
@@ -81,6 +91,7 @@ class TestIndianaJones(object):
          'cb6cdb7de8d37cb1b15b23867435c7dbbeaa1ca4b766f434138a8b9ef131994f'),
     ])
     def test_fetch_maven_specific(self, tmpdir, maven, name, version, expected_digest):
+        """Test fetching of maven artifact."""
         digest, path = IndianaJones.fetch_artifact(maven,
                                                    artifact=name,
                                                    version=version,
@@ -94,6 +105,7 @@ class TestIndianaJones(object):
         ('NUnit', '3.7.1', 'db714c0a01d8a172e6c378144b1192290263f8c308e8e2baba9c11d9fe165db4'),
     ])
     def test_fetch_nuget_specific(self, tmpdir, nuget, name, version, expected_digest):
+        """Test fetching of nuget artifact."""
         digest, path = IndianaJones.fetch_artifact(nuget,
                                                    artifact=name,
                                                    version=version,
@@ -109,6 +121,7 @@ class TestIndianaJones(object):
          'f928494dcb92b86e31a4b5f3fba8daa9d54e614e8e4dcbe9f47f22cfe05a3be1')
     ])
     def test_fetch_go_specific(self, tmpdir, go, name, version, expected_digest):
+        """Test fetching of go artifact."""
         digest, path = IndianaJones.fetch_artifact(go,
                                                    artifact=name,
                                                    version=version,
