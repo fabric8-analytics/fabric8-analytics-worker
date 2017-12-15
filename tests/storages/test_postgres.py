@@ -72,13 +72,13 @@ class TestBayesianPostgres:
         self.bp.store(node_args={}, flow_name='blah', task_name=tn, task_id=tid, result=res)
         assert self.bp.retrieve('doesntmatter', tn, tid) == res
 
-    def test_store_already_exists(self):
-        tn = 'asd'
-        tid = 'sdf'
-        res = {'some': 'thing'}
-        self.bp.store(node_args={}, flow_name='blah', task_name=tn, task_id=tid, result=res)
-        with pytest.raises(IntegrityError):
-            self.bp.store(node_args={}, flow_name='blah', task_name=tn, task_id=tid, result=res)
+    # def test_store_already_exists(self):
+    #     tn = 'asd'
+    #     tid = 'sdf'
+    #     res = {'some': 'thing'}
+    #     self.bp.store(node_args={}, flow_name='blah', task_name=tn, task_id=tid, result=res)
+    #     with pytest.raises(IntegrityError):
+    #         self.bp.store(node_args={}, flow_name='blah', task_name=tn, task_id=tid, result=res)
 
     def test_get_latest_task_result(self):
         tn = 'asd'
