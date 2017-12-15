@@ -3,7 +3,7 @@ import json
 from selinon import FatalTaskError
 from sqlalchemy.exc import SQLAlchemyError
 
-from f8a_worker.base_api import BaseAPITask
+from f8a_worker.base import BaseTask
 from f8a_worker.manifests import get_manifest_descriptor_by_filename
 from f8a_worker.models import StackAnalysisRequest
 from f8a_worker.solver import get_ecosystem_solver
@@ -11,7 +11,7 @@ from f8a_worker.utils import tempdir
 from f8a_worker.workers.mercator import MercatorTask
 
 
-class GraphAggregatorTask(BaseAPITask):
+class GraphAggregatorTask(BaseTask):
     _analysis_name = 'graph_aggregator'
     schema_ref = None
 
