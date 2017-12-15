@@ -13,6 +13,7 @@ import semantic_version as sv
 from f8a_worker.graphutils import (GREMLIN_SERVER_URL_REST, create_package_dict,
                                    select_latest_version, LICENSE_SCORING_URL_REST)
 from f8a_worker.base import BaseTask
+from f8a_worker.base_api import BaseAPITask
 from f8a_worker.utils import get_session_retry
 from f8a_worker.workers.stackaggregator_v2 import extract_user_stack_package_licenses
 
@@ -724,7 +725,7 @@ def apply_license_filter(user_stack_components, epv_list_alt, epv_list_com):
     return output
 
 
-class RecommendationV2Task(BaseTask):
+class RecommendationV2Task(BaseAPITask):
     _analysis_name = 'recommendation_v2'
     description = 'Get Recommendation'
 
