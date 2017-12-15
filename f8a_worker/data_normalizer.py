@@ -303,6 +303,7 @@ class DataNormalizer(object):
         return result
 
     def _handle_java(self, data):
+        """Handle data from pom.xml."""
         # we expect pom.xml to be there, since it's always downloaded to top level by InitTask
         pom = data.get('pom.xml')
         if pom is None:
@@ -341,14 +342,17 @@ class DataNormalizer(object):
 
     @staticmethod
     def _extract_engine_requirements(data, key):
-        # This is what mercator creates when parsing rubygems metadata.yaml
-        # key is for example 'required_rubygem_version'
-        # key: {
-        #      "requirements": [
-        #        [">=", {"version": "1.9.2"}]
-        #      ]
-        #    }
-        # extract just the ">=1.9.2" from it
+        """Extract requirements.
+
+        This is what mercator creates when parsing rubygems metadata.yaml
+        key is for example 'required_rubygem_version'
+        key: {
+             "requirements": [
+               [">=", {"version": "1.9.2"}]
+             ]
+           }
+        extract just the ">=1.9.2" from it.
+        """
         try:
             requirement = data[key]['requirements'][0]
             return requirement[0] + requirement[1]['version']
@@ -356,6 +360,7 @@ class DataNormalizer(object):
             return None
 
     def _handle_rubygems(self, data):
+        """Handle metadata from rubygems` metadata.yaml."""
         key_map = (('author',), ('authors',), ('email',), ('name',), ('version',), ('homepage',),
                    (('license', 'licenses',), 'declared_licenses'),
                    ('dependencies',), ('devel_dependencies',), ('description',),
@@ -416,6 +421,7 @@ class DataNormalizer(object):
         return transformed
 
     def _handle_gofedlib(self, data):
+        """Handle metadata from gofedlib."""
         key_map = (('version',), ('name',), ('code_repository',))
         transformed = self.transform_keys(data, key_map)
 
@@ -431,6 +437,7 @@ class DataNormalizer(object):
         return transformed
 
     def _handle_dotnet_solution(self, data):
+        """Handle nuget package metadata."""
         if not data.get('Metadata'):
             return {}
         data = data['Metadata']

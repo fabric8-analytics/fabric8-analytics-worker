@@ -1,3 +1,5 @@
+"""DataNormalizer tests."""
+
 from io import open
 import json
 import os
@@ -8,6 +10,7 @@ from f8a_worker.data_normalizer import DataNormalizer
 
 
 def compare_dictionaries(a, b):
+    """Compare dictionaries a and b."""
     def mapper(item):
         if isinstance(item, list):
             return frozenset(map(mapper, item))
@@ -19,13 +22,17 @@ def compare_dictionaries(a, b):
 
 
 class TestDataNormalizer(object):
+    """Test DataNormalizer."""
+
     def setup_method(self, method):
+        """Set up any state tied to the execution of the given method in a class."""
         self.data = os.path.join(
             os.path.dirname(
                 os.path.abspath(__file__)), 'data', 'dataNormalizer')
         self._dataNormalizer = DataNormalizer()
 
     def _load_json(self, f):
+        """Load json from f."""
         with open(os.path.join(self.data, f), encoding='utf-8') as f:
             return json.load(f)
 
@@ -50,6 +57,7 @@ class TestDataNormalizer(object):
          ['one', 'two']),
     ])
     def test__split_keywords(self, args, expected):
+        """Test DataNormalizer._split_keywords()."""
         assert self._dataNormalizer._split_keywords(**args) == expected
 
     @pytest.mark.parametrize('args, expected', [
@@ -76,6 +84,7 @@ class TestDataNormalizer(object):
          {'declared_licenses': 'MIT'}),
     ])
     def test__transform_keys(self, args, expected):
+        """Test DataNormalizer.transform_keys()."""
         assert self._dataNormalizer.transform_keys(**args) == expected
 
     @pytest.mark.parametrize('args, expected', [
@@ -93,6 +102,7 @@ class TestDataNormalizer(object):
          "https://github.com/o/p/issues <project@name.com>"),
     ])
     def test__join_name_email(self, args, expected):
+        """Test DataNormalizer._join_name_email()."""
         assert self._dataNormalizer._join_name_email(**args) == expected
 
     @pytest.mark.parametrize('args, expected', [
@@ -118,24 +128,29 @@ class TestDataNormalizer(object):
          True),
     ])
     def test__are_tests_implemented(self, args, expected):
+        """Test DataNormalizer._are_tests_implemented()."""
         assert self._dataNormalizer._are_tests_implemented(**args) == expected
 
     def test_transforming_setup_py(self):
+        """Test normalizing of data from setup.py."""
         data = self._load_json('setup-py-from-mercator')
         expected = self._load_json('setup-py-expected')
         assert self._dataNormalizer.handle_data(data['items'][0]) == expected
 
     def test_transforming_pkginfo(self):
+        """Test normalizing of data from PKG-INFO."""
         data = self._load_json('PKG-INFO-from-mercator')
         expected = self._load_json('PKG-INFO-expected')
         assert self._dataNormalizer.handle_data(data['items'][0]) == expected
 
     def test_transforming_metadata_json(self):
+        """Test normalizing of data from metadata.json."""
         data = self._load_json('metadata-json-from-mercator')
         expected = self._load_json('metadata-json-expected')
         assert self._dataNormalizer.handle_data(data['items'][0]) == expected
 
     def test_transforming_rubygems_metadata_yaml(self):
+        """Test DataNormalizer.()."""
         data = self._load_json('rubygems-metadata-json-from-mercator')
         expected = self._load_json('rubygems-metadata-json-expected')
         assert self._dataNormalizer.handle_data(data['items'][0]) == expected
@@ -155,6 +170,7 @@ class TestDataNormalizer(object):
          None),
     ])
     def test__extract_engine_requirements(self, args, expected):
+        """Test DataNormalizer._extract_engine_requirements()."""
         assert self._dataNormalizer._extract_engine_requirements(**args) == expected
 
     @pytest.mark.parametrize('data, expected', [
@@ -198,22 +214,26 @@ class TestDataNormalizer(object):
          {'devel_dependencies': ['mocha ~2.0.0']}),
     ])
     def test_transforming_javascript_data(self, data, expected):
+        """Test normalizing of npm package metadata."""
         transformed_data = self._dataNormalizer._handle_javascript(data)
         for key, value in expected.items():
             assert key in transformed_data
             assert transformed_data[key] == value
 
     def test_transforming_npm_shrinkwrap_data(self):
+        """Test normalizing of npm's shrinkwrap.json data."""
         data = self._load_json('npm-with-shrinkwrap-json-from-mercator')
         expected = self._load_json('npm-with-shrinkwrap-json-expected')
         assert compare_dictionaries(self._dataNormalizer.handle_data(data), expected)
 
     def test_transforming_java(self):
+        """Test normalizing of pom.xml data."""
         data = self._load_json('pom-xml-from-mercator')
         expected = self._load_json('pom-xml-expected')
         assert compare_dictionaries(self._dataNormalizer.handle_data(data['items'][0]), expected)
 
     def test_transforming_nuspec(self):
+        """Test normalizing of nuspec data."""
         data = self._load_json('nuspec-from-mercator')
         expected = self._load_json('nuspec-expected')
         assert compare_dictionaries(self._dataNormalizer.handle_data(data['items'][0]), expected)
@@ -229,15 +249,19 @@ class TestDataNormalizer(object):
          {'devel_dependencies': []}),
     ])
     def test_sanitizing_data(self, transformed_data, expected):
+        """Test DataNormalizer._sanitize_data()."""
         sanitized_data = self._dataNormalizer._sanitize_data(transformed_data)
         for key, value in expected.items():
             assert key in sanitized_data
             assert sanitized_data[key] == value
 
-    def sort_by_path(self, dict_):
+    @staticmethod
+    def sort_by_path(dict_):
+        """Sort dict_ by length of 'path' of it's members."""
         return sorted(dict_, key=lambda a: len(a['path'].split(path.sep)))
 
     def test_get_outermost_items(self):
+        """Test DataNormalizer.get_outermost_items()."""
         d = [{'path': '/a/b/c/d'}, {'path': '/a/b/c'}, {'path': '/a'}]
         assert self._dataNormalizer.get_outermost_items(d) == [{'path': '/a'}]
 
@@ -278,6 +302,7 @@ class TestDataNormalizer(object):
          {'homepage': 'https://github.com/fabric8-analytics/fabric8-analytics-worker'}),
     ])
     def test_transforming_java_data(self, data, expected):
+        """Test normalizing of pom.xml data."""
         transformed_data = self._dataNormalizer._handle_java(data)
         for key, value in expected.items():
             assert key in transformed_data
@@ -298,6 +323,7 @@ class TestDataNormalizer(object):
                                                     'github.com/gorilla/sessions']}),
     ])
     def test_transforming_gofedlib_data(self, data, expected):
+        """Test normalizing of gofedlib data."""
         transformed_data = self._dataNormalizer.handle_data(data)
         for key, value in expected.items():
             assert key in transformed_data
