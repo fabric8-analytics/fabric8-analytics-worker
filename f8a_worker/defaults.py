@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+
+"""Configuration."""
+
 import logging
 from urllib.parse import quote, urljoin
 
@@ -11,9 +14,12 @@ logger = logging.getLogger(__name__)
 
 
 class F8AConfiguration(object):
+    """Configuration."""
+
     def _make_postgres_string(password):
-        """
-        Method creates postgres connection string. It's parametrized, so it's possible to
+        """Create postgres connection string.
+
+        It's parametrized, so it's possible to
         create either quoted or unquoted version of connection string.
         Note that it's outside of class since there is no simple way how to call it inside the class
         without class initialization.
@@ -114,13 +120,12 @@ class F8AConfiguration(object):
 
     @classmethod
     def is_local_deployment(cls):
-        """
-        :return: True if we are running locally
-        """
+        """Return True if we are running locally."""
         return environ.get('F8A_UNCLOUDED_MODE', '0').lower() in ('1', 'true', 'yes')
 
     @classmethod
     def _rate_limit_exceeded(cls, headers):
+        """Return True if Github API rate limit has been exceeded."""
         # avoid cyclic import
         from f8a_worker.utils import get_response
         response = get_response(urljoin(cls.GITHUB_API, "rate_limit"), headers=headers)
@@ -129,6 +134,7 @@ class F8AConfiguration(object):
 
     @classmethod
     def _decide_token_usage(cls):
+        """Randomly select and return one Github token."""
         if len(cls.GITHUB_TOKEN) >= 1 and cls.GITHUB_TOKEN[0] == 'not-set':
             logger.warning("No Github API token provided (GITHUB_TOKEN env variable), "
                            "requests will be unauthenticated i.e. limited to 60 per hour")
@@ -139,8 +145,8 @@ class F8AConfiguration(object):
 
     @classmethod
     def select_random_github_token(cls):
-        """
-        Select and test either no token or randomly chosen
+        """Select and test either no token or randomly chosen.
+
         :return: token and headers dictionary
         """
         token = cls._decide_token_usage()
