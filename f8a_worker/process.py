@@ -1,5 +1,4 @@
-# This Python file uses the following encoding: utf-8
-# ^  https://www.python.org/dev/peps/pep-0263/
+"""Core classes for working with git, archives and downloading of artifacts."""
 
 import os
 import glob
@@ -22,22 +21,15 @@ logger = logging.getLogger(__name__)
 
 
 class Git(object):
-    """ Git process helper """
+    """Provide util git functions for git repository located at local path."""
 
     def __init__(self, path):
-        """
-        provide util git functions for git repository located at local path
-
-        :param path: str
-        :return:
-        """
+        """Initialize."""
         self.repo_path = path
 
     @staticmethod
     def config():
-        """
-        configure git
-        """
+        """Configure git."""
         user_name = configuration.GIT_USER_NAME
         user_email = configuration.GIT_USER_EMAIL
         if not TimedCommand.get_command_output(["git", "config", "--get", "user.name"]):
@@ -51,8 +43,7 @@ class Git(object):
 
     @classmethod
     def clone(cls, url, path, depth=None, branch=None, single_branch=False):
-        """
-        clone repository provided as url to specific path
+        """Clone repository provided as url to specific path.
 
         :param url: str
         :param path: str
@@ -79,8 +70,7 @@ class Git(object):
 
     @classmethod
     def create_git(cls, path):
-        """
-        initiate new git repository at path
+        """Initialize new git repository at path.
 
         :param path: str
         :return: instance of Git()
@@ -90,8 +80,7 @@ class Git(object):
         return cls(path=path)
 
     def commit(self, message='blank'):
-        """
-        commit git repository
+        """Commit git repository.
 
         :param message: str, commit message
         """
@@ -101,19 +90,18 @@ class Git(object):
             TimedCommand.get_command_output(["git", "commit", "-m", message], graceful=False)
 
     def log(self):
-        """Parse git log history and return its content in a dictionary
+        """Parse git log history and return its content in a dictionary.
 
         :return: a dict representing git log entries
         """
         return list(parse_commits(run_git_log(os.path.join(self.repo_path, '.git'))))
 
     def rev_parse(self, args=None):
-        """
-        :param args: arguments to pass to `git rev-parse`
+        """Run git rev-parse.
 
+        :param args: arguments to pass to `git rev-parse`
         :return: [str], output from `git rev-parse`
         """
-
         cmd = ["git", "rev-parse"]
         if args:
             cmd.extend(args)
@@ -122,8 +110,7 @@ class Git(object):
             return TimedCommand.get_command_output(cmd, graceful=False)
 
     def add(self, path):
-        """
-        add path to index
+        """Add path to index.
 
         :param path: str
         """
@@ -131,11 +118,10 @@ class Git(object):
             TimedCommand.get_command_output(["git", "add", path], graceful=False)
 
     def add_and_commit_everything(self, message="blank"):
-        """
-        equiv of:
+        """Add and commit.
 
-            git add .
-            git commit -m everything
+        git add .
+        git commit -m everything
 
         :param message: str, commit message
         """
@@ -149,8 +135,7 @@ class Git(object):
         self.commit(message=message)
 
     def archive(self, basename, sub_path=None):
-        """
-        Create an archive; simply calls `git archive`.
+        """Create an archive; simply calls `git archive`.
 
         :param basename: str, name of the resulting archive, without file extension (suffix)
         :param sub_path: str, only add files found under this path to the archive;
@@ -171,6 +156,7 @@ class Git(object):
         return filename
 
     def reset(self, revision, hard=False):
+        """Run 'git reset'."""
         cmd = ["git", "reset", revision]
         if hard:
             cmd.extend(["--hard"])
@@ -199,12 +185,13 @@ class Git(object):
 
 
 class Archive(object):
-    "Extract different kind of archives"
+    """Extract different kind of archives."""
+
     TarMatcher = re_compile('\.tar\..{1,3}$')
 
     @staticmethod
     def extract(target, dest):
-        """ Detects archive type and extracts it """
+        """Detect archive type and extracts it."""
         tar = Archive.TarMatcher.search(target)
         if target.endswith(('.zip', '.whl', '.egg', '.jar', '.war', '.aar', '.nupkg')):
             return Archive.extract_zip(target, dest)
@@ -217,6 +204,7 @@ class Archive(object):
 
     @staticmethod
     def zip_file(file, archive, junk_paths=False):
+        """Zip file/dir with system 'zip' command."""
         command = ['zip', '-r', archive, file]
         if junk_paths:
             # Store just the name of a saved file (junk the path), not directory names.
@@ -226,6 +214,7 @@ class Archive(object):
 
     @staticmethod
     def extract_zip(target, dest, mkdest=False):
+        """Extract target zip archive into dest using system 'unzip' command."""
         if mkdest:
             try:
                 os.mkdir(dest, mode=0o775)
@@ -238,13 +227,15 @@ class Archive(object):
 
     @staticmethod
     def extract_tar(target, dest):
+        """Extract target tarball into dest using system 'tar' command."""
         TimedCommand.get_command_output(['tar', 'xf', target, '-C', dest])
 
     @staticmethod
     def extract_gem(target, dest):
-        """
-        extract target gem into $dest/sources and
-                gemspec (renamed to rubygems-metadata.yaml) into $dest/metadata/
+        """Extract target gem and gemspec.
+
+        Gem into $dest/sources
+        Gemspec (renamed to rubygems-metadata.yaml) into $dest/metadata/
         """
         sources = os.path.join(dest, 'sources')
         metadata = os.path.join(dest, 'metadata')
@@ -258,8 +249,11 @@ class Archive(object):
 
 
 class IndianaJones(object):
+    """Legendary class for retrieving of artifacts."""
+
     @staticmethod
     def download_file(url, target_dir=None, name=None):
+        """Download file from url."""
         if url.endswith('/'):
             url = url[:-1]
         local_filename = name or url.split('/')[-1]
@@ -283,13 +277,14 @@ class IndianaJones(object):
 
     @staticmethod
     def get_revision(target_directory):
-        """ Get digest of last commit """
+        """Get digest of last commit."""
         with cwd(target_directory):
             return TimedCommand.get_command_output(['git', 'rev-parse', 'HEAD'],
                                                    graceful=False).pop()
 
     @staticmethod
     def fetch_maven_artifact(name, version, target_dir):
+        """Fetch maven artifact from maven.org."""
         git = Git.create_git(target_dir)
         artifact_coords = MavenCoordinates.from_str(name)
         if not version:
@@ -323,6 +318,7 @@ class IndianaJones(object):
 
     @staticmethod
     def fetch_npm_artifact(name, version, target_dir):
+        """Fetch npm artifact using system 'npm' tool."""
         git = Git.create_git(target_dir)
 
         # $ npm config get cache
@@ -380,6 +376,7 @@ class IndianaJones(object):
 
     @staticmethod
     def fetch_nuget_artifact(name, version, target_dir):
+        """Fetch nuget artifact from nuget.org."""
         git = Git.create_git(target_dir)
         nuget_url = 'https://api.nuget.org/packages/'
         file_url = '{url}{name}.{version}.nupkg'.format(url=nuget_url,
@@ -396,6 +393,7 @@ class IndianaJones(object):
 
     @staticmethod
     def fetch_pypi_artifact(name, version, target_dir):
+        """Fetch Pypi artifact."""
         git = Git.create_git(target_dir)
         # NOTE: we can't download Python packages via pip, because it runs setup.py
         #  even with `pip download`. Therefore we could always get syntax errors
@@ -429,6 +427,7 @@ class IndianaJones(object):
 
     @staticmethod
     def fetch_rubygems_artifact(name, version, target_dir):
+        """Fetch rubygems artifact using 'gem fetch' command."""
         git = Git.create_git(target_dir)
         logger.info("downloading rubygems package %s-%s", name, version)
         version_arg = []
@@ -454,6 +453,7 @@ class IndianaJones(object):
 
     @staticmethod
     def fetch_scm_artifact(name, version, target_dir):
+        """Fetch go artifact using 'go get' command."""
         env = dict(os.environ)
         env['GOPATH'] = target_dir
         TimedCommand.get_command_output(['go', 'get', '-d', name],
@@ -474,13 +474,8 @@ class IndianaJones(object):
                        artifact=None,
                        version=None,
                        target_dir='.'):
-        """
-        download artifact from registry and process it
+        """Download artifact from registry and process it.
 
-        :param ecosystem:
-        :param artifact:
-        :param version:
-        :param target_dir:
         :return: tuple: (digest, artifact_path)
         """
         parsed = urlparse(artifact)
