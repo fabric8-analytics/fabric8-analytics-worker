@@ -7,6 +7,7 @@ node('docker') {
 
     def image = docker.image('bayesian/cucos-worker')
 
+
     stage('Checkout') {
         checkout scm
         commitId = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
