@@ -18,7 +18,7 @@ DIR=$(dirname "${BASH_SOURCE[0]}")
 # Report versions of all core components
 selinonlib-cli version
 
-if [ -n "${WORKER_INCLUDE_QUEUES}" -a -n "${WORKER_EXCLUDE_QUEUES}" ]; then
+if [ -n "${WORKER_INCLUDE_QUEUES}" ] && [ -n "${WORKER_EXCLUDE_QUEUES}" ]; then
     echo "Specify only one queue configuration - either WORKER_INCLUDE_QUEUES or WORKER_EXCLUDE_QUEUES" 1>&2
     exit 1
 fi
@@ -29,22 +29,22 @@ if [ -z "${WORKER_ADMINISTRATION_REGION}" ]; then
 fi
 
 # node:queue
-WORKER_QUEUES=`selinonlib-cli inspect  \
+WORKER_QUEUES=$(selinonlib-cli inspect  \
   -n ${DISPATCHER_YAML_FILES_DIR}/nodes.yml  \
   -f ${DISPATCHER_YAML_FILES_DIR}/flows/*.yml  \
-  --list-task-queues --list-dispatcher-queues`
+  --list-task-queues --list-dispatcher-queues)
 
 if [ -n "${WORKER_INCLUDE_QUEUES}" ]; then
-    WORKER_INCLUDE_QUEUES=`echo "${WORKER_INCLUDE_QUEUES}" | tr ',' '|'`
-    WORKER_QUEUES=`echo "${WORKER_QUEUES}" | egrep "${WORKER_INCLUDE_QUEUES}"`
+    WORKER_INCLUDE_QUEUES=$(echo "${WORKER_INCLUDE_QUEUES}" | tr ',' '|')
+    WORKER_QUEUES=$(echo "${WORKER_QUEUES}" | grep -E "${WORKER_INCLUDE_QUEUES}")
 elif [ -n "${WORKER_EXCLUDE_QUEUES}" ]; then
-    WORKER_EXCLUDE_QUEUES=`echo "${WORKER_EXCLUDE_QUEUES}" | tr ',' '|'`
-    WORKER_QUEUES=`echo "${WORKER_QUEUES}" | egrep -v "${WORKER_EXCLUDE_QUEUES}"`
+    WORKER_EXCLUDE_QUEUES=$(echo "${WORKER_EXCLUDE_QUEUES}" | tr ',' '|')
+    WORKER_QUEUES=$(echo "${WORKER_QUEUES}" | grep -E -v "${WORKER_EXCLUDE_QUEUES}")
 fi
 
 # Listen only on queues that are supposed to be served based on administration region
-WORKER_QUEUES=`echo "${WORKER_QUEUES}" | grep "_${WORKER_ADMINISTRATION_REGION}_"`
+WORKER_QUEUES=$(echo "${WORKER_QUEUES}" | grep "_${WORKER_ADMINISTRATION_REGION}_")
 
 # Always exclude livenessFlow queue and prepare for celery worker
-WORKER_QUEUES=`echo "${WORKER_QUEUES}" | grep -v '^livenessFlow:' | cut -d':' -f2 | sort -u | tr '\n' ','`
+WORKER_QUEUES=$(echo "${WORKER_QUEUES}" | grep -v '^livenessFlow:' | cut -d':' -f2 | sort -u | tr '\n' ',')
 WORKER_QUEUES="${WORKER_QUEUES:0:-1}"  # remove trailing ','
