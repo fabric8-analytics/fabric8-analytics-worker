@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-if [ -z "$WORKER_RUN_DB_MIGRATIONS" ]; then
+if [ -z "${WORKER_RUN_DB_MIGRATIONS}" ]; then
     echo "WORKER_RUN_DB_MIGRATIONS was not set - this worker will not run database migrations"
     exit 0
 fi
@@ -16,12 +16,12 @@ set -ex
 
 # try to create DB in Postgres, if it doesn't exist yet
 RESULT=1
-while (( $RESULT != 0 )); do
+while (( RESULT != 0 )); do
   echo "Trying to create database..."
   # http://stackoverflow.com/a/36591842
-  psql -h $POSTGRESQL_HOST -p $POSTGRESQL_PORT -U $POSTGRESQL_USER -d $POSTGRESQL_INITIAL_DATABASE -tc "SELECT 1 FROM pg_database WHERE datname = '${POSTGRESQL_DATABASE}'" | grep -q 1 || psql -h $POSTGRESQL_HOST -p $POSTGRESQL_PORT -U $POSTGRESQL_USER -d $POSTGRESQL_INITIAL_DATABASE -c "CREATE DATABASE ${POSTGRESQL_DATABASE}"
+  psql -h "${POSTGRESQL_HOST}" -p "${POSTGRESQL_PORT}" -U "${POSTGRESQL_USER}" -d "${POSTGRESQL_INITIAL_DATABASE}" -tc "SELECT 1 FROM pg_database WHERE datname = '${POSTGRESQL_DATABASE}'" | grep -q 1 || psql -h "${POSTGRESQL_HOST}" -p "${POSTGRESQL_PORT}" -U "${POSTGRESQL_USER}" -d "${POSTGRESQL_INITIAL_DATABASE}" -c "CREATE DATABASE ${POSTGRESQL_DATABASE}"
   RESULT=$?
-  if (( $RESULT == 0 )); then
+  if (( RESULT == 0 )); then
     echo "Database created"
   else
     echo "Failed creating database, sleeping for 10 seconds"
@@ -30,8 +30,7 @@ while (( $RESULT != 0 )); do
 done
 
 # run alembic migrations
-pushd ${ALEMBIC_DIR}
+pushd "${ALEMBIC_DIR}"
   export MIGRATE_ONLY=1
   alembic upgrade head
 popd
-
