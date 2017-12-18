@@ -223,6 +223,12 @@ def create_package_dict(graph_results, alt_dict=None):
             }
             if epv['pkg'].get('cooccurrence_probability'):
                 pkg_dict['cooccurrence_probability'] = epv['pkg']['cooccurrence_probability']
+
+            # Add the co-occurence count as well.
+            if epv['pkg'].get('cooccurrence_count'):
+                pkg_dict['cooccurrence_count'] = epv[
+                    'pkg']['cooccurrence_count']
+
             github_dict = {
                 'dependent_projects': epv['pkg'].get('libio_dependents_projects', [-1])[0],
                 'dependent_repos': epv['pkg'].get('libio_dependents_repos', [-1])[0],
