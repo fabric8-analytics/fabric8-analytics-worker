@@ -427,6 +427,8 @@ class GraphDB:
                         epv['pkg']['pgm_topics'] = pgm_epv.get('topic_list', [])
                         epv['pkg']['cooccurrence_probability'] = pgm_epv.get(
                             'cooccurrence_probability', 0)
+                        epv['pkg']['cooccurrence_count'] = pgm_epv.get(
+                            'cooccurrence_count', 0)
 
         return comp_list
 
