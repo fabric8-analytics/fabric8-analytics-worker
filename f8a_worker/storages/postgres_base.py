@@ -7,7 +7,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from selinon import DataStorage
-from f8a_worker.models import Ecosystem, WorkerResult
+from f8a_worker.models import Ecosystem
 
 
 Base = declarative_base()
@@ -108,21 +108,15 @@ class PostgresBase(DataStorage):
     def store(self, node_args, flow_name, task_name, task_id, result):
         # Sanity checks
         if not self.is_connected():
-            self.connect()            
+            self.connect()
+
+        res = self._create_result_entry(node_args, flow_name, task_name, task_id, result)
         try:
-            record = PostgresBase.session.query(WorkerResult).\
-                                        filter_by(worker_id=task_id).\
-                                        one()
-        except NoResultFound:
-            res = self._create_result_entry(node_args, flow_name, task_name, task_id, result)
-            try:
-                PostgresBase.session.add(res)
-                PostgresBase.session.commit()
-            except SQLAlchemyError:
-                PostgresBase.session.rollback()
-                raise
-        except (MultipleResultsFound, SQLAlchemyError):
-            self.disconnect()
+            PostgresBase.session.add(res)
+            PostgresBase.session.commit()
+        except SQLAlchemyError:
+            PostgresBase.session.rollback()
+            raise
 
     def store_error(self, node_args, flow_name, task_name, task_id, exc_info):
         #

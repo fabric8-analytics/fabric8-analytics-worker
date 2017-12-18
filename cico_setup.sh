@@ -18,8 +18,7 @@ prep() {
 
 build_image() {
     # build image and tests
-    #make docker-build-tests
-	make fast-docker-build-sam
+    make docker-build-tests
 }
 
 tag_push() {

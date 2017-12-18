@@ -12,7 +12,7 @@ import datetime
 import logging
 import requests
 
-from f8a_worker.base_api import BaseAPITask
+from f8a_worker.base import BaseTask
 from f8a_worker.graphutils import (GREMLIN_SERVER_URL_REST, LICENSE_SCORING_URL_REST,
                                    select_latest_version)
 from f8a_worker.utils import get_session_retry
@@ -370,7 +370,7 @@ def get_dependency_data(resolved, ecosystem):
     return {"result": result}
 
 
-class StackAggregatorV2Task(BaseAPITask):
+class StackAggregatorV2Task(BaseTask):
     """ Aggregates stack data from components """
     _analysis_name = 'stack_aggregator_v2'
 

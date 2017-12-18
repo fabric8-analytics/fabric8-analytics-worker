@@ -13,7 +13,6 @@ import semantic_version as sv
 from f8a_worker.graphutils import (GREMLIN_SERVER_URL_REST, create_package_dict,
                                    select_latest_version, LICENSE_SCORING_URL_REST)
 from f8a_worker.base import BaseTask
-from f8a_worker.base_api import BaseAPITask
 from f8a_worker.utils import get_session_retry
 from f8a_worker.workers.stackaggregator_v2 import extract_user_stack_package_licenses
 
@@ -725,7 +724,7 @@ def apply_license_filter(user_stack_components, epv_list_alt, epv_list_com):
     return output
 
 
-class RecommendationV2Task(BaseAPITask):
+class RecommendationV2Task(BaseTask):
     _analysis_name = 'recommendation_v2'
     description = 'Get Recommendation'
 
@@ -797,10 +796,7 @@ class RecommendationV2Task(BaseAPITask):
 
             # Call PGM and get the response
             start = datetime.datetime.utcnow()
-            #pgm_response = self.call_pgm(input_task_for_pgm)
-            #self.log.info('##### PGM Response %r' % pgm_response)
-            pgm_response = [{'user_persona': '1', 'alternate_packages': {}, 'ecosystem': 'maven', 'companion_packages': [{'cooccurrence_probability': 75, 'package_name': 'mysql:mysql-connector-java', 'topic_list': ['java', 'connector', 'mysql']}, {'cooccurrence_probability': 3, 'package_name': 'org.springframework.boot:spring-boot-starter-web', 'topic_list': ['spring-webapp-booster', 'spring-starter-web', 'spring-rest-api-starter', 'spring-web-service']}, {'cooccurrence_probability': 1, 'package_name': 'org.springframework.boot:spring-boot-starter-data-jpa', 'topic_list': ['spring-persistence', 'spring-jpa', 'spring-data', 'spring-jpa-adaptor']}, {'cooccurrence_probability': 2, 'package_name': 'org.springframework.boot:spring-boot-starter-actuator', 'topic_list': ['spring-rest-api', 'spring-starter', 'spring-actuator', 'spring-http']}], 'missing_packages': [], 'outlier_package_list': [], 'package_to_topic_dict': {'io.vertx:vertx-web': ['vertx-web', 'webapp', 'auth', 'routing'], 'io.vertx:vertx-core': ['http', 'socket', 'tcp', 'reactive']}}]
-
+            pgm_response = self.call_pgm(input_task_for_pgm)
             elapsed_seconds = (datetime.datetime.utcnow() - start).total_seconds()
             msg = 'It took {t} seconds to get response from PGM ' \
                   'for external request {e}.'.format(t=elapsed_seconds,
@@ -830,7 +826,7 @@ class RecommendationV2Task(BaseAPITask):
                     # Get Companion Packages from Graph
                     comp_packages_graph = GraphDB().get_version_information(companion_packages,
                                                                             ecosystem)
-                    self.log.info('######## Companion Packages from Graph\n %r' % comp_packages_graph)
+
                     # Apply Version Filters
                     filtered_comp_packages_graph, filtered_list = GraphDB().filter_versions(
                         comp_packages_graph, input_stack)
@@ -870,7 +866,6 @@ class RecommendationV2Task(BaseAPITask):
                     # Get Alternate Packages from Graph
                     alt_packages_graph = GraphDB().get_version_information(
                         alternate_packages, ecosystem)
-                    self.log.info('######## Alternate Packages from Graph\n %r' % alt_packages_graph)
 
                     # Apply Version Filters
                     filtered_alt_packages_graph, filtered_list = GraphDB().filter_versions(
@@ -884,11 +879,9 @@ class RecommendationV2Task(BaseAPITask):
 
                     # apply license based filters
                     list_user_stack_comp = extract_user_stack_package_licenses(resolved, ecosystem)
-                    self.log.info('######### USER STACK COMPONENTS: %r' % list_user_stack_comp)
                     license_filter_output = apply_license_filter(list_user_stack_comp,
                                                                  filtered_alt_packages_graph,
                                                                  filtered_comp_packages_graph)
-                    self.log.info('######### FILTERED LICENSES \n %r' % license_filter_output)
 
                     lic_filtered_alt_graph = license_filter_output['filtered_alt_packages_graph']
                     lic_filtered_comp_graph = license_filter_output['filtered_comp_packages_graph']

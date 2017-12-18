@@ -1,7 +1,7 @@
 ---
   flow-definitions:
     - name: 'stackApiGraphV2Flow'
-      queue: '{DEPLOYMENT_PREFIX}_api_stackApiGraphFlow_v0'
+      queue: '{DEPLOYMENT_PREFIX}_api_stackApiGraphFlow_v0.fifo'
       edges:
         - from:
           to: 'GraphAggregatorTask'

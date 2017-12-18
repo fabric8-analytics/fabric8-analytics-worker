@@ -176,7 +176,7 @@
     - name: 'GraphAggregatorTask'
       import: 'f8a_worker.workers'
       max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GraphAggregatorTask_v0'
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GraphAggregatorTask_v0.fifo'
       storage: 'BayesianPostgres'
     - name: 'stack_aggregator'
       classname: 'StackAggregatorTask'
@@ -188,7 +188,7 @@
       classname: 'StackAggregatorV2Task'
       import: 'f8a_worker.workers'
       max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_StackAggregatorV2Task_v0'
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_StackAggregatorV2Task_v0.fifo'
       storage: 'BayesianPostgres'
     - name: 'recommendation'
       classname: 'RecommendationTask'
@@ -200,7 +200,7 @@
       classname: 'RecommendationV2Task'
       import: 'f8a_worker.workers'
       max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_RecommendationV2Task_v0'
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_RecommendationV2Task_v0.fifo'
       storage: 'BayesianPostgres'
     - name: 'InitAnalysisFlow'
       import: 'f8a_worker.workers'
