@@ -1,11 +1,12 @@
 #!/bin/bash
 
 # UNQUOTED password is expected here. Fails otherwise
-export F8A_POSTGRES=$(python3 -c 'from f8a_worker.defaults import configuration; print(configuration.UNQUOTED_POSTGRES_CONNECTION)')
+F8A_POSTGRES=$(python3 -c 'from f8a_worker.defaults import configuration; print(configuration.UNQUOTED_POSTGRES_CONNECTION)')
+export F8A_POSTGRES
 
 set -ex
 
-pushd ${ALEMBIC_DIR}
+pushd "${ALEMBIC_DIR}"
 wanted=$(alembic heads | grep '(head)' | awk '{ print $1 }')
 current=$(alembic current | grep '(head)' | awk '{ print $1 }')
 popd
@@ -21,4 +22,3 @@ if [ "${wanted}" != "${current}" ]; then
 fi
 
 echo "We are ready to roll! :)"
-
