@@ -48,7 +48,7 @@ class GraphAggregatorTask(BaseTask):
 
         # If we receive a manifest file we need to save it first
         result = []
-        '''
+
         for manifest in manifests:
             with tempdir() as temp_path:
                 with open(os.path.join(temp_path, manifest['filename']), 'a+') as fd:
@@ -107,6 +107,5 @@ class GraphAggregatorTask(BaseTask):
                         out["details"][0]["dependencies"])
                 out["details"][0]['_resolved'] = resolved_deps
             result.append(out)
-        '''
-        result = [{'summary': [], 'status': 'success', 'details': [{'devel_dependencies': ['io.vertx:vertx-unit 3.4.2', 'com.jayway.awaitility:awaitility 1.7.0', 'io.openshift:openshift-test-utils 2', 'io.vertx:vertx-web-client 3.4.2', 'junit:junit 4.12', 'com.jayway.restassured:rest-assured 2.9.0', 'org.assertj:assertj-core 3.6.2'], 'dependencies': ['io.vertx:vertx-web 3.4.2', 'io.vertx:vertx-core 3.4.2'], 'version': '1.0.0-SNAPSHOT', 'homepage': 'https://github.com/openshiftio/space00005', '_resolved': [{'package': 'io.vertx:vertx-web', 'version': '3.4.2'}, {'package': 'io.vertx:vertx-core', 'version': '3.4.2'}], 'ecosystem': 'maven', 'name': 'Vert.x - HTTP', 'declared_licenses': ['Apache License, Version 2.0'], 'description': 'Exposes an HTTP API using Vert.x', 'code_repository': {'type': 'git', 'url': 'https://github.com/openshiftio/space00005'}, 'manifest_file_path': '/home/JohnDoe', 'manifest_file': 'pom.xml'}]}]
+
         return {'result': result}
