@@ -31,6 +31,8 @@ class GraphAggregatorTask(BaseTask):
         self._strict_assert(arguments.get('data'))
         self._strict_assert(arguments.get('external_request_id'))
 
+        return {"_audit": {"version": "v1", "ended_at": "2017-12-15T05:15:59.494731", "started_at": "2017-12-15T05:15:39.728736"}, "result": [{"status": "success", "details": [{"name": "com.redhat.bayessian.test:test-app-vertx", "version": "1.0", "homepage": null, "_resolved": [{"package": "io.vertx:vertx-core", "version": "3.4.2"}, {"package": "io.vertx:vertx-web-templ-freemarker", "version": "3.4.2"}, {"package": "io.vertx:vertx-web-client", "version": "3.4.2"}, {"package": "io.vertx:vertx-jdbc-client", "version": "3.4.2"}, {"package": "io.vertx:vertx-web", "version": "3.4.2"}, {"package": "io.vertx:vertx-rx-java", "version": "3.4.2"}, {"package": "io.vertx:vertx-web-templ-handlebars", "version": "3.4.2"}], "ecosystem": "maven", "description": null, "dependencies": ["io.vertx:vertx-core 3.4.2", "io.vertx:vertx-web-templ-freemarker 3.4.2", "io.vertx:vertx-web-client 3.4.2", "io.vertx:vertx-jdbc-client 3.4.2", "io.vertx:vertx-web 3.4.2", "io.vertx:vertx-rx-java 3.4.2", "io.vertx:vertx-web-templ-handlebars 3.4.2"], "manifest_file": "pom.xml", "declared_licenses": [], "devel_dependencies": [], "manifest_file_path": "/Users/samuzzal/perf-tests/data"}], "summary": []}], "_release": "maven:None:None"}
+
         db = self.storage.session
         try:
             results = db.query(StackAnalysisRequest)\
