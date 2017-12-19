@@ -1,3 +1,5 @@
+"""Tests covering code in utils.py."""
+
 import os
 import errno
 import itertools
@@ -30,13 +32,18 @@ from f8a_worker.utils import (get_all_files_from,
 
 
 class TestUtilFunctions(object):
+    """Test functions from utils.py."""
+
     def setup_method(self, method):
+        """Set up any state tied to the execution of the given method in a class."""
         pass
 
     def teardown_method(self, method):
+        """Teardown any state that was previously setup with a setup_method call."""
         pass
 
     def test_get_all_files_from(self, tmpdir):
+        """Test get_all_files_from()."""
         test_dir = os.path.abspath(str(tmpdir))
 
         def touch_file(path):
@@ -77,6 +84,7 @@ class TestUtilFunctions(object):
             set(itertools.chain(py_files, test_files))
 
     def test_compute_digest(self):
+        """Test compute_digest()."""
         assert compute_digest("/etc/os-release")
         with pytest.raises(TaskError):
             assert compute_digest("/", raise_on_error=True)
@@ -84,7 +92,10 @@ class TestUtilFunctions(object):
 
 
 class TestThreadPool(object):
+    """Test ThreadPool class."""
+
     def test_context_manager(self):
+        """Test using ThreadPool as context manager."""
         s = set()
 
         def foo(x):
@@ -98,6 +109,7 @@ class TestThreadPool(object):
         assert s == original
 
     def test_normal_usage(self):
+        """Test normal usage."""
         s = set()
 
         def foo(x):
@@ -143,11 +155,14 @@ example_coordinates = [
 
 
 class TestMavenCoordinates(object):
+    """Test MavenCoordinates class."""
+
     @pytest.mark.parametrize(('coords', 'from_str', 'is_from_str_ok', 'to_str',
                               'to_str_omit_version', 'to_repo_url'),
                              example_coordinates)
     def test_from_str(self, coords, from_str, is_from_str_ok, to_str, to_str_omit_version,
                       to_repo_url):
+        """Test MavenCoordinates.from_str()."""
         from_strings = from_str if isinstance(from_str, list) else [from_str]
         for fstr in from_strings:
             if is_from_str_ok:
@@ -160,6 +175,7 @@ class TestMavenCoordinates(object):
                              'to_str_omit_version', 'to_repo_url'), example_coordinates)
     def test_to_str(self, coords, from_str, is_from_str_ok, to_str, to_str_omit_version,
                     to_repo_url):
+        """Test MavenCoordinates.to_str()."""
         if to_str:
             assert coords.to_str() == to_str
         if to_str_omit_version:
@@ -169,12 +185,16 @@ class TestMavenCoordinates(object):
                               'to_str_omit_version', 'to_repo_url'), example_coordinates)
     def test_to_repo_url(self, coords, from_str, is_from_str_ok, to_str, to_str_omit_version,
                          to_repo_url):
+        """Test MavenCoordinates.to_repo_url()."""
         if to_repo_url:
             assert coords.to_repo_url() == to_repo_url
 
 
 class TestGetAnityaProject(object):
+    """Test getting info from Anitya."""
+
     def test_basic(self):
+        """Test get_latest_upstream_details()."""
         resp = flexmock(json=lambda: {'a': 'b'},
                         raise_for_status=lambda: None)
         url = configuration.ANITYA_URL + '/api/by_ecosystem/foo/bar'
@@ -182,6 +202,7 @@ class TestGetAnityaProject(object):
         assert get_latest_upstream_details('foo', 'bar') == {'a': 'b'}
 
     def test_bad_status(self):
+        """Test get_latest_upstream_details()."""
         resp = flexmock(json=lambda: {'a': 'b'})
         resp.should_receive('raise_for_status').and_raise(Exception())
         url = configuration.ANITYA_URL + '/api/by_ecosystem/foo/bar'
@@ -191,12 +212,16 @@ class TestGetAnityaProject(object):
 
 
 class TestSafeGetLatestVersion(object):
+    """Test safe_get_latest_version()."""
+
     def test_basic(self):
+        """Test safe_get_latest_version()."""
         flexmock(utils).should_receive('get_latest_upstream_details').\
             with_args('foo', 'bar').and_return({'versions': ['1']})
         assert safe_get_latest_version('foo', 'bar') == '1'
 
     def test_anitya_error(self):
+        """Test safe_get_latest_version()."""
         flexmock(utils).should_receive('get_latest_upstream_details').\
             with_args('foo', 'bar').and_raise(requests.exceptions.RequestException())
         assert safe_get_latest_version('foo', 'bar') is None
@@ -207,7 +232,10 @@ class TestSafeGetLatestVersion(object):
 
 
 class TestDownstreamMapCache(object):
+    """Test DownstreamMapCache class."""
+
     def test_set_get(self):
+        """Test accessing DownstreamMapCache."""
         class DownstreamMap(Base):
             __tablename__ = 'downstream_map'
             key = Column(String(255), primary_key=True)
@@ -230,6 +258,8 @@ class TestDownstreamMapCache(object):
 
 
 class TestParseGHRepo:
+    """Test parse_gh_repo()."""
+
     @pytest.mark.parametrize('url', [
         'github.com/foo/bar',
         'github.com/foo/bar.git',
@@ -243,6 +273,7 @@ class TestParseGHRepo:
         'ssh://git@github.com:foo/bar.git',
     ])
     def test_parse_gh_repo_ok(self, url):
+        """Test parse_gh_repo()."""
         assert parse_gh_repo(url) == 'foo/bar'
 
     @pytest.mark.parametrize('url', [
@@ -254,10 +285,13 @@ class TestParseGHRepo:
         'http://github.com/user/repo/something',
     ])
     def test_parse_gh_repo_nok(self, url):
+        """Test parse_gh_repo()."""
         assert parse_gh_repo(url) is None
 
 
 class TestUrl2GitRepo(object):
+    """Test url2git_repo()."""
+
     @pytest.mark.parametrize('url,expected_result', [
         ('git@github.com:foo/bar', 'https://github.com/foo/bar'),
         ('git@github.com:foo/bar.git', 'https://github.com/foo/bar.git'),
@@ -265,11 +299,13 @@ class TestUrl2GitRepo(object):
         ('git+https://github.com/foo/bar.git', 'https://github.com/foo/bar.git')
     ])
     def test_url2git_repo_ok(self, url, expected_result):
+        """Test url2git_repo()."""
         assert url2git_repo(url) == expected_result
 
     @pytest.mark.parametrize('url', [
         'git@github.com/foo/bar'
     ])
     def test_url2git_repo_nok(self, url):
+        """Test url2git_repo()."""
         with pytest.raises(ValueError):
             url2git_repo(url)
