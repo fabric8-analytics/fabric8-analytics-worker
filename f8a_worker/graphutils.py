@@ -224,13 +224,12 @@ def create_package_dict(graph_results, alt_dict=None):
                 'topic_list': epv['pkg'].get('pgm_topics', [])
             }
 
-            if epv['pkg'].get('cooccurrence_probability'):
-                pkg_dict['cooccurrence_probability'] = epv['pkg']['cooccurrence_probability']
+            pkg_dict['cooccurrence_probability'] = epv[
+                'pkg'].get('cooccurrence_probability', 0)
 
-            # Add the co-occurence count as well.
-            if epv['pkg'].get('cooccurrence_count'):
-                pkg_dict['cooccurrence_count'] = epv[
-                    'pkg']['cooccurrence_count']
+            # Add the co - occurence count as well.
+            pkg_dict['cooccurrence_count'] = epv[
+                'pkg'].epv['pkg'].get('cooccurrence_count', 0)
 
             github_dict = {
                 'dependent_projects': epv['pkg'].get('libio_dependents_projects', [-1])[0],
