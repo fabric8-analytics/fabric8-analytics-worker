@@ -1056,6 +1056,10 @@ class StackAnalyzerTask(BaseTask):
             raise FatalTaskError("Dependencies could not be resolved: '{}'" .format(deps)) from exc
         return [{"package": k, "version": v} for k, v in versions.items()]
 
+    def _get_current_timestamp(self):
+        now = datetime.datetime.now()
+        return now.isoformat()
+
     def execute(self, arguments=None):
         self._strict_assert(arguments.get('data'))
         self._strict_assert(arguments.get('external_request_id'))
@@ -1154,13 +1158,17 @@ class StackAnalyzerTask(BaseTask):
             manifest = result['details'][0]['manifest_file']
             manifest_file_path = result['details'][0]['manifest_file_path']
 
+            self.log.info('PERF_LOG|REQ: {}|STACK_AGGREGATOR|GRAPH1|START|{}'.format(external_request_id, self._get_current_timestamp()))
             finished = get_dependency_data(resolved, ecosystem)
+            self.log.info('PERF_LOG|REQ: {}|STACK_AGGREGATOR|GRAPH1|END|{}'.format(external_request_id, self._get_current_timestamp()))
             if finished is not None:
+                self.log.info('PERF_LOG|REQ: {}|STACK_AGGREGATOR|LICENSE|START|{}'.format(external_request_id,
+                                                                                     self._get_current_timestamp()))
                 stack_data.append(aggregate_stack_data(finished, manifest, ecosystem.lower(),
                                   resolved, manifest_file_path))
+                self.log.info('PERF_LOG|REQ: {}|STACK_AGGREGATOR|LICENSE|END|{}'.format(external_request_id,
+                                                                                          self._get_current_timestamp()))
 
-        print ("Stack Data: %r" % stack_data)
-        print ('RECOMMENDER INPUT: #####################\n%r' % results)
         results = arguments
         
         input_task_for_pgm = []
@@ -1200,8 +1208,12 @@ class StackAnalyzerTask(BaseTask):
 
             # Call PGM and get the response
             start = datetime.datetime.utcnow()
+            self.log.info('PERF_LOG|REQ: {}|RECOMMENDER|PGM|START|{}'.format(external_request_id,
+                                                                                      self._get_current_timestamp()))
             #pgm_response = self.call_pgm(input_task_for_pgm)
             pgm_response = [{'user_persona': '1', 'alternate_packages': {}, 'ecosystem': 'maven', 'companion_packages': [{'cooccurrence_probability': 75, 'package_name': 'mysql:mysql-connector-java', 'topic_list': ['java', 'connector', 'mysql']}, {'cooccurrence_probability': 3, 'package_name': 'org.springframework.boot:spring-boot-starter-web', 'topic_list': ['spring-webapp-booster', 'spring-starter-web', 'spring-rest-api-starter', 'spring-web-service']}, {'cooccurrence_probability': 1, 'package_name': 'org.springframework.boot:spring-boot-starter-data-jpa', 'topic_list': ['spring-persistence', 'spring-jpa', 'spring-data', 'spring-jpa-adaptor']}, {'cooccurrence_probability': 2, 'package_name': 'org.springframework.boot:spring-boot-starter-actuator', 'topic_list': ['spring-rest-api', 'spring-starter', 'spring-actuator', 'spring-http']}], 'missing_packages': [], 'outlier_package_list': [], 'package_to_topic_dict': {'io.vertx:vertx-web': ['vertx-web', 'webapp', 'auth', 'routing'], 'io.vertx:vertx-core': ['http', 'socket', 'tcp', 'reactive']}}]
+            self.log.info('PERF_LOG|REQ: {}|RECOMMENDER|PGM|END|{}'.format(external_request_id,
+                                                                                  self._get_current_timestamp()))
 
             elapsed_seconds = (datetime.datetime.utcnow() - start).total_seconds()
             msg = 'It took {t} seconds to get response from PGM ' \
@@ -1230,9 +1242,12 @@ class StackAnalyzerTask(BaseTask):
                         companion_packages.append(pkg['package_name'])
 
                     # Get Companion Packages from Graph
+                    self.log.info('PERF_LOG|REQ: {}|RECOMMENDER|GRAPH1|START|{}'.format(external_request_id,
+                                                                                     self._get_current_timestamp()))
                     comp_packages_graph = GraphDB().get_version_information(companion_packages,
                                                                             ecosystem)
-
+                    self.log.info('PERF_LOG|REQ: {}|RECOMMENDER|GRAPH1|END|{}'.format(external_request_id,
+                                                                                     self._get_current_timestamp()))
                     # Apply Version Filters
                     filtered_comp_packages_graph, filtered_list = GraphDB().filter_versions(
                         comp_packages_graph, input_stack)
@@ -1270,8 +1285,12 @@ class StackAnalyzerTask(BaseTask):
                             alternate_packages.append(alt_pkg)
 
                     # Get Alternate Packages from Graph
+                    self.log.info('PERF_LOG|REQ: {}|RECOMMENDER|GRAPH2|START|{}'.format(external_request_id,
+                                                                                       self._get_current_timestamp()))
                     alt_packages_graph = GraphDB().get_version_information(
                         alternate_packages, ecosystem)
+                    self.log.info('PERF_LOG|REQ: {}|RECOMMENDER|GRAPH2|END|{}'.format(external_request_id,
+                                                                                       self._get_current_timestamp()))
 
                     # Apply Version Filters
                     filtered_alt_packages_graph, filtered_list = GraphDB().filter_versions(
@@ -1284,10 +1303,18 @@ class StackAnalyzerTask(BaseTask):
                                          filtered_alternate_packages))
 
                     # apply license based filters
+                    self.log.info('PERF_LOG|REQ: {}|RECOMMENDER|GRAPH3|START|{}'.format(external_request_id,
+                                                                                       self._get_current_timestamp()))
                     list_user_stack_comp = extract_user_stack_package_licenses(resolved, ecosystem)
+                    self.log.info('PERF_LOG|REQ: {}|RECOMMENDER|GRAPH3|END|{}'.format(external_request_id,
+                                                                                       self._get_current_timestamp()))
+                    self.log.info('PERF_LOG|REQ: {}|RECOMMENDER|LICENSE|START|{}'.format(external_request_id,
+                                                                                       self._get_current_timestamp()))
                     license_filter_output = apply_license_filter(list_user_stack_comp,
                                                                  filtered_alt_packages_graph,
                                                                  filtered_comp_packages_graph)
+                    self.log.info('PERF_LOG|REQ: {}|RECOMMENDER|LICENSE|END|{}'.format(external_request_id,
+                                                                                         self._get_current_timestamp()))
 
                     lic_filtered_alt_graph = license_filter_output['filtered_alt_packages_graph']
                     lic_filtered_comp_graph = license_filter_output['filtered_comp_packages_graph']
