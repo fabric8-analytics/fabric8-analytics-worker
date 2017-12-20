@@ -1066,6 +1066,8 @@ class StackAnalyzerTask(BaseTask):
 
         external_request_id = arguments.get('external_request_id')
 
+        self.log.info('PERF_LOG|REQ: {}|GRAPH_AGGREGATOR|DB|START|{}'.format(external_request_id,
+                                                                                 self._get_current_timestamp()))
         db = self.storage.session
         try:
             results = db.query(StackAnalysisRequest)\
@@ -1074,6 +1076,8 @@ class StackAnalyzerTask(BaseTask):
         except SQLAlchemyError:
             db.rollback()
             raise
+        self.log.info('PERF_LOG|REQ: {}|GRAPH_AGGREGATOR|DB|END|{}'.format(external_request_id,
+                                                                             self._get_current_timestamp()))
 
         manifests = []
         if results is not None:
@@ -1097,7 +1101,11 @@ class StackAnalyzerTask(BaseTask):
                 # Create instance manually since stack analysis is not handled by dispatcher
                 subtask = MercatorTask.create_test_instance(task_name=self.task_name)
                 arguments['ecosystem'] = manifest['ecosystem']
+                self.log.info('PERF_LOG|REQ: {}|GRAPH_AGGREGATOR|MERCATOR|START|{}'.format(external_request_id,
+                                                                                 self._get_current_timestamp()))
                 out = subtask.run_mercator(arguments, temp_path)
+                self.log.info('PERF_LOG|REQ: {}|GRAPH_AGGREGATOR|MERCATOR|END|{}'.format(external_request_id,
+                                                                                 self._get_current_timestamp()))
 
             if not out["details"]:
                 raise FatalTaskError("No metadata found processing manifest file '{}'"
