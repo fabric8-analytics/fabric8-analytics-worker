@@ -218,18 +218,12 @@ def create_package_dict(graph_results, alt_dict=None):
                 'licenses': epv['ver'].get('declared_licenses', []),
                 'latest_version': select_latest_version(
                     epv['pkg'].get('libio_latest_version', [''])[0],
-                    epv['pkg'].get('latest_version', [''])[0]),
-                'security': [],
+                    epv['pkg'].get('latest_version', [''])[0]), 'security': [],
                 'osio_user_count': osio_user_count,
-                'topic_list': epv['pkg'].get('pgm_topics', [])
+                'topic_list': epv['pkg'].get('pgm_topics', []),
+                'cooccurrence_probability': epv['pkg'].get('cooccurrence_probability', 0),
+                'cooccurrence_count': epv['pkg'].get('cooccurrence_count', 0)
             }
-
-            pkg_dict['cooccurrence_probability'] = epv[
-                'pkg'].get('cooccurrence_probability', 0)
-
-            # Add the co - occurence count as well.
-            pkg_dict['cooccurrence_count'] = epv[
-                'pkg'].epv['pkg'].get('cooccurrence_count', 0)
 
             github_dict = {
                 'dependent_projects': epv['pkg'].get('libio_dependents_projects', [-1])[0],
