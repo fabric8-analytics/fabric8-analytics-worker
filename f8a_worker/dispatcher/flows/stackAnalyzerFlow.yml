@@ -1,7 +1,11 @@
 ---
   flow-definitions:
     - name: 'stackAnalyzerFlow'
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_stackAnalyzerFlow_v0.fifo'
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_stackAnalyzerFlow_v0'
+      sampling:
+        name: 'constant'
+        args:
+          retry: 1
       edges:
         - from:
           to: 'StackAnalyzerTask'
