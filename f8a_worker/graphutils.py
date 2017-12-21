@@ -68,17 +68,18 @@ def get_stack_popularity_data_graph(components):
                 if stargazers_count < configuration.POPULARITY_THRESHOLD:
                     less_popular_components += 1
 
-    result = {}
+    result = {
+        "average_stars": "NA",
+        "average_forks": "NA",
+        "low_popularity_components": less_popular_components
+    }
     if components_with_stargazers > 0:
-        result["average_stars"] = "%.2f" % round(total_stargazers / components_with_stargazers, 2)
-    else:
-        result["average_stars"] = 'NA'
+        result["average_stars"] = "%.2f" % round(
+            float(total_stargazers) / components_with_stargazers, 2)
 
     if components_with_forks > 0:
-        result['average_forks'] = "%.2f" % round(total_forks / components_with_forks, 2)
-    else:
-        result['average_forks'] = 'NA'
-    result['low_popularity_components'] = less_popular_components
+        result['average_forks'] = "%.2f" % round(
+            float(total_forks) / components_with_forks, 2)
 
     return result
 
@@ -137,7 +138,7 @@ def extract_component_details(component):
             "vulnerabilities": cves
         }
 
-    licenses = component.get("version", {}).get("licenses", [])
+    licenses = component.get("version", {}).get("declared_licenses", [])
     name = component.get("version", {}).get("pname", [""])[0]
     version = component.get("version", {}).get("version", [""])[0]
     ecosystem = component.get("version", {}).get("pecosystem", [""])[0]
@@ -183,8 +184,9 @@ def aggregate_stack_data(stack, manifest_file, ecosystem, manifest_file_path):
 
 
 def get_osio_user_count(ecosystem, name, version):
-    str_gremlin = "g.V().has('pecosystem','" + ecosystem + "').has('pname','" + name + "')." \
-                  "has('version','" + version + "').in('uses').count();"
+    str_gremlin = "g.V().has('pecosystem','{}').has('pname','{}').has('version','{}').".format(
+        ecosystem, name, version)
+    str_gremlin += "in('uses').count();"
     payload = {
         'gremlin': str_gremlin
     }
@@ -199,7 +201,7 @@ def get_osio_user_count(ecosystem, name, version):
 
 
 def create_package_dict(graph_results, alt_dict=None):
-    """Converts Graph Results into the Recommendation Dict"""
+    """Convert Graph Results into the Recommendation Dict."""
     pkg_list = []
 
     for epv in graph_results:
@@ -213,7 +215,7 @@ def create_package_dict(graph_results, alt_dict=None):
                 'ecosystem': ecosystem,
                 'name': name,
                 'version': version,
-                'licenses': epv['ver'].get('licenses', []),
+                'licenses': epv['ver'].get('declared_licenses', []),
                 'latest_version': select_latest_version(
                     epv['pkg'].get('libio_latest_version', [''])[0],
                     epv['pkg'].get('latest_version', [''])[0]),
@@ -221,8 +223,14 @@ def create_package_dict(graph_results, alt_dict=None):
                 'osio_user_count': osio_user_count,
                 'topic_list': epv['pkg'].get('pgm_topics', [])
             }
-            if epv['pkg'].get('cooccurrence_probability'):
-                pkg_dict['cooccurrence_probability'] = epv['pkg']['cooccurrence_probability']
+
+            pkg_dict['cooccurrence_probability'] = epv[
+                'pkg'].get('cooccurrence_probability', 0)
+
+            # Add the co - occurence count as well.
+            pkg_dict['cooccurrence_count'] = epv[
+                'pkg'].epv['pkg'].get('cooccurrence_count', 0)
+
             github_dict = {
                 'dependent_projects': epv['pkg'].get('libio_dependents_projects', [-1])[0],
                 'dependent_repos': epv['pkg'].get('libio_dependents_repos', [-1])[0],
