@@ -48,6 +48,7 @@ class GraphAggregatorTask(BaseTask):
 
         # If we receive a manifest file we need to save it first
         result = []
+
         for manifest in manifests:
             with tempdir() as temp_path:
                 with open(os.path.join(temp_path, manifest['filename']), 'a+') as fd:

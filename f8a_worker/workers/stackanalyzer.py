@@ -1,21 +1,24 @@
-from __future__ import division
+import os
 import json
+from selinon import FatalTaskError
+from sqlalchemy.exc import SQLAlchemyError
 import traceback
 import datetime
 
 import requests
-import os
 from collections import Counter, defaultdict
 import re
 import logging
 import semantic_version as sv
 
+from f8a_worker.base import BaseTask
+from f8a_worker.manifests import get_manifest_descriptor_by_filename
+from f8a_worker.models import StackAnalysisRequest
+from f8a_worker.solver import get_ecosystem_solver
+from f8a_worker.utils import tempdir, get_session_retry
+from f8a_worker.workers.mercator import MercatorTask
 from f8a_worker.graphutils import (GREMLIN_SERVER_URL_REST, create_package_dict,
                                    select_latest_version, LICENSE_SCORING_URL_REST)
-from f8a_worker.base import BaseTask
-from f8a_worker.utils import get_session_retry
-from f8a_worker.workers.stackaggregator_v2 import extract_user_stack_package_licenses
-
 
 danger_word_list = ["drop\(\)", "V\(\)", "count\(\)"]
 remove = '|'.join(danger_word_list)
@@ -25,6 +28,434 @@ pattern_n2_remove = re.compile(pattern_to_save)
 
 _logger = logging.getLogger(__name__)
 
+"""
+STTACK AGGREGATOR FUNCTIONS
+"""
+def extract_component_details(component):
+    github_details = {
+        "dependent_projects":
+            component.get("package", {}).get("libio_dependents_projects", [-1])[0],
+        "dependent_repos": component.get("package", {}).get("libio_dependents_repos", [-1])[0],
+        "total_releases": component.get("package", {}).get("libio_total_releases", [-1])[0],
+        "latest_release_duration":
+            str(datetime.datetime.fromtimestamp(component.get("package", {}).get(
+                "libio_latest_release", [1496302486.0])[0])),
+        "first_release_date": "Apr 16, 2010",
+        "issues": {
+            "month": {
+                "opened": component.get("package", {}).get("gh_issues_last_month_opened", [-1])[0],
+                "closed": component.get("package", {}).get("gh_issues_last_month_closed", [-1])[0]
+            }, "year": {
+                "opened": component.get("package", {}).get("gh_issues_last_year_opened", [-1])[0],
+                "closed": component.get("package", {}).get("gh_issues_last_year_closed", [-1])[0]
+            }},
+        "pull_requests": {
+            "month": {
+                "opened": component.get("package", {}).get("gh_prs_last_month_opened", [-1])[0],
+                "closed": component.get("package", {}).get("gh_prs_last_month_closed", [-1])[0]
+            }, "year": {
+                "opened": component.get("package", {}).get("gh_prs_last_year_opened", [-1])[0],
+                "closed": component.get("package", {}).get("gh_prs_last_year_closed", [-1])[0]
+            }},
+        "stargazers_count": component.get("package", {}).get("gh_stargazers", [-1])[0],
+        "forks_count": component.get("package", {}).get("gh_forks", [-1])[0],
+        "open_issues_count": component.get("package", {}).get("gh_open_issues_count", [-1])[0],
+        "contributors": component.get("package", {}).get("gh_contributors_count", [-1])[0],
+        "size": "N/A"
+    }
+    used_by = component.get("package", {}).get("libio_usedby", [])
+    used_by_list = []
+    for epvs in used_by:
+        slc = epvs.split(':')
+        used_by_dict = {
+            'name': slc[0],
+            'stars': int(slc[1])
+        }
+        used_by_list.append(used_by_dict)
+    github_details['used_by'] = used_by_list
+
+    code_metrics = {
+        "code_lines": component.get("version", {}).get("cm_loc", [-1])[0],
+        "average_cyclomatic_complexity":
+            component.get("version", {}).get("cm_avg_cyclomatic_complexity", [-1])[0],
+        "total_files": component.get("version", {}).get("cm_num_files", [-1])[0]
+    }
+
+    cves = []
+    for cve in component.get("version", {}).get("cve_ids", []):
+        component_cve = {
+            'CVE': cve.split(':')[0],
+            'CVSS': cve.split(':')[1]
+        }
+        cves.append(component_cve)
+
+    licenses = component.get("version", {}).get("licenses", [])
+    name = component.get("version", {}).get("pname", [""])[0]
+    version = component.get("version", {}).get("version", [""])[0]
+    ecosystem = component.get("version", {}).get("pecosystem", [""])[0]
+    latest_version = select_latest_version(
+        component.get("package", {}).get("libio_latest_version", [""])[0],
+        component.get("package", {}).get("latest_version", [""])[0])
+    component_summary = {
+        "ecosystem": ecosystem,
+        "name": name,
+        "version": version,
+        "licenses": licenses,
+        "security": cves,
+        "osio_user_count": component.get("version", {}).get("osio_usage_count", 0),
+        "latest_version": latest_version,
+        "github": github_details,
+        "code_metrics": code_metrics
+    }
+
+    return component_summary
+
+
+def _extract_conflict_packages(license_service_output):
+    """
+    This helper function extracts conflict licenses from the given output
+    of license analysis REST service.
+
+    It returns a list of pairs of packages whose licenses are in conflict.
+    Note that this information is only available when each component license
+    was identified ( i.e. no unknown and no component level conflict ) and
+    there was a stack level license conflict.
+
+    :param license_service_output: output of license analysis REST service
+    :return: list of pairs of packages whose licenses are in conflict
+    """
+    license_conflict_packages = []
+    if not license_service_output:
+        return license_conflict_packages
+
+    conflict_packages = license_service_output.get('conflict_packages', [])
+    for conflict_pair in conflict_packages:
+        list_pkgs = list(conflict_pair.keys())
+        assert len(list_pkgs) == 2
+        d = {
+            "package1": list_pkgs[0],
+            "license1": conflict_pair[list_pkgs[0]],
+            "package2": list_pkgs[1],
+            "license2": conflict_pair[list_pkgs[1]]
+        }
+        license_conflict_packages.append(d)
+
+    return license_conflict_packages
+
+
+def _extract_unknown_licenses(license_service_output):
+    """
+    This helper function extracts unknown licenses information from the given
+    output of license analysis REST service.
+
+    At the moment, there are two types of unknowns:
+
+    a. really unknown licenses: those licenses, which are not understood by our system.
+    b. component level conflicting licenses: if a component has multiple licenses
+        associated then license analysis service tries to identify a representative
+        license for this component. If some licenses are in conflict, then its
+        representative license cannot be identified and this is another type of
+        'unknown' !
+
+    This function returns both types of unknown licenses.
+
+    :param license_service_output: output of license analysis REST service
+    :return: list of packages with unknown licenses and/or conflicting licenses
+    """
+    really_unknown_licenses = []
+    lic_conflict_licenses = []
+    if not license_service_output:
+        return really_unknown_licenses
+
+    if license_service_output.get('status', '') == 'Unknown':
+        list_components = license_service_output.get('packages', [])
+        for comp in list_components:
+            license_analysis = comp.get('license_analysis', {})
+            if license_analysis.get('status', '') == 'Unknown':
+                pkg = comp.get('package', 'Unknown')
+                comp_unknown_licenses = license_analysis.get('unknown_licenses', [])
+                for lic in comp_unknown_licenses:
+                    really_unknown_licenses.append({
+                        'package': pkg,
+                        'license': lic
+                    })
+
+    if license_service_output.get('status', '') == 'ComponentLicenseConflict':
+        list_components = license_service_output.get('packages', [])
+        for comp in list_components:
+            license_analysis = comp.get('license_analysis', {})
+            if license_analysis.get('status', '') == 'Conflict':
+                pkg = comp.get('package', 'Unknown')
+                d = {
+                    "package": pkg
+                }
+                comp_conflict_licenses = license_analysis.get('conflict_licenses', [])
+                list_conflicting_pairs = []
+                for pair in comp_conflict_licenses:
+                    assert (len(pair) == 2)
+                    list_conflicting_pairs.append({
+                        'license1': pair[0],
+                        'license2': pair[1]
+                    })
+                d['conflict_licenses'] = list_conflicting_pairs
+                lic_conflict_licenses.append(d)
+
+    output = {
+        'really_unknown': really_unknown_licenses,
+        'component_conflict': lic_conflict_licenses
+    }
+    return output
+
+
+def _extract_license_outliers(license_service_output):
+    """
+    This helper function extracts license outliers from the given output of
+    license analysis REST service.
+
+    :param license_service_output: output of license analysis REST service
+    :return: list of license outlier packages
+    """
+    outliers = []
+    if not license_service_output:
+        return outliers
+
+    outlier_packages = license_service_output.get('outlier_packages', {})
+    for pkg in outlier_packages.keys():
+        outliers.append({
+            'package': pkg,
+            'license': outlier_packages.get(pkg, 'Unknown')
+        })
+
+    return outliers
+
+
+def perform_license_analysis(license_score_list, dependencies):
+    license_url = LICENSE_SCORING_URL_REST + "/api/v1/stack_license"
+
+    payload = {
+        "packages": license_score_list
+    }
+    resp = {}
+    flag_stack_license_exception = False
+    try:
+        lic_response = get_session_retry().post(license_url, data=json.dumps(payload))
+        lic_response.raise_for_status()  # raise exception for bad http-status codes
+        resp = lic_response.json()
+    except requests.exceptions.RequestException:
+        _logger.exception("Unexpected error happened while invoking license analysis!")
+        flag_stack_license_exception = True
+        pass
+
+    stack_license = []
+    stack_license_status = None
+    unknown_licenses = []
+    license_conflict_packages = []
+    license_outliers = []
+    if not flag_stack_license_exception:
+        list_components = resp.get('packages', [])
+        for comp in list_components:  # output from license analysis
+            for dep in dependencies:  # the known dependencies
+                if dep.get('name', '') == comp.get('package', '') and \
+                                dep.get('version', '') == comp.get('version', ''):
+                    dep['license_analysis'] = comp.get('license_analysis', {})
+
+        _stack_license = resp.get('stack_license', None)
+        if _stack_license is not None:
+            stack_license = [_stack_license]
+        stack_license_status = resp.get('status', None)
+        unknown_licenses = _extract_unknown_licenses(resp)
+        license_conflict_packages = _extract_conflict_packages(resp)
+        license_outliers = _extract_license_outliers(resp)
+
+    output = {
+        "status": stack_license_status,
+        "f8a_stack_licenses": stack_license,
+        "unknown_licenses": unknown_licenses,
+        "conflict_packages": license_conflict_packages,
+        "outlier_packages": license_outliers
+    }
+    return output, dependencies
+
+def extract_user_stack_package_licenses(resolved, ecosystem):
+    user_stack = get_dependency_data(resolved, ecosystem)
+    list_package_licenses = []
+    if user_stack is not None:
+        for component in user_stack.get('result', []):
+            data = component.get("data", None)
+            if data:
+                component_data = extract_component_details(data[0])
+                license_scoring_input = {
+                    'package': component_data['name'],
+                    'version': component_data['version'],
+                    'licenses': component_data['licenses']
+                }
+                list_package_licenses.append(license_scoring_input)
+
+    return list_package_licenses
+
+
+def aggregate_stack_data(stack, manifest_file, ecosystem, deps, manifest_file_path):
+    dependencies = []
+    licenses = []
+    license_score_list = []
+    for component in stack.get('result', []):
+        data = component.get("data", None)
+        if data:
+            component_data = extract_component_details(data[0])
+            # create license dict for license scoring
+            license_scoring_input = {
+                'package': component_data['name'],
+                'version': component_data['version'],
+                'licenses': component_data['licenses']
+            }
+            dependencies.append(component_data)
+            licenses.extend(component_data['licenses'])
+            license_score_list.append(license_scoring_input)
+
+    stack_distinct_licenses = set(licenses)
+
+    # Call License Scoring to Get Stack License
+    license_analysis, dependencies = perform_license_analysis(license_score_list, dependencies)
+    stack_license_conflict = len(license_analysis.get('f8a_stack_licenses', [])) == 0
+
+    all_dependencies = {(dependency['package'], dependency['version']) for dependency in deps}
+    analyzed_dependencies = {(dependency['name'], dependency['version'])
+                            for dependency in dependencies}
+    unknown_dependencies = list()
+    for name, version in all_dependencies.difference(analyzed_dependencies):
+        unknown_dependencies.append({'name': name, 'version': version})
+
+    data = {
+            "manifest_name": manifest_file,
+            "manifest_file_path": manifest_file_path,
+            "user_stack_info": {
+                "ecosystem": ecosystem,
+                "analyzed_dependencies_count": len(dependencies),
+                "analyzed_dependencies": dependencies,
+                "unknown_dependencies_count": len(deps) - len(dependencies),
+                "unknown_dependencies": unknown_dependencies,
+                "recommendation_ready": True,  # based on the percentage of dependencies analysed
+                "total_licenses": len(stack_distinct_licenses),
+                "distinct_licenses": list(stack_distinct_licenses),
+                "stack_license_conflict": stack_license_conflict,
+                "dependencies": deps,
+                "license_analysis": license_analysis
+            }
+    }
+    return data
+
+def get_dependency_data(resolved, ecosystem):
+    result = []
+    for elem in resolved:
+        if elem["package"] is None or elem["version"] is None:
+            _logger.warning("Either component name or component version is missing")
+            continue
+
+        qstring = \
+            "g.V().has('pecosystem', '{}').has('pname', '{}').has('version', '{}')" \
+            .format(ecosystem, elem["package"], elem["version"]) + \
+            ".as('version').in('has_version').as('package')" + \
+            ".select('version','package').by(valueMap());"
+        payload = {'gremlin': qstring}
+
+        try:
+            graph_req = get_session_retry().post(GREMLIN_SERVER_URL_REST, data=json.dumps(payload))
+
+            if graph_req.status_code == 200:
+                graph_resp = graph_req.json()
+                if 'result' not in graph_resp:
+                    continue
+                if len(graph_resp['result']['data']) == 0:
+                    continue
+
+                result.append(graph_resp["result"])
+            else:
+                _logger.error("Failed retrieving dependency data.")
+                continue
+        except Exception:
+            _logger.exception("Error retrieving dependency data!")
+            continue
+    return {"result": result}
+
+"""
+RECOMMENDER FUNCTIONS
+"""
+def invoke_license_analysis_service(user_stack_packages, alternate_packages, companion_packages):
+    license_url = LICENSE_SCORING_URL_REST + "/api/v1/stack_license"
+
+    payload = {
+        "packages": user_stack_packages,
+        "alternate_packages": alternate_packages,
+        "companion_packages": companion_packages
+    }
+
+    json_response = {}
+    try:
+        lic_response = get_session_retry().post(license_url, data=json.dumps(payload))
+        lic_response.raise_for_status()  # raise exception for bad http-status codes
+        json_response = lic_response.json()
+    except requests.exceptions.RequestException:
+        _logger.exception("Unexpected error happened while invoking license analysis!")
+        pass
+
+    return json_response
+
+
+def apply_license_filter(user_stack_components, epv_list_alt, epv_list_com):
+    license_score_list_alt = []
+    for epv in epv_list_alt:
+        license_scoring_input = {
+            'package': epv.get('pkg', {}).get('name', [''])[0],
+            'version': epv.get('ver', {}).get('version', [''])[0],
+            'licenses': epv.get('ver', {}).get('licenses', [])
+        }
+        license_score_list_alt.append(license_scoring_input)
+
+    license_score_list_com = []
+    for epv in epv_list_com:
+        license_scoring_input = {
+            'package': epv.get('pkg', {}).get('name', [''])[0],
+            'version': epv.get('ver', {}).get('version', [''])[0],
+            'licenses': epv.get('ver', {}).get('licenses', [])
+        }
+        license_score_list_com.append(license_scoring_input)
+
+    # Call license scoring to find license filters
+    la_output = invoke_license_analysis_service(user_stack_components,
+                                                license_score_list_alt,
+                                                license_score_list_com)
+
+    conflict_packages_alt = conflict_packages_com = []
+    if la_output.get('status') == 'Successful' and la_output.get('license_filter') is not None:
+        license_filter = la_output.get('license_filter', {})
+        conflict_packages_alt = license_filter.get('alternate_packages', {})\
+                                              .get('conflict_packages', [])
+        conflict_packages_com = license_filter.get('companion_packages', {})\
+                                              .get('conflict_packages', [])
+
+    list_pkg_names_alt = []
+    for epv in epv_list_alt[:]:
+        name = epv.get('pkg', {}).get('name', [''])[0]
+        if name in conflict_packages_alt:
+            list_pkg_names_alt.append(name)
+            epv_list_alt.remove(epv)
+
+    list_pkg_names_com = []
+    for epv in epv_list_com[:]:
+        name = epv.get('pkg', {}).get('name', [''])[0]
+        if name in conflict_packages_com:
+            list_pkg_names_com.append(name)
+            epv_list_com.remove(epv)
+
+    output = {
+        'filtered_alt_packages_graph': epv_list_alt,
+        'filtered_list_pkg_names_alt': list_pkg_names_alt,
+        'filtered_comp_packages_graph': epv_list_com,
+        'filtered_list_pkg_names_com': list_pkg_names_com
+    }
+    _logger.info("License Filter output: {}".format(json.dumps(output)))
+
+    return output
 
 class SimilarStack(object):
     def __init__(self, stack_id, usage_score=None, source=None,
@@ -427,8 +858,6 @@ class GraphDB:
                         epv['pkg']['pgm_topics'] = pgm_epv.get('topic_list', [])
                         epv['pkg']['cooccurrence_probability'] = pgm_epv.get(
                             'cooccurrence_probability', 0)
-                        epv['pkg']['cooccurrence_count'] = pgm_epv.get(
-                            'cooccurrence_count', 0)
 
         return comp_list
 
@@ -584,151 +1013,9 @@ class RelativeSimilarity:
 
         return similar_stack_lists
 
-
-class RecommendationTask(BaseTask):
-    _analysis_name = 'recommendation'
-    description = 'Get Recommendation'
-
-    def execute(self, arguments=None):
-        arguments = self.parent_task_result('GraphAggregatorTask')
-        recommendations = []
-        rs = RelativeSimilarity()
-
-        for result in arguments.get('result', []):
-            input_stack = {d["package"]: d["version"] for d in result.get("details", [])[0]
-                           .get("_resolved")}
-            ecosystem = result["details"][0].get("ecosystem")
-            manifest_file_path = result["details"][0].get('manifest_file_path')
-
-            # Get Input Stack data
-            input_stack_vectors = GraphDB().get_input_stacks_vectors_from_graph(input_stack,
-                                                                                ecosystem)
-            # Fetch all reference stacks if any one component from input is present
-            ref_stacks = GraphDB().get_reference_stacks_from_graph(input_stack.keys())
-
-            if len(ref_stacks) > 0:
-                # Apply jaccard similarity to consider only stacks having 30%
-                # interection of component names
-                # We only get one top matching reference stack based on components now
-                # filtered_ref_stacks = rs.filter_package(input_stack, ref_stacks)
-                # Calculate similarity of the filtered stacks
-                similar_stacks_list = rs.find_relative_similarity(input_stack, input_stack_vectors,
-                                                                  ref_stacks)
-                similarity_list = self._get_stack_values(similar_stacks_list)
-                recommendations.append({
-                    "similar_stacks": similarity_list,
-                    "component_level": None,
-                    "manifest_file_path": manifest_file_path
-                })
-            else:
-                recommendations.append({
-                    "similar_stacks": [],
-                    "component_level": None,
-                    "manifest_file_path": manifest_file_path
-                })
-
-        return {"recommendations": recommendations}
-
-    def _get_stack_values(self, similar_stacks_list):
-        """Converts the similarity score list to JSON based on the needs"""
-        similarity_list = []
-        for stack in similar_stacks_list:
-            s_stack = {
-                "stack_id": stack.stack_id,
-                "stack_name": stack.stack_name,
-                "similarity": stack.original_score,
-                "usage": stack.usage_score,
-                "source": stack.source,
-                "analysis": {
-                    "missing_packages": stack.missing_packages,
-                    "version_mismatch": stack.version_mismatch
-                }
-            }
-            similarity_list.append(s_stack)
-        return similarity_list
-
-
-def invoke_license_analysis_service(user_stack_packages, alternate_packages, companion_packages):
-    license_url = LICENSE_SCORING_URL_REST + "/api/v1/stack_license"
-
-    payload = {
-        "packages": user_stack_packages,
-        "alternate_packages": alternate_packages,
-        "companion_packages": companion_packages
-    }
-
-    json_response = {}
-    try:
-        lic_response = get_session_retry().post(license_url, data=json.dumps(payload))
-        lic_response.raise_for_status()  # raise exception for bad http-status codes
-        json_response = lic_response.json()
-    except requests.exceptions.RequestException:
-        _logger.exception("Unexpected error happened while invoking license analysis!")
-        pass
-
-    return json_response
-
-
-def apply_license_filter(user_stack_components, epv_list_alt, epv_list_com):
-    license_score_list_alt = []
-    for epv in epv_list_alt:
-        license_scoring_input = {
-            'package': epv.get('pkg', {}).get('name', [''])[0],
-            'version': epv.get('ver', {}).get('version', [''])[0],
-            'licenses': epv.get('ver', {}).get('declared_licenses', [])
-        }
-        license_score_list_alt.append(license_scoring_input)
-
-    license_score_list_com = []
-    for epv in epv_list_com:
-        license_scoring_input = {
-            'package': epv.get('pkg', {}).get('name', [''])[0],
-            'version': epv.get('ver', {}).get('version', [''])[0],
-            'licenses': epv.get('ver', {}).get('declared_licenses', [])
-        }
-        license_score_list_com.append(license_scoring_input)
-
-    # Call license scoring to find license filters
-    la_output = invoke_license_analysis_service(user_stack_components,
-                                                license_score_list_alt,
-                                                license_score_list_com)
-
-    conflict_packages_alt = conflict_packages_com = []
-    if la_output.get('status') == 'Successful' and la_output.get('license_filter') is not None:
-        license_filter = la_output.get('license_filter', {})
-        conflict_packages_alt = license_filter.get('alternate_packages', {})\
-                                              .get('conflict_packages', [])
-        conflict_packages_com = license_filter.get('companion_packages', {})\
-                                              .get('conflict_packages', [])
-
-    list_pkg_names_alt = []
-    for epv in epv_list_alt[:]:
-        name = epv.get('pkg', {}).get('name', [''])[0]
-        if name in conflict_packages_alt:
-            list_pkg_names_alt.append(name)
-            epv_list_alt.remove(epv)
-
-    list_pkg_names_com = []
-    for epv in epv_list_com[:]:
-        name = epv.get('pkg', {}).get('name', [''])[0]
-        if name in conflict_packages_com:
-            list_pkg_names_com.append(name)
-            epv_list_com.remove(epv)
-
-    output = {
-        'filtered_alt_packages_graph': epv_list_alt,
-        'filtered_list_pkg_names_alt': list_pkg_names_alt,
-        'filtered_comp_packages_graph': epv_list_com,
-        'filtered_list_pkg_names_com': list_pkg_names_com
-    }
-    _logger.info("License Filter output: {}".format(json.dumps(output)))
-
-    return output
-
-
-class RecommendationV2Task(BaseTask):
-    _analysis_name = 'recommendation_v2'
-    description = 'Get Recommendation'
+class StackAnalyzerTask(BaseTask):
+    _analysis_name = 'stack_analyzer'
+    schema_ref = None
 
     def call_pgm(self, payload):
         """Calls the PGM model with the normalized manifest information to get
@@ -757,31 +1044,162 @@ class RecommendationV2Task(BaseTask):
             self.log.error("Failed retrieving PGM data.")
             return None
 
-    def execute(self, parguments=None):
-        arguments = self.parent_task_result('GraphAggregatorTask')
-        results = arguments['result']
+    @staticmethod
+    def _handle_external_deps(ecosystem, deps):
+        """Resolve external dependency specifications"""
+        if not ecosystem or not deps:
+            return []
+        solver = get_ecosystem_solver(ecosystem)
+        try:
+            versions = solver.solve(deps)
+        except Exception as exc:
+            raise FatalTaskError("Dependencies could not be resolved: '{}'" .format(deps)) from exc
+        return [{"package": k, "version": v} for k, v in versions.items()]
 
+    def _get_current_timestamp(self):
+        now = datetime.datetime.now()
+        return now.isoformat()
+
+    def execute(self, arguments=None):
+        self._strict_assert(arguments.get('data'))
+        self._strict_assert(arguments.get('external_request_id'))
+
+        external_request_id = arguments.get('external_request_id')
+
+        self.log.info('PERF_LOG|REQ: {}|GRAPH_AGGREGATOR|DB|START|{}'.format(external_request_id,
+                                                                                 self._get_current_timestamp()))
+        db = self.storage.session
+        try:
+            results = db.query(StackAnalysisRequest)\
+                        .filter(StackAnalysisRequest.id == external_request_id)\
+                        .first()
+        except SQLAlchemyError:
+            db.rollback()
+            raise
+        self.log.info('PERF_LOG|REQ: {}|GRAPH_AGGREGATOR|DB|END|{}'.format(external_request_id,
+                                                                             self._get_current_timestamp()))
+
+        manifests = []
+        if results is not None:
+            row = results.to_dict()
+            request_json = row.get("requestJson", {})
+            manifests = request_json.get('manifest', [])
+
+        # If we receive a manifest file we need to save it first
+        """
+        result = []
+        for manifest in manifests:
+            with tempdir() as temp_path:
+                with open(os.path.join(temp_path, manifest['filename']), 'a+') as fd:
+                    fd.write(manifest['content'])
+
+                # mercator-go does not work if there is no package.json
+                if 'shrinkwrap' in manifest['filename'].lower():
+                    with open(os.path.join(temp_path, 'package.json'), 'w') as f:
+                        f.write(json.dumps({}))
+
+                # Create instance manually since stack analysis is not handled by dispatcher
+                subtask = MercatorTask.create_test_instance(task_name=self.task_name)
+                arguments['ecosystem'] = manifest['ecosystem']
+                self.log.info('PERF_LOG|REQ: {}|GRAPH_AGGREGATOR|MERCATOR|START|{}'.format(external_request_id,
+                                                                                 self._get_current_timestamp()))
+                out = subtask.run_mercator(arguments, temp_path)
+                self.log.info('PERF_LOG|REQ: {}|GRAPH_AGGREGATOR|MERCATOR|END|{}'.format(external_request_id,
+                                                                                 self._get_current_timestamp()))
+
+            if not out["details"]:
+                raise FatalTaskError("No metadata found processing manifest file '{}'"
+                                     .format(manifest['filename']))
+
+            if 'dependencies' not in out['details'][0] and out.get('status', None) == 'success':
+                raise FatalTaskError("Dependencies could not be resolved from manifest file '{}'"
+                                     .format(manifest['filename']))
+
+            out["details"][0]['manifest_file'] = manifest['filename']
+            out["details"][0]['ecosystem'] = manifest['ecosystem']
+            out["details"][0]['manifest_file_path'] = manifest.get('filepath',
+                                                                   'File path not available')
+
+            # If we're handling an external request we need to convert dependency specifications to
+            # concrete versions that we can query later on in the `AggregatorTask`
+            manifest_descriptor = get_manifest_descriptor_by_filename(manifest['filename'])
+            if 'external_request_id' in arguments:
+                manifest_dependencies = []
+                if manifest_descriptor.has_resolved_deps:  # npm-shrinkwrap.json, pom.xml
+                    if "_dependency_tree_lock" in out["details"][0]:  # npm-shrinkwrap.json
+                        if 'dependencies' in out['details'][0]["_dependency_tree_lock"]:
+                            manifest_dependencies = out["details"][0]["_dependency_tree_lock"].get(
+                                "dependencies", [])
+                    else:  # pom.xml
+                        if 'dependencies' in out['details'][0]:
+                            manifest_dependencies = out["details"][0].get("dependencies", [])
+                    if manifest_descriptor.has_recursive_deps:  # npm-shrinkwrap.json
+                        def _flatten(deps, collect):
+                            for dep in deps:
+                                collect.append({'package': dep['name'], 'version': dep['version']})
+                                _flatten(dep['dependencies'], collect)
+                        resolved_deps = []
+                        _flatten(manifest_dependencies, resolved_deps)
+                    else:  # pom.xml
+                        resolved_deps =\
+                            [{'package': x.split(' ')[0], 'version': x.split(' ')[1]}
+                             for x in manifest_dependencies]
+                else:  # package.json, requirements.txt
+                    resolved_deps = self._handle_external_deps(
+                        self.storage.get_ecosystem(arguments['ecosystem']),
+                        out["details"][0]["dependencies"])
+                out["details"][0]['_resolved'] = resolved_deps
+            result.append(out)
+
+        self.log.info ('#############\n\n%r##################\n\n'%result)
+        """
+
+        result = [{'status': 'success', 'details': [{'ecosystem': 'maven', 'homepage': 'https://github.com/openshiftio/space00005', '_resolved': [{'version': '3.4.2', 'package': 'io.vertx:vertx-web'}, {'version': '3.4.2', 'package': 'io.vertx:vertx-core'}], 'description': 'Exposes an HTTP API using Vert.x', 'devel_dependencies': ['io.vertx:vertx-web-client 3.4.2', 'com.jayway.awaitility:awaitility 1.7.0', 'io.openshift:openshift-test-utils 2', 'io.vertx:vertx-unit 3.4.2', 'org.assertj:assertj-core 3.6.2', 'junit:junit 4.12', 'com.jayway.restassured:rest-assured 2.9.0'], 'manifest_file_path': '/home/JohnDoe', 'manifest_file': 'pom.xml', 'code_repository': {'url': 'https://github.com/openshiftio/space00005', 'type': 'git'}, 'dependencies': ['io.vertx:vertx-web 3.4.2', 'io.vertx:vertx-core 3.4.2'], 'name': 'Vert.x - HTTP', 'declared_licenses': ['Apache License, Version 2.0'], 'version': '1.0.0-SNAPSHOT'}], 'summary': []}]
+        finished = []
+        stack_data = []
+        aggregated = result
+        arguments = result
+
+        for result in aggregated:
+            resolved = result['details'][0]['_resolved']
+            ecosystem = result['details'][0]['ecosystem']
+            manifest = result['details'][0]['manifest_file']
+            manifest_file_path = result['details'][0]['manifest_file_path']
+
+            self.log.info('PERF_LOG|REQ: {}|STACK_AGGREGATOR|GRAPH1|START|{}'.format(external_request_id, self._get_current_timestamp()))
+            finished = get_dependency_data(resolved, ecosystem)
+            self.log.info('PERF_LOG|REQ: {}|STACK_AGGREGATOR|GRAPH1|END|{}'.format(external_request_id, self._get_current_timestamp()))
+            if finished is not None:
+                self.log.info('PERF_LOG|REQ: {}|STACK_AGGREGATOR|LICENSE|START|{}'.format(external_request_id,
+                                                                                     self._get_current_timestamp()))
+                stack_data.append(aggregate_stack_data(finished, manifest, ecosystem.lower(),
+                                  resolved, manifest_file_path))
+                self.log.info('PERF_LOG|REQ: {}|STACK_AGGREGATOR|LICENSE|END|{}'.format(external_request_id,
+                                                                                          self._get_current_timestamp()))
+
+        results = arguments
+        
         input_task_for_pgm = []
         recommendations = []
         input_stack = {}
-        for result in results:
+        for r in results:
             temp_input_stack = {d["package"]: d["version"] for d in
-                                result.get("details", [])[0].get("_resolved")}
+                                r.get("details", [])[0].get("_resolved")}
             input_stack.update(temp_input_stack)
 
-        for result in results:
-            details = result['details'][0]
+        for r in results:
+            details = r['details'][0]
             resolved = details['_resolved']
             manifest_file_path = details['manifest_file_path']
 
-            self.log.debug(result)
+            self.log.debug(r)
             recommendation = {
                 'companion': [],
                 'alternate': [],
                 'usage_outliers': [],
                 'manifest_file_path': manifest_file_path
             }
-            new_arr = [r['package'] for r in resolved]
+            new_arr = [r1['package'] for r1 in resolved]
             json_object = {
                 'ecosystem': details['ecosystem'],
                 'comp_package_count_threshold': int(os.environ.get('MAX_COMPANION_PACKAGES', 5)),
@@ -798,12 +1216,17 @@ class RecommendationV2Task(BaseTask):
 
             # Call PGM and get the response
             start = datetime.datetime.utcnow()
+            self.log.info('PERF_LOG|REQ: {}|RECOMMENDER|PGM|START|{}'.format(external_request_id,
+                                                                                      self._get_current_timestamp()))
             #pgm_response = self.call_pgm(input_task_for_pgm)
             pgm_response = [{'user_persona': '1', 'alternate_packages': {}, 'ecosystem': 'maven', 'companion_packages': [{'cooccurrence_probability': 75, 'package_name': 'mysql:mysql-connector-java', 'topic_list': ['java', 'connector', 'mysql']}, {'cooccurrence_probability': 3, 'package_name': 'org.springframework.boot:spring-boot-starter-web', 'topic_list': ['spring-webapp-booster', 'spring-starter-web', 'spring-rest-api-starter', 'spring-web-service']}, {'cooccurrence_probability': 1, 'package_name': 'org.springframework.boot:spring-boot-starter-data-jpa', 'topic_list': ['spring-persistence', 'spring-jpa', 'spring-data', 'spring-jpa-adaptor']}, {'cooccurrence_probability': 2, 'package_name': 'org.springframework.boot:spring-boot-starter-actuator', 'topic_list': ['spring-rest-api', 'spring-starter', 'spring-actuator', 'spring-http']}], 'missing_packages': [], 'outlier_package_list': [], 'package_to_topic_dict': {'io.vertx:vertx-web': ['vertx-web', 'webapp', 'auth', 'routing'], 'io.vertx:vertx-core': ['http', 'socket', 'tcp', 'reactive']}}]
+            self.log.info('PERF_LOG|REQ: {}|RECOMMENDER|PGM|END|{}'.format(external_request_id,
+                                                                                  self._get_current_timestamp()))
+
             elapsed_seconds = (datetime.datetime.utcnow() - start).total_seconds()
             msg = 'It took {t} seconds to get response from PGM ' \
                   'for external request {e}.'.format(t=elapsed_seconds,
-                                                     e=parguments.get('external_request_id'))
+                                                     e=external_request_id)
             self.log.info(msg)
 
             # From PGM response process companion and alternate packages and
@@ -827,9 +1250,12 @@ class RecommendationV2Task(BaseTask):
                         companion_packages.append(pkg['package_name'])
 
                     # Get Companion Packages from Graph
+                    self.log.info('PERF_LOG|REQ: {}|RECOMMENDER|GRAPH1|START|{}'.format(external_request_id,
+                                                                                     self._get_current_timestamp()))
                     comp_packages_graph = GraphDB().get_version_information(companion_packages,
                                                                             ecosystem)
-
+                    self.log.info('PERF_LOG|REQ: {}|RECOMMENDER|GRAPH1|END|{}'.format(external_request_id,
+                                                                                     self._get_current_timestamp()))
                     # Apply Version Filters
                     filtered_comp_packages_graph, filtered_list = GraphDB().filter_versions(
                         comp_packages_graph, input_stack)
@@ -837,7 +1263,7 @@ class RecommendationV2Task(BaseTask):
                     filtered_companion_packages = \
                         set(companion_packages).difference(set(filtered_list))
                     _logger.info("Companion Packages Filtered for external_request_id {} {}"
-                                 .format(parguments.get('external_request_id', ''),
+                                 .format(external_request_id,
                                          filtered_companion_packages))
 
                     # Get the topmost alternate package for each input package
@@ -867,8 +1293,12 @@ class RecommendationV2Task(BaseTask):
                             alternate_packages.append(alt_pkg)
 
                     # Get Alternate Packages from Graph
+                    self.log.info('PERF_LOG|REQ: {}|RECOMMENDER|GRAPH2|START|{}'.format(external_request_id,
+                                                                                       self._get_current_timestamp()))
                     alt_packages_graph = GraphDB().get_version_information(
                         alternate_packages, ecosystem)
+                    self.log.info('PERF_LOG|REQ: {}|RECOMMENDER|GRAPH2|END|{}'.format(external_request_id,
+                                                                                       self._get_current_timestamp()))
 
                     # Apply Version Filters
                     filtered_alt_packages_graph, filtered_list = GraphDB().filter_versions(
@@ -877,14 +1307,22 @@ class RecommendationV2Task(BaseTask):
                     filtered_alternate_packages = \
                         set(alternate_packages).difference(set(filtered_list))
                     _logger.info("Alternate Packages Filtered for external_request_id {} {}"
-                                 .format(parguments.get('external_request_id', ''),
+                                 .format(external_request_id,
                                          filtered_alternate_packages))
 
                     # apply license based filters
+                    self.log.info('PERF_LOG|REQ: {}|RECOMMENDER|GRAPH3|START|{}'.format(external_request_id,
+                                                                                       self._get_current_timestamp()))
                     list_user_stack_comp = extract_user_stack_package_licenses(resolved, ecosystem)
+                    self.log.info('PERF_LOG|REQ: {}|RECOMMENDER|GRAPH3|END|{}'.format(external_request_id,
+                                                                                       self._get_current_timestamp()))
+                    self.log.info('PERF_LOG|REQ: {}|RECOMMENDER|LICENSE|START|{}'.format(external_request_id,
+                                                                                       self._get_current_timestamp()))
                     license_filter_output = apply_license_filter(list_user_stack_comp,
                                                                  filtered_alt_packages_graph,
                                                                  filtered_comp_packages_graph)
+                    self.log.info('PERF_LOG|REQ: {}|RECOMMENDER|LICENSE|END|{}'.format(external_request_id,
+                                                                                         self._get_current_timestamp()))
 
                     lic_filtered_alt_graph = license_filter_output['filtered_alt_packages_graph']
                     lic_filtered_comp_graph = license_filter_output['filtered_comp_packages_graph']
@@ -895,14 +1333,14 @@ class RecommendationV2Task(BaseTask):
                         s = set(filtered_alternate_packages).difference(set(lic_filtered_list_alt))
                         msg = \
                             "Alternate Packages filtered (licenses) for external_request_id {} {}"\
-                            .format(parguments.get('external_request_id', ''), s)
+                            .format(external_request_id, s)
                         _logger.info(msg)
 
                     if len(lic_filtered_list_com) > 0:
                         s = set(filtered_companion_packages).difference(set(lic_filtered_list_com))
                         msg = \
                             "Companion Packages filtered (licenses) for external_request_id {} {}"\
-                            .format(parguments.get('external_request_id', ''), s)
+                            .format(external_request_id, s)
                         _logger.info(msg)
 
                     # Get Topics Added to Filtered Packages
@@ -924,4 +1362,5 @@ class RecommendationV2Task(BaseTask):
                     recommendation['alternate'] = alt_packages
 
             recommendations.append(recommendation)
-        return {'recommendations': recommendations}
+        
+        return {'stack_data': stack_data, 'recommendations': recommendations}
