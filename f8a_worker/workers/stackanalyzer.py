@@ -1086,7 +1086,6 @@ class StackAnalyzerTask(BaseTask):
             manifests = request_json.get('manifest', [])
 
         # If we receive a manifest file we need to save it first
-        """
         result = []
         for manifest in manifests:
             with tempdir() as temp_path:
@@ -1103,7 +1102,7 @@ class StackAnalyzerTask(BaseTask):
                 arguments['ecosystem'] = manifest['ecosystem']
                 self.log.info('PERF_LOG|REQ: {}|GRAPH_AGGREGATOR|MERCATOR|START|{}'.format(external_request_id,
                                                                                  self._get_current_timestamp()))
-                out = subtask.run_mercator(arguments, temp_path)
+                out = subtask.run_mercator(arguments, temp_path, resolve_poms=False)
                 self.log.info('PERF_LOG|REQ: {}|GRAPH_AGGREGATOR|MERCATOR|END|{}'.format(external_request_id,
                                                                                  self._get_current_timestamp()))
 
@@ -1151,10 +1150,9 @@ class StackAnalyzerTask(BaseTask):
                 out["details"][0]['_resolved'] = resolved_deps
             result.append(out)
 
-        self.log.info ('#############\n\n%r##################\n\n'%result)
-        """
+        self.log.info ('####### MERCATOR OUTPUT:\n%r' % result)
 
-        result = [{'status': 'success', 'details': [{'ecosystem': 'maven', 'homepage': 'https://github.com/openshiftio/space00005', '_resolved': [{'version': '3.4.2', 'package': 'io.vertx:vertx-web'}, {'version': '3.4.2', 'package': 'io.vertx:vertx-core'}], 'description': 'Exposes an HTTP API using Vert.x', 'devel_dependencies': ['io.vertx:vertx-web-client 3.4.2', 'com.jayway.awaitility:awaitility 1.7.0', 'io.openshift:openshift-test-utils 2', 'io.vertx:vertx-unit 3.4.2', 'org.assertj:assertj-core 3.6.2', 'junit:junit 4.12', 'com.jayway.restassured:rest-assured 2.9.0'], 'manifest_file_path': '/home/JohnDoe', 'manifest_file': 'pom.xml', 'code_repository': {'url': 'https://github.com/openshiftio/space00005', 'type': 'git'}, 'dependencies': ['io.vertx:vertx-web 3.4.2', 'io.vertx:vertx-core 3.4.2'], 'name': 'Vert.x - HTTP', 'declared_licenses': ['Apache License, Version 2.0'], 'version': '1.0.0-SNAPSHOT'}], 'summary': []}]
+        #result = [{'status': 'success', 'details': [{'ecosystem': 'maven', 'homepage': 'https://github.com/openshiftio/space00005', '_resolved': [{'version': '3.4.2', 'package': 'io.vertx:vertx-web'}, {'version': '3.4.2', 'package': 'io.vertx:vertx-core'}], 'description': 'Exposes an HTTP API using Vert.x', 'devel_dependencies': ['io.vertx:vertx-web-client 3.4.2', 'com.jayway.awaitility:awaitility 1.7.0', 'io.openshift:openshift-test-utils 2', 'io.vertx:vertx-unit 3.4.2', 'org.assertj:assertj-core 3.6.2', 'junit:junit 4.12', 'com.jayway.restassured:rest-assured 2.9.0'], 'manifest_file_path': '/home/JohnDoe', 'manifest_file': 'pom.xml', 'code_repository': {'url': 'https://github.com/openshiftio/space00005', 'type': 'git'}, 'dependencies': ['io.vertx:vertx-web 3.4.2', 'io.vertx:vertx-core 3.4.2'], 'name': 'Vert.x - HTTP', 'declared_licenses': ['Apache License, Version 2.0'], 'version': '1.0.0-SNAPSHOT'}], 'summary': []}]
         finished = []
         stack_data = []
         aggregated = result
