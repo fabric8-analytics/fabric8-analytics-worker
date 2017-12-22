@@ -1086,7 +1086,6 @@ class StackAnalyzerTask(BaseTask):
             manifests = request_json.get('manifest', [])
 
         # If we receive a manifest file we need to save it first
-        """
         result = []
         for manifest in manifests:
             with tempdir() as temp_path:
@@ -1103,7 +1102,7 @@ class StackAnalyzerTask(BaseTask):
                 arguments['ecosystem'] = manifest['ecosystem']
                 self.log.info('PERF_LOG|REQ: {}|GRAPH_AGGREGATOR|MERCATOR|START|{}'.format(external_request_id,
                                                                                  self._get_current_timestamp()))
-                out = subtask.run_mercator(arguments, temp_path)
+                out = subtask.run_mercator(arguments, temp_path, resolve_poms=False)
                 self.log.info('PERF_LOG|REQ: {}|GRAPH_AGGREGATOR|MERCATOR|END|{}'.format(external_request_id,
                                                                                  self._get_current_timestamp()))
 
@@ -1151,10 +1150,7 @@ class StackAnalyzerTask(BaseTask):
                 out["details"][0]['_resolved'] = resolved_deps
             result.append(out)
 
-        self.log.info ('#############\n\n%r##################\n\n'%result)
-        """
-
-        result = [{'status': 'success', 'details': [{'ecosystem': 'maven', 'homepage': 'https://github.com/openshiftio/space00005', '_resolved': [{'version': '3.4.2', 'package': 'io.vertx:vertx-web'}, {'version': '3.4.2', 'package': 'io.vertx:vertx-core'}], 'description': 'Exposes an HTTP API using Vert.x', 'devel_dependencies': ['io.vertx:vertx-web-client 3.4.2', 'com.jayway.awaitility:awaitility 1.7.0', 'io.openshift:openshift-test-utils 2', 'io.vertx:vertx-unit 3.4.2', 'org.assertj:assertj-core 3.6.2', 'junit:junit 4.12', 'com.jayway.restassured:rest-assured 2.9.0'], 'manifest_file_path': '/home/JohnDoe', 'manifest_file': 'pom.xml', 'code_repository': {'url': 'https://github.com/openshiftio/space00005', 'type': 'git'}, 'dependencies': ['io.vertx:vertx-web 3.4.2', 'io.vertx:vertx-core 3.4.2'], 'name': 'Vert.x - HTTP', 'declared_licenses': ['Apache License, Version 2.0'], 'version': '1.0.0-SNAPSHOT'}], 'summary': []}]
+        #result = [{'status': 'success', 'details': [{'ecosystem': 'maven', 'homepage': 'https://github.com/openshiftio/space00005', '_resolved': [{'version': '3.4.2', 'package': 'io.vertx:vertx-web'}, {'version': '3.4.2', 'package': 'io.vertx:vertx-core'}], 'description': 'Exposes an HTTP API using Vert.x', 'devel_dependencies': ['io.vertx:vertx-web-client 3.4.2', 'com.jayway.awaitility:awaitility 1.7.0', 'io.openshift:openshift-test-utils 2', 'io.vertx:vertx-unit 3.4.2', 'org.assertj:assertj-core 3.6.2', 'junit:junit 4.12', 'com.jayway.restassured:rest-assured 2.9.0'], 'manifest_file_path': '/home/JohnDoe', 'manifest_file': 'pom.xml', 'code_repository': {'url': 'https://github.com/openshiftio/space00005', 'type': 'git'}, 'dependencies': ['io.vertx:vertx-web 3.4.2', 'io.vertx:vertx-core 3.4.2'], 'name': 'Vert.x - HTTP', 'declared_licenses': ['Apache License, Version 2.0'], 'version': '1.0.0-SNAPSHOT'}], 'summary': []}]
         finished = []
         stack_data = []
         aggregated = result
@@ -1218,8 +1214,8 @@ class StackAnalyzerTask(BaseTask):
             start = datetime.datetime.utcnow()
             self.log.info('PERF_LOG|REQ: {}|RECOMMENDER|PGM|START|{}'.format(external_request_id,
                                                                                       self._get_current_timestamp()))
-            #pgm_response = self.call_pgm(input_task_for_pgm)
-            pgm_response = [{'user_persona': '1', 'alternate_packages': {}, 'ecosystem': 'maven', 'companion_packages': [{'cooccurrence_probability': 75, 'package_name': 'mysql:mysql-connector-java', 'topic_list': ['java', 'connector', 'mysql']}, {'cooccurrence_probability': 3, 'package_name': 'org.springframework.boot:spring-boot-starter-web', 'topic_list': ['spring-webapp-booster', 'spring-starter-web', 'spring-rest-api-starter', 'spring-web-service']}, {'cooccurrence_probability': 1, 'package_name': 'org.springframework.boot:spring-boot-starter-data-jpa', 'topic_list': ['spring-persistence', 'spring-jpa', 'spring-data', 'spring-jpa-adaptor']}, {'cooccurrence_probability': 2, 'package_name': 'org.springframework.boot:spring-boot-starter-actuator', 'topic_list': ['spring-rest-api', 'spring-starter', 'spring-actuator', 'spring-http']}], 'missing_packages': [], 'outlier_package_list': [], 'package_to_topic_dict': {'io.vertx:vertx-web': ['vertx-web', 'webapp', 'auth', 'routing'], 'io.vertx:vertx-core': ['http', 'socket', 'tcp', 'reactive']}}]
+            pgm_response = self.call_pgm(input_task_for_pgm)
+            #pgm_response = [{'user_persona': '1', 'alternate_packages': {}, 'ecosystem': 'maven', 'companion_packages': [{'cooccurrence_probability': 75, 'package_name': 'mysql:mysql-connector-java', 'topic_list': ['java', 'connector', 'mysql']}, {'cooccurrence_probability': 3, 'package_name': 'org.springframework.boot:spring-boot-starter-web', 'topic_list': ['spring-webapp-booster', 'spring-starter-web', 'spring-rest-api-starter', 'spring-web-service']}, {'cooccurrence_probability': 1, 'package_name': 'org.springframework.boot:spring-boot-starter-data-jpa', 'topic_list': ['spring-persistence', 'spring-jpa', 'spring-data', 'spring-jpa-adaptor']}, {'cooccurrence_probability': 2, 'package_name': 'org.springframework.boot:spring-boot-starter-actuator', 'topic_list': ['spring-rest-api', 'spring-starter', 'spring-actuator', 'spring-http']}], 'missing_packages': [], 'outlier_package_list': [], 'package_to_topic_dict': {'io.vertx:vertx-web': ['vertx-web', 'webapp', 'auth', 'routing'], 'io.vertx:vertx-core': ['http', 'socket', 'tcp', 'reactive']}}]
             self.log.info('PERF_LOG|REQ: {}|RECOMMENDER|PGM|END|{}'.format(external_request_id,
                                                                                   self._get_current_timestamp()))
 
