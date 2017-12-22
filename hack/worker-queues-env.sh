@@ -48,3 +48,14 @@ WORKER_QUEUES=$(echo "${WORKER_QUEUES}" | grep "_${WORKER_ADMINISTRATION_REGION}
 # Always exclude livenessFlow queue and prepare for celery worker
 WORKER_QUEUES=$(echo "${WORKER_QUEUES}" | grep -v '^livenessFlow:' | cut -d':' -f2 | sort -u | tr '\n' ',')
 WORKER_QUEUES="${WORKER_QUEUES:0:-1}"  # remove trailing ','
+
+# Add prefetch size for worker queues (Pick tasks in Bulk Size)
+if [ -z "$PREFETCH_SIZE" ]; then
+    echo "Prefetch Size : 4"
+    PREFETCH_SIZE=4
+else
+    echo "Prefetch Size : $PREFETCH_SIZE"
+    PREFETCH_SIZE="$PREFETCH_SIZE"
+fi
+
+
