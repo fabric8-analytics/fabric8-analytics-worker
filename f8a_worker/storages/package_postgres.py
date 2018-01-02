@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""Adapter used for Package-level."""
+
 from itertools import chain
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.declarative import declarative_base
@@ -21,6 +23,7 @@ class PackagePostgres(PostgresBase):
 
     @property
     def s3(self):
+        """Retrieve the connector to the S3 database."""
         # Do S3 retrieval lazily so tests do not complain about S3 setup
         if self._s3 is None:
             self._s3 = StoragePool.get_connected_storage('S3PackageData')
@@ -42,12 +45,11 @@ class PackagePostgres(PostgresBase):
         )
 
     def get_analysis_by_id(self, analysis_id):
-        """Get result of previously scheduled analysis
+        """Get result of previously scheduled analysis.
 
         :param analysis_id: str, ID of analysis
         :return: analysis result
         """
-
         try:
             return PostgresBase.session.query(PackageAnalysis).\
                                         filter(PackageAnalysis.id == analysis_id).\
@@ -113,7 +115,7 @@ class PackagePostgres(PostgresBase):
         return list(chain(*task_names))
 
     def get_latest_task_result(self, ecosystem, package, task_name):
-        """Get latest task result based on task name
+        """Get latest task result based on task name.
 
         :param ecosystem: name of the ecosystem
         :param package: name of the package
@@ -180,7 +182,7 @@ class PackagePostgres(PostgresBase):
         return entry.task_result
 
     def get_latest_task_entry(self, ecosystem, package, task_name, error=False):
-        """Get latest task result based on task name
+        """Get latest task result based on task name.
 
         :param ecosystem: name of the ecosystem
         :param package: name of the package
