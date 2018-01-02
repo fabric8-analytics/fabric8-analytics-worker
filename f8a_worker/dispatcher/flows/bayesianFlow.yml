@@ -38,20 +38,8 @@
         - from: 'bayesianAnalysisFlow'
           to: 'FinalizeTask'
         - from: 'FinalizeTask'
-          to: 'ResultCollector'
-          condition:
-            name: 'envEqual'
-            args:
-              env: 'BAYESIAN_SYNC_S3'
-              value: '1'
+          to: 'GraphImporterTask'
         - from: 'FinalizeTaskError'
-          to: 'ResultCollector'
-          condition:
-            name: 'envEqual'
-            args:
-              env: 'BAYESIAN_SYNC_S3'
-              value: '1'
-        - from: 'ResultCollector'
           to: 'GraphImporterTask'
       failures:
         - nodes:

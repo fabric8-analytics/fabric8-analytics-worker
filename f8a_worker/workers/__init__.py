@@ -26,7 +26,6 @@ from f8a_worker.workers.manifest_keeper import ManifestKeeperTask
 from f8a_worker.workers.mercator import MercatorTask
 from f8a_worker.workers.oscryptocatcher import OSCryptoCatcherTask
 from f8a_worker.workers.recommender import RecommendationTask, RecommendationV2Task
-from f8a_worker.workers.result_collector import ResultCollector, PackageResultCollector
 from f8a_worker.workers.stackaggregator import StackAggregatorTask
 from f8a_worker.workers.stackaggregator_v2 import StackAggregatorV2Task
 from f8a_worker.workers.bookkeeper import BookkeeperTask

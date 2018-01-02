@@ -1,0 +1,350 @@
+{
+  "migration": {
+    "bayesianApiFlow": {
+      "tainted_edges": {
+        "4": {
+          "condition_str": {
+            "args": {
+              "env": "BAYESIAN_SYNC_S3",
+              "value": "1"
+            },
+            "name": "envEqual"
+          },
+          "from": [
+            "FinalizeTask"
+          ],
+          "to": [
+            "ResultCollector"
+          ]
+        },
+        "5": {
+          "condition_str": {
+            "args": {
+              "env": "BAYESIAN_SYNC_S3",
+              "value": "1"
+            },
+            "name": "envEqual"
+          },
+          "from": [
+            "FinalizeTaskError"
+          ],
+          "to": [
+            "ResultCollector"
+          ]
+        },
+        "6": {
+          "condition_str": {
+            "name": "alwaysTrue"
+          },
+          "from": [
+            "ResultCollector"
+          ],
+          "to": [
+            "GraphImporterTask"
+          ]
+        }
+      },
+      "tainting_nodes": {
+        "4": [
+          "FinalizeTask"
+        ],
+        "5": [
+          "FinalizeTaskError"
+        ]
+      },
+      "translation": {
+        "4": null,
+        "5": null,
+        "6": null
+      }
+    },
+    "bayesianApiPackageFlow": {
+      "tainted_edges": {
+        "5": {
+          "condition_str": {
+            "name": "alwaysTrue"
+          },
+          "from": [
+            "PackageFinalizeTask"
+          ],
+          "to": [
+            "PackageResultCollector"
+          ]
+        },
+        "6": {
+          "condition_str": {
+            "name": "alwaysTrue"
+          },
+          "from": [
+            "PackageResultCollector"
+          ],
+          "to": [
+            "PackageGraphImporterTask"
+          ]
+        }
+      },
+      "tainting_nodes": {
+        "5": [
+          "PackageFinalizeTask"
+        ]
+      },
+      "translation": {
+        "5": null,
+        "6": null,
+        "7": 6,
+        "8": 7
+      }
+    },
+    "bayesianFlow": {
+      "tainted_edges": {
+        "4": {
+          "condition_str": {
+            "args": {
+              "env": "BAYESIAN_SYNC_S3",
+              "value": "1"
+            },
+            "name": "envEqual"
+          },
+          "from": [
+            "FinalizeTask"
+          ],
+          "to": [
+            "ResultCollector"
+          ]
+        },
+        "5": {
+          "condition_str": {
+            "args": {
+              "env": "BAYESIAN_SYNC_S3",
+              "value": "1"
+            },
+            "name": "envEqual"
+          },
+          "from": [
+            "FinalizeTaskError"
+          ],
+          "to": [
+            "ResultCollector"
+          ]
+        },
+        "6": {
+          "condition_str": {
+            "name": "alwaysTrue"
+          },
+          "from": [
+            "ResultCollector"
+          ],
+          "to": [
+            "GraphImporterTask"
+          ]
+        }
+      },
+      "tainting_nodes": {
+        "4": [
+          "FinalizeTask"
+        ],
+        "5": [
+          "FinalizeTaskError"
+        ]
+      },
+      "translation": {
+        "4": null,
+        "5": null,
+        "6": null
+      }
+    },
+    "bayesianPackageAnalysisFlow": {
+      "tainted_edges": {},
+      "tainting_nodes": {},
+      "translation": {}
+    },
+    "bayesianPackageFlow": {
+      "tainted_edges": {
+        "5": {
+          "condition_str": {
+            "name": "alwaysTrue"
+          },
+          "from": [
+            "PackageFinalizeTask"
+          ],
+          "to": [
+            "PackageResultCollector"
+          ]
+        },
+        "6": {
+          "condition_str": {
+            "name": "alwaysTrue"
+          },
+          "from": [
+            "PackageResultCollector"
+          ],
+          "to": [
+            "PackageGraphImporterTask"
+          ]
+        }
+      },
+      "tainting_nodes": {
+        "5": [
+          "PackageFinalizeTask"
+        ]
+      },
+      "translation": {
+        "5": null,
+        "6": null,
+        "7": 6,
+        "8": 7
+      }
+    },
+    "bayesianPackageTaggingFlow": {
+      "tainted_edges": {},
+      "tainting_nodes": {},
+      "translation": {}
+    },
+    "bayesianPriorityFlow": {
+      "tainted_edges": {
+        "4": {
+          "condition_str": {
+            "args": {
+              "env": "BAYESIAN_SYNC_S3",
+              "value": "1"
+            },
+            "name": "envEqual"
+          },
+          "from": [
+            "FinalizeTask"
+          ],
+          "to": [
+            "ResultCollector"
+          ]
+        },
+        "5": {
+          "condition_str": {
+            "args": {
+              "env": "BAYESIAN_SYNC_S3",
+              "value": "1"
+            },
+            "name": "envEqual"
+          },
+          "from": [
+            "FinalizeTaskError"
+          ],
+          "to": [
+            "ResultCollector"
+          ]
+        },
+        "6": {
+          "condition_str": {
+            "name": "alwaysTrue"
+          },
+          "from": [
+            "ResultCollector"
+          ],
+          "to": [
+            "GraphImporterTask"
+          ]
+        }
+      },
+      "tainting_nodes": {
+        "4": [
+          "FinalizeTask"
+        ],
+        "5": [
+          "FinalizeTaskError"
+        ]
+      },
+      "translation": {
+        "4": null,
+        "5": null,
+        "6": null
+      }
+    },
+    "bayesianPriorityPackageFlow": {
+      "tainted_edges": {
+        "5": {
+          "condition_str": {
+            "name": "alwaysTrue"
+          },
+          "from": [
+            "PackageFinalizeTask"
+          ],
+          "to": [
+            "PackageResultCollector"
+          ]
+        },
+        "6": {
+          "condition_str": {
+            "name": "alwaysTrue"
+          },
+          "from": [
+            "PackageResultCollector"
+          ],
+          "to": [
+            "PackageGraphImporterTask"
+          ]
+        }
+      },
+      "tainting_nodes": {
+        "5": [
+          "PackageFinalizeTask"
+        ]
+      },
+      "translation": {
+        "5": null,
+        "6": null,
+        "7": 6,
+        "8": 7
+      }
+    },
+    "bigQueryFlow": {
+      "tainted_edges": {},
+      "tainting_nodes": {},
+      "translation": {}
+    },
+    "componentApiFlow": {
+      "tainted_edges": {},
+      "tainting_nodes": {},
+      "translation": {}
+    },
+    "cveCheckFlow": {
+      "tainted_edges": {},
+      "tainting_nodes": {},
+      "translation": {}
+    },
+    "githubManifestMetadataFlow": {
+      "tainted_edges": {},
+      "tainting_nodes": {},
+      "translation": {}
+    },
+    "keywordsApiSummaryFlow": {
+      "tainted_edges": {},
+      "tainting_nodes": {},
+      "translation": {}
+    },
+    "keywordsPrioritySummaryFlow": {
+      "tainted_edges": {},
+      "tainting_nodes": {},
+      "translation": {}
+    },
+    "keywordsSummaryFlow": {
+      "tainted_edges": {},
+      "tainting_nodes": {},
+      "translation": {}
+    },
+    "livenessFlow": {
+      "tainted_edges": {},
+      "tainting_nodes": {},
+      "translation": {}
+    },
+    "stackApiGraphFlow": {
+      "tainted_edges": {},
+      "tainting_nodes": {},
+      "translation": {}
+    },
+    "stackApiGraphV2Flow": {
+      "tainted_edges": {},
+      "tainting_nodes": {},
+      "translation": {}
+    }
+  },
+  "tainted_flow_strategy": "IGNORE"
+}

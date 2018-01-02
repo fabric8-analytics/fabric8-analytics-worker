@@ -24,14 +24,25 @@ class S3Data(S3DataBase):
             'version': version
         }, task_name)
 
-    def retrieve_task_result(self, ecosystem, name, version, task_name):
+    def retrieve_task_result(self, ecosystem, name, version, task_name, object_version_id=None):
         """Retrieve task result stored on S3 for the given EPV.
 
         :param ecosystem: ecosystem name
         :param name: package name
         :param version: package version
         :param task_name: task name
+        :param object_version_id: version id of retrieved object, None for latest
         :return: task results as stored on S3
         """
-        object_key = self._construct_task_result_object_key(locals(), task_name)
-        return self.retrieve_dict(object_key)
+        return self.retrieve_task_result_args(locals(), task_name, object_version_id)
+
+    def retrieve_task_result_args(self, arguments, task_name, object_version_id=None):
+        """Retrieve task result stored on S3 for the given EPV.
+
+        :param arguments: arguments supplied to the flow
+        :param task_name: task name
+        :param object_version_id: version id of retrieved object, None for latest
+        :return: task results as stored on S3
+        """
+        object_key = self._construct_task_result_object_key(arguments, task_name)
+        return self.retrieve_dict(object_key, object_version_id)

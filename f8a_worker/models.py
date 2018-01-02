@@ -167,14 +167,6 @@ class Analysis(Base):
     version = relationship(Version, back_populates='analyses', lazy='joined')
 
     @property
-    def analyses(self):
-        s = Session.object_session(self)
-        if s:
-            worker_results = s.query(WorkerResult).filter(WorkerResult.analysis_id == self.id)
-            return {wr.worker: wr.task_result for wr in worker_results}
-        return {}
-
-    @property
     def raw_analyses(self):
         s = Session.object_session(self)
         if s:
@@ -246,8 +238,10 @@ class WorkerResult(Base):
     # the value of `analysis_id` should be `NULL`
     external_request_id = Column(String(64), index=True)
     analysis_id = Column(ForeignKey(Analysis.id), index=True)
+    # Used only in stack analysis now
     task_result = Column(JSONB)
     error = Column(Boolean, nullable=False, default=False)
+    s3_version_id = Column(String(255), index=False, nullable=True)
 
     analysis = relationship(Analysis)
 
@@ -314,18 +308,18 @@ class PackageWorkerResult(Base):
     worker = Column(String(255), index=True)
     worker_id = Column(String(64), unique=True)
     external_request_id = Column(String(64))
-    task_result = Column(JSONB)
     error = Column(Boolean, nullable=False, default=False)
+    s3_version_id = Column(String(255), index=False, nullable=True)
 
     package_analysis = relationship(PackageAnalysis)
 
     @property
     def ecosystem(self):
-        return self.diagnosis.package.ecosystem
+        return self.package_analysis.package.ecosystem
 
     @property
     def package(self):
-        return self.diagnosis.package
+        return self.package_analysis.package
 
 
 class StackAnalysisRequest(Base):

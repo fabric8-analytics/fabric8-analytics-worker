@@ -194,17 +194,27 @@ class AmazonS3(DataStorage):
         blob = self.dict2blob(dictionary)
         return self.store_blob(blob, object_key)
 
-    def retrieve_file(self, object_key, file_path):
+    def retrieve_file(self, object_key, file_path, version_id=None):
         """ Download an S3 object to a file. """
-        self._s3.Object(self.bucket_name, object_key).download_file(file_path)
+        extra_args = None
+        if version_id:
+            extra_args = {
+                'VersionId': version_id
+            }
+        self._s3.Object(self.bucket_name, object_key).download_file(file_path, ExtraArgs=extra_args)
 
-    def retrieve_blob(self, object_key):
+    def retrieve_blob(self, object_key, version_id=None):
         """ Retrieve remote object content. """
-        return self._s3.Object(self.bucket_name, object_key).get()['Body'].read()
+        s3_object = self._s3.Object(self.bucket_name, object_key)
+        if not configuration.is_local_deployment():
+            # Ignore version_id on local development as minio does not handle it
+            return s3_object.get(VersionId=version_id)['Body'].read()
+        else:
+            return s3_object.get()['Body'].read()
 
-    def retrieve_dict(self, object_key):
+    def retrieve_dict(self, object_key, version_id=None):
         """ Retrieve a dictionary stored as JSON from S3 """
-        return json.loads(self.retrieve_blob(object_key).decode())
+        return json.loads(self.retrieve_blob(object_key, version_id).decode())
 
     def retrieve_latest_version_id(self, object_key):
         """ Retrieve latest version identifier for the given object
