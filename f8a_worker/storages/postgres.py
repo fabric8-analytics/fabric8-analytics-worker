@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+
+"""Adapter used for EPV analyses."""
+
 import datetime
 import hashlib
 import json
@@ -24,6 +27,7 @@ class BayesianPostgres(PostgresBase):
 
     @property
     def s3(self):
+        """Retrieve the connector to the S3 database."""
         # Do S3 retrieval lazily so tests do not complain about S3 setup
         if self._s3 is None:
             self._s3 = StoragePool.get_connected_storage('S3Data')
@@ -44,7 +48,7 @@ class BayesianPostgres(PostgresBase):
         )
 
     def get_latest_task_result(self, ecosystem, package, version, task_name):
-        """Get latest task result based on task name
+        """Get latest task result based on task name.
 
         :param ecosystem: name of the ecosystem
         :param package: name of the package
@@ -80,7 +84,7 @@ class BayesianPostgres(PostgresBase):
         return entry.task_result
 
     def get_latest_task_entry(self, ecosystem, package, version, task_name, error=False):
-        """Get latest task result based on task name
+        """Get latest task result based on task name.
 
         :param ecosystem: name of the ecosystem
         :param package: name of the package
@@ -167,7 +171,7 @@ class BayesianPostgres(PostgresBase):
 
     @staticmethod
     def get_analysis_by_id(analysis_id):
-        """Get result of previously scheduled analysis
+        """Get result of previously scheduled analysis.
 
         :param analysis_id: str, ID of analysis
         :return: analysis result
@@ -184,7 +188,7 @@ class BayesianPostgres(PostgresBase):
 
     @staticmethod
     def check_api_user_entry(email):
-        """Check if a user entry has already been made in api_requests
+        """Check if a user entry has already been made in api_requests.
 
         :param email: str, user's email id
         :return: First entry in api_requests table with matching email id
@@ -199,12 +203,13 @@ class BayesianPostgres(PostgresBase):
 
     @staticmethod
     def store_in_bucket(content):
+        """Store the conetent into S3 bucket."""
         # TODO: move to appropriate S3 storage
         s3 = StoragePool.get_connected_storage('S3UserProfileStore')
         s3.store_in_bucket(content)
 
     def store_api_requests(self, external_request_id, data, dep_data):
-        """Get result of previously scheduled analysis5
+        """Get result of previously scheduled analysis.
 
         :param external_request_id: str, ID of analysis
         :param data: bookkeeping data
@@ -251,7 +256,6 @@ class BayesianPostgres(PostgresBase):
     @staticmethod
     def get_analysed_versions(ecosystem, package):
         """Return all already analysed versions for the given package.
-
 
         :param ecosystem: str, Ecosystem name
         :param package: str, Package name

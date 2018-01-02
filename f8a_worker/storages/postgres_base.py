@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""Base class for PostgreSQL related adapters."""
+
 import os
 from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
@@ -29,6 +31,7 @@ class PostgresBase(DataStorage):
                           "base for connecting to different PostgreSQL instances"
 
     def __init__(self, connection_string, encoding='utf-8', echo=False):
+        """Configure database connector."""
         super().__init__()
 
         connection_string = connection_string.format(**os.environ)
@@ -52,9 +55,11 @@ class PostgresBase(DataStorage):
         self._s3 = None
 
     def is_connected(self):
+        """Check if the connection to database has been established."""
         return PostgresBase.session is not None
 
     def connect(self):
+        """Establish connection to the databse."""
         # Keep one connection alive and keep overflow unlimited so we can add
         # more connections in our jobs service
         engine = create_engine(
@@ -69,11 +74,13 @@ class PostgresBase(DataStorage):
         Base.metadata.create_all(engine)
 
     def disconnect(self):
+        """Close connection to the database."""
         if self.is_connected():
             PostgresBase.session.close()
             PostgresBase.session = None
 
     def retrieve(self, flow_name, task_name, task_id):
+        """Retrieve the record identified by task_id from the database."""
         if not self.is_connected():
             self.connect()
 
@@ -106,6 +113,7 @@ class PostgresBase(DataStorage):
         raise NotImplementedError()
 
     def store(self, node_args, flow_name, task_name, task_id, result):
+        """Store the record identified by task_id into the database."""
         # Sanity checks
         if not self.is_connected():
             self.connect()

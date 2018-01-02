@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""Basic interface to the Amazon S3 database."""
+
 import os
 import json
 import uuid
@@ -11,6 +13,8 @@ from f8a_worker.defaults import configuration
 
 
 class AmazonS3(DataStorage):
+    """Basic interface to the Amazon S3 database."""
+
     _DEFAULT_REGION_NAME = 'us-east-1'
     _DEFAULT_BUCKET_NAME = 'bayesian-core-unknown'
     _DEFAULT_LOCAL_ENDPOINT = 'http://coreapi-s3:33000'
@@ -61,8 +65,8 @@ class AmazonS3(DataStorage):
         return json.dumps(dictionary, sort_keys=True, separators=(',', ': '), indent=2).encode()
 
     def _create_bucket_if_needed(self):
-        """
-        Create desired bucket based on configuration if does not exist.
+        """Create desired bucket based on configuration if does not exist.
+
         Versioning is enabled on creation.
         """
         # check that the bucket exists - see boto3 docs
@@ -109,7 +113,7 @@ class AmazonS3(DataStorage):
             )
 
     def object_exists(self, object_key):
-        """Check if the there is an object with the given key in bucket, does only HEAD request"""
+        """Check if the there is an object with the given key in bucket, does only HEAD request."""
         try:
             self._s3.Object(self.bucket_name, object_key).load()
         except botocore.exceptions.ClientError as e:
@@ -122,6 +126,7 @@ class AmazonS3(DataStorage):
         return exists
 
     def connect(self):
+        """Connect to the S3 database."""
         session = boto3.session.Session(aws_access_key_id=self._aws_access_key_id,
                                         aws_secret_access_key=self._aws_secret_access_key,
                                         region_name=self.region_name)
@@ -131,9 +136,11 @@ class AmazonS3(DataStorage):
         self._create_bucket_if_needed()
 
     def is_connected(self):
+        """Check if the connection to database has been established."""
         return self._s3 is not None
 
     def disconnect(self):
+        """Close the connection to S3 database."""
         del self._s3
         self._s3 = None
 
@@ -148,13 +155,12 @@ class AmazonS3(DataStorage):
         return uuid.uuid4().hex + '-unknown'
 
     def store_file(self, file_path, object_key):
-        """ Store file on S3
+        """Store file onto S3.
 
         :param file_path: path to file to be stored
         :param object_key: object key under which the file should be stored
         :return: object version or None if versioning is off
         """
-
         f = None
         try:
             f = open(file_path, 'rb')
@@ -164,7 +170,7 @@ class AmazonS3(DataStorage):
                 f.close()
 
     def store_blob(self, blob, object_key):
-        """ Store blob on S3
+        """Store blob onto S3.
 
         :param blob: bytes or stream to be stored
         :param object_key: object key under which the blob should be stored
@@ -185,7 +191,7 @@ class AmazonS3(DataStorage):
         return response.get('VersionId')
 
     def store_dict(self, dictionary, object_key):
-        """ Store dictionary as JSON on S3
+        """Store dictionary as JSON on S3.
 
         :param dictionary: dictionary to be stored
         :param object_key: object key under which the blob should be stored
@@ -195,19 +201,19 @@ class AmazonS3(DataStorage):
         return self.store_blob(blob, object_key)
 
     def retrieve_file(self, object_key, file_path):
-        """ Download an S3 object to a file. """
+        """Download an S3 object to a file."""
         self._s3.Object(self.bucket_name, object_key).download_file(file_path)
 
     def retrieve_blob(self, object_key):
-        """ Retrieve remote object content. """
+        """Retrieve remote object content."""
         return self._s3.Object(self.bucket_name, object_key).get()['Body'].read()
 
     def retrieve_dict(self, object_key):
-        """ Retrieve a dictionary stored as JSON from S3 """
+        """Retrieve a dictionary stored as JSON from S3."""
         return json.loads(self.retrieve_blob(object_key).decode())
 
     def retrieve_latest_version_id(self, object_key):
-        """ Retrieve latest version identifier for the given object
+        """Retrieve latest version identifier for the given object.
 
         :param object_key: key under which the object is stored
         :return: version identifier
