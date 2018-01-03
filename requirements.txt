@@ -11,9 +11,9 @@ argcomplete==1.8.2        # via selinonlib
 beautifulsoup4==4.6.0
 bigquery-python==1.12.0
 billiard==3.5.0.2         # via celery
-boto3==1.4.4
+boto3==1.4.8
 boto==2.48.0
-botocore==1.5.81          # via boto3, s3transfer
+botocore==1.8.16          # via boto3, s3transfer
 celery==4.0.2             # via selinon, selinonlib
 certifi==2017.4.17        # via requests
 chardet==3.0.4            # via requests

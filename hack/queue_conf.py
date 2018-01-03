@@ -5,6 +5,7 @@ import boto3
 import os
 import logging
 import sys
+from time import sleep
 from datetime import timedelta
 
 logging.basicConfig(level=logging.WARNING)
@@ -17,6 +18,7 @@ _logger.setLevel(logging.DEBUG)
 _AWS_SQS_REGION = os.getenv('AWS_SQS_REGION', 'us-east-1')
 _AWS_ACCESS_KEY_ID = os.getenv('AWS_SQS_ACCESS_KEY_ID')
 _AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SQS_SECRET_ACCESS_KEY')
+_DEPLOYMENT_PREFIX = os.getenv('DEPLOYMENT_PREFIX')
 
 
 def set_queue_attributes(queue_names):
@@ -47,9 +49,22 @@ def set_queue_attributes(queue_names):
                 'MessageRetentionPeriod': str(int(timedelta(days=14).total_seconds()))
             }
         )
-
         _logger.debug("Remote responded with %r after setting queue attributes for %r",
                       response, queue_name)
+
+        if _DEPLOYMENT_PREFIX:
+            response = client.tag_queue(
+                QueueUrl=queue_url,
+                Tags={
+                    'ENV': _DEPLOYMENT_PREFIX
+                }
+            )
+            _logger.debug("Remote responded with %r after setting queue tag for %r",
+                          response, queue_name)
+            # Tagging API actions are limited to 5 TPS (Transactions Per Second) per AWS account.
+            # http://docs.aws.amazon.com/AWSSimpleQueueService/latest/
+            # SQSDeveloperGuide/limits-queues.html
+            sleep(1 / 5)
 
     _logger.info("Queue attributes were adjusted for all %d queues" % len(queue_names))
 
