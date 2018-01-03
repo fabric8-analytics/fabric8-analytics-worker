@@ -12,7 +12,7 @@ here=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)
 
 TIMESTAMP="$(date +%F-%H-%M-%S)"
 
-IMAGE_NAME=${IMAGE_NAME:-registry.devshift.net/bayesian/cucos-worker}
+IMAGE_NAME=${IMAGE_NAME:-registry.devshift.net/fabric8-analytics/cucos-worker}
 TEST_IMAGE_NAME="worker-tests"
 POSTGRES_IMAGE_NAME="registry.centos.org/sclo/postgresql-94-centos7:latest"
 S3_IMAGE_NAME="minio/minio"
