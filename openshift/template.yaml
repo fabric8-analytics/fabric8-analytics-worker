@@ -201,7 +201,7 @@ parameters:
   displayName: Docker image
   required: true
   name: DOCKER_IMAGE
-  value: "bayesian/cucos-worker"
+  value: "fabric8-analytics/cucos-worker"
 
 - description: Image tag
   displayName: Image tag
