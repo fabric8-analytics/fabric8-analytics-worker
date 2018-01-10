@@ -494,24 +494,6 @@ class RelativeSimilarity:
         pvalue = self.relative_similarity(input_data, ref_data)
         return pvalue
 
-    def downstream_boosting(self, missing_packages, ref_stack, denominator):
-        """
-        Boost the similarity score if a component is missing from input stack
-        but is part of our reference stack, and at the same time is also
-        distributed by Red Hat.
-        """
-        additional_downstream = 0.0
-        missing_downstream_component = []
-        for pkg in missing_packages:
-            for package, ver in pkg.items():
-                for component in ref_stack['dependencies']:
-                    if component['package_name'] == package:
-                        if component['redistributed_by_redhat']:
-                            additional_downstream += 1.0
-                            missing_downstream_component.append({package: ver})
-
-        return additional_downstream / denominator, missing_downstream_component
-
     def compute_modified_jaccard_similarity(self, len_input_stack, len_ref_stack, vcount):
         """For two stacks A and B, it returns Count(A intersection B) / max(Count(A, B))"""
         return vcount / max(len_ref_stack, len_input_stack)
@@ -564,13 +546,6 @@ class RelativeSimilarity:
             original_score = self.compute_modified_jaccard_similarity(len(input_set),
                                                                       len(refstack_component_list),
                                                                       vcount)
-
-            # Get Downstream Boosting
-            # We do not do downstream boosting at the moment
-            # boosted_score, missing_downstream_component =  self.downstream_boosting(
-            #    missing_packages,ref_stack,
-            #    max(len(input_set),len(refstack_component_list)))
-            # downstream_score = original_score + boosted_score
 
             # We give the result no matter what similarity score is
             if original_score > self.similarity_score_threshold:

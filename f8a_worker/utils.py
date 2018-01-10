@@ -26,7 +26,7 @@ from sqlalchemy import desc
 from f8a_worker.defaults import configuration
 from f8a_worker.errors import TaskError
 from f8a_worker.models import (Analysis, Ecosystem, Package, Version,
-                               PackageGHUsage, ComponentGHUsage, DownstreamMap)
+                               PackageGHUsage, ComponentGHUsage)
 
 from selinon import StoragePool
 
@@ -517,79 +517,6 @@ class MavenCoordinates(object):
         """Create instance from string."""
         coordinates = MavenCoordinates._parse_string(coordinates_str)
         return cls(**coordinates)
-
-
-def get_latest_upstream_details(ecosystem, package):
-    """Return dict representation of Anitya project."""
-    url = configuration.ANITYA_URL + '/api/by_ecosystem/{e}/{p}'.\
-        format(e=ecosystem, p=package)
-
-    res = requests.get(url)
-    res.raise_for_status()
-    return res.json()
-
-
-def safe_get_latest_version(ecosystem, package):
-    """Silence possible exceptions when getting of latest upstream version fails and return None."""
-    version = None
-    try:
-        version = get_latest_upstream_details(ecosystem, package)['versions'][0]
-    except (requests.exceptions.RequestException, IndexError) as e:
-        logger.warning('Unable to obtain latest version information: %r' % e)
-    return version
-
-
-class DownstreamMapCache(object):
-    """Use Postgres as Redis-like hash map."""
-
-    def __init__(self, session=None):
-        """Initialize session."""
-        if session is not None:
-            self.session = session
-        else:
-            storage = StoragePool.get_connected_storage("BayesianPostgres")
-            self.session = storage.session
-
-    def _query(self, key):
-        """Return DownstreamMap or None if key is not in DB."""
-        try:
-            return self.session.query(DownstreamMap) \
-                               .filter(DownstreamMap.key == key) \
-                               .first()
-        except SQLAlchemyError:
-            self.session.rollback()
-            raise
-
-    def _update(self, key, value):
-        """Update DownstreamMap with key to value."""
-        q = self._query(key)
-        if q and q.value != value:
-            try:
-                q.value = value
-                self.session.commit()
-            except SQLAlchemyError:
-                self.session.rollback()
-                raise
-
-    def __getitem__(self, key):
-        """Implement indexing operator, getting part."""
-        q = self._query(key)
-        return q.value if q else None
-
-    def __setitem__(self, key, value):
-        """Implement indexing operator, setting part."""
-        mapping = DownstreamMap(key=key, value=value)
-        try:
-            self.session.add(mapping)
-            self.session.commit()
-        except SQLAlchemyError:
-            self.session.rollback()
-            try:
-                self._update(key, value)
-            except Exception:
-                raise
-            else:
-                pass
 
 
 def usage_rank2str(rank):

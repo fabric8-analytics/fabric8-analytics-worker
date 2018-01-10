@@ -22,15 +22,6 @@
       ## only 1 task per 5 seconds
       #throttle:
       #   seconds: 5
-    - name: 'redhat_downstream'
-      classname: 'DownstreamUsageTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      storage: 'BayesianPostgres'
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_DownstreamUsageTask_v0'
-      selective_run_function:
-        name: 'selective_run_function'
-        import: 'f8a_worker.dispatcher.selective'
     - name: 'security_issues'
       classname: 'CVEcheckerTask'
       import: 'f8a_worker.workers'
@@ -85,17 +76,6 @@
       max_retry: 0
       storage: 'BayesianPostgres'
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_LicenseCheckTask_v0'
-      selective_run_function:
-        name: 'selective_run_function'
-        import: 'f8a_worker.dispatcher.selective'
-    - name: 'anitya'
-      classname: 'AnityaTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      # Even AnityaTask does not store results in database, we provide database as a source
-      storage: 'BayesianPostgres'
-      storage_readonly: true
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_AnityaTask_v0'
       selective_run_function:
         name: 'selective_run_function'
         import: 'f8a_worker.dispatcher.selective'

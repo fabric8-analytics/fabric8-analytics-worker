@@ -24,9 +24,6 @@ from f8a_worker.utils import (get_all_files_from,
                               ThreadPool,
                               MavenCoordinates,
                               compute_digest,
-                              get_latest_upstream_details,
-                              safe_get_latest_version,
-                              DownstreamMapCache,
                               parse_gh_repo,
                               url2git_repo)
 
@@ -188,73 +185,6 @@ class TestMavenCoordinates(object):
         """Test MavenCoordinates.to_repo_url()."""
         if to_repo_url:
             assert coords.to_repo_url() == to_repo_url
-
-
-class TestGetAnityaProject(object):
-    """Test getting info from Anitya."""
-
-    def test_basic(self):
-        """Test get_latest_upstream_details()."""
-        resp = flexmock(json=lambda: {'a': 'b'},
-                        raise_for_status=lambda: None)
-        url = configuration.ANITYA_URL + '/api/by_ecosystem/foo/bar'
-        flexmock(requests).should_receive('get').with_args(url).and_return(resp)
-        assert get_latest_upstream_details('foo', 'bar') == {'a': 'b'}
-
-    def test_bad_status(self):
-        """Test get_latest_upstream_details()."""
-        resp = flexmock(json=lambda: {'a': 'b'})
-        resp.should_receive('raise_for_status').and_raise(Exception())
-        url = configuration.ANITYA_URL + '/api/by_ecosystem/foo/bar'
-        flexmock(requests).should_receive('get').with_args(url).and_return(resp)
-        with pytest.raises(Exception):
-            get_latest_upstream_details('foo', 'bar')
-
-
-class TestSafeGetLatestVersion(object):
-    """Test safe_get_latest_version()."""
-
-    def test_basic(self):
-        """Test safe_get_latest_version()."""
-        flexmock(utils).should_receive('get_latest_upstream_details').\
-            with_args('foo', 'bar').and_return({'versions': ['1']})
-        assert safe_get_latest_version('foo', 'bar') == '1'
-
-    def test_anitya_error(self):
-        """Test safe_get_latest_version()."""
-        flexmock(utils).should_receive('get_latest_upstream_details').\
-            with_args('foo', 'bar').and_raise(requests.exceptions.RequestException())
-        assert safe_get_latest_version('foo', 'bar') is None
-
-        flexmock(utils).should_receive('get_latest_upstream_details').\
-            with_args('foo', 'bar').and_return({'versions': []})
-        assert safe_get_latest_version('foo', 'bar') is None
-
-
-class TestDownstreamMapCache(object):
-    """Test DownstreamMapCache class."""
-
-    def test_set_get(self):
-        """Test accessing DownstreamMapCache."""
-        class DownstreamMap(Base):
-            __tablename__ = 'downstream_map'
-            key = Column(String(255), primary_key=True)
-            value = Column(String(512), nullable=False)
-
-        engine = create_engine(configuration.POSTGRES_CONNECTION)
-        session = sessionmaker(bind=engine)()
-        Base.metadata.create_all(engine)
-        r = DownstreamMapCache(session)
-
-        key = uuid4().hex
-        value = uuid4().hex
-        r[key] = value
-        assert r[key] == value
-
-        # test update
-        value = 'new value'
-        r[key] = value
-        assert r[key] == value
 
 
 class TestParseGHRepo:

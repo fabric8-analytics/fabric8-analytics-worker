@@ -182,13 +182,6 @@ class Analysis(Base):
         return []
 
     @property
-    def latest_version(self):
-        # prevent import loop
-        from f8a_worker.utils import safe_get_latest_version
-        return safe_get_latest_version(self.version.package.ecosystem.name,
-                                       self.version.package.name)
-
-    @property
     def package_info(self):
         s = Session.object_session(self)
         if s:
@@ -225,7 +218,6 @@ class Analysis(Base):
     def to_dict(self, omit_analyses=False):
         res = Base.to_dict(self)
         res['analyses'] = {} if omit_analyses else self.analyses
-        res['latest_version'] = self.latest_version
         res.pop('version_id')
         res['version'] = self.version.identifier
         res['package'] = self.version.package.name
@@ -381,10 +373,3 @@ class ComponentGHUsage(Base):
     ecosystem_backend = Column(ENUM(*[b.name for b in EcosystemBackend],
                                name='ecosystem_backend_enum', create_type=False))
     timestamp = Column(DateTime, nullable=False, server_default=func.localtimestamp())
-
-
-class DownstreamMap(Base):
-    __tablename__ = 'downstream_map'
-
-    key = Column(String(255), primary_key=True)
-    value = Column(String(512))
