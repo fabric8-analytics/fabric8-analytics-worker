@@ -61,10 +61,6 @@ def set_queue_attributes(queue_names):
             )
             _logger.debug("Remote responded with %r after setting queue tag for %r",
                           response, queue_name)
-            # Tagging API actions are limited to 5 TPS (Transactions Per Second) per AWS account.
-            # http://docs.aws.amazon.com/AWSSimpleQueueService/latest/
-            # SQSDeveloperGuide/limits-queues.html
-            sleep(1 / 5)
 
     _logger.info("Queue attributes were adjusted for all %d queues" % len(queue_names))
 
