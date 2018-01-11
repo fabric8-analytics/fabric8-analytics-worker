@@ -6,7 +6,6 @@ Workers not included here are ecosystem agnostic.
 
 | Worker/Ecosystem                             | npm                                | maven                              | pypi                               | nuget                              | go                                 |
 |----------------------------------------------|------------------------------------|------------------------------------|------------------------------------|------------------------------------|------------------------------------|
-| `anitya.AnityaTask`                          | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :negative_squared_cross_mark:      | :negative_squared_cross_mark:
 | `bigquery.BigQueryTask`                      | :white_check_mark:                 | :negative_squared_cross_mark:  (1) | :negative_squared_cross_mark:      | :grey_question:                    | :negative_squared_cross_mark:
 | `binwalk.BinwalkTask`                        | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :grey_exclamation:  (5)            | :grey_question:
 | `blackduck.BlackDuckTask`                    | :white_check_mark:                 | :grey_question:                    | :white_check_mark:                 | :grey_question:                    | :grey_question:
@@ -15,7 +14,6 @@ Workers not included here are ecosystem agnostic.
 | `CVEchecker.CVEcheckerTask`                  | :white_check_mark:                 | :grey_exclamation:  (2)            | :white_check_mark:                 | :white_check_mark:                 | :negative_squared_cross_mark: (6)
 | `dependency_snapshot.DependencySnapshotTask` | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:
 | `digester.DigesterTask`                      | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:
-| `downstream.DownstreamUsageTask`             | :white_check_mark:                 | :grey_exclamation:  (3)            | :white_check_mark:                 | :negative_squared_cross_mark:      | :negative_squared_cross_mark:
 | `finalize.FinalizeTask`                      | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:
 | `githuber.GithubTask`                        | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:
 | `init_analysis_flow.InitAnalysisFlow`        | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:

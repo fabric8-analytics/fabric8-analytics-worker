@@ -290,6 +290,8 @@ def create_package_dict(graph_results, alt_dict=None):
 
 
 def select_latest_version(libio, anitya):
+    # anitya does not provide latest version anymore, but it's kept for
+    # compatibility
     libio_latest_version = libio if libio else '0.0.0'
     anitya_latest_version = anitya if anitya else '0.0.0'
     libio_latest_version = libio_latest_version.replace('.', '-', 3)

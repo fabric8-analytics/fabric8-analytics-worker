@@ -1,4 +1,3 @@
-from f8a_worker.workers.anitya import AnityaTask
 from f8a_worker.workers.binwalk import BinwalkTask
 from f8a_worker.workers.bigquery_gh import BigQueryTask
 from f8a_worker.workers.blackduck import BlackDuckTask, BlackDuckLatentCollector
@@ -8,7 +7,6 @@ from f8a_worker.workers.CVEchecker import CVEcheckerTask
 from f8a_worker.workers.cvedbsync import CVEDBSyncTask
 from f8a_worker.workers.dependency_snapshot import DependencySnapshotTask
 from f8a_worker.workers.digester import DigesterTask
-from f8a_worker.workers.downstream import DownstreamUsageTask
 from f8a_worker.workers.finalize import FinalizeTask, PackageFinalizeTask
 from f8a_worker.workers.gh_metadata_result_collector import GitHubManifestMetadataResultCollector
 from f8a_worker.workers.gh_metadata_init import InitGitHubManifestMetadata

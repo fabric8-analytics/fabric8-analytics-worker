@@ -116,8 +116,6 @@ objects:
             value: "6162"
           - name: F8A_SERVER_SERVICE_HOST
             value: bayesian-api
-          - name: ANITYA_SERVICE_HOST
-            value: bayesian-anitya
           - name: AWS_S3_BUCKET_NAME
             valueFrom:
               configMapKeyRef:
