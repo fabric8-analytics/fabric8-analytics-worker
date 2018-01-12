@@ -1,7 +1,7 @@
 """add_recommendation_feedack
 
 Revision ID: 0be686aa2297
-Revises: 49fb7de6227f  
+Revises: 49fb7de6227f
 Create Date: 2018-01-11 10:05:19.423099
 
 """
