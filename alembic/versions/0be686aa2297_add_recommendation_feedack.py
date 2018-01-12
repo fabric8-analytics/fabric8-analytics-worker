@@ -1,14 +1,14 @@
 """add_recommendation_feedack
 
 Revision ID: 0be686aa2297
-Revises: 7c643a1823db
+Revises: 49fb7de6227f  
 Create Date: 2018-01-11 10:05:19.423099
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '0be686aa2297'
-down_revision = '7c643a1823db'
+down_revision = '49fb7de6227f'
 branch_labels = None
 depends_on = None
 
