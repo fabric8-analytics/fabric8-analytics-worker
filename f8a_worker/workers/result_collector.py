@@ -1,7 +1,7 @@
 from selinon import StoragePool
 from sqlalchemy.exc import SQLAlchemyError
 from f8a_worker.base import BaseTask
-
+from f8a_worker.models import Analysis
 
 class _ResultCollectorBase(BaseTask):
     """
@@ -24,6 +24,9 @@ class _ResultCollectorBase(BaseTask):
                                               worker_result.task_result)
             # Substitute task's result with version that we got on S3
             worker_result.task_result = {'version_id': version_id}
+
+        if hasattr(results, 'version'):  # update only for version Analysis objects
+            results.version.synced2graph = False
 
         try:
             postgres.session.commit()
