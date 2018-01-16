@@ -1,7 +1,7 @@
 from selinon import StoragePool
 from sqlalchemy.exc import SQLAlchemyError
 from f8a_worker.base import BaseTask
-from f8a_worker.models import Analysis
+
 
 class _ResultCollectorBase(BaseTask):
     """
