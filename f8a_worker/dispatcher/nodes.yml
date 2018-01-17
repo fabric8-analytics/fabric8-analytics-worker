@@ -480,6 +480,16 @@
         encryption: false
         versioned: true
 
+    - name: 'S3KronosAppend'
+      import: 'f8a_worker.storages'
+      classname: 'AmazonS3'
+      configuration:
+        <<: *configurationS3
+        bucket_name: '{DEPLOYMENT_PREFIX}-stack-analysis-clean-data'
+        region_name: 'us-east-1'
+        encryption: false
+        versioned: true
+
     - name: 'S3TempArtifacts'
       import: 'f8a_worker.storages'
       configuration:
