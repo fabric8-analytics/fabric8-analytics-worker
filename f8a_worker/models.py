@@ -138,6 +138,7 @@ class Version(Base):
     id = Column(Integer, primary_key=True)
     package_id = Column(Integer, ForeignKey(Package.id))
     identifier = Column(String(255), index=True)
+    synced2graph = Column(Boolean, nullable=False, default=False)
 
     package = relationship(Package, back_populates='versions', lazy='joined')
     analyses = relationship('Analysis', back_populates='version')

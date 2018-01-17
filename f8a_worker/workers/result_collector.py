@@ -25,6 +25,9 @@ class _ResultCollectorBase(BaseTask):
             # Substitute task's result with version that we got on S3
             worker_result.task_result = {'version_id': version_id}
 
+        if hasattr(results, 'version'):  # update only for version Analysis objects
+            results.version.synced2graph = False
+
         try:
             postgres.session.commit()
         except SQLAlchemyError:
