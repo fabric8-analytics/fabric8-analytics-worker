@@ -89,6 +89,8 @@ class Ecosystem(Base):
         Enum(*[b.name for b in EcosystemBackend], name='ecosystem_backend_enum'))
 
     packages = relationship('Package', back_populates='ecosystem')
+    feedback = relationship('RecommendationFeedback',
+                            back_populates='ecosystem')
 
     @property
     def backend(self):
@@ -336,6 +338,8 @@ class StackAnalysisRequest(Base):
     origin = Column(String(64), nullable=True)
     result = Column(JSON, nullable=True)
     team = Column(String(64), nullable=True)
+    feedback = relationship('RecommendationFeedback',
+                            back_populates="stack_request")
 
 
 class APIRequests(Base):
@@ -391,8 +395,11 @@ class RecommendationFeedback(Base):
     __tablename__ = "recommendation_feedback"
 
     id = Column(Integer, autoincrement=True, primary_key=True)
-    stack_id = Column(String(64), nullable=False)
     package_name = Column(String(255), nullable=False)
     recommendation_type = Column(String(255), nullable=False)
     feedback_type = Column(Boolean, nullable=False, default=False)
-    ecosystem = Column(String(64), nullable=False)
+    ecosystem_id = Column(Integer, ForeignKey(Ecosystem.id))
+    ecosystem = relationship("Ecosystem", back_populates="feedback")
+    stack_id = Column(String(64), ForeignKey(StackAnalysisRequest.id))
+    stack_request = relationship("StackAnalysisRequest",
+                                 back_populates="feedback")
