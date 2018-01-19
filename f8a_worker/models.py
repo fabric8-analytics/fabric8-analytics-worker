@@ -31,7 +31,6 @@ class BayesianModelMixin(object):
     Also note, that these class methods will raise sqlalchemy.rom.exc.NoResultFound if the object
     is not found.
     """
-
     def to_dict(self):
         d = {}
         for column in self.__table__.columns:
@@ -85,12 +84,9 @@ class Ecosystem(Base):
     name = Column(String(255), unique=True)
     url = Column(String(255))
     fetch_url = Column(String(255))
-    _backend = Column(
-        Enum(*[b.name for b in EcosystemBackend], name='ecosystem_backend_enum'))
+    _backend = Column(Enum(*[b.name for b in EcosystemBackend], name='ecosystem_backend_enum'))
 
     packages = relationship('Package', back_populates='ecosystem')
-    feedback = relationship('RecommendationFeedback',
-                            back_populates='ecosystem')
 
     @property
     def backend(self):
@@ -115,15 +111,13 @@ class Ecosystem(Base):
 class Package(Base):
     __tablename__ = 'packages'
     # ecosystem_id together with name must be unique
-    __table_args__ = (UniqueConstraint(
-        'ecosystem_id', 'name', name='ep_unique'),)
+    __table_args__ = (UniqueConstraint('ecosystem_id', 'name', name='ep_unique'),)
 
     id = Column(Integer, primary_key=True)
     ecosystem_id = Column(Integer, ForeignKey(Ecosystem.id))
     name = Column(String(255), index=True)
 
-    ecosystem = relationship(
-        Ecosystem, back_populates='packages', lazy='joined')
+    ecosystem = relationship(Ecosystem, back_populates='packages', lazy='joined')
     versions = relationship('Version', back_populates='package')
 
     @classmethod
@@ -139,8 +133,7 @@ class Package(Base):
 class Version(Base):
     __tablename__ = 'versions'
     # package_id together with version identifier must be unique
-    __table_args__ = (UniqueConstraint(
-        'package_id', 'identifier', name='pv_unique'),)
+    __table_args__ = (UniqueConstraint('package_id', 'identifier', name='pv_unique'),)
 
     id = Column(Integer, primary_key=True)
     package_id = Column(Integer, ForeignKey(Package.id))
@@ -178,8 +171,7 @@ class Analysis(Base):
     def analyses(self):
         s = Session.object_session(self)
         if s:
-            worker_results = s.query(WorkerResult).filter(
-                WorkerResult.analysis_id == self.id)
+            worker_results = s.query(WorkerResult).filter(WorkerResult.analysis_id == self.id)
             return {wr.worker: wr.task_result for wr in worker_results}
         return {}
 
@@ -310,8 +302,7 @@ class PackageWorkerResult(Base):
     __tablename__ = "package_worker_results"
 
     id = Column(Integer, primary_key=True)
-    package_analysis_id = Column(
-        Integer, ForeignKey(PackageAnalysis.id), index=True)
+    package_analysis_id = Column(Integer, ForeignKey(PackageAnalysis.id), index=True)
     # Semantics are same as for WorkerResult
     worker = Column(String(255), index=True)
     worker_id = Column(String(64), unique=True)
@@ -338,8 +329,6 @@ class StackAnalysisRequest(Base):
     origin = Column(String(64), nullable=True)
     result = Column(JSON, nullable=True)
     team = Column(String(64), nullable=True)
-    feedback = relationship('RecommendationFeedback',
-                            back_populates="stack_request")
 
 
 class APIRequests(Base):
@@ -366,8 +355,7 @@ class PackageGHUsage(Base):
     count = Column(Integer, nullable=False)
     ecosystem_backend = Column(ENUM(*[b.name for b in EcosystemBackend],
                                     name='ecosystem_backend_enum', create_type=False))
-    timestamp = Column(DateTime, nullable=False,
-                       server_default=func.localtimestamp())
+    timestamp = Column(DateTime, nullable=False, server_default=func.localtimestamp())
 
 
 class ComponentGHUsage(Base):
@@ -375,31 +363,14 @@ class ComponentGHUsage(Base):
     __tablename__ = 'component_gh_usage'
 
     id = Column(Integer, primary_key=True)
-    # dependency name as extracted from npm-shrinkwrap.json found somewhere on
-    # GitHub
+    # dependency name as extracted from npm-shrinkwrap.json found somewhere on GitHub
     name = Column(String(255), nullable=False)
     # dependency version
     version = Column(String(255), nullable=False)
     # number of references to the (name, version) from shrinkwrap files
     count = Column(Integer, nullable=False)
-    # percentage of components that are used less or equally often as (name,
-    # version)
+    # percentage of components that are used less or equally often as (name, version)
     percentile_rank = Column(Integer, nullable=False)
     ecosystem_backend = Column(ENUM(*[b.name for b in EcosystemBackend],
-                                    name='ecosystem_backend_enum', create_type=False))
-    timestamp = Column(DateTime, nullable=False,
-                       server_default=func.localtimestamp())
-
-
-class RecommendationFeedback(Base):
-    __tablename__ = "recommendation_feedback"
-
-    id = Column(Integer, autoincrement=True, primary_key=True)
-    package_name = Column(String(255), nullable=False)
-    recommendation_type = Column(String(255), nullable=False)
-    feedback_type = Column(Boolean, nullable=False, default=False)
-    ecosystem_id = Column(Integer, ForeignKey(Ecosystem.id))
-    ecosystem = relationship("Ecosystem", back_populates="feedback")
-    stack_id = Column(String(64), ForeignKey(StackAnalysisRequest.id))
-    stack_request = relationship("StackAnalysisRequest",
-                                 back_populates="feedback")
+                               name='ecosystem_backend_enum', create_type=False))
+    timestamp = Column(DateTime, nullable=False, server_default=func.localtimestamp())
