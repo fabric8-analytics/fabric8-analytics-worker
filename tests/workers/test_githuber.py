@@ -28,7 +28,7 @@ class TestGithuber(object):
         assert results['details']['forks_count'] > 0
         assert set(results['details']['last_year_commits'].keys()) == {'sum', 'weekly'}
         assert results['details']['license'] == {'key': 'bsd-3-clause',
-                                                 'name': 'BSD 3-clause "New" or "Revised" License',
+                                                 'name': 'BSD 3-Clause "New" or "Revised" License',
                                                  'spdx_id': 'BSD-3-Clause',
                                                  'url':
                                                      'https://api.github.com/licenses/bsd-3-clause'}
