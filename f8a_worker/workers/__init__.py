@@ -32,3 +32,4 @@ from f8a_worker.workers.keywords_tagging import KeywordsTaggingTask
 from f8a_worker.workers.keywords_tagging import PackageKeywordsTaggingTask
 from f8a_worker.workers.repository_description import RepositoryDescCollectorTask
 from f8a_worker.workers.keywords_summary import KeywordsSummaryTask
+from f8a_worker.workers.stackanalyzer import StackAnalyzerTask

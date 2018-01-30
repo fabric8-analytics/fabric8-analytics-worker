@@ -36,7 +36,10 @@ def set_queue_attributes(queue_names):
 
     for queue_name in queue_names:
         _logger.info("Creating or requesting QueueURL for queue '{}'".format(queue_name))
-        response = client.create_queue(QueueName=queue_name)
+        if queue_name.endswith('.fifo'):
+            response = client.create_queue(QueueName=queue_name, Attributes={'FifoQueue': 'true'})
+        else:
+            response = client.create_queue(QueueName=queue_name)
 
         queue_url = response.get('QueueUrl')
         if not queue_url:
