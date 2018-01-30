@@ -1,4 +1,4 @@
-"""add_col_dep_snapshot
+"""Add new column dep_snapshot into the table stack_analyses_request.
 
 Revision ID: 33b719488061
 Revises: da53445aabad
