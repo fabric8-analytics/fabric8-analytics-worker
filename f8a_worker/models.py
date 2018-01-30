@@ -340,6 +340,7 @@ class StackAnalysisRequest(Base):
     team = Column(String(64), nullable=True)
     feedback = relationship('RecommendationFeedback',
                             back_populates="stack_request")
+    dep_snapshot = Column(JSONB, nullable=True)
 
 
 class APIRequests(Base):
