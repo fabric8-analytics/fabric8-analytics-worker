@@ -38,6 +38,7 @@ $ ./runtests.sh
 (The above command assumes you have passwordless docker invocation configured -
 if you don't, then `sudo` will be necessary to enable docker invocation).
 
+
 If you're changing dependencies rather than just editing source code locally,
 you will need images to be rebuilt when invoking `runtest.sh`. You
 can set environment variable `REBUILD=1` to request image rebuilding.
