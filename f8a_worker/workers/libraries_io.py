@@ -15,11 +15,18 @@ class LibrariesIoTask(BaseTask):
 
     def project_url(self, ecosystem, name):
         """Construct url to endpoint, which gets information about a project and it's versions."""
-        url = '{api}/{platform}/{name}?api_key={token}'.\
+        url = '{api}/{platform}/{name}'.\
             format(api=self.configuration.LIBRARIES_IO_API,
                    platform=ecosystem,
-                   name=name,
-                   token=self.configuration.LIBRARIES_IO_TOKEN)
+                   name=name)
+
+        # 'no-token' value forces the API call to not use ANY token.
+        # It works, but if abused, they can cut our IP off,
+        # therefore we use this only in tests.
+        if self.configuration.LIBRARIES_IO_TOKEN and \
+                self.configuration.LIBRARIES_IO_TOKEN != 'no-token':
+            url += '?api_key=' + self.configuration.LIBRARIES_IO_TOKEN
+
         return url
 
     @staticmethod
