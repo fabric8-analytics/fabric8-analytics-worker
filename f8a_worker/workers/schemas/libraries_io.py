@@ -53,7 +53,7 @@ class LibrariesIoResult(JSLSchemaBaseWithRelease):
         description = "Result of LibrariesIoTask"
 
     details = jsl.DocumentField(LibrariesIoDetails, as_ref=True, required=True)
-    status = jsl.StringField(enum=["success", "error", "unknown"], required=True)
+    status = jsl.StringField(enum=["success"], required=True)
     summary = jsl.ArrayField(jsl.StringField(), required=True)
 
 

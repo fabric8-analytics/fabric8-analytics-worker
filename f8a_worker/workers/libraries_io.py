@@ -4,7 +4,6 @@ from operator import itemgetter
 from urllib.parse import quote
 
 from f8a_worker.base import BaseTask
-from f8a_worker.errors import TaskError
 from f8a_worker.utils import get_response
 from f8a_worker.schemas import SchemaRef
 
@@ -33,28 +32,16 @@ class LibrariesIoTask(BaseTask):
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
 
-        result_data = {'status': 'unknown',
-                       'summary': [],
-                       'details': {}}
-
         name = arguments['name']
         ecosystem = arguments['ecosystem']
         if ecosystem == 'go':
             name = quote(name, safe='')
 
-        try:
-            project = get_response(self.project_url(ecosystem, name))
-        except TaskError as e:
-            self.log.debug(e)
-            result_data['status'] = 'error'
-            return result_data
-
+        project = get_response(self.project_url(ecosystem, name))
         versions = project['versions']
         details = {'dependent_repositories': {'count': project['dependent_repos_count']},
                    'dependents': {'count': project['dependents_count']},
                    'releases': {'count': len(versions),
-                                # 'latest': {'version': project['latest_release_number'],
-                                #           'published_at': project['latest_release_published_at']},
                                 'recent': self.recent_releases(versions)
                                 }
                    }
