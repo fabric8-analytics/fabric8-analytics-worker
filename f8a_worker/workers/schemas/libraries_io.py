@@ -13,7 +13,6 @@ class DependentRepositories(jsl.Document):
         definition_id = "libraries_io_dependent_repositories"
 
     count = jsl.IntField(required=True)
-    top = jsl.DictField(additional_properties=True)
 
 
 class Dependents(jsl.Document):

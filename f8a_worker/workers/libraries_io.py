@@ -1,8 +1,6 @@
 """Task to collects statistics from Libraries.io."""
 
-from bs4 import BeautifulSoup
 from operator import itemgetter
-from requests import get
 from urllib.parse import quote
 
 from f8a_worker.base import BaseTask
@@ -15,20 +13,6 @@ class LibrariesIoTask(BaseTask):
     """Collects statistics from Libraries.io."""
     _analysis_name = "libraries_io"
     schema_ref = SchemaRef(_analysis_name, '2-0-0')
-
-    @staticmethod
-    def get_top_dependent_repositories(ecosystem, name):
-        """Return content of https://libraries.io/{ecosystem}/{name}/top_dependent_repos as dict.
-
-        There's no API equivalent of this page, but the page is very simple, we take
-        everything from it and return as dict of <repository>: <number of stars>
-        """
-        url = 'https://libraries.io/{ecosystem}/{name}/top_dependent_repos'.\
-            format(ecosystem=ecosystem, name=name)
-        page = BeautifulSoup(get(url).text, 'html.parser')
-        top_dep_repos = {tag.text.strip(): int(tag.find_next('dd').text.strip())
-                         for tag in page.find_all(['dt'])}
-        return top_dep_repos
 
     def project_url(self, ecosystem, name):
         """Construct url to endpoint, which gets information about a project and it's versions."""
@@ -66,9 +50,7 @@ class LibrariesIoTask(BaseTask):
             return result_data
 
         versions = project['versions']
-        details = {'dependent_repositories': {'count': project['dependent_repos_count'],
-                                              'top': self.get_top_dependent_repositories(ecosystem,
-                                                                                         name)},
+        details = {'dependent_repositories': {'count': project['dependent_repos_count']},
                    'dependents': {'count': project['dependents_count']},
                    'releases': {'count': len(versions),
                                 # 'latest': {'version': project['latest_release_number'],

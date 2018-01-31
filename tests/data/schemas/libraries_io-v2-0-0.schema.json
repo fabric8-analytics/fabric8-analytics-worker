@@ -6,10 +6,6 @@
             "properties": {
                 "count": {
                     "type": "integer"
-                },
-                "top": {
-                    "type": "object",
-                    "additionalProperties": true
                 }
             },
             "required": [
