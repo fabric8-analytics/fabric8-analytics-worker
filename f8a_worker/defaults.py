@@ -55,6 +55,9 @@ class F8AConfiguration(object):
     GITHUB_TOKEN = environ.get('GITHUB_TOKEN', 'not-set').split(',')
     GITHUB_API = "https://api.github.com/"
 
+    LIBRARIES_IO_TOKEN = environ.get('LIBRARIES_IO_TOKEN', 'not-set')
+    LIBRARIES_IO_API = 'https://libraries.io/api'
+
     # URL to npmjs couch DB, which returns stream of changes happening in npm registry
     NPMJS_CHANGES_URL = environ.get('NPMJS_CHANGES_URL',
                                     "https://skimdb.npmjs.com/registry/"
