@@ -1,4 +1,4 @@
-"""Add synced2graph boolean column to version table
+"""Add synced2graph boolean column to version table.
 
 Revision ID: cd05b43f27e5
 Revises: 49fb7de6227f
