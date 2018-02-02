@@ -1,7 +1,11 @@
+"""Common enumerations used across the project."""
+
 from enum import IntEnum
 
 
 class EcosystemBackend(IntEnum):
+    """Backends for all ecosystems."""
+
     # range will increase in case of adding new backend
     # none, nodejs, java, python, ruby, go, crates
     # NOTE: when altering this, you'll manually need to create a migration that alters
@@ -11,5 +15,7 @@ class EcosystemBackend(IntEnum):
 
 
 class SortOrder(IntEnum):
+    """Sort orders."""
+
     ascending = 0
     descending = 1
