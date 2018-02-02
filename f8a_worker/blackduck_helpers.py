@@ -4,25 +4,23 @@ from f8a_worker.schemas import (external_schema as schema, SchemaRef)
 
 
 class BlackDuckException(Exception):
-    """ Generic exception class thrown by the BlackDuck """
+    """Generic exception class thrown by the BlackDuck."""
     pass
 
 
 class BlackDuckSessionException(BlackDuckException):
-    """ Thrown when session couldn't be established or has expired """
+    """Thrown when session couldn't be established or has expired."""
     pass
 
 
 class BlackDuckApiToken(object):
-    """
-    API Token Abstraction
-    """
+    """API Token Abstraction."""
     def __init__(self, value):
         self._value = value
 
     @property
     def token(self):
-        """ Value of this API token """
+        """Value of this API token."""
         return self._value
 
 

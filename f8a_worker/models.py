@@ -24,9 +24,11 @@ def create_db_scoped_session(connection_string=None):
 
 
 class BayesianModelMixin(object):
-    """Subclasses of this class will gain some `by_*` class methods. Note, that these should
-    only be used to obtain objects by unique attribute (or combination of attributes that
-    make the object unique), since under the hood they use SQLAlchemy's `.one()`.
+    """Subclasses of this class will gain some `by_*` class methods.
+
+    Note, that these should only be used to obtain objects by unique attribute
+    (or combination of attributes that make the object unique), since under the
+    hood they use SQLAlchemy's `.one()`.
 
     Also note, that these class methods will raise sqlalchemy.rom.exc.NoResultFound if the object
     is not found.
@@ -358,6 +360,7 @@ class APIRequests(Base):
 
 class PackageGHUsage(Base):
     """Table for storing package results from BigQuery."""
+
     __tablename__ = 'package_gh_usage'
 
     id = Column(Integer, primary_key=True)
@@ -373,6 +376,7 @@ class PackageGHUsage(Base):
 
 class ComponentGHUsage(Base):
     """Table for storing component results from BigQuery."""
+
     __tablename__ = 'component_gh_usage'
 
     id = Column(Integer, primary_key=True)

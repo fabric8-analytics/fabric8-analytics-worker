@@ -1,4 +1,4 @@
-"""JSL schema for Code metrics worker"""
+"""JSL schema for Code metrics worker."""
 import jsl
 from f8a_worker.schemas import JSLSchemaBaseWithRelease
 

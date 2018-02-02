@@ -148,7 +148,7 @@ class TestCVEchecker(object):
         assert_equal(results.get('details'), expected_details)
 
     def test_python_requests(self):
-        """ To make sure that python CPE suppression works (issue#131) """
+        """To make sure that python CPE suppression works (issue#131)."""
         extracted = os.path.join(
                         os.path.dirname(
                          os.path.abspath(__file__)), '..', 'data', 'pypi', 'requests-2.5.3')
@@ -184,8 +184,9 @@ class TestCVEchecker(object):
         assert_equal(results.get('details'), expected_details)
 
     def test_python_salt(self):
-        """ To make sure we can scan source with standalone PKG-INFO
-            https://github.com/jeremylong/DependencyCheck/issues/896
+        """To make sure we can scan source with standalone PKG-INFO.
+
+        https://github.com/jeremylong/DependencyCheck/issues/896
         """
         pkg_info = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                 '..', 'data', 'pypi', 'salt-2016.11.6', 'PKG-INFO')

@@ -1,12 +1,14 @@
+"""Determine whether we need to run a task or we can reuse already existing results."""
+
 import logging
 
 _logger = logging.getLogger(__name__)
 
 
 def selective_run_function(flow_name, node_name, node_args, task_names, storage_pool):
-    """A function that is called on selective run by dispatcher.
+    """Determine whether we need to run a task or we can reuse already existing results.
 
-    This function determines whether we need to run a task or we can reuse already existing results
+    This function that is called on selective run by dispatcher.
 
     :param flow_name: name of the flow in which this function is called
     :param node_args: flow arguments

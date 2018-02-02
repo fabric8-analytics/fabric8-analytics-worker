@@ -1,3 +1,5 @@
+"""Collect and compute Git statistics."""
+
 import numpy as np
 from time import time
 from datetime import timedelta
@@ -125,6 +127,7 @@ class GitStats(BaseTask):
         }
 
     def execute(self, arguments):
+        """Execute the task."""
         self._strict_assert('ecosystem' in arguments)
         self._strict_assert('name' in arguments)
         self._strict_assert('url' in arguments)

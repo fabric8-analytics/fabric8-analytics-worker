@@ -1,3 +1,5 @@
+"""Collects statistics using Github API."""
+
 from urllib.parse import urljoin
 
 import requests
@@ -12,7 +14,8 @@ REPO_PROPS = ('forks_count', 'subscribers_count', 'stargazers_count', 'open_issu
 
 
 class GithubTask(BaseTask):
-    """ Collects statistics using Github API """
+    """Collects statistics using Github API."""
+
     _analysis_name = "github_details"
     schema_ref = SchemaRef(_analysis_name, '2-0-1')
     # used for testing
@@ -52,7 +55,7 @@ class GithubTask(BaseTask):
         return d
 
     def _get_repo_name(self, url):
-        """Retrieve GitHub repo from a preceding Mercator scan"""
+        """Retrieve GitHub repo from a preceding Mercator scan."""
         parsed = parse_gh_repo(url)
         if not parsed:
             self.log.debug('Could not parse Github repo URL %s', url)
@@ -109,7 +112,7 @@ class GithubTask(BaseTask):
 
 
 class GitReadmeCollectorTask(BaseTask):
-    """ Store README files stored on Github """
+    """Store README files stored on Github."""
 
     _GITHUB_README_PATH = \
         'https://raw.githubusercontent.com/{project}/{repo}/master/README{extension}'

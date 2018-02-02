@@ -26,12 +26,13 @@ from f8a_worker.object_cache import ObjectCache
 
 
 class DigesterTask(BaseTask):
-    """ Computes various digests of all files found in target cache path """
+    """Computes various digests of all files found in target cache path."""
+
     _analysis_name = 'digests'
     schema_ref = SchemaRef(_analysis_name, '1-0-0')
 
     def compute_ssdeep(self, target):
-        """ Compute SSdeep piece-wise linear hash of target """
+        """Compute SSdeep piece-wise linear hash of target."""
         # 0 : ssdeep header
         # 1 : hash,filename
         data = TimedCommand.get_command_output(['ssdeep', '-c', '-s', target])

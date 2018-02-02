@@ -50,17 +50,14 @@ class GraphDB:
 
     @staticmethod
     def id_value_checker(id_value):
-        """Check is the given id_value is an integer or not"""
+        """Check is the given id_value is an integer or not."""
         if isinstance(id_value, int):
             return id_value
         return 0
 
     @staticmethod
     def str_value_cleaner(safe_string):
-        """
-        Clean up the safe_string to remove suspicious words,
-        and special characters.
-        """
+        """Clean up the safe_string to remove suspicious words, and special characters."""
         result = ''
         if isinstance(safe_string, str):  # can raise an exception as well
             temp_str = pattern.sub('', safe_string)
@@ -83,7 +80,10 @@ class GraphDB:
             return None
 
     def get_response_data(self, json_response, data_default):
-        """Data default parameters takes what should data to be returned."""
+        """Return the result taken from the JSON response.
+
+        The data_default parameter is used as an selector for data to be returned.
+        """
         return json_response.get("result", {}).get("data", data_default)
 
     def get_full_ref_stacks(self, list_packages):
@@ -106,8 +106,8 @@ class GraphDB:
         return full_ref_stacks
 
     def get_topmost_ref_stack(self, list_packages):
-        """
-        Get best matching reference stack in terms of similarity score
+        """Get best matching reference stack in terms of similarity score.
+
         Similarity score is calculated as, given,
         input_stack is a list of package names in manifest file
         ref_stack is a list of package names in a reference stack
@@ -234,7 +234,8 @@ class GraphDB:
         return package
 
     def get_reference_stacks_from_graph(self, list_packages):
-        """
+        """Retrieve a reference stack based on highest matching component names.
+
         This function retrieves a reference stack,
         which has the highest matching component names with an input stack.
         It then fetches EPV properties of
@@ -269,7 +270,8 @@ class GraphDB:
         return list_ref_stacks
 
     def get_version_information(self, input_list, ecosystem):
-        """Fetch the version information for each of the packages
+        """Fetch the version information for each of the packages.
+
         Also remove EPVs with CVEs and ones not present in Graph
         """
         input_packages = [package for package in input_list]
@@ -292,14 +294,16 @@ class GraphDB:
         return response
 
     def filter_versions(self, epv_list, input_stack):
-        """First filter fetches only EPVs that
+        """Filter the EPVs according to following rules.
+
+        First filter fetches only EPVs that
         1. has No CVEs
         2. are Present in Graph
         Apply additional filter based on following. That is sorted based on
         3. Latest Version
         4. Dependents Count in Github Manifest Data
-        5. Github Release Date"""
-
+        5. Github Release Date
+        """
         pkg_dict = defaultdict(dict)
         new_dict = defaultdict(dict)
         filtered_comp_list = []
@@ -375,7 +379,7 @@ class GraphDB:
         return new_list, filtered_comp_list
 
     def get_input_stacks_vectors_from_graph(self, input_list, ecosystem):
-        """Fetches EPV properties of all the components provided as part of input stack"""
+        """Fetch EPV properties of all the components provided as part of input stack."""
         input_stack_list = []
         for package, version in input_list.items():
             if package is not None:
@@ -406,7 +410,7 @@ class GraphDB:
         return input_stack_list
 
     def get_topics_for_alt(self, comp_list, pgm_dict):
-        """Gets topics from pgm and associate with filtered versions from Graph"""
+        """Get topics from pgm and associate with filtered versions from Graph."""
         for epv in comp_list:
             name = epv.get('pkg', {}).get('name', [''])[0]
             if name:
@@ -418,7 +422,7 @@ class GraphDB:
         return comp_list
 
     def get_topics_for_comp(self, comp_list, pgm_list):
-        """Gets topics from pgm and associate with filtered versions from Graph"""
+        """Get topics from pgm and associate with filtered versions from Graph."""
         for epv in comp_list:
             name = epv.get('pkg', {}).get('name', [''])[0]
             if name:
@@ -443,7 +447,7 @@ class RelativeSimilarity:
         return ref_component_version.strip() == input_component_version.strip()
 
     def relative_similarity(self, x, y):
-        """Measures the difference between two elements based on some vectors(list of values)"""
+        """Measure the difference between two elements based on some vectors(list of values)."""
         nu = sum(abs(a - b) for a, b in zip(x, y))
         dnu = sum(x) + sum(y)
         if dnu == 0:
@@ -453,8 +457,11 @@ class RelativeSimilarity:
         return sim
 
     def get_refstack_component_list(self, ref_stack):
-        """Breaks down reference stack elements into two separate lists of
-        package names and corresponding version"""
+        """Create list of package names and list of corresponding versions.
+
+        Breaks down reference stack elements into two separate lists of
+        package names and corresponding version
+        """
         refstack_component_list = []
         corresponding_version = []
         ref_stack_deps = ref_stack["dependencies"]
@@ -474,7 +481,8 @@ class RelativeSimilarity:
         return code_metric_data
 
     def getp_value_graph(self, component_name, input_stack, ref_stack):
-        """
+        """Return the distance between input stack EPV and the reference stack.
+
         Returns the actual distance between input stack EPV and reference stack
         EPV based on some vectors.
         It uses relative_similarity to arrive at the distance.
@@ -495,11 +503,12 @@ class RelativeSimilarity:
         return pvalue
 
     def compute_modified_jaccard_similarity(self, len_input_stack, len_ref_stack, vcount):
-        """For two stacks A and B, it returns Count(A intersection B) / max(Count(A, B))"""
+        """For two stacks A and B, it returns Count(A intersection B) / max(Count(A, B))."""
         return vcount / max(len_ref_stack, len_input_stack)
 
     def filter_package(self, input_stack, ref_stacks):
-        """
+        """Filter reference stack.
+
         Filters reference stack and process only those which has a higher value
         of intersection of components
         (Input Stack vs. Reference Stack) based on some configuration param
@@ -522,7 +531,7 @@ class RelativeSimilarity:
         return filtered_ref_stacks
 
     def find_relative_similarity(self, input_stack, input_stack_vectors, filtered_ref_stacks):
-        """Returns the similarity score between an input stack and reference stack"""
+        """Return the similarity score between an input stack and reference stack."""
         input_set = set(list(input_stack.keys()))
         similar_stack_lists = []
         for ref_stack in filtered_ref_stacks:
@@ -605,7 +614,7 @@ class RecommendationTask(BaseTask):
         return {"recommendations": recommendations}
 
     def _get_stack_values(self, similar_stacks_list):
-        """Converts the similarity score list to JSON based on the needs"""
+        """Convert the similarity score list to JSON based on the needs."""
         similarity_list = []
         for stack in similar_stacks_list:
             s_stack = {
@@ -706,8 +715,11 @@ class RecommendationV2Task(BaseTask):
     description = 'Get Recommendation'
 
     def call_pgm(self, payload):
-        """Calls the PGM model with the normalized manifest information to get
-        the relevant packages"""
+        """Call the PGM model.
+
+        Calls the PGM model with the normalized manifest information to get
+        the relevant packages.
+        """
         try:
             # TODO remove hardcodedness for payloads with multiple ecosystems
             if payload and 'ecosystem' in payload[0]:

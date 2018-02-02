@@ -6,7 +6,8 @@ from sqlalchemy.exc import SQLAlchemyError
 
 
 class ManifestKeeperTask(BaseTask):
-    """ Keep manifest stored on S3 """
+    """Keep manifest stored on S3."""
+
     # we don't want to add `_audit` etc into the manifest submitted
     add_audit_info = False
 

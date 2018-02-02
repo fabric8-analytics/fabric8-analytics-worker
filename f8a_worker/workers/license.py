@@ -1,6 +1,4 @@
-"""
-Uses ScanCode toolkit to detect licences in source code.
-"""
+"""Uses ScanCode toolkit to detect licences in source code."""
 
 from os import path
 from f8a_worker.utils import TimedCommand, username
@@ -12,7 +10,8 @@ from selinon import FatalTaskError
 
 
 class LicenseCheckTask(BaseTask):
-    """ Check licences of all files of a package """
+    """Check licences of all files of a package."""
+
     _analysis_name = 'source_licenses'
     schema_ref = SchemaRef(_analysis_name, '3-0-0')
 

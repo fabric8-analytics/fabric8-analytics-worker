@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
+
+"""Project setup file for the fabric8 analytics worker project."""
+
 import os
 from setuptools import setup, find_packages
 
 
 def get_requirements():
+    """Parse all packages mentioned in the 'requirements.txt' file."""
     with open('requirements.txt') as fd:
         return fd.read().splitlines()
 

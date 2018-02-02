@@ -7,6 +7,7 @@ from f8a_worker.models import Analysis, PackageAnalysis
 
 class FinalizeTask(BaseTask):
     """Finish EPV analysis flow and store audit."""
+
     def run(self, arguments):
         self._strict_assert(arguments.get('document_id'))
 
@@ -29,6 +30,7 @@ class FinalizeTask(BaseTask):
 
 class PackageFinalizeTask(BaseTask):
     """Finish Package-level flow and store audit."""
+
     def run(self, arguments):
         self._strict_assert(arguments.get('document_id'))
 

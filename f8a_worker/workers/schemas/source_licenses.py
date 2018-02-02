@@ -1,4 +1,4 @@
-"""JSL schema for license scan worker"""
+"""JSL schema for license scan worker."""
 
 import jsl
 from f8a_worker.schemas import JSLSchemaBaseWithRelease, added_in, removed_in

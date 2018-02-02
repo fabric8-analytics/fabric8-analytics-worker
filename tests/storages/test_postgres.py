@@ -1,3 +1,5 @@
+"""Test the Postgress interface - data storage and retrieval."""
+
 import datetime
 
 import flexmock
@@ -15,7 +17,10 @@ from ..conftest import rdb
 
 
 class TestBayesianPostgres:
+    """Test the Postgress interface - data storage and retrieval."""
+
     def setup_method(self, method):
+        """Get the DB session and prepare test data."""
         rdb()
         self.s = create_db_scoped_session()
         self.en = 'foo'
@@ -34,6 +39,7 @@ class TestBayesianPostgres:
         self.bp = BayesianPostgres(connection_string=configuration.POSTGRES_CONNECTION)
 
     def test_retrieve_normal(self):
+        """Test the ability to retrieve data from Postgress."""
         wid = 'x'
         w = 'y'
         tr = {'1': '2'}
@@ -44,6 +50,7 @@ class TestBayesianPostgres:
         assert self.bp.retrieve('whatever', w, wid) == tr
 
     def test_retrieve_s3(self):
+        """Test the ability to retrieve data from Postgress, target is mocked S3 storage."""
         wid = 'x'
         w = 'y'
         tr = {'version_id': 123}
@@ -66,6 +73,7 @@ class TestBayesianPostgres:
         assert self.bp.retrieve('blahblah', w, wid) == res
 
     def test_store_normal(self):
+        """Test the ability to store data to Postgress."""
         tn = 'asd'
         tid = 'sdf'
         res = {'some': 'thing'}
@@ -73,6 +81,7 @@ class TestBayesianPostgres:
         assert self.bp.retrieve('doesntmatter', tn, tid) == res
 
     def test_store_already_exists(self):
+        """Test if database integrity is checked."""
         tn = 'asd'
         tid = 'sdf'
         res = {'some': 'thing'}
@@ -81,6 +90,7 @@ class TestBayesianPostgres:
             self.bp.store(node_args={}, flow_name='blah', task_name=tn, task_id=tid, result=res)
 
     def test_get_latest_task_result(self):
+        """Test the function to get the latest task result from database."""
         tn = 'asd'
         tid = 'sdf'
         res = {'some': 'thing'}
@@ -106,4 +116,5 @@ class TestBayesianPostgres:
     #     assert self.bp.get_latest_task_entry(self.en, self.pn, tn).worker == tn
 
     def test_get_latest_task_result_no_results(self):
+        """Test the function to get the latest task result from empty database."""
         assert self.bp.get_latest_task_result(self.en, self.pn, self.vi, 'asd') is None

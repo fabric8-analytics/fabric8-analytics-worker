@@ -85,7 +85,7 @@ def go(rdb):
 
 @pytest.fixture()
 def dispatcher_setup():
-    """ Setup environment for Dispatcher if needed """
+    """Perform environment setup for Dispatcher if needed."""
     nodes_yaml, flows_yaml = get_dispatcher_config_files()
     Config.set_config_yaml(nodes_yaml, flows_yaml)
 

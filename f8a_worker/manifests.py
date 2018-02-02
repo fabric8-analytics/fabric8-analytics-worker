@@ -8,7 +8,7 @@ _registered_manifest_descriptors = []
 
 
 def register_manifest_descriptor(descriptor):
-    """Registers new ManifestDescriptor.
+    """Register new ManifestDescriptor.
 
     All manifest descriptors need to be registered in order to be recognized by Bayesian.
     """
@@ -17,7 +17,7 @@ def register_manifest_descriptor(descriptor):
 
 
 def get_manifest_descriptor_by_filename(filename):
-    """Returns ManifestDescriptor for given filename.
+    """Return ManifestDescriptor for given filename.
 
     Or None if there is no registered ManifestDescriptor for the given filename.
     """
