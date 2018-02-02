@@ -27,7 +27,8 @@ def get_manifest_descriptor_by_filename(filename):
 class ManifestDescriptor(object):
     def __init__(self, filename, ecosystem, has_resolved_deps=False, has_recursive_deps=False,
                  validator=lambda x: False):
-        """
+        """Initialize all required attributes of the newly created object.
+
         :param filename: a typical filename
         :param ecosystem: ecosystem to which this manifest belongs to
         :param has_resolved_deps: indication whether manifest contains exact

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""Classes that implements EPV cache and artifact cache."""
+
 import os
 import shutil
 import logging
@@ -10,8 +12,12 @@ from f8a_worker.models import EcosystemBackend, Ecosystem
 
 
 class EPVCache(object):
-    """Object that encapsulates basic operations on EPV artifacts and their
-    items, all operations are done lazily"""
+    """Encapsulation of basic operations on EPV artifacts.
+
+    Object that encapsulates basic operations on EPV artifacts and their
+    items, all operations are done lazily
+    """
+
     log = logging.getLogger(__name__)
     _POM_XML_NAME = 'pom.xml'
     _SOURCE_JAR_NAME = 'package-source.jar'
@@ -21,7 +27,8 @@ class EPVCache(object):
     _META_JSON_NAME = 'meta.json'
 
     def __init__(self, ecosystem, name, version, cache_dir, is_temporary=False):
-        """
+        """Initialize all attributes of the EPVCache during object instantiation.
+
         :param ecosystem: ecosystem for the given EPV
         :param name: name for the given EPV
         :param version: version of the given EPV
@@ -80,7 +87,8 @@ class EPVCache(object):
         return self._meta
 
     def _has_meta(self):
-        """
+        """Test if there is associated meta.json for the given EPV.
+
         :return: True if there is associated meta.json for the given EPV
         """
         # as this call is done privately and meta.json is stored inside
@@ -136,7 +144,8 @@ class EPVCache(object):
         return self._get_object_cached(self._source_tarball_object_key, self._source_tarball_path)
 
     def has_source_tarball(self):
-        """
+        """Test if there is available source tarball in the S3 bucket.
+
         :return: True if there is available source tarball in the S3 bucket
         """
         if not self._has_meta():
@@ -155,7 +164,8 @@ class EPVCache(object):
         self._s3.store_file(source_tarball_path, self._source_tarball_object_key)
 
     def get_extracted_source_tarball(self):
-        """
+        """Get path to the extracted package tarball.
+
         :return: path to the extracted package tarball
         """
         self._construct_source_tarball_names()
@@ -173,7 +183,8 @@ class EPVCache(object):
         return self._extracted_tarball_dir
 
     def get_pom_xml(self):
-        """
+        """Get path to the pom.xml file.
+
         :return: path to the pom.xml file
         """
         return self._get_object_cached(self._pom_xml_object_key, self._pom_xml_path)
@@ -186,7 +197,8 @@ class EPVCache(object):
         self._s3.store_file(pom_xml_path, self._pom_xml_object_key)
 
     def has_pom_xml(self):
-        """
+        """Test if the given EPV has pom.xml in the remote S3 bucket.
+
         :return: True if the given EPV has pom.xml in the remote S3 bucket
         """
         return self._s3.object_exists(self._pom_xml_object_key)
@@ -223,13 +235,15 @@ class EPVCache(object):
         self._s3.store_file(source_jar_path, self._source_jar_object_key)
 
     def has_source_jar(self):
-        """
+        """Test if the given EPV has source jar in the remote S3 bucket.
+
         :return: True if the given EPV has source jar in the remote S3 bucket
         """
         return self._s3.object_exists(self._source_jar_object_key)
 
     def get_sources(self):
-        """
+        """Get path to source files.
+
         :return: path to source files
         """
         if not self._eco_obj:
@@ -241,7 +255,8 @@ class EPVCache(object):
             return self.get_extracted_source_tarball()
 
     def has_sources(self):
-        """
+        """Test if the given EPV has available sources.
+
         :return: true if the given EPV has available sources
         """
         if not self._eco_obj:
@@ -265,6 +280,7 @@ class ObjectCache(object):
     _base_cache_dir = configuration.WORKER_DATA_DIR
 
     def __init__(self):
+        """Raise error as the cache can not be instantiated."""
         raise NotImplementedError()
 
     @classmethod
