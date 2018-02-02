@@ -15,7 +15,7 @@ class S3VulnDB(AmazonS3):
     METAINFO_OBJECT_KEY = 'meta.json'
 
     def update_sync_date(self):
-        """ Update sync associated metadata
+        """Update sync associated metadata.
 
         :return: timestamp of the previous sync
         """
@@ -33,7 +33,7 @@ class S3VulnDB(AmazonS3):
         return previous_sync_datetime.replace(tzinfo=timezone.utc).timestamp()
 
     def store_depcheck_db(self, data_dir):
-        """ Zip CVE DB file and store to S3 """
+        """Zip CVE DB file and store to S3."""
         with tempdir() as archive_dir:
             archive_path = os.path.join(archive_dir, self.DEPCHECK_DB_ARCHIVE)
             db_file_path = os.path.join(data_dir, self.DEPCHECK_DB_FILENAME)
@@ -45,7 +45,7 @@ class S3VulnDB(AmazonS3):
                 self.store_file(archive_path, self.DEPCHECK_DB_ARCHIVE)
 
     def retrieve_depcheck_db_if_exists(self, data_dir):
-        """ Retrieve zipped CVE DB file as stored on S3 and extract"""
+        """Retrieve zipped CVE DB file as stored on S3 and extract."""
         if self.object_exists(self.DEPCHECK_DB_ARCHIVE):
             with tempdir() as archive_dir:
                 archive_path = os.path.join(archive_dir, self.DEPCHECK_DB_ARCHIVE)
@@ -55,7 +55,7 @@ class S3VulnDB(AmazonS3):
         return False
 
     def store_victims_db(self, victims_db_dir):
-        """ Zip victims_db_dir/* and store to S3 as VICTIMS_DB_ARCHIVE"""
+        """Zip victims_db_dir/* and store to S3 as VICTIMS_DB_ARCHIVE."""
         with tempdir() as temp_archive_dir:
             temp_archive_path = os.path.join(temp_archive_dir, self.VICTIMS_DB_ARCHIVE)
             with cwd(victims_db_dir):
@@ -63,7 +63,7 @@ class S3VulnDB(AmazonS3):
                 self.store_file(temp_archive_path, self.VICTIMS_DB_ARCHIVE)
 
     def retrieve_victims_db_if_exists(self, victims_db_dir):
-        """ Retrieve VICTIMS_DB_ARCHIVE from S3 and extract into victims_db_dir """
+        """Retrieve VICTIMS_DB_ARCHIVE from S3 and extract into victims_db_dir."""
         if self.object_exists(self.VICTIMS_DB_ARCHIVE):
             with tempdir() as temp_archive_dir:
                 temp_archive_path = os.path.join(temp_archive_dir, self.VICTIMS_DB_ARCHIVE)
