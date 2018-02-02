@@ -1,5 +1,6 @@
 """Declaration of classes representing various exception types."""
 
+
 class TaskError(Exception):
     """There was an error during task execution."""
 
