@@ -25,6 +25,8 @@ def get_manifest_descriptor_by_filename(filename):
 
 
 class ManifestDescriptor(object):
+    """Represents manifest descriptor for the selected file and ecosystem."""
+
     def __init__(self, filename, ecosystem, has_resolved_deps=False, has_recursive_deps=False,
                  validator=lambda x: False):
         """Initialize all required attributes of the newly created object.
@@ -44,6 +46,7 @@ class ManifestDescriptor(object):
         self.validator = validator
 
     def validate(self, data):
+        """Validate the data using selected validator."""
         return self.validator(data)
 
 

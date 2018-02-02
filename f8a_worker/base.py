@@ -32,6 +32,11 @@ class BaseTask(SelinonTask):
             raise FatalTaskError("Strict assert failed in task '%s'" % cls.__name__)
 
     def run(self, node_args):
+        """To be transparently called by Selinon.
+
+        Selinon transparently calls run(), which takes care of task audit and
+        some additional checks and calls execute().
+        """
         # SQS guarantees 'deliver at least once', so there could be multiple
         # messages of a type, give up immediately
         if self.storage and isinstance(self.storage, (BayesianPostgres, PackagePostgres)):
@@ -94,4 +99,5 @@ class BaseTask(SelinonTask):
         set_schema_ref(result, schema_ref)
 
     def execute(self, arguments):
+        """Return dictionary with results - must be implemented by any subclass."""
         raise NotImplementedError("Task not implemented")
