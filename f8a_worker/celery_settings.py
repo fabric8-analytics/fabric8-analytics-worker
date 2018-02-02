@@ -8,7 +8,8 @@ _logger = logging.getLogger(__name__)
 
 
 def _use_sqs():
-    """
+    """Check if worker should use Amazon SQS.
+
     :return: True if worker should use Amazon SQS
     """
     has_key_id = configuration.AWS_SQS_ACCESS_KEY_ID is not None

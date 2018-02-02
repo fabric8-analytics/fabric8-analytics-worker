@@ -1,5 +1,4 @@
-"""
-This is a csmock worker which runs static analysis tools on a given archive.
+"""A csmock worker which runs static analysis tools on a given archive.
 
 TODO:
   * What analysis does this run?
@@ -19,7 +18,7 @@ from f8a_worker.object_cache import ObjectCache
 
 
 def csmock(args):
-    """ call csmock tool with provided args """
+    """Call csmock tool with provided args."""
     results_prefix = "scan"
     results_filename = "scan-results.js"
     subprocess.check_call(["csmock", "-o", results_prefix] + args)
@@ -33,8 +32,7 @@ class StaticAnalysis(object):
         self.archive_path = archive_path
 
     def analyze(self):
-        """
-        start analysis on provided archive
+        """Start analysis on provided archive.
 
         :return: json-deserialized response
         """
@@ -47,12 +45,12 @@ class StaticAnalysis(object):
 
 
 class CsmockTask(BaseTask):
-    """ Static analysis of source code """
+    """Static analysis of source code."""
+
     _analysis_name = 'static_analysis'
 
     def execute(self, arguments):
-        """
-        task code
+        """Task code.
 
         :param arguments: dictionary with task arguments
         :return: {}, results

@@ -17,7 +17,8 @@ class BlackDuckDataNotReady(Exception):
 
 
 class BlackDuckTask(BaseTask):
-    """ Scan the package using Black Duck """
+    """Scan the package using Black Duck."""
+
     _analysis_name = 'blackduck'
     _valid_ecosystems = ["npm", "maven", "pypi"]
     _allow_cli_scan = True
@@ -26,8 +27,7 @@ class BlackDuckTask(BaseTask):
     _BLACKDUCK_CLI_TIMEOUT = 600
 
     def _format_hub_url(self):
-        """
-        Format Hub connection string from supplied config
+        """Format Hub connection string from supplied config.
 
         :return:
         """
@@ -36,9 +36,7 @@ class BlackDuckTask(BaseTask):
                                                   port=self.configuration.BLACKDUCK_PORT)
 
     def _is_valid_ecosystem(self, ecosystem_id):
-        """
-        Determine whether the given ecosystem is valid for
-        Black Duck analysis
+        """Determine whether the given ecosystem is valid for Black Duck analysis.
 
         :param ecosystem_id: int, the ID of the ecosystem
         :return: bool
@@ -46,9 +44,7 @@ class BlackDuckTask(BaseTask):
         return ecosystem_id in self._valid_ecosystems
 
     def _find_blackduck_cli_root(self):
-        """
-        Find the base directory where the BlackDuck CLI got
-        extracted
+        """Find the base directory where the BlackDuck CLI got extracted.
 
         :return: str, path to the CLI root
         """
@@ -62,15 +58,13 @@ class BlackDuckTask(BaseTask):
         return path.join(base, dirs.pop())
 
     def _prepare_command(self, project, version, archive):
-        """
-        Prepare the necessary CLI parameters
+        """Prepare the necessary CLI parameters.
 
         :param project: str, name of the project
         :param version: str, version of the release
         :param archive: str, path to the archive with the sources
         :return: List[str], command list ready to be run
         """
-
         binary = "{base}/{rel}".format(base=self._find_blackduck_cli_root(),
                                        rel="bin/scan.cli.sh")
 
@@ -84,8 +78,7 @@ class BlackDuckTask(BaseTask):
                 archive]
 
     def _get_release(self, hub, project, version):
-        """
-        Get release ID for given project version
+        """Get release ID for given project version.
 
         :param hub: BlackDuckHub, hub object to use
         :param project: str, name of the project
@@ -102,8 +95,7 @@ class BlackDuckTask(BaseTask):
         return releases.get(version, None)
 
     def _release_data(self, hub, project, version):
-        """
-        Fetch release data for the given project and version
+        """Fetch release data for the given project and version.
 
         :param hub: BlackDuckHub, hub object to use
         :param project: str, name of the project

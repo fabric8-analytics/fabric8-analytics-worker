@@ -1,6 +1,4 @@
-"""
-Worker for querying GitHub package/component usage data from BigQuery.
-"""
+"""Worker for querying GitHub package/component usage data from BigQuery."""
 
 import os
 import collections
@@ -82,7 +80,6 @@ _DEFAULT_BUCKET_NAME = 'bayesian-core-bigquery-data'
 class BigQueryTask(SelinonTask):
     def run(self, node_args):
         """Get package usage information from BigQuery's public GitHub dataset."""
-
         dataset = 'bayesian'
         json_key = configuration.BIGQUERY_JSON_KEY
         try:
@@ -168,7 +165,6 @@ class BigQueryTask(SelinonTask):
     @staticmethod
     def dump_to_rdb(csv_file, csv_header, table_name):
         """Import results from BigQuery into the DB."""
-
         conn = psycopg2.connect(configuration.POSTGRES_CONNECTION)
         try:
             cur = conn.cursor()
@@ -183,7 +179,8 @@ class BigQueryTask(SelinonTask):
 class BigQueryProject(object):
 
     def __init__(self, json_key):
-        """
+        """Initialize the object.
+
         :param json_key: path to the JSON key containing BigQuery credentials
         """
         if not os.path.isfile(json_key):
@@ -211,7 +208,6 @@ class BigQueryProject(object):
                URI (e.g.: ['gs://bucket/path']).
         :return: response from BigQuery
         """
-
         permanent_table = False
         if dest_dataset and dest_table:
             self._create_dataset(dest_dataset)
@@ -268,7 +264,7 @@ class BigQueryProject(object):
 
 
 def compute_percentile_ranks(sorted_list):
-    """Computes percentile ranks for all elements in the `sorted_list`.
+    """Compute percentile ranks for all elements in the `sorted_list`.
 
     :param sorted_list: sorted list of elements
     :return: dict containing element->percentile rank mapping
@@ -280,7 +276,6 @@ def compute_percentile_ranks(sorted_list):
     >>> compute_percentile_ranks(['E', 'E', 'E', 'D', 'D', 'D', 'C', 'B', 'A', 'A'])
     OrderedDict([('E', 30), ('D', 60), ('C', 70), ('B', 80), ('A', 100)])
     """
-
     # get frequency of elements in the input array
     freq = collections.OrderedDict()
     for elem in sorted_list:

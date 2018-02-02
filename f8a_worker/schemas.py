@@ -1,4 +1,5 @@
-"""Utilities for accessing and working with JSON schemas"""
+"""Utilities for accessing and working with JSON schemas."""
+
 import abc
 from collections import namedtuple, OrderedDict
 from functools import wraps
@@ -12,7 +13,7 @@ import jsonschema
 
 
 def added_in(role):
-    """Helper for schema fields added in a particular version
+    """Provide helper for schema fields added in a particular version.
 
     Example:
 
@@ -23,7 +24,7 @@ def added_in(role):
 
 
 def removed_in(role):
-    """Helper for schema fields removed in a particular version
+    """Provide helper for schema fields removed in a particular version.
 
     Example:
 
@@ -42,7 +43,9 @@ class JSLWithSchemaAttribute(jsl.Document):
 
 
 class JSLSchemaBase(jsl.Document):
-    """This class serves as a base class for all schema definitions that should
+    """Base class for all schema definitions.
+
+    This class serves as a base class for all schema definitions that should
     include the `schema` object (with `name`, `version` and optional `url`).
     """
 
@@ -76,7 +79,8 @@ class JSLSchemaBaseWithRelease(JSLSchemaBase):
 
 
 class SchemaRef(namedtuple("SchemaRef", "name version")):
-    """Name and version number for a JSON schema"""
+    """Name and version number for a JSON schema."""
+
     __slots__ = ()  # 3.4.3 compatibility: prevent __dict__ override
 
     def __str__(self):
@@ -104,7 +108,8 @@ class SchemaRef(namedtuple("SchemaRef", "name version")):
 
 
 class SchemaLookupError(LookupError):
-    """Failed to find requested schema in schema library"""
+    """Failed to find requested schema in schema library."""
+
     def __init__(self, schema_ref):
         self.schema_ref = schema_ref
 
@@ -132,7 +137,7 @@ class SchemaImportError(ImportError):
 
 class AbstractSchemaLibrary(object, metaclass=abc.ABCMeta):
     def load_schema(self, schema_ref):
-        """Loads and parses specified schema from the library"""
+        """Load and parse specified schema from the library."""
         try:
             schema_data = self.read_binary_schema(schema_ref)
         except Exception as exc:
@@ -141,12 +146,13 @@ class AbstractSchemaLibrary(object, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def read_binary_schema(self, schema_ref):
-        """Reads raw binary schema from path constructed from given schema ref"""
+        """Read raw binary schema from path constructed from given schema ref."""
         raise NotImplementedError('read_binary_schema is abstract method')
 
 
 class SchemaLibrary(AbstractSchemaLibrary):
-    """Load named and versioned JSON schemas"""
+    """Load named and versioned JSON schemas."""
+
     def __init__(self, schema_dir):
         # Py2 compatibility: use explicit super()
         super(SchemaLibrary, self).__init__()
@@ -160,7 +166,8 @@ class SchemaLibrary(AbstractSchemaLibrary):
 
 
 class BundledSchemaLibrary(SchemaLibrary):
-    """Load named and version JSON schemas bundled with a Python package"""
+    """Load named and version JSON schemas bundled with a Python package."""
+
     def __init__(self, schema_dir, base_module):
         # Py2 compatibility: use explicit super()
         super(BundledSchemaLibrary, self).__init__(schema_dir)
@@ -220,7 +227,7 @@ class BundledDynamicSchemaLibrary(AbstractSchemaLibrary):
                 yield SchemaRef(modname, version)
 
     def load_all_jsl_definitions(self):
-        """Returns all JSL definitions from modules in `self.schema_mod_fqn`
+        """Return all JSL definitions from modules in `self.schema_mod_fqn`.
 
         The result is a dictionary that maps SchemaRef instances to JSL
         document definition and role pairs.
@@ -229,7 +236,7 @@ class BundledDynamicSchemaLibrary(AbstractSchemaLibrary):
         return {ref: self.load_schema_class_and_role(ref) for ref in all_refs}
 
     def load_all_schemas(self):
-        """Returns all schemas from modules in `self.schema_mod_fqn`
+        """Return all schemas from modules in `self.schema_mod_fqn`.
 
         The result is a dictionary that maps SchemaRef instances to JSON
         schema dictionaries.
@@ -249,7 +256,8 @@ load_worker_schema_class_and_role = _worker_schemas.load_schema_class_and_role
 
 
 class SchemaValidator(object):
-    """
+    """Encapsulation for the provided schema library.
+
     SchemaValidator encapsulates the provided schema library
     and provides pre/post-condition checking decorators
 
@@ -288,7 +296,7 @@ class SchemaValidator(object):
 
     def input(self, *args):
         def decorator(func):
-            """ Inner function decorator """
+            """Inner function decorator."""
             @wraps(func)
             def wrapper(*largs, **kwargs):
                 s = self._ensure_schema(args[0])
@@ -306,7 +314,7 @@ class SchemaValidator(object):
 
     def result(self, *args):
         def decorator(func):
-            """ Inner function decorator """
+            """Inner function decorator."""
             @wraps(func)
             def wrapper(*largs, **kwargs):
                 s = self._ensure_schema(args[0])
@@ -321,7 +329,7 @@ external_schema = SchemaValidator(_external_schemas)
 
 
 def get_schema_ref(analysis, default=None):
-    """Retrieves a schema reference from a component analysis"""
+    """Retrieve a schema reference from a component analysis."""
     try:
         schema_ref_dict = analysis["schema"]
     except KeyError as exc:
@@ -339,26 +347,31 @@ def get_schema_ref(analysis, default=None):
 
 
 def pop_schema_ref(analysis, default=None):
-    """Retrieves and removes a schema reference from a component analysis"""
+    """Retrieve and remove a schema reference from a component analysis."""
     schema_ref = get_schema_ref(analysis, default)
     analysis.pop("schema", None)
     return schema_ref
 
 
 def set_schema_ref(analysis, schema_ref):
-    """Sets the schema reference for a component analysis"""
+    """Set the schema reference for a component analysis."""
     analysis["schema"] = schema_ref._asdict()
 
 
 def schema_version_comparator_key(schema_version):
-    """Function that you can use for `sorted`'s `key` argument when sorting schema versions"""
+    """Split the schema version on return it as a tuple of numbers.
+
+    Function that you can use for `sorted`'s `key` argument when sorting schema versions.
+    """
     parts = schema_version.split('-')
     parts = [int(p) for p in parts]
     return parts
 
 
 def assert_no_two_consecutive_schemas_are_same(load_all_schemas):
-    """Test utility function used by both server and worker test suites. It makes sure
+    """Check that no two consecutive versions of schema are the same.
+
+    Test utility function used by both server and worker test suites. It makes sure
     that no two consecutive versions of schema are the same (if they are, we don't need
     one of them)
 

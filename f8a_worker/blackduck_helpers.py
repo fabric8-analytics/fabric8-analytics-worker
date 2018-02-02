@@ -5,16 +5,19 @@ from f8a_worker.schemas import (external_schema as schema, SchemaRef)
 
 class BlackDuckException(Exception):
     """Generic exception class thrown by the BlackDuck."""
+
     pass
 
 
 class BlackDuckSessionException(BlackDuckException):
     """Thrown when session couldn't be established or has expired."""
+
     pass
 
 
 class BlackDuckApiToken(object):
     """API Token Abstraction."""
+
     def __init__(self, value):
         self._value = value
 
@@ -25,10 +28,11 @@ class BlackDuckApiToken(object):
 
 
 class BlackDuckSession(object):
+    """Session that is valid for certain duration.
+
+    Empiric testing has shown that the BlackDuck JSESSION is valid for 24 hours.
     """
-    Session that is valid for certain duration, empiric testing has shown
-    that the BlackDuck JSESSION is valid for 24 hours
-    """
+
     def __init__(self, token=None, duration=timedelta(hours=24)):
         self._token = token
         self._duration = duration
@@ -36,16 +40,16 @@ class BlackDuckSession(object):
 
     @property
     def api_token(self):
-        """ Underlying `BlackDuckApiToken` """
+        """Underlying `BlackDuckApiToken`."""
         return self._token
 
     @property
     def duration(self):
-        """ Duration of the token expressed as `datetime.timedelta` """
+        """Duration of the token expressed as `datetime.timedelta`."""
         return self._duration
 
     def expired(self):
-        """ Determine whether the session has expired
+        """Determine whether the session has expired.
 
         :return: bool, expired or not
         """
@@ -53,10 +57,12 @@ class BlackDuckSession(object):
 
 
 class BlackDuckRelease(object):
-    """
+    """Class representing release object type.
+
     Release object consist of version string, unique identifier
     and `datetime.datetime` information when this particular version was released
     """
+
     @schema.input(SchemaRef("blackduck-release", "1-0-0"))
     def __init__(self, json_data, project):
         self._version = json_data['version']
@@ -70,24 +76,23 @@ class BlackDuckRelease(object):
 
     @property
     def version(self):
-        """ Release version """
+        """Release version."""
         return self._version
 
     @property
     def id(self):
-        """ Unique identifier """
+        """Return unique identifier."""
         return self._id
 
     @property
     def released_at(self):
-        """ Release date time """
+        """Release date time."""
         return self._released_at
 
 
 class BlackDuckProject(object):
-    """
-    Project contains information about specific {ecosystem}-{package} pair
-    """
+    """Project contains information about specific {ecosystem}-{package} pair."""
+
     @schema.input(SchemaRef("blackduck-project", "1-0-0"))
     def __init__(self, json_data):
         self._source = json_data
@@ -98,33 +103,32 @@ class BlackDuckProject(object):
 
     @property
     def name(self):
-        """ Name of the project """
+        """Name of the project."""
         return self._name
 
     @property
     def id(self):
-        """ Unique identifier of the project """
+        """Return unique identifier of the project."""
         return self._id
 
     @property
     def urls(self):
-        """ Flat list of additional URLs for this project """
+        """Flat list of additional URLs for this project."""
         return self._urls
 
     @property
     def canonical_release_id(self):
-        """ Latest release for the given project (in terms of version number) """
+        """Latest release for the given project (in terms of version number)."""
         return self._canonical_release_id
 
     @property
     def source(self):
-        """ Source JSON from which this object was parsed """
+        """Source JSON from which this object was parsed."""
         return self._source
 
 
 def needs_session(func):
-    """
-    Decorator checking that we have a valid session
+    """Provide decorator checking that we have a valid session.
 
     :param func: meth, method to decorate
     :return: meth, decorated method
@@ -137,9 +141,7 @@ def needs_session(func):
 
 
 class BlackDuckHub(object):
-    """
-    Hub provides access around Black Duck Hub APIs
-    """
+    """Hub provides access around Black Duck Hub APIs."""
 
     # The authentication token is returned in a cookie with this name
     COOKIE_NAME = 'JSESSIONID'
@@ -150,12 +152,11 @@ class BlackDuckHub(object):
 
     @property
     def url(self):
-        """ URL of the Hub with trailing slash, example `https://hub.blackducksoftware.com/` """
+        """URL of the Hub with trailing slash, example `https://hub.blackducksoftware.com/`."""
         return self._url
 
     def _api(self, param):
-        """
-        Format a new API call, checks session validity as well
+        """Format a new API call, checks session validity as well.
 
         :param param: str, parameters to append to base url
         :return: str, formatted API call
@@ -163,8 +164,7 @@ class BlackDuckHub(object):
         return "{}{}".format(self.url, param)
 
     def _api_get(self, param):
-        """
-        Perform a get request against the API using local `_session`
+        """Perform a get request against the API using local `_session`.
 
         :param param: str, full request URL
         :return: requests.Request, a request object
@@ -173,8 +173,7 @@ class BlackDuckHub(object):
                    verify=False)
 
     def connect_session(self, username, password):
-        """
-        Establishes a new session with the HUB using the provided credentials
+        """Establish a new session with the HUB using the provided credentials.
 
         :param username: str
         :param password: str
@@ -198,8 +197,7 @@ class BlackDuckHub(object):
 
     @needs_session
     def find_project(self, name):
-        """
-        Find a Project by Name
+        """Find a Project by Name.
 
         :param name: str, name of the project
         :return: BlackDuckProject, found project or `None`
@@ -222,8 +220,7 @@ class BlackDuckHub(object):
             raise BlackDuckException('Unable to list projects')
 
     def list_projects(self):
-        """
-        Lists all projects valid for the current session
+        """List all projects valid for the current session.
 
         :return: List[BlackDuckProject], list of projects
         :raises: BlackDuckException, BlackDuckSessionException
@@ -238,8 +235,7 @@ class BlackDuckHub(object):
 
     @needs_session
     def get_releases(self, project_id):
-        """
-        Get all releases of the given project
+        """Get all releases of the given project.
 
         :param project_id: BlackDuckProject or str, project reference or ID
         :return: Dict[str, BlackDuckRelease], a map of version strings to release objects
@@ -258,8 +254,7 @@ class BlackDuckHub(object):
     @needs_session
     @schema.result(SchemaRef("blackduck-vulnerable-bom", "1-0-0"))
     def get_release_bom_json(self, release_id):
-        """
-        Get the Bill of Materials for specific release
+        """Get the Bill of Materials for specific release.
 
         :param release_id: BlackDuckRelease or str, release reference or ID
         :return: dict, the BOM JSON as a dictionary
@@ -282,8 +277,7 @@ class BlackDuckHub(object):
 
     @needs_session
     def get_release_code_locations(self, release_id):
-        """
-        Get code locations for given release
+        """Get code locations for given release.
 
         :param release_id: BlackDuckRelease or str, release reference or ID
         :return: dict, response json containing the retrieved code locations list
@@ -305,8 +299,7 @@ class BlackDuckHub(object):
 
     @needs_session
     def get_code_location_scan_summary(self, location_id):
-        """
-        Get scan summary for given code location ID
+        """Get scan summary for given code location ID.
 
         :param location_id: str
         :return: dict, the code location

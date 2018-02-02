@@ -1,3 +1,5 @@
+"""Update vulnerability sources."""
+
 from selinon import StoragePool
 from f8a_worker.base import BaseTask
 from f8a_worker.solver import get_ecosystem_solver, OSSIndexDependencyParser
@@ -6,10 +8,11 @@ from f8a_worker.workers import CVEcheckerTask
 
 
 class CVEDBSyncTask(BaseTask):
-    """ Update vulnerability sources """
+    """Update vulnerability sources."""
 
     def components_to_scan(self, previous_sync_timestamp, only_already_scanned):
-        """
+        """Get EPV that were recently updated in OSS Index, so they can contain new vulnerabilities.
+
         Get components (e:p:v) that were recently (since previous_sync_timestamp) updated
         in OSS Index, which means that they can contain new vulnerabilities.
 
@@ -64,7 +67,7 @@ class CVEDBSyncTask(BaseTask):
         return to_scan
 
     def execute(self, arguments):
-        """
+        """Start the task.
 
         :param arguments: optional argument 'only_already_scanned' to run only
         on already analysed packages
