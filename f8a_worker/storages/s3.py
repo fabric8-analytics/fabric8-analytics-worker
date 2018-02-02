@@ -58,7 +58,8 @@ class AmazonS3(DataStorage):
 
     @staticmethod
     def dict2blob(dictionary):
-        """
+        """Serialize the dictionary into JSON format.
+
         :param dictionary: dictionary to convert to JSON
         :return: encoded bytes representing pretty-printed JSON
         """

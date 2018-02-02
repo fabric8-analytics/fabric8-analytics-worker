@@ -58,7 +58,7 @@ class EPVCache(object):
         self._meta_json_object_key = "{}/{}".format(self._base_object_key, self._META_JSON_NAME)
 
     def _retrieve_s3_object(self, object_key, dst_path):
-        """Retrieve object stored in S3"""
+        """Retrieve object stored in S3."""
         self.log.debug("Retrieving object '%s' from bucket '%s' to '%s'", object_key,
                        self._s3.bucket_name, dst_path)
         basedir = os.path.dirname(dst_path)
@@ -67,7 +67,7 @@ class EPVCache(object):
         self._s3.retrieve_file(object_key, dst_path)
 
     def _get_meta(self):
-        """Get artifact meta-information stored on S3
+        """Get artifact meta-information stored on S3.
 
         :return: None if there is no meta.json
         """
@@ -89,7 +89,7 @@ class EPVCache(object):
         return self._get_meta() is not None
 
     def _put_meta(self, tarball_name):
-        """Store meta-information about artifact
+        """Store meta-information about artifact.
 
         :param tarball_name: tarball name to be stored
         """
@@ -99,7 +99,7 @@ class EPVCache(object):
         self._s3.store_dict(tarball_name, self._meta_json_object_key)
 
     def _construct_source_tarball_names(self):
-        """Construct source tarball object key and source tarball path based on meta-information"""
+        """Construct source tarball object key and source tarball path based on meta-information."""
         if self._source_tarball_object_key and self._source_tarball_path:
             return
 
@@ -111,7 +111,7 @@ class EPVCache(object):
                                                          meta['tarball_name'])
 
     def _get_object_cached(self, object_key, local_path):
-        """Retrieve object from S3 if not cached, otherwise use locally cached one
+        """Retrieve object from S3 if not cached, otherwise use locally cached one.
 
         :param object_key: object key to be used when getting remote object
         :param local_path: path where the object should be placed locally
@@ -122,13 +122,13 @@ class EPVCache(object):
         return local_path
 
     def remove_files(self):
-        """Remove all files that are cached for the given EPVCache"""
+        """Remove all files that are cached for the given EPVCache."""
         self.log.debug("Removing cached files for %s/%s/%s", self.ecosystem, self.name,
                        self.version)
         shutil.rmtree(self.cache_dir, ignore_errors=True)
 
     def get_source_tarball(self):
-        """Retrieve source tarball for the given EPV
+        """Retrieve source tarball for the given EPV.
 
         :return: path to the given tarball
         """
@@ -146,7 +146,7 @@ class EPVCache(object):
         return self._s3.object_exists(self._source_tarball_object_key)
 
     def put_source_tarball(self, source_tarball_path):
-        """Upload source tarball to S3
+        """Upload source tarball to S3.
 
         :param source_tarball_path: path to source tarball
         """
@@ -173,13 +173,13 @@ class EPVCache(object):
         return self._extracted_tarball_dir
 
     def get_pom_xml(self):
-        """"
+        """
         :return: path to the pom.xml file
         """
         return self._get_object_cached(self._pom_xml_object_key, self._pom_xml_path)
 
     def put_pom_xml(self, pom_xml_path):
-        """Upload pom.xml to the remote S3 bucket
+        """Upload pom.xml to the remote S3 bucket.
 
         :param pom_xml_path: path to pom.xml file
         """
@@ -192,14 +192,14 @@ class EPVCache(object):
         return self._s3.object_exists(self._pom_xml_object_key)
 
     def get_source_jar(self):
-        """Get package source jar file (un-extracted)
+        """Get package source jar file (un-extracted).
 
         :return: path to raw source jar file
         """
         return self._get_object_cached(self._source_jar_object_key, self._source_jar_path)
 
     def get_extracted_source_jar(self):
-        """Get extracted package source jar file
+        """Get extracted package source jar file.
 
         :return: path to extracted source jar file
         """
@@ -216,7 +216,7 @@ class EPVCache(object):
         return self._extracted_source_jar_dir
 
     def put_source_jar(self, source_jar_path):
-        """Upload source jar to the remote S3 bucket
+        """Upload source jar to the remote S3 bucket.
 
         :param source_jar_path: path to source jar to be uploaded
         """
@@ -255,11 +255,12 @@ class EPVCache(object):
 
 
 class ObjectCache(object):
-    """Artifact cache handling that encapsulates artifacts handling on worker side
+    """Artifact cache handling that encapsulates artifacts handling on worker side.
 
     >>> epv_cache = ObjectCache.get(ecosystem='npm', name='serve-static', version='1.7.1')
     >>> extracted_tarball_path = epv_cache.get_extracted_source_tarball()
     """
+
     _cache = {}
     _base_cache_dir = configuration.WORKER_DATA_DIR
 
@@ -268,19 +269,19 @@ class ObjectCache(object):
 
     @classmethod
     def wipe(cls):
-        """Wipe all files that are stored in the current cache"""
+        """Wipe all files that are stored in the current cache."""
         for item in cls._cache.values():
             item.remove_files()
         cls._cache = {}
 
     @classmethod
     def _cache_dir(cls, ecosystem, name, version):
-        """Get cache dir for the given EPV"""
+        """Get cache dir for the given EPV."""
         return os.path.join(cls._base_cache_dir, ecosystem, name, version)
 
     @classmethod
     def get(cls, ecosystem, name, version):
-        """Get EPVCache for the given EPV"""
+        """Get EPVCache for the given EPV."""
         # This code just stores info about downloaded objects, once we will
         # want to optimize number of retrievals and do some caching, remove
         # wipe() call in the base task and implement caching logic here
@@ -297,5 +298,5 @@ class ObjectCache(object):
 
     @classmethod
     def get_from_dict(cls, dictionary):
-        """Sugar for self.get() that respects arguments from a dict"""
+        """Sugar for self.get() that respects arguments from a dict."""
         return cls.get(dictionary['ecosystem'], dictionary['name'], dictionary['version'])

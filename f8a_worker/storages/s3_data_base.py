@@ -40,7 +40,8 @@ class S3DataBase(AmazonS3):
 
         :param arguments: arguments as passed to the flow
         :param task_name: name of the task for which the key should be constructed
-        :return: fully qualified path to the task result"""
+        :return: fully qualified path to the task result
+        """
         base_file_name = cls._construct_base_file_name(arguments)
         return "{base_file_name}/{task_name}.json".format(base_file_name=base_file_name,
                                                           task_name=task_name)

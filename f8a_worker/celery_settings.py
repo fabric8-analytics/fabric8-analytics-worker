@@ -75,7 +75,7 @@ class CelerySettings(object):
 
     @classmethod
     def disable_result_backend(cls):
-        """Disable backend so we don't need to connect to it if not necessary"""
+        """Disable backend so we don't need to connect to it if not necessary."""
         cls.result_backend = None
 
 

@@ -24,8 +24,10 @@ class BaseTask(SelinonTask):
 
     @classmethod
     def _strict_assert(cls, assert_cond):
-        """Assert on condition, if condition is False, fatal error is raised so
-        task is not retried"""
+        """Assert on condition.
+
+        If condition is False, fatal error is raised so task is not retried.
+        """
         if not assert_cond:
             raise FatalTaskError("Strict assert failed in task '%s'" % cls.__name__)
 
@@ -73,8 +75,7 @@ class BaseTask(SelinonTask):
         return cls(flow_name, task_name or cls.__name__, parent, task_id, dispatcher_id)
 
     def validate_result(self, result):
-        """
-        Ensures results comply with the task schema, if defined
+        """Ensure that results comply with the task schema, if defined.
 
         Tasks define a schema by setting schema_ref appropriately.
         Schemas are retrieved from workers/schemas/generated via pkgutil.

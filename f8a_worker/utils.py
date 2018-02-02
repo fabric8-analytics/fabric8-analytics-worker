@@ -1,4 +1,4 @@
-"""Helper functions used by other parts of worker."""
+"""Module containing helper functions that are used by other parts of worker."""
 
 import getpass
 import json
