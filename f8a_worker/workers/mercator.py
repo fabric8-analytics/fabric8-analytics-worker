@@ -1,5 +1,4 @@
-"""
-Extracts ecosystem specific information and transforms it to a common scheme
+"""Extracts ecosystem specific information and transforms it to a common scheme.
 
 Scans the cache path for manifest files (package.json, setup.py, *.gemspec,
 *.jar, Makefile etc.) to extract meta data and transform it a common scheme.
@@ -37,7 +36,8 @@ from f8a_worker.utils import TimedCommand, tempdir
 
 # TODO: we need to unify the output from different ecosystems
 class MercatorTask(BaseTask):
-    """ Collects `Release` specific information from Mercator """
+    """Collects `Release` specific information from Mercator."""
+
     _analysis_name = 'metadata'
     _dependency_tree_lock = '_dependency_tree_lock'
     schema_ref = SchemaRef(_analysis_name, '3-2-0')
@@ -68,7 +68,7 @@ class MercatorTask(BaseTask):
             return path.rstrip('/').count('/')
 
         def is_deeper(item1, item2):
-            """ Returns True if item1 is deeper in directory hierarchy than item2 """
+            """Return True if item1 is deeper in directory hierarchy than item2."""
             if item1 is None:
                 return True
             return get_depth(item1['path']) > get_depth(item2['path'])
@@ -146,7 +146,7 @@ class MercatorTask(BaseTask):
         return ret
 
     def execute(self, arguments):
-        "Execute mercator and convert it's output to JSON object"
+        """Execute mercator and convert it's output to JSON object."""
         self._strict_assert(arguments.get('ecosystem'))
 
         if 'url' in arguments:

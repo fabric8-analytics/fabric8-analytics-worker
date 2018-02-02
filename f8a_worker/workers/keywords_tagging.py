@@ -37,7 +37,7 @@ class KeywordsTaggingTaskBase(BaseTask):
     }
 
     def _get_keywords_yaml(self, ecosystem):
-        """Download keywords.yaml file for the given ecosystem, use cached one if needed
+        """Download keywords.yaml file for the given ecosystem, use cached one if needed.
 
         :param ecosystem: ecosystem for which keywords.yaml file should be downloaded
         :return: filename of downloaded keywords.yaml file
@@ -93,8 +93,9 @@ class KeywordsTaggingTaskBase(BaseTask):
         return self._stopwords_txt
 
     def _get_config_files(self, ecosystem):
-        """Download keywords.yaml and stopwords.txt files if update time
-        expires, otherwise use cached ones.
+        """Download keywords.yaml and stopwords.txt files if update time expires.
+
+        The cached ones are used otherwise.
 
         :param ecosystem: ecosystem for which config files should be retrieved
         :return: tuple with keywords.yaml and stopwords.txt file as stored on GitHub
@@ -109,6 +110,7 @@ class KeywordsTaggingTaskBase(BaseTask):
 
 class KeywordsTaggingTask(KeywordsTaggingTaskBase):
     """Compute tags based on gathered natural text - package-version level keywords."""
+
     _analysis_name = 'keywords_tagging'
     schema_ref = SchemaRef(_analysis_name, '1-0-0')
 
@@ -149,6 +151,7 @@ class KeywordsTaggingTask(KeywordsTaggingTaskBase):
 
 class PackageKeywordsTaggingTask(KeywordsTaggingTaskBase):
     """Compute tags based on gathered natural text - strictly package level keywords."""
+
     _analysis_name = 'package_keywords_tagging'
     schema_ref = SchemaRef(_analysis_name, '1-0-0')
 

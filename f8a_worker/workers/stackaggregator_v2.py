@@ -1,4 +1,5 @@
-"""
+"""Gathers and aggregate component data.
+
 Gathers component data from the graph database and aggregate the data to be presented
 by stack-analyses endpoint
 
@@ -101,7 +102,8 @@ def extract_component_details(component):
 
 
 def _extract_conflict_packages(license_service_output):
-    """
+    """Extract conflict licenses.
+
     This helper function extracts conflict licenses from the given output
     of license analysis REST service.
 
@@ -133,7 +135,8 @@ def _extract_conflict_packages(license_service_output):
 
 
 def _extract_unknown_licenses(license_service_output):
-    """
+    """Extract unknown licenses.
+
     This helper function extracts unknown licenses information from the given
     output of license analysis REST service.
 
@@ -197,7 +200,8 @@ def _extract_unknown_licenses(license_service_output):
 
 
 def _extract_license_outliers(license_service_output):
-    """
+    """Extract license outliers.
+
     This helper function extracts license outliers from the given output of
     license analysis REST service.
 
@@ -371,7 +375,8 @@ def get_dependency_data(resolved, ecosystem):
 
 
 class StackAggregatorV2Task(BaseTask):
-    """ Aggregates stack data from components """
+    """Aggregate stack data from components."""
+
     _analysis_name = 'stack_aggregator_v2'
 
     def execute(self, arguments=None):

@@ -1,3 +1,5 @@
+"""Compute various code metrics for a project."""
+
 import functools
 import json
 import os
@@ -10,13 +12,14 @@ from f8a_worker.object_cache import ObjectCache
 
 
 class CodeMetricsTask(BaseTask):
-    """ Compute various code metrics for a project """
+    """Compute various code metrics for a project."""
+
     _analysis_name = 'code_metrics'
     schema_ref = SchemaRef(_analysis_name, '1-0-0')
     _CLI_TIMEOUT = 300
 
     def _run_analyzer(self, command, json_output=True):
-        """Run command (analyzer), if a JSON output is expected, parse it
+        """Run command (analyzer), if a JSON output is expected, parse it.
 
         :param command: command to be run (command with argument vector as array)
         :param json_output: True if output should be parsed
@@ -48,8 +51,9 @@ class CodeMetricsTask(BaseTask):
         return status, output, error
 
     def _get_generic_result(self, source_path):
-        """Get core result of CodeMetricsTask task that is based on cloc tool,
-        this output is later enriched with output of tools based on languages
+        """Get core result of CodeMetricsTask task that is based on cloc tool.
+
+        This output is later enriched with output of tools based on languages
         that were found by cloc
 
         :param source_path: path to sources where analyzed artefact resists
@@ -90,7 +94,8 @@ class CodeMetricsTask(BaseTask):
 
     @staticmethod
     def _normalize_complexity_report_output(output, source_path):
-        """ Normalize complexity_report output
+        """Normalize complexity_report output.
+
         See https://github.com/escomplex/escomplex/blob/master/README.md#metrics
 
         :param output: output dict to be normalized
@@ -130,7 +135,7 @@ class CodeMetricsTask(BaseTask):
 
     @staticmethod
     def _normalize_javancss_output(output):
-        """Parse and normalize JavaNCSS ASCII output
+        """Parse and normalize JavaNCSS ASCII output.
 
         :param output: output dict to be normalized
         :return: normalized output
@@ -234,7 +239,7 @@ class CodeMetricsTask(BaseTask):
         return result
 
     def complexity_report(self, source_path):
-        """Run complexity_report tool https://www.npmjs.com/package/complexity-report
+        """Run complexity_report tool https://www.npmjs.com/package/complexity-report .
 
         :param source_path: path to source codes
         :return: normalized output
@@ -251,7 +256,7 @@ class CodeMetricsTask(BaseTask):
         return output
 
     def javancss(self, source_path):
-        """Run JavaNCSS tool http://www.kclee.de/clemens/java/javancss
+        """Run JavaNCSS tool http://www.kclee.de/clemens/java/javancss .
 
         :param source_path: path to source codes
         :return normalized output
@@ -270,7 +275,7 @@ class CodeMetricsTask(BaseTask):
         return output
 
     def python_mccabe(self, source_path):
-        """Run mccabe tool https://pypi.python.org/pypi/mccabe
+        """Run mccabe tool https://pypi.python.org/pypi/mccabe .
 
         :param source_path: path to source codes
         :return: normalized output
@@ -331,6 +336,7 @@ class CodeMetricsTask(BaseTask):
     }
 
     def execute(self, arguments):
+        """Start the task."""
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))

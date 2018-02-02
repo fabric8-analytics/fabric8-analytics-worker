@@ -4,10 +4,12 @@ from f8a_worker.base import BaseTask
 
 
 class _ResultCollectorBase(BaseTask):
-    """
-    Collect all results that were computed, upload them to S3 and store version
+    """Collect results, upload them to S3 and store reference to results in WorkerResult.
+
+    This class collects all results that were computed, upload them to S3 and store version
     reference to results in WorkerResult
     """
+
     def do_run(self, arguments, s3, postgres, results):
         for worker_result in results.raw_analyses:
             # We don't want to store tasks that do book-keeping for Selinon's

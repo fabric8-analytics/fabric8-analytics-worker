@@ -1,4 +1,5 @@
-"""
+"""Computes various digests of all files found in target cache path.
+
 output: list of files in directory and along with their hashes (md5, sha1, sha256, ssdeep)
 
 sample output:

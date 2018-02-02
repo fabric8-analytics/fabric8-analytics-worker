@@ -1,3 +1,5 @@
+"""Security issues scanner."""
+
 import anymarkup
 from bs4 import BeautifulSoup
 from glob import glob
@@ -18,7 +20,8 @@ from f8a_worker.utils import TimedCommand, tempdir
 
 
 class CVEcheckerTask(BaseTask):
-    """ Security issues scanner """
+    """Security issues scanner."""
+
     _analysis_name = 'security_issues'
     schema_ref = SchemaRef(_analysis_name, '3-0-1')
 
@@ -119,7 +122,7 @@ class CVEcheckerTask(BaseTask):
         return packages
 
     def _query_ossindex(self, arguments):
-        """ Query OSS Index REST API """
+        """Query OSS Index REST API."""
         entries = {}
         solver = get_ecosystem_solver(self.storage.get_ecosystem(arguments['ecosystem']),
                                       with_parser=OSSIndexDependencyParser())
@@ -148,7 +151,7 @@ class CVEcheckerTask(BaseTask):
 
     @staticmethod
     def update_depcheck_db_on_s3():
-        """Update OWASP Dependency-check DB on S3"""
+        """Update OWASP Dependency-check DB on S3."""
         s3 = StoragePool.get_connected_storage('S3VulnDB')
         depcheck = os.path.join(configuration.OWASP_DEP_CHECK_PATH, 'bin',
                                 'dependency-check.sh')
@@ -252,7 +255,7 @@ class CVEcheckerTask(BaseTask):
 
     @staticmethod
     def update_victims_cve_db_on_s3():
-        """Update Victims CVE DB on S3"""
+        """Update Victims CVE DB on S3."""
         repo_url = 'https://github.com/victims/victims-cve-db.git'
         s3 = StoragePool.get_connected_storage('S3VulnDB')
         with tempdir() as temp_dir:
@@ -260,7 +263,7 @@ class CVEcheckerTask(BaseTask):
             s3.store_victims_db(temp_dir)
 
     def _run_victims_cve_db_cli(self, arguments):
-        """Run Victims CVE DB CLI"""
+        """Run Victims CVE DB CLI."""
         s3 = StoragePool.get_connected_storage('S3VulnDB')
         output = []
 
@@ -286,9 +289,7 @@ class CVEcheckerTask(BaseTask):
         return output
 
     def _maven_scan(self, arguments):
-        """
-        Run OWASP dependency-check & Victims CVE DB CLI
-        """
+        """Run OWASP dependency-check & Victims CVE DB CLI."""
         jar_path = ObjectCache.get_from_dict(arguments).get_source_tarball()
         results = self._run_owasp_dep_check(jar_path, experimental=False)
         if results.get('status') != 'success':
@@ -305,8 +306,7 @@ class CVEcheckerTask(BaseTask):
         return results
 
     def _python_scan(self, arguments):
-        """
-        Run OWASP dependency-check experimental analyzer for Python artifacts
+        """Run OWASP dependency-check experimental analyzer for Python artifacts.
 
         https://jeremylong.github.io/DependencyCheck/analyzers/python.html
         """

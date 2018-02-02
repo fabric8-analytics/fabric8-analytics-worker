@@ -1,4 +1,5 @@
-"""
+"""GitHub's tool to figure out what language is used in code.
+
 https://github.com/github/linguist
 
 
@@ -39,7 +40,8 @@ from f8a_worker.object_cache import ObjectCache
 
 
 class LinguistTask(BaseTask):
-    """ GitHub's tool to figure out what language is used in code """
+    """GitHub's tool to figure out what language is used in code."""
+
     _analysis_name = 'languages'
     schema_ref = SchemaRef(_analysis_name, '1-0-0')
 
@@ -48,8 +50,9 @@ class LinguistTask(BaseTask):
             return None
 
         def extract_value(line):
-            """ `language:   Python` -> `Python` """
+            """Extract the language name: `language:   Python` -> `Python`."""
             return line.split(':', 1)[1].strip()
+
         lines_matcher = re.compile('(\d+) lines \((\d+) sloc\)')
         m = lines_matcher.search(output[0])
         lines, sloc = 0, 0
@@ -63,6 +66,7 @@ class LinguistTask(BaseTask):
         return data
 
     def execute(self, arguments):
+        """Start the task."""
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))

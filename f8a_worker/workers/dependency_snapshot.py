@@ -1,3 +1,5 @@
+"""Task that analyzes dependencies."""
+
 import datetime
 from re import compile as regexp
 import urllib.parse
@@ -12,13 +14,13 @@ gh_dep = regexp('@?[\w-]+/[\w-]+')
 
 
 class DependencySnapshotTask(BaseTask):
-    """ Task that analyzes dependencies """
+    """Task that analyzes dependencies."""
+
     _analysis_name = 'dependency_snapshot'
     schema_ref = SchemaRef(_analysis_name, '1-0-0')
 
     def _collect_dependencies(self):
-        """
-        Return all dependencies for current analysis flow (operates on parent mercator result)
+        """Return all dependencies for current analysis flow (operates on parent mercator result).
 
         :return: List[str], list of dependencies
         """
@@ -76,6 +78,7 @@ class DependencySnapshotTask(BaseTask):
         return ret
 
     def execute(self, arguments):
+        """Start the task that analyzes dependencies."""
         self._strict_assert(arguments.get('ecosystem'))
 
         result = {'summary': {'errors': [], 'dependency_counts': {}},
