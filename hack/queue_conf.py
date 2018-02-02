@@ -66,6 +66,7 @@ def set_queue_attributes(queue_names):
 
 
 def print_help():
+    """Display the help message on the standard output."""
     print("Set queue attributes for fabric8-worker.\n"
           "Usage: {} COMMA-SEPARATED-LIST-OF-QUEUES".format(sys.argv[0]))
 
