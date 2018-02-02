@@ -1,5 +1,4 @@
-"""
-Matches crypto algorithms in sources based on content
+"""Matches crypto algorithms in sources based on content.
 
 Output: list of files along with crypto algorithm they contain
 """
@@ -11,11 +10,13 @@ from f8a_worker.object_cache import ObjectCache
 
 
 class OSCryptoCatcherTask(BaseTask):
-    """ Runs oscryptocatcher tool for matching crypto algorithms """
+    """Runs oscryptocatcher tool for matching crypto algorithms."""
+
     _analysis_name = 'crypto_algorithms'
     schema_ref = SchemaRef(_analysis_name, '1-0-0')
 
     def execute(self, arguments):
+        """Run oscryptocatcher tool for matching crypto algorithms."""
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))

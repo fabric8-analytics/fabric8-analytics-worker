@@ -1,6 +1,7 @@
-"""
+"""Aggregator for data to be consumed by stack-analyses endpoint.
+
 Gathers component data from the graph database and aggregate the data to be presented
-by stack-analyses endpoint
+by stack-analyses endpoint.
 
 Output: TBD
 
@@ -19,7 +20,8 @@ from f8a_worker.utils import get_session_retry
 
 
 class StackAggregatorTask(BaseTask):
-    """ Aggregates stack data from components """
+    """Aggregates stack data from components."""
+
     _analysis_name = 'stack_aggregator'
 
     def _get_stack_usage_data(self, components):
@@ -153,6 +155,7 @@ class StackAggregatorTask(BaseTask):
         return {"result": result}
 
     def execute(self, arguments=None):
+        """Run the task to aggregate stack data from components."""
         stack_data = []
 
         for result in self.parent_task_result('GraphAggregatorTask')['result']:

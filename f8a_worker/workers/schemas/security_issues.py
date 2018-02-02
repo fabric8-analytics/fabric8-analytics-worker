@@ -1,4 +1,4 @@
-"""JSL schema for cvechecker worker"""
+"""JSL schema for cvechecker worker."""
 import jsl
 
 from f8a_worker.schemas import JSLSchemaBaseWithRelease, added_in, removed_in

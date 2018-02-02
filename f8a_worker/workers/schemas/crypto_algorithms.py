@@ -1,4 +1,4 @@
-"""JSL schema for OSCrypto catcher worker"""
+"""JSL schema for OSCrypto catcher worker."""
 import jsl
 
 from f8a_worker.schemas import JSLSchemaBaseWithRelease

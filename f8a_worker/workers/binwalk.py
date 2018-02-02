@@ -1,5 +1,4 @@
-"""
-Find and extract interesting files / data from binary images.
+r"""Find and extract interesting files / data from binary images.
 
 Uses http://binwalk.org/
 
@@ -51,7 +50,8 @@ from f8a_worker.schemas import SchemaRef
 
 
 class BinwalkTask(BaseTask):
-    """ Find and extract interesting files / data from binary images """
+    """Find and extract interesting files / data from binary images."""
+
     _analysis_name = 'binary_data'
     schema_ref = SchemaRef(_analysis_name, '1-0-0')
 

@@ -7,7 +7,8 @@ from f8a_worker.base import BaseTask
 
 
 class GitHubManifestMetadataResultCollector(BaseTask):
-    """
+    """Collector for metadata retrieved from GitHub manifest files.
+
     Collect all results that were computed, upload them to S3 and store version
     reference to results in WorkerResult
     """

@@ -10,6 +10,7 @@ from f8a_worker.schemas import SchemaRef
 
 class LibrariesIoTask(BaseTask):
     """Collects statistics from Libraries.io."""
+
     _analysis_name = "libraries_io"
     schema_ref = SchemaRef(_analysis_name, '2-0-0')
 

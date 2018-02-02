@@ -17,7 +17,7 @@ class GraphAggregatorTask(BaseTask):
 
     @staticmethod
     def _handle_external_deps(ecosystem, deps):
-        """Resolve external dependency specifications"""
+        """Resolve external dependency specifications."""
         if not ecosystem or not deps:
             return []
         solver = get_ecosystem_solver(ecosystem)
