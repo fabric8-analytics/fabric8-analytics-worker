@@ -155,5 +155,26 @@ class F8AConfiguration(object):
             raise F8AConfigurationException("Limit for unauthorized GitHub access exceeded.")
         return token, headers
 
+    @classmethod
+    def libraries_io_project_url(cls, ecosystem, name):
+        """Construct url to endpoint, which gets information about a project and it's versions."""
+        url = '{api}/{platform}/{name}'. \
+            format(api=cls.LIBRARIES_IO_API,
+                   platform=ecosystem,
+                   name=name)
+
+        if not cls.LIBRARIES_IO_TOKEN or cls.LIBRARIES_IO_TOKEN == 'not-set':
+            raise F8AConfigurationException("LIBRARIES_IO_TOKEN has not been set.")
+
+        # 'no-token' value forces the API call to not use ANY token.
+        # It works, but if abused, they can ban your IP, so use with caution.
+        if cls.LIBRARIES_IO_TOKEN != 'no-token':
+            logger.warning("Libraries.io API calls will be without an API key."
+                           "It'll work, but if you're going to analyse more packages,"
+                           "please set the LIBRARIES_IO_TOKEN to your private token.")
+            url += '?api_key=' + cls.LIBRARIES_IO_TOKEN
+
+        return url
+
 
 configuration = F8AConfiguration()
