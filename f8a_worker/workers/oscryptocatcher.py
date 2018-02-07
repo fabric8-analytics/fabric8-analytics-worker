@@ -3,6 +3,8 @@
 Output: list of files along with crypto algorithm they contain
 """
 
+from selinon import FatalTaskError
+
 from f8a_worker.utils import TimedCommand
 from f8a_worker.base import BaseTask
 from f8a_worker.schemas import SchemaRef
@@ -37,6 +39,6 @@ class OSCryptoCatcherTask(BaseTask):
             results['summary'] = oscc['summary']
             results['status'] = 'success'
         except Exception:
-            results['status'] = 'error'
+            raise FatalTaskError('oscryptocatcher failed')
 
         return results
