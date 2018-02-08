@@ -1,27 +1,6 @@
 
 ---
   tasks:
-    - name: 'blackduck'
-      classname: 'BlackDuckLatentCollector'
-      import: 'f8a_worker.workers'
-      max_retry: 3
-      retry_countdown: 15
-      storage: 'BayesianPostgres'
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_BlackDuckLatentCollector_v0'
-      selective_run_function:
-        name: 'selective_run_function'
-        import: 'f8a_worker.dispatcher.selective'
-    - name: 'blackduck_executor'
-      storage_readonly: true
-      classname: 'BlackDuckTask'
-      import: 'f8a_worker.workers'
-      max_retry: 5
-      retry_countdown: 120
-      storage: 'BayesianPostgres'
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_BlackDuckTask_v0'
-      ## only 1 task per 5 seconds
-      #throttle:
-      #   seconds: 5
     - name: 'security_issues'
       classname: 'CVEcheckerTask'
       import: 'f8a_worker.workers'

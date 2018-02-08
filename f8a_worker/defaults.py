@@ -37,14 +37,6 @@ class F8AConfiguration(object):
 
     BIGQUERY_JSON_KEY = environ.get('GITHUB_CONSUMER_KEY', 'not-set')
 
-    # BlackDuck configuration
-    BLACKDUCK_HOST = environ.get('BLACKDUCK_HOST', 'not-set')
-    BLACKDUCK_SCHEME = environ.get('BLACKDUCK_SCHEME', 'not-set')
-    BLACKDUCK_PORT = environ.get('BLACKDUCK_PORT', 'not-set')
-    BLACKDUCK_USERNAME = environ.get('BLACKDUCK_USERNAME', 'not-set')
-    BLACKDUCK_PASSWORD = environ.get('BLACKDUCK_PASSWORD', 'not-set')
-    BLACKDUCK_PATH = environ.get('BLACKDUCK_PATH', 'not-set')
-
     BROKER_CONNECTION = "amqp://guest@{host}:{port}".format(
         host=environ.get('RABBITMQ_SERVICE_SERVICE_HOST', 'coreapi-broker'),
         port=environ.get('RABBITMQ_SERVICE_SERVICE_PORT', '5672'))
