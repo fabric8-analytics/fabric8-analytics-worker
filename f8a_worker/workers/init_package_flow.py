@@ -61,8 +61,7 @@ class InitPackageFlow(BaseTask):
                 url=url,
                 updated_at=None,
                 deactivated_at=None,
-                added_at=now,
-                active=True
+                added_at=now
             )
             db.add(ret)
 
