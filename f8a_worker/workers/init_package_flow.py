@@ -1,6 +1,4 @@
 import datetime
-from selinon import FatalTaskError
-from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import desc
 from f8a_worker.base import BaseTask
 from f8a_worker.models import Ecosystem, Package, Upstream, PackageAnalysis
@@ -41,12 +39,12 @@ class InitPackageFlow(BaseTask):
             .order_by(desc(Upstream.updated_at))\
             .all()
 
-        # deactivate entries that have different upstream URL
         ret = None
         for entry in upstreams:
             if url is not None and entry.url != url:
                 self.log.info("Marking upstream entry with id '%s' and URL '%s' for deactivation, "
                               "substituting with upstream URL '%s'", entry.id, entry.url, url)
+                # deactivate entries that have different upstream URL
                 entry.deactivated_at = now
             else:
                 self.log.info("Reusing already existing and active upstream record with id '%d' "
@@ -54,16 +52,31 @@ class InitPackageFlow(BaseTask):
                 ret = entry
 
         if ret is None:
-            self.log.info("Creating new upstream record entry for package %s/%s and "
-                          "upstream URL '%s'", package.ecosystem.name, package.name, url)
-            ret = Upstream(
-                package_id=package.id,
-                url=url,
-                updated_at=None,
-                deactivated_at=None,
-                added_at=now
-            )
-            db.add(ret)
+            older_upstream = db.query(Upstream) \
+                .filter(Upstream.package_id == package.id) \
+                .filter(Upstream.deactivated_at.isnot(None)) \
+                .filter(Upstream.url == url) \
+                .order_by(desc(Upstream.updated_at)) \
+                .first()
+            if older_upstream:
+                self.log.info("Activating older upstream record entry for package %s/%s and "
+                              "upstream URL '%s'", package.ecosystem.name, package.name, url)
+                older_upstream.updated_at = now
+                older_upstream.deactivated_at = None
+                db.commit()
+                ret = older_upstream
+            else:
+                self.log.info("Creating new upstream record entry for package %s/%s and "
+                              "upstream URL '%s'", package.ecosystem.name, package.name, url)
+                new_upstream = Upstream(
+                    package_id=package.id,
+                    url=url,
+                    updated_at=None,
+                    deactivated_at=None,
+                    added_at=now
+                )
+                db.add(new_upstream)
+                ret = new_upstream
 
         return ret
 
