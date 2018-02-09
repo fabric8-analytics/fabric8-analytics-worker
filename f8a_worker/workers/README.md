@@ -27,13 +27,11 @@ provides fine grained control of task flows. Configuration of the whole workflow
 is done in simple YAML configuration files (see [dispatcher configuration
 files](../dispatcher/)) which model time or data dependencies between tasks. You can
 easily visualize flows by prepared script in `hack/visualize_flows.sh`. Make
-sure you have Selinon installed using `hack/update_selinon.sh` - Selinon has
-no releases now as it is still under development, so you have to install
-particular commit version.
+sure you have Selinon installed.
 
 ## BaseTask
 For the purpose of better code reuse and maintainability every new worker type
-should be implemented as a subclass of BaseTask abstract base class that is
+should be implemented as a subclass of `BaseTask` abstract base class that is
 derived from `SelinonTask`:
 
 ```python
@@ -47,7 +45,7 @@ What is the actual purpose of this base class and its methods?
 
 * `run()`: Selinon transparently calls `run()`, which takes care of task audit
   and some additional checks and calls execute()
-* `execute()`: Task's workhorse, called from `run(). Abstract method.
+* `execute()`: Task's workhorse, called from `run()`. Abstract method.
   Once implemented returns dictionary with results.
 
 ## Example worker task
@@ -67,7 +65,7 @@ with all the gory details of messaging and queueing - simply implement an
 Nice and shiny, but what if something goes wrong ?
 
 The good thing is that raising an exception is a canonical mechanism to signal
-a failed state for tasks in Selinon/Celery, as returning False or None could be
+a failed state for tasks in Selinon/Celery, as returning `False` or `None` could be
 a valid result depending on the context. That means that if something really
 goes wrong, we’ll know about it, and we’ll have the precise traceback stored
 at our disposal. The failed task can be automatically rescheduled after
@@ -79,32 +77,29 @@ Selinon configuration file that states all flow nodes available in the system.
 
 ## Utility workers
 
-Workers that assist other workers but don't provide exposed data.
+Workers that assist other workers.
 
-* [binwalk.py](binwalk.py) - Find and extract interesting files / data from binary images
+* [InitAnalysisFlow](init_analysis_flow.py) and [InitPackageFlow](init_package_flow.py)- Initializes whole analysis
 
-* [digester.py](digester.py) - Computes various digests of all files found in target cache path
-
-* [init_analysis_flow.py](init_analysis_flow.py) - This task initializes whole analysis
-
-* [linguist.py](linguist.py) - GitHub's tool to figure out what language is used in code
+* [FinalizeTask](finalize.py) and [PackageFinalizeTask](finalize.py) - Finish a flow and store audit
 
 ## Data Workers
 
-Workers that provide data exposed to the user.
+Workers that expose data to the user.
+The following list contains only examples,
+because some workers are not part of [any flow](../dispatcher/flows/),
+[their code is there](./) just from historical reasons.
 
-* [csmock_worker.py](csmock_worker.py) - Static code analysis.
+* [CVEcheckerTask](CVEchecker.py) - Queries CVE databases for security issues
 
-* [code_metrics.py](code_metrics.py) - Code metrics computation.
+* [DependencySnapshotTask](dependency_snapshot.py) - Analyzes dependencies
 
-* [CVEchecker.py](CVEchecker.py) - Queries CVE database for security issues.
+* [DigesterTask](digester.py) - Computes various digests of all files found in target cache path
 
-* [githuber.py](githuber.py) - Gets popularity and issues data from Github
+* [GithubTask](githuber.py) - Gets various info via Github API
 
-* [license.py](license.py) - Check licences of all files of a package
+* [LibrariesIoTask](libraries_io.py) - Collects statistics from Libraries.io
 
-* [mercator.py](mercator.py) - Extracts ecosystem specific information and transforms it to a common scheme
+* [LicenseCheckTask](license.py) - Check licences of all files of a package
 
-* [oscryptocatcher.py](oscryptocatcher.py) - Matches crypto algorithms in sources based on content
-
-* [BigQuery_GH](docs/bigquery_gh.md) ([bigquery_gh.py](bigquery_gh.py)) - Gets GitHub package usage information from BigQuery
+* [MercatorTask](mercator.py) - Extracts ecosystem specific information and transforms it to a common scheme
