@@ -482,7 +482,7 @@
   global:
     trace:
       - sentry:
-          dns: 'https://8b27246148ea4db6bf408c0fb4557e97:07aed49c1f1e4d81834ddb6951c72f25@errortracking.prod-preview.openshift.io/13'
+          dsn: 'https://8b27246148ea4db6bf408c0fb4557e97:07aed49c1f1e4d81834ddb6951c72f25@errortracking.prod-preview.openshift.io/13'
       - function:
           import: 'f8a_worker.dispatcher.trace'
           name: 'trace_func'
