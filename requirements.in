@@ -1,8 +1,8 @@
 # normally pulled in by kombu, but version 2.2.0 is broken
 amqp<=2.1.4
 # also handles Celery as a requirement
-selinonlib
-selinon
+selinonlib==0.1.0rc9
+selinon[sentry]
 sqlalchemy
 psycopg2
 lxml
