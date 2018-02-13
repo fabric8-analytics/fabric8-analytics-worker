@@ -14,22 +14,6 @@ class LibrariesIoTask(BaseTask):
     _analysis_name = "libraries_io"
     schema_ref = SchemaRef(_analysis_name, '2-0-0')
 
-    def project_url(self, ecosystem, name):
-        """Construct url to endpoint, which gets information about a project and it's versions."""
-        url = '{api}/{platform}/{name}'.\
-            format(api=self.configuration.LIBRARIES_IO_API,
-                   platform=ecosystem,
-                   name=name)
-
-        # 'no-token' value forces the API call to not use ANY token.
-        # It works, but if abused, they can cut our IP off,
-        # therefore we use this only in tests.
-        if self.configuration.LIBRARIES_IO_TOKEN and \
-                self.configuration.LIBRARIES_IO_TOKEN != 'no-token':
-            url += '?api_key=' + self.configuration.LIBRARIES_IO_TOKEN
-
-        return url
-
     @staticmethod
     def recent_releases(versions, count=10):
         """Sort versions by 'published_at' and return 'count' latest."""
@@ -45,7 +29,8 @@ class LibrariesIoTask(BaseTask):
         if ecosystem == 'go':
             name = quote(name, safe='')
 
-        project = get_response(self.project_url(ecosystem, name))
+        project_url = self.configuration.libraries_io_project_url(ecosystem, name)
+        project = get_response(project_url)
         versions = project['versions']
         details = {'dependent_repositories': {'count': project['dependent_repos_count']},
                    'dependents': {'count': project['dependents_count']},
