@@ -24,6 +24,7 @@ sample output:
 
 import os
 import json
+from selinon import FatalTaskError
 
 from f8a_worker.base import BaseTask
 from f8a_worker.data_normalizer import DataNormalizer
@@ -208,8 +209,8 @@ class MercatorTask(BaseTask):
                                        update_env=update_env)
         if status != 0:
             self.log.error(err)
-            result_data['status'] = 'error'
-            return result_data
+            raise FatalTaskError(err)
+
         ecosystem_object = self.storage.get_ecosystem(arguments['ecosystem'])
         if ecosystem_object.is_backed_by(EcosystemBackend.pypi):
             # TODO: attempt static setup.py parsing with mercator

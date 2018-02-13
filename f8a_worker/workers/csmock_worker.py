@@ -11,6 +11,7 @@ Kamil's presentation at Flock 2014: https://kdudka.fedorapeople.org/static-analy
 import json
 import os
 import sys
+from selinon import FatalTaskError
 import subprocess
 
 from f8a_worker.base import BaseTask
@@ -91,8 +92,9 @@ class CsmockTask(BaseTask):
             result_data['status'] = 'success'
             result_data['details'] = analysis_result
         except Exception as ex:
-            self.log.error("static analysis was not successful: %r", ex)
-            result_data['status'] = 'error'
+            msg = "static analysis was not successful: %r" % ex
+            self.log.error(msg)
+            raise FatalTaskError(msg) from ex
 
         return result_data
 

@@ -8,7 +8,7 @@ from re import compile as re_compile
 import requests
 from shutil import rmtree, copy
 from tempfile import gettempdir
-from selinon import StoragePool
+from selinon import StoragePool, FatalTaskError, RequestError
 from f8a_worker.base import BaseTask
 from f8a_worker.defaults import configuration
 from f8a_worker.errors import TaskError
@@ -204,9 +204,7 @@ class CVEcheckerTask(BaseTask):
                 for line in output:
                     self.log.warning(line)
                 self.log.exception(str(e))
-                return {'summary': ['OWASP Dependency-Check scan failed'],
-                        'status': 'error',
-                        'details': []}
+                raise FatalTaskError('OWASP Dependency-Check scan failed') from e
             _clean_dep_check_tmp()
 
         results = []
@@ -333,9 +331,7 @@ class CVEcheckerTask(BaseTask):
                 self.log.warning('Failed to copy %s to %s', pkg_info, egg_info_dir)
 
         if not scan_path:
-            return {'summary': ['File types not supported by OWASP dependency-check'],
-                    'status': 'error',
-                    'details': []}
+            raise FatalTaskError('File types not supported by OWASP dependency-check')
 
         return self._run_owasp_dep_check(scan_path, experimental=True)
 
@@ -356,6 +352,4 @@ class CVEcheckerTask(BaseTask):
         elif arguments['ecosystem'] == 'nuget':
             return self._nuget_scan(arguments)
         else:
-            return {'summary': ['Unsupported ecosystem'],
-                    'status': 'error',
-                    'details': []}
+            raise RequestError('Unsupported ecosystem')

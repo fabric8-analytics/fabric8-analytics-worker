@@ -2,6 +2,7 @@
 
 import datetime
 from re import compile as regexp
+from selinon import FatalTaskError
 import urllib.parse
 
 from f8a_worker.base import BaseTask
@@ -36,7 +37,8 @@ class DependencySnapshotTask(BaseTask):
                              for dep in m.get('dependencies', [])})
         return dependencies
 
-    def _resolve_dependency(self, ecosystem, dep):
+    @staticmethod
+    def _resolve_dependency(ecosystem, dep):
         ret = {'ecosystem': ecosystem.name,
                'declaration': dep,
                'resolved_at': json_serial(datetime.datetime.utcnow())}
@@ -88,9 +90,7 @@ class DependencySnapshotTask(BaseTask):
             deps = self._collect_dependencies()
         except TaskError as e:
             self.log.error(str(e))
-            result['summary']['errors'].append(str(e))
-            result['status'] = 'error'
-            return result
+            raise FatalTaskError from e
 
         resolved_deps = []
         for dep in deps:
@@ -100,6 +100,7 @@ class DependencySnapshotTask(BaseTask):
                 self.log.error(str(e))
                 result['summary']['errors'].append(str(e))
                 result['status'] = 'error'
+                # Is this fatal, i.e. should we 'raise FatalTaskError from e' ?
                 break
             self.log.info('resolved dependency %s as %s', resolved, dep)
             resolved_deps.append(resolved)

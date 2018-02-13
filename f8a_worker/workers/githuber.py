@@ -4,6 +4,7 @@ from urllib.parse import urljoin
 
 import requests
 from collections import OrderedDict
+from selinon import FatalTaskError
 
 from f8a_worker.base import BaseTask
 from f8a_worker.errors import F8AConfigurationException, TaskError
@@ -80,16 +81,14 @@ class GithubTask(BaseTask):
             self._headers.update(header)
         except F8AConfigurationException as e:
             self.log.error(e)
-            result_data['status'] = 'error'
-            return result_data
+            raise FatalTaskError from e
 
         repo_url = urljoin(self.configuration.GITHUB_API + "repos/", self._repo_name)
         try:
             repo = get_response(repo_url, self._headers)
         except TaskError as e:
-            self.log.debug(e)
-            result_data['status'] = 'error'
-            return result_data
+            self.log.error(e)
+            raise FatalTaskError from e
 
         result_data['status'] = 'success'
 
