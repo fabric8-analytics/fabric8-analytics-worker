@@ -36,7 +36,7 @@ class InitPackageFlow(BaseTask):
         upstreams = db.query(Upstream)\
             .filter(Upstream.package_id == package.id) \
             .filter(Upstream.deactivated_at.is_(None))\
-            .order_by(desc(Upstream.updated_at))\
+            .order_by(Upstream.updated_at)\
             .all()
 
         ret = None
