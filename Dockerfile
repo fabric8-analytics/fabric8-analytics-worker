@@ -13,19 +13,18 @@ RUN mkdir -p ${HOME} ${WORKER_DATA_DIR} ${ALEMBIC_DIR}/alembic/ && \
     chmod 777 ${HOME} ${WORKER_DATA_DIR}
 WORKDIR ${HOME}
 
-RUN mkdir -p /tmp/f8a_worker
-COPY requirements.txt /tmp/f8a_worker
+COPY requirements.txt /tmp/f8a_worker/
 # Install google.protobuf from source
 # https://github.com/fabric8-analytics/fabric8-analytics-worker/issues/261
 # https://github.com/google/protobuf/issues/1296
-RUN cd /tmp/f8a_worker && \
+RUN cd /tmp/f8a_worker/ && \
     pip3 install -r requirements.txt
 
 COPY alembic.ini hack/run-db-migrations.sh ${ALEMBIC_DIR}/
 COPY alembic/ ${ALEMBIC_DIR}/alembic
 
 # Install f8a_worker
-COPY ./ /tmp/f8a_worker
+COPY ./ /tmp/f8a_worker/
 RUN cd /tmp/f8a_worker && pip3 install .
 
 COPY hack/worker+pmcd.sh /usr/bin/

@@ -276,7 +276,6 @@ class Upstream(Base):
     updated_at = Column(DateTime, default=None)
     added_at = Column(DateTime, nullable=False)
     deactivated_at = Column(DateTime, nullable=True)
-    active = Column(Boolean, nullable=False, default=True)
 
     package = relationship(Package)
 
