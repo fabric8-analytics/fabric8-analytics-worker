@@ -158,9 +158,9 @@ class CVEcheckerTask(BaseTask):
         with tempdir() as temp_data_dir:
             s3.retrieve_depcheck_db_if_exists(temp_data_dir)
             # give DependencyCheck 25 minutes to download the DB
-            TimedCommand.get_command_output([depcheck, '--updateonly', '--data', temp_data_dir],
-                                            timeout=1500)
-            s3.store_depcheck_db(temp_data_dir)
+            if TimedCommand.get_command_output([depcheck, '--updateonly', '--data', temp_data_dir],
+                                               timeout=1500):
+                s3.store_depcheck_db(temp_data_dir)
 
     def _run_owasp_dep_check(self, scan_path, experimental=False):
         def _clean_dep_check_tmp():
