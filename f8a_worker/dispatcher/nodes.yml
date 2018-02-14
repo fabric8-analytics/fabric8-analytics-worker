@@ -481,6 +481,8 @@
 
   global:
     trace:
+      - sentry:
+          dsn: '{SENTRY_DSN}'
       - function:
           import: 'f8a_worker.dispatcher.trace'
           name: 'trace_func'
