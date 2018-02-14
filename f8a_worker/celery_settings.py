@@ -115,7 +115,7 @@ def configure_logging(**kwargs):
             'level': 'DEBUG',
             'propagate': False
         },
-        'selinonlib': {
+        'selinon': {
             'handlers': ['verbose'],
             'level': 'DEBUG',
             'propagate': False

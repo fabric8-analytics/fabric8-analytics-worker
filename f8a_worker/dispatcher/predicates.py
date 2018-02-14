@@ -1,6 +1,6 @@
 from functools import reduce
 
-from selinonlib.predicates import *
+from selinon.predicates import *
 
 from f8a_worker.utils import parse_gh_repo
 

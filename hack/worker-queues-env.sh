@@ -16,7 +16,7 @@ WORKER_NAME="${WORKER_NAME:-bayesian}"
 DIR=$(dirname "${BASH_SOURCE[0]}")
 
 # Report versions of all core components
-selinonlib-cli version
+selinon-cli version
 
 if [ -n "${WORKER_INCLUDE_QUEUES}" ] && [ -n "${WORKER_EXCLUDE_QUEUES}" ]; then
     echo "Specify only one queue configuration - either WORKER_INCLUDE_QUEUES or WORKER_EXCLUDE_QUEUES" 1>&2
@@ -29,9 +29,9 @@ if [ -z "${WORKER_ADMINISTRATION_REGION}" ]; then
 fi
 
 # node:queue
-WORKER_QUEUES=$(selinonlib-cli inspect  \
+WORKER_QUEUES=$(selinon-cli inspect  \
   -n ${DISPATCHER_YAML_FILES_DIR}/nodes.yml  \
-  -f ${DISPATCHER_YAML_FILES_DIR}/flows/*.yml  \
+  -f ${DISPATCHER_YAML_FILES_DIR}/flows/  \
   --list-task-queues --list-dispatcher-queues)
 
 if [ -n "${WORKER_INCLUDE_QUEUES}" ]; then

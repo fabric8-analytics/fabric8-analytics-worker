@@ -2,8 +2,8 @@
 
 DISPATCHER_CONF_DIR=${DISPATCHER_CONF_DIR:-'../f8a_worker/dispatcher/'}
 
-which selinonlib-cli 2>/dev/null >&1 || {
-    echo "Please install selinonlib-cli to visualize flow by running 'pip3 install selinonlib'"
+which selinon-cli 2>/dev/null >&1 || {
+    echo "Please install selinon-cli to visualize flow by running 'pip3 install selinon'"
     exit 1
 }
 
@@ -12,13 +12,13 @@ which selinonlib-cli 2>/dev/null >&1 || {
 # As we are using custom predicates and we want to make sure that the queue
 # expansion name is done correctly, export expected env vars
 PYTHONPATH='../' DEPLOYMENT_PREFIX='plot_' WORKER_ADMINISTRATION_REGION="api" \
-    selinonlib-cli -vvvv plot --nodes-definition "${DISPATCHER_CONF_DIR}/nodes.yml" \
+    selinon-cli -vvvv plot --nodes-definition "${DISPATCHER_CONF_DIR}/nodes.yml" \
                         --flow-definitions "${DISPATCHER_CONF_DIR}"/flows/*.yml \
                         --format png --output-dir . && echo "Graphs are available in the current directory"
 
 
 # If you want to produce Dispatcher configuration in Python, run:
 #PYTHONPATH='../' DEPLOYMENT_PREFIX='dump_' WORKER_ADMINISTRATION_REGION="api" \
-#    selinonlib-cli inspect --nodes-definition "${DISPATCHER_CONF_DIR}/nodes.yml" \
+#    selinon-cli inspect --nodes-definition "${DISPATCHER_CONF_DIR}/nodes.yml" \
 #                       --flow-definitions "${DISPATCHER_CONF_DIR}"/flows/*.yml \
 #                       --dump out.py

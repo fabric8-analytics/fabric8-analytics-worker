@@ -4,7 +4,6 @@ import logging
 from celery import Celery
 from celery import __version__ as celery_version
 from selinon import Config, selinon_version
-from selinonlib import selinonlib_version
 from f8a_worker.celery_settings import CelerySettings
 
 YAML_FILES_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'dispatcher')
@@ -58,7 +57,6 @@ def init_celery(app=None, result_backend=True):
     """
     # Keep this for debugging purposes for now
     _logger.debug(">>> Selinon version is %s" % selinon_version)
-    _logger.debug(">>> Selinonlib version is %s" % selinonlib_version)
     _logger.debug(">>> Celery version is %s" % celery_version)
 
     if not result_backend:
