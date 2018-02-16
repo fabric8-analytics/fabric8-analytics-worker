@@ -1,4 +1,4 @@
-FROM registry.devshift.net/fabric8-analytics/f8a-worker-base:1f23d74
+FROM registry.devshift.net/fabric8-analytics/f8a-worker-base:SNAPSHOT-PR-30-fe88f9d
 
 ENV LANG=en_US.UTF-8 \
     # place where to download & unpack artifacts
@@ -13,12 +13,11 @@ RUN mkdir -p ${HOME} ${WORKER_DATA_DIR} ${ALEMBIC_DIR}/alembic/ && \
     chmod 777 ${HOME} ${WORKER_DATA_DIR}
 WORKDIR ${HOME}
 
-COPY requirements.txt /tmp/f8a_worker/
-# Install google.protobuf from source
-# https://github.com/fabric8-analytics/fabric8-analytics-worker/issues/261
-# https://github.com/google/protobuf/issues/1296
-RUN cd /tmp/f8a_worker/ && \
-    pip3 install -r requirements.txt
+# The requirements are pre-installed (cached) in worker-base image
+# in order to speed up the build.
+# If you want to take advantage of the caching,
+# you need to rebuild base image and update the reference to it here.
+# RUN pip3 install -r requirements.txt
 
 COPY alembic.ini hack/run-db-migrations.sh ${ALEMBIC_DIR}/
 COPY alembic/ ${ALEMBIC_DIR}/alembic
