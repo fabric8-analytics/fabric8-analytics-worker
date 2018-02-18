@@ -407,3 +407,15 @@ class RecommendationFeedback(Base):
     stack_id = Column(String(64), ForeignKey(StackAnalysisRequest.id))
     stack_request = relationship("StackAnalysisRequest",
                                  back_populates="feedback")
+
+
+class OSIORegisteredRepos(Base):
+    """Table for storing all the openshift.io repos to be monitored."""
+
+    __tablename__ = "osio_registered_repos"
+
+    id = Column(String(64), primary_key=True)
+    github_repo = Column(String(256), nullable=False)
+    github_sha = Column(String(64), nullable=False)
+    email_ids = Column(String(512), nullable=False)
+    last_scanned = Column(DateTime)
