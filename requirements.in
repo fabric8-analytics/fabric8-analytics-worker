@@ -1,3 +1,12 @@
+# If you are doing changes here:
+
+# Don't forget to regenerate requirements.txt (per instructions there).
+
+# The requirements are pre-installed (cached) in worker-base image
+# in order to speed up the build.
+# If you want to take advantage of the caching,
+# you need to rebuild base image and update the reference to it in Dockerfile.
+
 # normally pulled in by kombu, but version 2.2.0 is broken
 amqp<=2.1.4
 # also handles Celery as a requirement
