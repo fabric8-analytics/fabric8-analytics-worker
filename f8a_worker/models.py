@@ -414,7 +414,7 @@ class OSIORegisteredRepos(Base):
 
     __tablename__ = "osio_registered_repos"
 
-    github_repo = Column(String(512), nullable=False)
+    github_repo = Column(String(512), primary_key=True)
     github_sha = Column(String(512), nullable=False)
     email_ids = Column(String(1024), nullable=False)
     last_scanned = Column(DateTime)
