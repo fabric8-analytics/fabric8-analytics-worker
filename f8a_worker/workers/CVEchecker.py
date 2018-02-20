@@ -25,6 +25,8 @@ class CVEcheckerTask(BaseTask):
     _analysis_name = 'security_issues'
     schema_ref = SchemaRef(_analysis_name, '3-0-1')
 
+    dependency_check_jvm_mem_limit = '-Xmx768m'
+
     @staticmethod
     def get_cve_impact(id_):
         score = 0
@@ -153,14 +155,16 @@ class CVEcheckerTask(BaseTask):
     def update_depcheck_db_on_s3():
         """Update OWASP Dependency-check DB on S3."""
         s3 = StoragePool.get_connected_storage('S3VulnDB')
-        depcheck = os.path.join(configuration.OWASP_DEP_CHECK_PATH, 'bin',
-                                'dependency-check.sh')
+        depcheck = configuration.dependency_check_script_path
         with tempdir() as temp_data_dir:
             s3.retrieve_depcheck_db_if_exists(temp_data_dir)
+            old_java_opts = os.getenv('JAVA_OPTS', '')
+            os.environ['JAVA_OPTS'] = CVEcheckerTask.dependency_check_jvm_mem_limit
             # give DependencyCheck 25 minutes to download the DB
             if TimedCommand.get_command_output([depcheck, '--updateonly', '--data', temp_data_dir],
                                                timeout=1500):
                 s3.store_depcheck_db(temp_data_dir)
+            os.environ['JAVA_OPTS'] = old_java_opts
 
     def _run_owasp_dep_check(self, scan_path, experimental=False):
         def _clean_dep_check_tmp():
@@ -168,8 +172,7 @@ class CVEcheckerTask(BaseTask):
                 rmtree(dcdir)
 
         s3 = StoragePool.get_connected_storage('S3VulnDB')
-        depcheck = os.path.join(self.configuration.OWASP_DEP_CHECK_PATH, 'bin',
-                                'dependency-check.sh')
+        depcheck = configuration.dependency_check_script_path
         with tempdir() as temp_data_dir:
             if not s3.retrieve_depcheck_db_if_exists(temp_data_dir):
                 self.log.debug('No cached OWASP Dependency-Check DB, generating fresh now ...')
@@ -191,9 +194,11 @@ class CVEcheckerTask(BaseTask):
                 command.extend(['--suppress', suppress_xml])
 
             output = []
+            old_java_opts = os.getenv('JAVA_OPTS', '')
             try:
                 self.log.debug('Running OWASP Dependency-Check to scan %s for vulnerabilities' %
                                scan_path)
+                os.environ['JAVA_OPTS'] = CVEcheckerTask.dependency_check_jvm_mem_limit
                 output = TimedCommand.get_command_output(command,
                                                          graceful=False,
                                                          timeout=600)  # 10 minutes
@@ -205,6 +210,8 @@ class CVEcheckerTask(BaseTask):
                     self.log.warning(line)
                 self.log.exception(str(e))
                 raise FatalTaskError('OWASP Dependency-Check scan failed') from e
+            finally:
+                os.environ['JAVA_OPTS'] = old_java_opts
             _clean_dep_check_tmp()
 
         results = []
