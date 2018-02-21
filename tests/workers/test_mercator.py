@@ -66,3 +66,18 @@ class TestMercator(object):
             assert v
         assert details['name'] == name
         assert details['version'] == version
+
+    @pytest.mark.usefixtures("no_s3_connection")
+    def test_execute_go(self, go):
+        path = os.path.join(
+                    os.path.dirname(os.path.abspath(__file__)),
+                    '..', 'data', 'go', 'mercator-go')
+
+        args = {'ecosystem': go.name, 'name': 'dummy', 'version': 'dummy'}
+        flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(path)
+        results = self.m.execute(arguments=args)
+
+        assert isinstance(results, dict) and results
+        details = results['details'][0]
+        assert set(details['dependencies']) == {'github.com/fabric8-analytics/mercator-go',
+                                                'github.com/go-yaml/yaml'}

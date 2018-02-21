@@ -201,29 +201,28 @@ class TestCVEchecker(object):
         assert isinstance(results, dict)
         assert set(results.keys()) == {'details', 'status', 'summary'}
         assert results['status'] == 'success'
-        assert results['summary'] == ['CVE-2017-14696', 'CVE-2017-14695', 'CVE-2017-12791']
+        assert results['summary'] == ['CVE-2017-12791', 'CVE-2017-14695', 'CVE-2017-14696']
         # http://www.cvedetails.com/version/222059/Saltstack-Salt-2016.11.6.html
         expected_details = [
             {
                 "cvss": {
-                    "score": 5.0,
-                    "vector": "AV:N/AC:L/Au:?/C:?/I:?/A:P"
+                    "score": 7.5,
+                    "vector": "AV:N/AC:L/Au:?/C:P/I:P/A:P"
                 },
-                "description": "SaltStack Salt before 2016.3.8, 2016.11.x before 2016.11.8, "
-                               "and 2017.7.x before 2017.7.2 allows remote attackers to cause "
-                               "a denial of service via a crafted authentication request.",
-                "id": "CVE-2017-14696",
+                "description": "Directory traversal vulnerability in minion id validation in "
+                               "SaltStack Salt before 2016.11.7 and 2017.7.x before 2017.7.1 "
+                               "allows remote minions with incorrect credentials to authenticate "
+                               "to a master via a crafted minion ID.",
+                "id": "CVE-2017-12791",
                 "references": [
-                    "https://github.com/saltstack/salt/commit/"
-                    "5f8b5e1a0f23fe0f2be5b3c3e04199b57a53db5b",
-                    "https://docs.saltstack.com/en/latest/topics/releases/2016.11.8.html",
-                    "https://docs.saltstack.com/en/latest/topics/releases/2016.3.8.html",
-                    "http://lists.opensuse.org/opensuse-updates/2017-10/msg00073.html",
-                    "http://lists.opensuse.org/opensuse-updates/2017-10/msg00075.html",
-                    "https://bugzilla.redhat.com/show_bug.cgi?id=1500742",
-                    "https://docs.saltstack.com/en/latest/topics/releases/2017.7.2.html"
+                    "http://www.securityfocus.com/bid/100384",
+                    "https://bugzilla.redhat.com/show_bug.cgi?id=1482006",
+                    "https://github.com/saltstack/salt/pull/42944",
+                    "https://docs.saltstack.com/en/2016.11/topics/releases/2016.11.7.html",
+                    "https://docs.saltstack.com/en/latest/topics/releases/2017.7.1.html",
+                    "https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=872399"
                 ],
-                "severity": "Medium"
+                "severity": "High"
             },
             {
                 "cvss": {
@@ -251,26 +250,26 @@ class TestCVEchecker(object):
             },
             {
                 "cvss": {
-                    "score": 7.5,
-                    "vector": "AV:N/AC:L/Au:?/C:P/I:P/A:P"
+                    "score": 5.0,
+                    "vector": "AV:N/AC:L/Au:?/C:?/I:?/A:P"
                 },
-                "description": "Directory traversal vulnerability in minion id validation in "
-                               "SaltStack Salt before 2016.11.7 and 2017.7.x before 2017.7.1 "
-                               "allows remote minions with incorrect credentials to authenticate "
-                               "to a master via a crafted minion ID.",
-                "id": "CVE-2017-12791",
+                "description": "SaltStack Salt before 2016.3.8, 2016.11.x before 2016.11.8, "
+                               "and 2017.7.x before 2017.7.2 allows remote attackers to cause "
+                               "a denial of service via a crafted authentication request.",
+                "id": "CVE-2017-14696",
                 "references": [
-                    "http://www.securityfocus.com/bid/100384",
-                    "https://bugzilla.redhat.com/show_bug.cgi?id=1482006",
-                    "https://github.com/saltstack/salt/pull/42944",
-                    "https://docs.saltstack.com/en/2016.11/topics/releases/2016.11.7.html",
-                    "https://docs.saltstack.com/en/latest/topics/releases/2017.7.1.html",
-                    "https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=872399"
+                    "https://github.com/saltstack/salt/commit/"
+                    "5f8b5e1a0f23fe0f2be5b3c3e04199b57a53db5b",
+                    "https://docs.saltstack.com/en/latest/topics/releases/2016.11.8.html",
+                    "https://docs.saltstack.com/en/latest/topics/releases/2016.3.8.html",
+                    "http://lists.opensuse.org/opensuse-updates/2017-10/msg00073.html",
+                    "http://lists.opensuse.org/opensuse-updates/2017-10/msg00075.html",
+                    "https://bugzilla.redhat.com/show_bug.cgi?id=1500742",
+                    "https://docs.saltstack.com/en/latest/topics/releases/2017.7.2.html"
                 ],
-                "severity": "High"
+                "severity": "Medium"
             }
         ]
-
         assert_equal(results.get('details'), expected_details)
 
     @pytest.mark.usefixtures('nuget')

@@ -6,7 +6,7 @@ import logging
 from urllib.parse import quote, urljoin
 
 import random
-from os import environ
+from os import environ, path
 
 from f8a_worker.errors import F8AConfigurationException
 
@@ -167,6 +167,11 @@ class F8AConfiguration(object):
             url += '?api_key=' + cls.LIBRARIES_IO_TOKEN
 
         return url
+
+    @property
+    def dependency_check_script_path(self):
+        assert self.OWASP_DEP_CHECK_PATH, "OWASP_DEP_CHECK_PATH not set"
+        return path.join(self.OWASP_DEP_CHECK_PATH, 'bin', 'dependency-check.sh')
 
 
 configuration = F8AConfiguration()

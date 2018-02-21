@@ -216,21 +216,18 @@ class MercatorTask(BaseTask):
             # TODO: attempt static setup.py parsing with mercator
             items = [self._merge_python_items(mercator_target, data)]
         elif arguments['ecosystem'] == 'go':
-            result = {'result': json.loads(data[0])}
-            # data normalized expects this
-            result['ecosystem'] = 'gofedlib'
-            # we only support git now
-            result['result']['code_repository'] = {
+            result = json.loads(data[0])
+            main_deps_count = len(result.get('deps-main', []))
+            packages_count = len(result.get('deps-packages', []))
+            self.log.debug('gofedlib found %i dependencies', main_deps_count + packages_count)
+
+            result['code_repository'] = {
                 'type': 'git',
                 'url': 'https://{name}'.format(name=arguments.get('name'))
             }
-
-            result['result']['name'] = arguments.get('name')
-            result['result']['version'] = arguments.get('version')
-            items = [result]
-            main_deps_count = len(result['result'].get('deps-main', []))
-            packages_count = len(result['result'].get('deps-packages', []))
-            self.log.debug('gofedlib found %i dependencies', main_deps_count + packages_count)
+            result['name'] = arguments.get('name')
+            result['version'] = arguments.get('version')
+            items = [{'ecosystem': 'gofedlib', 'result': result}]
         else:
             if outermost_only:
                 # process only root level manifests (or the ones closest to the root level)
