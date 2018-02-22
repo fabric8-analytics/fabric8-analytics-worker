@@ -80,7 +80,6 @@ about mismatched locations in compiled files. Those can be deleted using:
 
 ## Some tips for running tests locally
 
-
 **Reusing an existing virtualenv for multiple test runs**
 
 When a virtualenv already is setup you can run tests like so:
