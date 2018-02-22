@@ -94,6 +94,7 @@ docker run -t \
   -e DEPLOYMENT_PREFIX='test' \
   -e WORKER_ADMINISTRATION_REGION='api' \
   -e F8A_UNCLOUDED_MODE='true' \
+  -e SENTRY_DSN='' \
   --env-file tests/postgres.env \
   --name=${CONTAINER_NAME} \
   ${TEST_IMAGE_NAME} /f8a_worker/hack/exec_tests.sh $@ /f8a_worker/tests/

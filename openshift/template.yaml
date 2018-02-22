@@ -46,6 +46,8 @@ objects:
             value: "${WORKER_INCLUDE_QUEUES}"
           - name: WORKER_RUN_DB_MIGRATIONS
             value: "${WORKER_RUN_DB_MIGRATIONS}"
+          - name: SENTRY_DSN
+            value: "{SENTRY_DSN}"
           - name: POSTGRESQL_DATABASE
             valueFrom:
               secretKeyRef:
@@ -242,3 +244,8 @@ parameters:
   name: MEMORY_LIMIT
   value: "1536Mi"
 
+- description: Sentry DSN 
+  displayName: Sentry DSN
+  required: false
+  name: SENTRY_DSN
+  value: ""
