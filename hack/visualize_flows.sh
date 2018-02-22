@@ -13,7 +13,7 @@ which selinon-cli 2>/dev/null >&1 || {
 # expansion name is done correctly, export expected env vars
 PYTHONPATH='../' DEPLOYMENT_PREFIX='plot_' WORKER_ADMINISTRATION_REGION="api" \
     selinon-cli -vvvv plot --nodes-definition "${DISPATCHER_CONF_DIR}/nodes.yml" \
-                        --flow-definitions "${DISPATCHER_CONF_DIR}"/flows/*.yml \
+                        --flow-definitions "${DISPATCHER_CONF_DIR}"/flows/ \
                         --format png --output-dir . && echo "Graphs are available in the current directory"
 
 
