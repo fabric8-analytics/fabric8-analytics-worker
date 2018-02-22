@@ -432,13 +432,13 @@ class Dependency(object):
             else:
                 raise ValueError('Invalid comparison token')
 
+        def _all(spec_):
+            return all([_all(s) if isinstance(s, list) else _compare_spec(s) for s in spec_])
+
         results, intermediaries = False, False
         for spec in self.spec:
             if isinstance(spec, list):
-                intermediary = True
-                for sub in spec:
-                    intermediary &= _compare_spec(sub)
-                intermediaries |= intermediary
+                intermediaries |= _all(spec)
             elif isinstance(spec, tuple):
                 results |= _compare_spec(spec)
 
