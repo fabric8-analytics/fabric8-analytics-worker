@@ -10,7 +10,7 @@ from f8a_worker.workers import CVEcheckerTask
 
 @pytest.mark.usefixtures("dispatcher_setup")
 class TestCVEchecker(object):
-    @pytest.mark.parametrize(('id_', 'score', 'vector', 'severity'), [
+    @pytest.mark.parametrize(('cve_id', 'score', 'vector', 'severity'), [
         ('CVE-2017-0249', 7.3, 'CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L', 'high'),
         ('cve-2015-1164', 4.3, 'AV:N/AC:M/Au:N/C:N/I:P/A:N', 'medium')
     ])
