@@ -11,6 +11,9 @@ from f8a_worker.workers import DigesterTask
 from f8a_worker.process import IndianaJones
 from f8a_worker.utils import compute_digest
 
+from . import instantiate_task
+
+
 PYPI_MODULE_NAME = "six"
 PYPI_MODULE_VERSION = "1.0.0"
 
@@ -26,7 +29,7 @@ class TestDigester(object):
         args = dict.fromkeys(('ecosystem', 'name', 'version'), 'some-value')
         # flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(str(tmpdir))
         flexmock(EPVCache).should_receive('get_source_tarball').and_return(artifact_path)
-        task = DigesterTask.create_test_instance(task_name='digests')
+        task = instantiate_task(cls=DigesterTask, task_name='digests')
         results = task.execute(arguments=args)
 
         assert results is not None

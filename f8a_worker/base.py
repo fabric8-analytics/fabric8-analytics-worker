@@ -73,12 +73,6 @@ class BaseTask(SelinonTask):
                                                    node_args.get('version'))
         return result
 
-    @classmethod
-    def create_test_instance(cls, flow_name=None, task_name=None, parent=None, task_id=None,
-                             dispatcher_id=None):
-        # used in tests so we do not do ugly things like this, this correctly done by dispatcher
-        return cls(flow_name, task_name or cls.__name__, parent, task_id, dispatcher_id)
-
     def validate_result(self, result):
         """Ensure that results comply with the task schema, if defined.
 

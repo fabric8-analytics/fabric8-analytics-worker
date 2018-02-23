@@ -8,6 +8,9 @@ from f8a_worker.workers import LinguistTask
 from f8a_worker.models import Ecosystem
 from f8a_worker.process import IndianaJones
 
+from . import instantiate_task
+
+
 ECOSYSTEM = Ecosystem(name='pypi', backend=EcosystemBackend.pypi)
 MODULE_NAME = 'six'
 MODULE_VERSION = '1.10.0'
@@ -25,7 +28,7 @@ class TestLinguist(object):
 
         args = dict.fromkeys(('ecosystem', 'name', 'version'), 'some-value')
         flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(str(tmpdir))
-        task = LinguistTask.create_test_instance(task_name='languages')
+        task = instantiate_task(cls=LinguistTask, task_name='languages')
         results = task.execute(args)
 
         assert results is not None

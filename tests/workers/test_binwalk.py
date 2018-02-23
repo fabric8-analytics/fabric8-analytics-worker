@@ -6,6 +6,8 @@ from flexmock import flexmock
 from f8a_worker.object_cache import EPVCache
 from f8a_worker.workers import BinwalkTask
 
+from . import instantiate_task
+
 
 def is_executable(fpath):
     return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
@@ -22,7 +24,7 @@ class TestBinwalk(object):
                        os.path.abspath(__file__)), '..', '..', 'hack')  # various executable scripts
         args = dict.fromkeys(('ecosystem', 'name', 'version'), 'some-value')
         flexmock(EPVCache).should_receive('get_source_tarball').and_return(path)
-        task = BinwalkTask.create_test_instance(task_name='binary_data')
+        task = instantiate_task(cls=BinwalkTask, task_name='binary_data')
         results = task.execute(arguments=args)
 
         assert isinstance(results, dict)

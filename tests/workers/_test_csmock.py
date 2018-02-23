@@ -6,6 +6,7 @@ import flexmock
 import requests
 
 from f8a_worker.workers import csmock_worker
+from . import instantiate_task
 
 
 dummy_package_dir = os.path.abspath(os.path.join(
@@ -60,7 +61,7 @@ def test_csmock_worker(tmpdir):
             for chunk in r.iter_content(4096):
                 f.write(chunk)
 
-    t = csmock_worker.CsmockTask.create_test_instance(task_name='static_analysis')
+    t = instantiate_task(cls=csmock_worker.CsmockTask, task_name='static_analysis')
     args = {'source_tarball_path': tb_path, 'cache_path': str(tmpdir)}
     results = t.execute(args)
 
@@ -80,7 +81,7 @@ def test_csmock_worker(tmpdir):
 @pytest.mark.offline
 def test_offline_csmock_worker(tmpdir):
     flexmock.flexmock(csmock_worker, csmock=mock_csmock)
-    t = csmock_worker.CsmockTask.create_test_instance(task_name='static_analysis')
+    t = instantiate_task(cls=csmock_worker.CsmockTask, task_name='static_analysis')
     args = {'source_tarball_path': dummy_package_path, 'cache_path': str(tmpdir)}
     results = t.execute(args)
 

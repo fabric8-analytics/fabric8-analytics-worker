@@ -8,6 +8,8 @@ from f8a_worker.workers import LicenseCheckTask
 from f8a_worker.schemas import load_worker_schema, pop_schema_ref
 from f8a_worker.object_cache import EPVCache
 
+from . import instantiate_task
+
 
 # TODO: drop the try/except after switching to Python 3
 try:
@@ -26,7 +28,8 @@ class TestLicenseCheck(object):
         data = "/this-is-not-a-real-directory"
         args = dict.fromkeys(('ecosystem', 'name', 'version'), 'some-value')
         flexmock(EPVCache).should_receive('get_sources').and_return(data)
-        task = LicenseCheckTask.create_test_instance(task_name='source_licenses')
+        task = instantiate_task(cls=LicenseCheckTask, task_name='source_licenses')
+
         with pytest.raises(Exception):
             results = task.execute(arguments=args)
 
@@ -39,7 +42,7 @@ class TestLicenseCheck(object):
                 os.path.abspath(__file__)), '..', 'data', 'license')
         args = dict.fromkeys(('ecosystem', 'name', 'version'), 'some-value')
         flexmock(EPVCache).should_receive('get_sources').and_return(data)
-        task = LicenseCheckTask.create_test_instance(task_name='source_licenses')
+        task = instantiate_task(cls=LicenseCheckTask, task_name='source_licenses')
         results = task.execute(arguments=args)
 
         assert results is not None

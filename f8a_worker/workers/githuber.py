@@ -28,14 +28,6 @@ class GithubTask(BaseTask):
                   'application/vnd.github.v3+json'  # recommended by GitHub for License API
     }
 
-    @classmethod
-    def create_test_instance(cls, repo_name, repo_url):
-        instance = super().create_test_instance()
-        # set for testing as we are not querying DB for mercator results
-        instance._repo_name = repo_name
-        instance._repo_url = repo_url
-        return instance
-
     def _get_last_years_commits(self, repo_url):
         try:
             activity = get_response(urljoin(repo_url + '/', "stats/commit_activity"), self._headers)

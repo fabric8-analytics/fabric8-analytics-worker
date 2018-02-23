@@ -7,6 +7,8 @@ from f8a_worker.defaults import F8AConfiguration
 from f8a_worker.errors import TaskError
 from f8a_worker.workers import LibrariesIoTask
 
+from . import instantiate_task
+
 
 @pytest.mark.usefixtures("dispatcher_setup")
 class TestLibrariesIoTask(object):
@@ -17,7 +19,7 @@ class TestLibrariesIoTask(object):
     ])
     def test_execute(self, args):
         """Test proper function."""
-        task = LibrariesIoTask.create_test_instance(task_name='libraries_io')
+        task = instantiate_task(cls=LibrariesIoTask, task_name='libraries_io')
         flexmock(F8AConfiguration, LIBRARIES_IO_TOKEN='no-token')
         results = task.execute(arguments=args)
 
@@ -38,7 +40,7 @@ class TestLibrariesIoTask(object):
     ])
     def test_execute_nonexistent(self, args):
         """Run task for nonexistent package."""
-        task = LibrariesIoTask.create_test_instance(task_name='libraries_io')
+        task = instantiate_task(cls=LibrariesIoTask, task_name='libraries_io')
         flexmock(F8AConfiguration, LIBRARIES_IO_TOKEN='no-token')
         with pytest.raises(TaskError):
             task.execute(arguments=args)

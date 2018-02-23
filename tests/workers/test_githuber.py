@@ -3,6 +3,7 @@
 import pytest
 
 from f8a_worker.workers import GithubTask
+from . import instantiate_task
 
 
 @pytest.mark.usefixtures("dispatcher_setup")
@@ -12,7 +13,10 @@ class TestGithuber(object):
         ('projectatomic/atomic-reactor', 'https://github.com/projectatomic/atomic-reactor'),
     ])
     def test_execute(self, repo_name, repo_url):
-        task = GithubTask.create_test_instance(repo_name, repo_url)
+        task = instantiate_task(cls=GithubTask, task_name='github_details')
+        # set for testing as we are not querying DB for mercator results
+        task._repo_name = repo_name
+        task._repo_url = repo_url
         results = task.execute(arguments={})
         assert results is not None
         assert isinstance(results, dict)

@@ -59,7 +59,8 @@ class GraphAggregatorTask(BaseTask):
                         f.write(json.dumps({}))
 
                 # Create instance manually since stack analysis is not handled by dispatcher
-                subtask = MercatorTask.create_test_instance(task_name=self.task_name)
+                subtask = MercatorTask(flow_name=None, task_name=self.task_name,
+                                       parent=None, task_id=None, dispatcher_id=None)
                 arguments['ecosystem'] = manifest['ecosystem']
                 out = subtask.run_mercator(arguments, temp_path)
 

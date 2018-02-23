@@ -7,6 +7,8 @@ from f8a_worker.object_cache import EPVCache
 from f8a_worker.utils import tempdir
 from f8a_worker.workers import CVEcheckerTask
 
+from . import instantiate_task
+
 
 @pytest.mark.usefixtures("dispatcher_setup")
 class TestCVEchecker(object):
@@ -23,7 +25,7 @@ class TestCVEchecker(object):
     @pytest.mark.usefixtures('npm')
     def test_npm_geddy(self):
         args = {'ecosystem': 'npm', 'name': 'geddy', 'version': '13.0.7'}
-        task = CVEcheckerTask.create_test_instance(task_name='security_issues')
+        task = instantiate_task(cls=CVEcheckerTask, task_name='security_issues')
         results = task.execute(args)
 
         assert isinstance(results, dict)
@@ -62,7 +64,7 @@ class TestCVEchecker(object):
         args = {'ecosystem': 'maven', 'name': 'commons-collections:commons-collections',
                 'version': '3.2.1'}
         flexmock(EPVCache).should_receive('get_source_tarball').and_return(jar_path)
-        task = CVEcheckerTask.create_test_instance(task_name='security_issues')
+        task = instantiate_task(cls=CVEcheckerTask, task_name='security_issues')
         results = task.execute(arguments=args)
 
         assert isinstance(results, dict)
@@ -120,7 +122,7 @@ class TestCVEchecker(object):
                          os.path.abspath(__file__)), '..', 'data', 'pypi', 'Mako-0.3.3')
         args = {'ecosystem': 'pypi', 'name': 'mako', 'version': '0.3.3'}
         flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(extracted)
-        task = CVEcheckerTask.create_test_instance(task_name='security_issues')
+        task = instantiate_task(cls=CVEcheckerTask, task_name='security_issues')
         results = task.execute(arguments=args)
 
         assert isinstance(results, dict)
@@ -154,7 +156,7 @@ class TestCVEchecker(object):
                          os.path.abspath(__file__)), '..', 'data', 'pypi', 'requests-2.5.3')
         args = {'ecosystem': 'pypi', 'name': 'requests', 'version': '2.5.3'}
         flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(extracted)
-        task = CVEcheckerTask.create_test_instance(task_name='security_issues')
+        task = instantiate_task(cls=CVEcheckerTask, task_name='security_issues')
         results = task.execute(arguments=args)
 
         assert isinstance(results, dict)
@@ -195,7 +197,7 @@ class TestCVEchecker(object):
             # We need a write-access into extracted/
             copy(pkg_info, extracted)
             flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(extracted)
-            task = CVEcheckerTask.create_test_instance(task_name='security_issues')
+            task = instantiate_task(cls=CVEcheckerTask, task_name='security_issues')
             results = task.execute(arguments=args)
 
         assert isinstance(results, dict)
@@ -275,7 +277,7 @@ class TestCVEchecker(object):
     @pytest.mark.usefixtures('nuget')
     def test_nuget_system_net_http(self):
         args = {'ecosystem': 'nuget', 'name': 'System.Net.Http', 'version': '4.1.1'}
-        task = CVEcheckerTask.create_test_instance(task_name='security_issues')
+        task = instantiate_task(cls=CVEcheckerTask, task_name='security_issues')
         results = task.execute(arguments=args)
 
         assert isinstance(results, dict)

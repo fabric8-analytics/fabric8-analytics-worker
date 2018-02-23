@@ -5,6 +5,8 @@ from f8a_worker.object_cache import EPVCache
 from f8a_worker.process import IndianaJones
 from f8a_worker.workers.mercator import MercatorTask
 
+from . import instantiate_task
+
 
 def compare_dictionaries(a, b):
     def mapper(item):
@@ -19,8 +21,6 @@ def compare_dictionaries(a, b):
 
 @pytest.mark.usefixtures("dispatcher_setup")
 class TestMercator(object):
-    def setup_method(self, method):
-        self.m = MercatorTask.create_test_instance(task_name='metadata')
 
     @pytest.mark.usefixtures("no_s3_connection")
     def test_execute_npm(self, tmpdir, npm):
@@ -32,7 +32,8 @@ class TestMercator(object):
 
         args = {'ecosystem': npm.name, 'name': name, 'version': version}
         flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(str(tmpdir))
-        results = self.m.execute(arguments=args)
+        task = instantiate_task(cls=MercatorTask, task_name='metadata')
+        results = task.execute(arguments=args)
 
         assert isinstance(results, dict) and results
         details = results['details'][0]
@@ -52,7 +53,8 @@ class TestMercator(object):
 
         args = {'ecosystem': maven.name, 'name': name, 'version': version}
         flexmock(EPVCache).should_receive('get_pom_xml').and_return(pom_path)
-        results = self.m.execute(arguments=args)
+        task = instantiate_task(cls=MercatorTask, task_name='metadata')
+        results = task.execute(arguments=args)
 
         assert isinstance(results, dict) and results
         details = results['details'][0]
@@ -75,7 +77,8 @@ class TestMercator(object):
 
         args = {'ecosystem': go.name, 'name': 'dummy', 'version': 'dummy'}
         flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(path)
-        results = self.m.execute(arguments=args)
+        task = instantiate_task(cls=MercatorTask, task_name='metadata')
+        results = task.execute(arguments=args)
 
         assert isinstance(results, dict) and results
         details = results['details'][0]

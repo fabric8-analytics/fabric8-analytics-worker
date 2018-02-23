@@ -7,6 +7,8 @@ from flexmock import flexmock
 from f8a_worker.workers import OSCryptoCatcherTask
 from f8a_worker.object_cache import EPVCache
 
+from . import instantiate_task
+
 
 @pytest.mark.usefixtures("dispatcher_setup")
 class TestOSCryptoCatcher(object):
@@ -17,7 +19,7 @@ class TestOSCryptoCatcher(object):
         path = sys.modules['ssl'].__file__  # /usr/lib64/python2.7/ssl.pyc
         args = dict.fromkeys(('ecosystem', 'name', 'version'), 'some-value')
         flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(path)
-        task = OSCryptoCatcherTask.create_test_instance(task_name='crypto_algorithms')
+        task = instantiate_task(cls=OSCryptoCatcherTask, task_name='crypto_algorithms')
         results = task.execute(arguments=args)
 
         assert results is not None
