@@ -28,31 +28,34 @@ class CVEcheckerTask(BaseTask):
     dependency_check_jvm_mem_limit = '-Xmx768m'
 
     @staticmethod
-    def get_cve_impact(id_):
+    def get_cve_impact(cve_id):
         score = 0
         vector = ''
         severity = ''
-        if id_:
-            response = requests.get("https://nvd.nist.gov/vuln/detail/{id_}".format(id_=id_))
-            if response.status_code == 200:
-                score_v3 = score_v2 = 0
-                severity_v3 = severity_v2 = vector_v3 = vector_v2 = ''
-                page = BeautifulSoup(response.text, 'html.parser')
-                for tag in page.find_all(href=re_compile('calculator')):
-                    if tag.attrs.get('data-testid') == 'vuln-cvssv3-base-score-link':
-                        score_v3 = float(tag.text.strip())
-                        severity_v3 = tag.find_next().text.lower()
-                    elif tag.attrs.get('data-testid') == 'vuln-cvssv3-vector-link':
-                        vector_v3 = tag.text.strip()
-                    elif tag.attrs.get('data-testid') == 'vuln-cvssv2-base-score-link':
-                        score_v2 = float(tag.text.strip())
-                        severity_v2 = tag.find_next().text.lower()
-                    elif tag.attrs.get('data-testid') == 'vuln-cvssv2-vector-link':
-                        vector_v2 = tag.text.strip().lstrip('(').rstrip(')')
-                # Prefer CVSS v3.0 over v2
-                score = score_v3 or score_v2
-                severity = severity_v3 or severity_v2
-                vector = vector_v3 or vector_v2
+        if cve_id:
+            url = "https://nvd.nist.gov/vuln/detail/{cve_id}".format(cve_id=cve_id)
+            response = requests.get(url)
+            if not response.status_code == 200:
+                raise IOError('Unable to reach URL: {url}'.format(url=url))
+
+            score_v3 = score_v2 = 0
+            severity_v3 = severity_v2 = vector_v3 = vector_v2 = ''
+            page = BeautifulSoup(response.text, 'html.parser')
+            for tag in page.find_all(href=re_compile('calculator')):
+                if tag.attrs.get('data-testid') == 'vuln-cvssv3-base-score-link':
+                    score_v3 = float(tag.text.strip())
+                    severity_v3 = tag.find_next().text.lower()
+                elif tag.attrs.get('data-testid') == 'vuln-cvssv3-vector-link':
+                    vector_v3 = tag.text.strip()
+                elif tag.attrs.get('data-testid') == 'vuln-cvssv2-base-score-link':
+                    score_v2 = float(tag.text.strip())
+                    severity_v2 = tag.find_next().text.lower()
+                elif tag.attrs.get('data-testid') == 'vuln-cvssv2-vector-link':
+                    vector_v2 = tag.text.strip().lstrip('(').rstrip(')')
+            # Prefer CVSS v3.0 over v2
+            score = score_v3 or score_v2
+            severity = severity_v3 or severity_v2
+            vector = vector_v3 or vector_v2
 
         return score, vector, severity
 
