@@ -407,3 +407,12 @@ class RecommendationFeedback(Base):
     stack_id = Column(String(64), ForeignKey(StackAnalysisRequest.id))
     stack_request = relationship("StackAnalysisRequest",
                                  back_populates="feedback")
+
+
+class OSIORegisteredRepos(Base):
+    __tablename__ = "osio_registered_repo"
+
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    github_repo = Column(String(255), nullable=False)
+    github_sha = Column(String(255), nullable=False)
+    email_ids = Column(String(255), nullable=False)
