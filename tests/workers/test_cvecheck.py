@@ -3,8 +3,9 @@ from flexmock import flexmock
 import os
 import pytest
 from shutil import copy
+from tempfile import TemporaryDirectory
+
 from f8a_worker.object_cache import EPVCache
-from f8a_worker.utils import tempdir
 from f8a_worker.workers import CVEcheckerTask
 
 
@@ -191,7 +192,7 @@ class TestCVEchecker(object):
         pkg_info = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                 '..', 'data', 'pypi', 'salt-2016.11.6', 'PKG-INFO')
         args = {'ecosystem': 'pypi', 'name': 'salt', 'version': '2016.11.6'}
-        with tempdir() as extracted:
+        with TemporaryDirectory() as extracted:
             # We need a write-access into extracted/
             copy(pkg_info, extracted)
             flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(extracted)

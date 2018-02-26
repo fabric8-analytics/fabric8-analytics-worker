@@ -7,7 +7,7 @@ import os
 from re import compile as re_compile
 import requests
 from shutil import rmtree, copy
-from tempfile import gettempdir
+from tempfile import gettempdir, TemporaryDirectory
 from selinon import StoragePool, FatalTaskError, RequestError
 from f8a_worker.base import BaseTask
 from f8a_worker.defaults import configuration
@@ -16,7 +16,7 @@ from f8a_worker.object_cache import ObjectCache
 from f8a_worker.process import Git
 from f8a_worker.schemas import SchemaRef
 from f8a_worker.solver import get_ecosystem_solver, OSSIndexDependencyParser
-from f8a_worker.utils import TimedCommand, tempdir
+from f8a_worker.utils import TimedCommand
 
 
 class CVEcheckerTask(BaseTask):
@@ -159,7 +159,7 @@ class CVEcheckerTask(BaseTask):
         """Update OWASP Dependency-check DB on S3."""
         s3 = StoragePool.get_connected_storage('S3VulnDB')
         depcheck = configuration.dependency_check_script_path
-        with tempdir() as temp_data_dir:
+        with TemporaryDirectory() as temp_data_dir:
             s3.retrieve_depcheck_db_if_exists(temp_data_dir)
             old_java_opts = os.getenv('JAVA_OPTS', '')
             os.environ['JAVA_OPTS'] = CVEcheckerTask.dependency_check_jvm_mem_limit
@@ -176,7 +176,7 @@ class CVEcheckerTask(BaseTask):
 
         s3 = StoragePool.get_connected_storage('S3VulnDB')
         depcheck = configuration.dependency_check_script_path
-        with tempdir() as temp_data_dir:
+        with TemporaryDirectory() as temp_data_dir:
             if not s3.retrieve_depcheck_db_if_exists(temp_data_dir):
                 self.log.debug('No cached OWASP Dependency-Check DB, generating fresh now ...')
                 self.update_depcheck_db_on_s3()
@@ -266,7 +266,7 @@ class CVEcheckerTask(BaseTask):
         """Update Victims CVE DB on S3."""
         repo_url = 'https://github.com/victims/victims-cve-db.git'
         s3 = StoragePool.get_connected_storage('S3VulnDB')
-        with tempdir() as temp_dir:
+        with TemporaryDirectory() as temp_dir:
             Git.clone(repo_url, temp_dir, depth="1")
             s3.store_victims_db(temp_dir)
 
@@ -275,7 +275,7 @@ class CVEcheckerTask(BaseTask):
         s3 = StoragePool.get_connected_storage('S3VulnDB')
         output = []
 
-        with tempdir() as temp_victims_db_dir:
+        with TemporaryDirectory() as temp_victims_db_dir:
             if not s3.retrieve_victims_db_if_exists(temp_victims_db_dir):
                 self.log.debug('No Victims CVE DB found on S3, cloning from github')
                 self.update_victims_cve_db_on_s3()

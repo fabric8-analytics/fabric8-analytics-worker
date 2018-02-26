@@ -147,22 +147,6 @@ def cwd(target):
 
 
 @contextmanager
-def tempdir():
-    """Context manager for temporary directory.
-
-    Usage:
-    with tempdir() as temp_dir:
-        use temp_dir
-    """
-    dirpath = tempfile.mkdtemp()
-    try:
-        yield dirpath
-    finally:
-        if os_path.isdir(dirpath):
-            shutil.rmtree(dirpath)
-
-
-@contextmanager
 def username():
     """Workaround for failing getpass.getuser().
 

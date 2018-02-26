@@ -4,10 +4,10 @@ import numpy as np
 from time import time
 from datetime import timedelta
 from sklearn.linear_model import LinearRegression
+from tempfile import TemporaryDirectory
 
 from f8a_worker.process import Git
 from f8a_worker.base import BaseTask
-from f8a_worker.utils import tempdir
 
 
 class GitStats(BaseTask):
@@ -24,7 +24,7 @@ class GitStats(BaseTask):
 
         :param url: url to the git repo
         """
-        with tempdir() as tmp_dir:
+        with TemporaryDirectory() as tmp_dir:
             git = Git.clone(url, tmp_dir)
             # nice notebook to check at:
             #   http://nbviewer.jupyter.org/github/tarmstrong/code-analysis/blob/master/IPythonReviewTime.ipynb

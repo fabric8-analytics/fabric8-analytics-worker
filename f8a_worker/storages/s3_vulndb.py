@@ -1,9 +1,11 @@
 from dateutil import parser as datetime_parser
 from datetime import datetime, timezone
 import os
+from tempfile import TemporaryDirectory
+
 from f8a_worker.errors import TaskError
 from f8a_worker.process import Archive
-from f8a_worker.utils import cwd, tempdir
+from f8a_worker.utils import cwd
 from . import AmazonS3
 
 
@@ -34,7 +36,7 @@ class S3VulnDB(AmazonS3):
 
     def store_depcheck_db(self, data_dir):
         """Zip CVE DB file and store to S3."""
-        with tempdir() as archive_dir:
+        with TemporaryDirectory() as archive_dir:
             archive_path = os.path.join(archive_dir, self.DEPCHECK_DB_ARCHIVE)
             db_file_path = os.path.join(data_dir, self.DEPCHECK_DB_FILENAME)
             try:
@@ -47,7 +49,7 @@ class S3VulnDB(AmazonS3):
     def retrieve_depcheck_db_if_exists(self, data_dir):
         """Retrieve zipped CVE DB file as stored on S3 and extract."""
         if self.object_exists(self.DEPCHECK_DB_ARCHIVE):
-            with tempdir() as archive_dir:
+            with TemporaryDirectory() as archive_dir:
                 archive_path = os.path.join(archive_dir, self.DEPCHECK_DB_ARCHIVE)
                 self.retrieve_file(self.DEPCHECK_DB_ARCHIVE, archive_path)
                 Archive.extract_zip(archive_path, data_dir)
@@ -56,7 +58,7 @@ class S3VulnDB(AmazonS3):
 
     def store_victims_db(self, victims_db_dir):
         """Zip victims_db_dir/* and store to S3 as VICTIMS_DB_ARCHIVE."""
-        with tempdir() as temp_archive_dir:
+        with TemporaryDirectory() as temp_archive_dir:
             temp_archive_path = os.path.join(temp_archive_dir, self.VICTIMS_DB_ARCHIVE)
             with cwd(victims_db_dir):
                 Archive.zip_file('.', temp_archive_path)
@@ -65,7 +67,7 @@ class S3VulnDB(AmazonS3):
     def retrieve_victims_db_if_exists(self, victims_db_dir):
         """Retrieve VICTIMS_DB_ARCHIVE from S3 and extract into victims_db_dir."""
         if self.object_exists(self.VICTIMS_DB_ARCHIVE):
-            with tempdir() as temp_archive_dir:
+            with TemporaryDirectory() as temp_archive_dir:
                 temp_archive_path = os.path.join(temp_archive_dir, self.VICTIMS_DB_ARCHIVE)
                 self.retrieve_file(self.VICTIMS_DB_ARCHIVE, temp_archive_path)
                 Archive.extract_zip(temp_archive_path, victims_db_dir)

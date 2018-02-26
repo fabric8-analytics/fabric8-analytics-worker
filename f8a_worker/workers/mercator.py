@@ -25,6 +25,7 @@ sample output:
 import os
 import json
 from selinon import FatalTaskError
+from tempfile import TemporaryDirectory
 
 from f8a_worker.base import BaseTask
 from f8a_worker.data_normalizer import DataNormalizer
@@ -32,7 +33,7 @@ from f8a_worker.enums import EcosystemBackend
 from f8a_worker.object_cache import ObjectCache
 from f8a_worker.process import Git
 from f8a_worker.schemas import SchemaRef
-from f8a_worker.utils import TimedCommand, tempdir
+from f8a_worker.utils import TimedCommand
 
 
 # TODO: we need to unify the output from different ecosystems
@@ -169,7 +170,7 @@ class MercatorTask(BaseTask):
     def run_mercator_on_git_repo(self, arguments):
         self._strict_assert(arguments.get('url'))
 
-        with tempdir() as workdir:
+        with TemporaryDirectory() as workdir:
             repo_url = arguments.get('url')
             repo = Git.clone(repo_url, path=workdir, depth=str(1))
             metadata = self.run_mercator(arguments, workdir,
