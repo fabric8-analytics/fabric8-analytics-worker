@@ -6,14 +6,15 @@ Code to transform data from Mercator [1] into a common scheme.
 [1] https://github.com/fabric8-analytics/mercator-go
 """
 
-import sys
 import argparse
+from itertools import zip_longest
 import json
 from os import path
-from itertools import zip_longest
+import sys
+from tempfile import TemporaryDirectory
 from urllib.parse import urlparse
 
-from f8a_worker.utils import parse_gh_repo, tempdir
+from f8a_worker.utils import parse_gh_repo
 
 
 # TODO: we need to unify the output from different ecosystems
@@ -456,7 +457,7 @@ class DataNormalizer(object):
             # It's here due to circular dependencies
             from f8a_worker.workers import LicenseCheckTask  # run_scancode
             transformed['declared_licenses'] = [data['LicenseUrl']]
-            with tempdir() as tmpdir:
+            with TemporaryDirectory() as tmpdir:
                 try:
                     # Get file from 'LicenseUrl' and let LicenseCheckTask decide what license it is
                     if IndianaJones.download_file(data['LicenseUrl'], tmpdir):

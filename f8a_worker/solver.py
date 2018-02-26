@@ -13,12 +13,12 @@ from requests import get
 from xmlrpc.client import ServerProxy
 from semantic_version import Version as semver_version
 from subprocess import check_output
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 from urllib.parse import urljoin
 
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.models import Analysis, Ecosystem, Package, Version
-from f8a_worker.utils import cwd, tempdir, TimedCommand
+from f8a_worker.utils import cwd, TimedCommand
 from f8a_worker.process import Git
 
 
@@ -952,7 +952,7 @@ class MavenSolver(object):
         """
         if not to_solve:
             return {}
-        with tempdir() as tmpdir:
+        with TemporaryDirectory() as tmpdir:
             with cwd(tmpdir):
                 MavenSolver._generate_pom_xml(to_solve)
                 return MavenSolver._dependencies_from_pom_xml()

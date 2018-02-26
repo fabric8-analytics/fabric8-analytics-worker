@@ -3,7 +3,6 @@
 from selinon import StoragePool
 from f8a_worker.base import BaseTask
 from f8a_worker.solver import get_ecosystem_solver, OSSIndexDependencyParser
-from f8a_worker.utils import tempdir
 from f8a_worker.workers import CVEcheckerTask
 
 

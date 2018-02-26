@@ -2,12 +2,12 @@ import os
 import json
 from selinon import FatalTaskError
 from sqlalchemy.exc import SQLAlchemyError
+from tempfile import TemporaryDirectory
 
 from f8a_worker.base import BaseTask
 from f8a_worker.manifests import get_manifest_descriptor_by_filename
 from f8a_worker.models import StackAnalysisRequest
 from f8a_worker.solver import get_ecosystem_solver
-from f8a_worker.utils import tempdir
 from f8a_worker.workers.mercator import MercatorTask
 
 
@@ -49,7 +49,7 @@ class GraphAggregatorTask(BaseTask):
         # If we receive a manifest file we need to save it first
         result = []
         for manifest in manifests:
-            with tempdir() as temp_path:
+            with TemporaryDirectory() as temp_path:
                 with open(os.path.join(temp_path, manifest['filename']), 'a+') as fd:
                     fd.write(manifest['content'])
 
