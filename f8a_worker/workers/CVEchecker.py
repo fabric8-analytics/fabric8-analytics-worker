@@ -159,7 +159,10 @@ class CVEcheckerTask(BaseTask):
         """Update OWASP Dependency-check DB on S3."""
         s3 = StoragePool.get_connected_storage('S3VulnDB')
         depcheck = configuration.dependency_check_script_path
-        with TemporaryDirectory() as temp_data_dir:
+        data_basedir = configuration.PERSISTANT_VOLUME_MOUNT_PATH
+        # creates temporary directory under /tmp if data_basedir is None
+        with TemporaryDirectory(prefix='owasp-dep-check-db-data',
+                                dir=data_basedir) as temp_data_dir:
             s3.retrieve_depcheck_db_if_exists(temp_data_dir)
             old_java_opts = os.getenv('JAVA_OPTS', '')
             os.environ['JAVA_OPTS'] = CVEcheckerTask.dependency_check_jvm_mem_limit

@@ -88,6 +88,8 @@ class F8AConfiguration(object):
     JAVANCSS_PATH = environ.get('JAVANCSS_PATH')
     OWASP_DEP_CHECK_PATH = environ.get('OWASP_DEP_CHECK_PATH')
 
+    PERSISTANT_VOLUME_MOUNT_PATH = environ.get('PERSISTANT_VOLUME_MOUNT_PATH')
+
     # Graph stuff
     try:
         USAGE_THRESHOLD = int(environ.get("LOW_USAGE_THRESHOLD", "5000"))

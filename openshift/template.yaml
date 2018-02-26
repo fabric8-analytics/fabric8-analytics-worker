@@ -48,6 +48,8 @@ objects:
             value: "${WORKER_RUN_DB_MIGRATIONS}"
           - name: SENTRY_DSN
             value: "${SENTRY_DSN}"
+          - name: PERSISTANT_VOLUME_MOUNT_PATH
+            value: "${PV}"
           - name: POSTGRESQL_DATABASE
             valueFrom:
               secretKeyRef:
@@ -152,7 +154,14 @@ objects:
             limits:
               memory: ${MEMORY_LIMIT}
               cpu: ${CPU_LIMIT}
+          volumeMounts:
+          - mountPath: "${PV}"
+            name: bayesian-worker-pv
         restartPolicy: Always
+        volumes:
+          - name: bayesian-worker-pv
+            persistentVolumeClaim:
+              claimName: bayesian-jobs-pvc
     test: false
     triggers:
     - type: ConfigChange
@@ -244,8 +253,14 @@ parameters:
   name: MEMORY_LIMIT
   value: "1536Mi"
 
-- description: Sentry DSN 
+- description: Sentry DSN
   displayName: Sentry DSN
   required: false
   name: SENTRY_DSN
   value: ""
+
+- description: Persistant volume mount path
+  displayName: PV mount path
+  required: false
+  name: PV
+  value: "/pv"
