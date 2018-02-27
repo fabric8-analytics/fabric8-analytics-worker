@@ -412,7 +412,7 @@ class RecommendationFeedback(Base):
 class OSIORegisteredRepos(Base):
     __tablename__ = "osio_registered_repo"
 
-    id = Column(Integer, autoincrement=True, primary_key=True)
-    github_repo = Column(String(255), nullable=False)
-    github_sha = Column(String(255), nullable=False)
+    git_url = Column(String(255), nullable=False)
+    git_sha = Column(String(255), nullable=False, primary_key=True)
     email_ids = Column(String(255), nullable=False)
+    last_scanned_at = Column(DateTime)
