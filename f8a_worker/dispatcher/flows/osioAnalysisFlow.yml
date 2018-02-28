@@ -7,4 +7,10 @@
           to: 'GithubDependencyTreeTask'
         - from: 'GithubDependencyTreeTask'
           to: 'unknown_deps_fetcher'
-
+        - from: 'unknown_deps_fetcher'
+          to: 'bayesianApiFlow'
+          foreach:
+            import: 'f8a_worker.dispatcher.foreach'
+            function: 'iter_unknown_dependencies'
+            # result of the function is used as sub-flow arguments
+         
