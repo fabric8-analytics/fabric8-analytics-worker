@@ -244,6 +244,8 @@ class WorkerResult(Base):
     id = Column(Integer, primary_key=True)
     worker = Column(String(255), index=True)
     worker_id = Column(String(64), unique=True)
+    started_at = Column(DateTime)
+    ended_at = Column(DateTime)
     # `external_request_id` provides mapping of particular `worker_result`
     # to externally defined identifier, when `external_request_id` is provided
     # the value of `analysis_id` should be `NULL`
@@ -316,6 +318,8 @@ class PackageWorkerResult(Base):
     # Semantics are same as for WorkerResult
     worker = Column(String(255), index=True)
     worker_id = Column(String(64), unique=True)
+    started_at = Column(DateTime)
+    ended_at = Column(DateTime)
     external_request_id = Column(String(64))
     task_result = Column(JSONB)
     error = Column(Boolean, nullable=False, default=False)

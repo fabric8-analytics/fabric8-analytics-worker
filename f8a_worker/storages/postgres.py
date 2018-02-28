@@ -40,6 +40,8 @@ class BayesianPostgres(PostgresBase):
         return WorkerResult(
             worker=task_name,
             worker_id=task_id,
+            started_at=result.get('_audit', {}).get('started_at') if result else None,
+            ended_at=result.get('_audit', {}).get('ended_at') if result else None,
             analysis_id=node_args.get('document_id') if isinstance(node_args, dict) else None,
             task_result=result,
             error=error,
