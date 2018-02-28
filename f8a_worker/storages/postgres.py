@@ -56,8 +56,6 @@ class BayesianPostgres(PostgresBase):
         :param package: name of the package
         :param version: package version
         :param task_name: name of task for which the latest result should be obtained
-        :param error: if False, avoid returning entries that track errors
-        :param real: if False, do not check results that are stored on S3 but
         rather return Postgres entry
         """
         # TODO: we should store date timestamps directly in WorkerResult
@@ -90,10 +88,9 @@ class BayesianPostgres(PostgresBase):
 
         :param ecosystem: name of the ecosystem
         :param package: name of the package
+        :param version: package version
         :param task_name: name of task for which the latest result should be obtained
         :param error: if False, avoid returning entries that track errors
-        :param real: if False, do not check results that are stored on S3 but
-        rather return Postgres entry
         """
         # TODO: we should store date timestamps directly in PackageWorkerResult
         if not self.is_connected():
@@ -115,7 +112,8 @@ class BayesianPostgres(PostgresBase):
 
         return entry
 
-    def get_analysis_count(self, ecosystem, package, version):
+    @staticmethod
+    def get_analysis_count(ecosystem, package, version):
         """Get count of previously scheduled analysis for given EPV triplet.
 
         :param ecosystem: str, Ecosystem name
@@ -158,7 +156,8 @@ class BayesianPostgres(PostgresBase):
 
         return list(chain(*task_names))
 
-    def get_worker_id_count(self, worker_id):
+    @staticmethod
+    def get_worker_id_count(worker_id):
         """Get number of results that has the given worker_id assigned (should be always 0 or 1).
 
         :param worker_id: unique worker id

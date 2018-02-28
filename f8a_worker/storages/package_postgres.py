@@ -46,7 +46,8 @@ class PackagePostgres(PostgresBase):
                                  if isinstance(node_args, dict) else None)
         )
 
-    def get_analysis_by_id(self, analysis_id):
+    @staticmethod
+    def get_analysis_by_id(analysis_id):
         """Get result of previously scheduled analysis.
 
         :param analysis_id: str, ID of analysis
@@ -62,7 +63,8 @@ class PackagePostgres(PostgresBase):
             PostgresBase.session.rollback()
             raise
 
-    def get_analysis_count(self, ecosystem, package):
+    @staticmethod
+    def get_analysis_count(ecosystem, package):
         """Get count of previously scheduled analyses for given ecosystem-package.
 
         :param ecosystem: str, Ecosystem name
@@ -84,7 +86,8 @@ class PackagePostgres(PostgresBase):
 
         return count
 
-    def get_worker_id_count(self, worker_id):
+    @staticmethod
+    def get_worker_id_count(worker_id):
         """Get number of results that has the given worker_id assigned (should be always 0 or 1).
 
         :param worker_id: unique worker id
