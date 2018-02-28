@@ -1,5 +1,5 @@
 from sqlalchemy import (Column, DateTime, Enum, ForeignKey, Integer, String, UniqueConstraint,
-                        create_engine, func, Boolean)
+                        create_engine, func, Boolean, Text)
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.dialects.postgresql import JSONB
@@ -407,3 +407,12 @@ class RecommendationFeedback(Base):
     stack_id = Column(String(64), ForeignKey(StackAnalysisRequest.id))
     stack_request = relationship("StackAnalysisRequest",
                                  back_populates="feedback")
+
+
+class OSIORegisteredRepos(Base):
+    __tablename__ = "osio_registered_repos"
+
+    git_url = Column(Text, nullable=False, primary_key=True)
+    git_sha = Column(String(255), nullable=False)
+    email_ids = Column(String(255), nullable=False)
+    last_scanned_at = Column(DateTime)
