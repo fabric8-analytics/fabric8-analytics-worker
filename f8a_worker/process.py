@@ -42,13 +42,14 @@ class Git(object):
                                          "/usr/bin/true"])
 
     @classmethod
-    def clone(cls, url, path, depth=None, branch=None, single_branch=False):
+    def clone(cls, url, path, timeout=300, depth=None, branch=None, single_branch=False):
         """Clone repository provided as url to specific path.
 
         :param url: str
         :param path: str
         :param depth: str
         :param branch: str
+        :param timeout: int
         :return: instance of Git()
         """
         orig_url = url
@@ -63,7 +64,7 @@ class Git(object):
         if single_branch:
             cmd.extend(["--single-branch"])
         try:
-            TimedCommand.get_command_output(cmd, graceful=False)
+            TimedCommand.get_command_output(cmd, graceful=False, timeout=timeout)
         except TaskError as exc:
             raise TaskError("Unable to clone: %s" % orig_url) from exc
         return cls(path=path)

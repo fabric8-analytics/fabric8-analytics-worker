@@ -648,3 +648,12 @@ def get_response(url, headers=None, sleep_time=2, retry_count=10):
         message = "Failed to get results from {url} with {err}".format(url=url, err=err)
         logger.error(message)
         raise TaskError(message) from err
+
+
+def add_maven_coords_to_set(coordinates_str, gav_set):
+    artifact_coords = MavenCoordinates.from_str(coordinates_str)
+    gav_set.add("{group_id}:{artifact_id}:{version}".format(
+        group_id=artifact_coords.groupId,
+        artifact_id=artifact_coords.artifactId,
+        version=artifact_coords.version
+    ))

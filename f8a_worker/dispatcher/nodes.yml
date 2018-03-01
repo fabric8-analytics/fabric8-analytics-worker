@@ -280,6 +280,12 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_KeywordsSummaryTask_tagging_v0'
       storage: 'S3KeywordsSummary'
+    - name: 'dependency_tree'
+      classname: 'GithubDependencyTreeTask'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GithubDependencyTreeTask_v0'
+      storage: 'BayesianPostgres'
 
   flows:
     - 'bayesianFlow'
@@ -301,6 +307,7 @@
     - 'keywordsSummaryFlow'
     - 'keywordsApiSummaryFlow'
     - 'keywordsPrioritySummaryFlow'
+    - 'osioAnalysisFlow'
 
   storages:
     - name: 'BayesianPostgres'
