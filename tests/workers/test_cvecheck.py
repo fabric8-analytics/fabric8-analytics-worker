@@ -93,9 +93,35 @@ class TestCVEchecker(object):
                 "https://h20566.www2.hpe.com/portal/site/hpsc/public/kb/"
                 "docDisplay?docId=emr_na-c05390722",
                 "http://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/"
-                "cisco-sa-20151209-java-deserialization"
+                "cisco-sa-20151209-java-deserialization",
+                "https://www.kb.cert.org/vuls/id/576313"
             ],
-            "severity": "High"}, {
+            "severity": "High"
+        }, {
+            "cvss": {
+                "score": 7.5,
+                "vector": "AV:N/AC:L/Au:?/C:P/I:P/A:P"
+            },
+            "description": "In Apache Synapse, by default no authentication is required for Java "
+                           "Remote Method Invocation (RMI). So Apache Synapse 3.0.1 or all "
+                           "previous releases (3.0.0, 2.1.0, 2.0.0, 1.2, 1.1.2, 1.1.1) allows "
+                           "remote code execution attacks that can be performed by injecting "
+                           "specially crafted serialized objects. And the presence of Apache "
+                           "Commons Collections 3.2.1 (commons-collections-3.2.1.jar) or previous "
+                           "versions in Synapse distribution makes this exploitable. To mitigate "
+                           "the issue, we need to limit RMI access to trusted users only. Further "
+                           "upgrading to 3.0.1 version will eliminate the risk of having said "
+                           "Commons Collection version. In Synapse 3.0.1, Commons Collection has "
+                           "been updated to 3.2.2 version.",
+            "id": "CVE-2017-15708",
+            "references": [
+                "http://www.securityfocus.com/bid/102154",
+                "https://lists.apache.org/thread.html/"
+                "77f2accf240d25d91b47033e2f8ebec84ffbc6e6627112b2f98b66c9@%3C"
+                "dev.synapse.apache.org%3E"
+            ],
+            "severity": "High"
+        }, {
             "cvss": {
                 "score": 7.5,
                 "vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
@@ -111,8 +137,7 @@ class TestCVEchecker(object):
                 "opennms-and-your-application-have-in-common-this-vulnerability/"],
             "severity": "critical",
             'attribution': 'https://github.com/victims/victims-cve-db, CC BY-SA 4.0, modified'
-        }
-        ]
+        }]
         assert_equal(results.get('details'), expected_details)
 
     def test_python_mako(self):
