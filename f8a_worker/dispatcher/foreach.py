@@ -22,24 +22,7 @@ def _is_url_dependency(dep):
         return True
 
     return False
-def iter_unknown_dependencies(storage_pool,node_args):
-    # Be safe here as fatal errors will cause errors in Dispatcher
-    try:
-        aggregated = storage_pool.get('UnknownDependencyFetcherTask')
-        postgres = storage_pool.get_connected_storage('BayesianPostgres')
-        arguments = []
-        for element in aggregated['result']:
-            list=element.split(":")
-            ecosystem = list[0]
-            name = list[1]+list[2]
-            version = list[3]
-            arguments.append(_create_analysis_arguments(ecosystem, name, version))
 
-        logger.info("Arguments for next flows: %s" % str(arguments))
-        return arguments
-    except Exception:
-        logger.exception("Failed to collect unknown dependencies")
-        return []  
 
 def iter_dependencies_analysis(storage_pool, node_args):
     # Be safe here as fatal errors will cause errors in Dispatcher
