@@ -2,7 +2,7 @@
 
 import glob
 import os
-import os.path as osp
+from pathlib import Path
 import pytest
 import subprocess
 
@@ -44,34 +44,34 @@ class TestIndianaJones(object):
     ])
     def test_fetch_npm_specific(self, tmpdir, npm, name, version, expected_digest):
         """Test fetching of npm artifact."""
-        cache_path = subprocess.check_output(["npm", "config", "get", "cache"],
-                                             universal_newlines=True).strip()
-        assert ".npm" in cache_path
+        cache_path = Path(subprocess.check_output(["npm", "config", "get", "cache"],
+                                                  universal_newlines=True).strip())
+        assert cache_path.name == ".npm"
         package_digest, path = IndianaJones.fetch_artifact(npm,
                                                            artifact=name,
                                                            version=version,
                                                            target_dir=str(tmpdir))
-        assert len(glob.glob(osp.join(cache_path, name, "*"))) == 1,\
+        assert len(list((cache_path / name).glob('*'))) == 1,\
             "there should be just one version of the artifact in the NPM cache"
         assert package_digest == expected_digest
-        assert osp.exists(path)
-        assert osp.exists(osp.join(osp.join(cache_path, name), version))
-        assert osp.exists(osp.join(str(tmpdir), "package.tgz"))
+        assert Path(path).exists()
+        assert (cache_path / name / version).exists()
+        assert Path(str(tmpdir / "package.tgz")).exists()
 
     @pytest.mark.parametrize('name, version, expected_digest', [
         ('six', '1.0.0', 'ca79c14c8cb5e58912d185f0e07ca9c687e232b7c68c4b73bf1c83ef5979333e'),
     ])
     def test_fetch_pypi_specific(self, tmpdir, pypi, name, version, expected_digest):
         """Test fetching of pypi artifact."""
+        tmpdir = Path(str(tmpdir))
         digest, path = IndianaJones.fetch_artifact(pypi,
                                                    artifact=name,
                                                    version=version,
                                                    target_dir=str(tmpdir))
         assert digest == expected_digest
-        assert len(os.listdir(str(tmpdir))) > 1
-        glob_whl_path = glob.glob(osp.join(str(tmpdir), "{}-{}*".format(name,
-                                                                        version))).pop()
-        assert osp.exists(glob_whl_path)
+        assert len(list(tmpdir.iterdir())) > 1
+        glob_whl_path = next(tmpdir.glob("{}-{}*".format(name, version)))
+        assert glob_whl_path.exists()
 
     @pytest.mark.parametrize('name, version, expected_digest', [
         ('permutation', '0.1.7', 'e715cccaccb8e2d1450fbdda85bbe84963a32e9bf612db278cbb3d6781267638')
@@ -83,8 +83,9 @@ class TestIndianaJones(object):
                                                    version=version,
                                                    target_dir=str(tmpdir))
         assert digest == expected_digest
-        assert path.endswith("{}-{}.gem".format(name, version))
-        assert osp.exists(path)
+        path = Path(path)
+        assert path.name == "{}-{}.gem".format(name, version)
+        assert path.exists()
 
     @pytest.mark.parametrize('name, version, expected_digest', [
         ('com.rabbitmq:amqp-client', '3.6.1',
@@ -98,8 +99,9 @@ class TestIndianaJones(object):
                                                    target_dir=str(tmpdir))
         _, artifactId = name.split(':', 1)
         assert digest == expected_digest
-        assert path.endswith('{}-{}.jar'.format(artifactId, version))
-        assert osp.exists(path)
+        path = Path(path)
+        assert path.name == '{}-{}.jar'.format(artifactId, version)
+        assert path.exists()
 
     @pytest.mark.parametrize('name, version, expected_digest', [
         ('NUnit', '3.7.1', 'db714c0a01d8a172e6c378144b1192290263f8c308e8e2baba9c11d9fe165db4'),
@@ -111,8 +113,9 @@ class TestIndianaJones(object):
                                                    version=version,
                                                    target_dir=str(tmpdir))
         assert digest == expected_digest
-        assert path.endswith('{}.{}.nupkg'.format(name.lower(), version))
-        assert osp.exists(path)
+        path = Path(path)
+        assert path.name == '{}.{}.nupkg'.format(name.lower(), version)
+        assert path.exists()
 
     @pytest.mark.parametrize('name, version, expected_digest', [
         ('github.com/gorilla/mux', '3f19343c7d9ce75569b952758bd236af94956061',
@@ -127,5 +130,6 @@ class TestIndianaJones(object):
                                                    version=version,
                                                    target_dir=str(tmpdir))
         assert digest == expected_digest
-        assert path.endswith('{}.tar.gz'.format(version))
-        assert osp.exists(path)
+        path = Path(path)
+        assert path.name == '{}.tar.gz'.format(version)
+        assert path.exists()

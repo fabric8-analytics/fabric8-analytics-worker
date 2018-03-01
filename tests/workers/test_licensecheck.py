@@ -1,20 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import pytest
-import os
 import jsonschema
 from flexmock import flexmock
+from pathlib import Path
+import pytest
+
 from f8a_worker.workers import LicenseCheckTask
 from f8a_worker.schemas import load_worker_schema, pop_schema_ref
 from f8a_worker.object_cache import EPVCache
-
-
-# TODO: drop the try/except after switching to Python 3
-try:
-    from shutil import which
-except ImportError:
-    # Near-enough-for-our-purposes equivalent in Python 2.x
-    from distutils.spawn import find_executable as which
 
 
 @pytest.mark.offline
@@ -28,15 +21,13 @@ class TestLicenseCheck(object):
         flexmock(EPVCache).should_receive('get_sources').and_return(data)
         task = LicenseCheckTask.create_test_instance(task_name='source_licenses')
         with pytest.raises(Exception):
-            results = task.execute(arguments=args)
+            task.execute(arguments=args)
 
-    @pytest.mark.skipif(not os.path.isfile('/opt/scancode-toolkit/scancode'),
+    @pytest.mark.skipif(not Path('/opt/scancode-toolkit/scancode').is_file(),
                         reason="requires scancode")
     @pytest.mark.usefixtures("no_s3_connection")
     def test_execute(self):
-        data = os.path.join(
-            os.path.dirname(
-                os.path.abspath(__file__)), '..', 'data', 'license')
+        data = str(Path(__file__).parent.parent / 'data/license')
         args = dict.fromkeys(('ecosystem', 'name', 'version'), 'some-value')
         flexmock(EPVCache).should_receive('get_sources').and_return(data)
         task = LicenseCheckTask.create_test_instance(task_name='source_licenses')
