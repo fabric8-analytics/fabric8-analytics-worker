@@ -14,7 +14,7 @@ TIMESTAMP="$(date +%F-%H-%M-%S)"
 
 IMAGE_NAME=${IMAGE_NAME:-registry.devshift.net/bayesian/cucos-worker}
 TEST_IMAGE_NAME="worker-tests"
-POSTGRES_IMAGE_NAME="registry.centos.org/sclo/postgresql-94-centos7:latest"
+POSTGRES_IMAGE_NAME="registry.centos.org/centos/postgresql-94-centos7:latest"
 S3_IMAGE_NAME="minio/minio"
 CVEDB_S3_DUMP_IMAGE_NAME="registry.devshift.net/bayesian/cvedb-s3-dump"
 
