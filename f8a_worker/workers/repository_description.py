@@ -1,3 +1,5 @@
+"""Class to gather package description available in repository."""
+
 import requests
 from bs4 import BeautifulSoup
 from f8a_worker.base import BaseTask
@@ -14,6 +16,7 @@ class RepositoryDescCollectorTask(BaseTask):
 
     @staticmethod
     def _scrape_page(url):
+        """Web scrape URL."""
         response = requests.get(url)
         if response.status_code != 200:
             raise FatalTaskError("Unable to access package web page at '%s'" % url)
@@ -61,6 +64,7 @@ class RepositoryDescCollectorTask(BaseTask):
     }
 
     def execute(self, arguments):
+        """Execute task."""
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
 

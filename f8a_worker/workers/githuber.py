@@ -30,6 +30,7 @@ class GithubTask(BaseTask):
 
     @classmethod
     def create_test_instance(cls, repo_name, repo_url):
+        """Create instance of task for tests."""
         instance = super().create_test_instance()
         # set for testing as we are not querying DB for mercator results
         instance._repo_name = repo_name
@@ -37,6 +38,7 @@ class GithubTask(BaseTask):
         return instance
 
     def _get_last_years_commits(self, repo_url):
+        """Get weekly commit activity for last year."""
         try:
             activity = get_response(urljoin(repo_url + '/', "stats/commit_activity"), self._headers)
         except TaskError as e:
@@ -45,6 +47,7 @@ class GithubTask(BaseTask):
         return [x['total'] for x in activity]
 
     def _get_repo_stats(self, repo):
+        """Collect various repository properties."""
         try:
             contributors = get_response(repo['contributors_url'], self._headers)
         except TaskError as e:
@@ -65,6 +68,7 @@ class GithubTask(BaseTask):
         return parsed
 
     def execute(self, arguments):
+        """Task's workhorse."""
         result_data = {'status': 'unknown',
                        'summary': [],
                        'details': {}}
@@ -111,7 +115,7 @@ class GithubTask(BaseTask):
 
 
 class GitReadmeCollectorTask(BaseTask):
-    """Store README files stored on Github."""
+    """Collect README files stored on Github."""
 
     _GITHUB_README_PATH = \
         'https://raw.githubusercontent.com/{project}/{repo}/master/README{extension}'
@@ -133,6 +137,7 @@ class GitReadmeCollectorTask(BaseTask):
     ))
 
     def _get_github_readme(self, url):
+        """Get README from url."""
         repo_tuple = parse_gh_repo(url)
         if repo_tuple:
             project, repo = repo_tuple.split('/')
@@ -155,6 +160,7 @@ class GitReadmeCollectorTask(BaseTask):
                 return {'type': readme_type, 'content': response.text}
 
     def run(self, arguments):
+        """Task's entrypoint."""
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('url'))

@@ -1,6 +1,7 @@
+"""Classes for recommending."""
+
 from __future__ import division
 import json
-import traceback
 import datetime
 
 import requests
@@ -27,9 +28,12 @@ _logger = logging.getLogger(__name__)
 
 
 class SimilarStack(object):
+    """Stack similarity."""
+
     def __init__(self, stack_id, usage_score=None, source=None,
                  original_score=None, missing_packages=None,
                  version_mismatch=None, stack_name=None):
+        """Initialize object."""
         self.stack_id = stack_id
         self.stack_name = stack_name
         self.usage_score = usage_score
@@ -39,18 +43,21 @@ class SimilarStack(object):
         self.version_mismatch = version_mismatch or []
 
     def __repr__(self):
+        """Represent object as a string."""
         return '{}: {} {}'.format(self.__class__.__name__,
                                   self.stack_id, self.original_score)
 
 
 class GraphDB:
+    """Graph database."""
 
     def __init__(self):
+        """Initialize object."""
         self._bayesian_graph_url = GREMLIN_SERVER_URL_REST
 
     @staticmethod
     def id_value_checker(id_value):
-        """Check is the given id_value is an integer or not."""
+        """Check if the given id_value is an integer."""
         if isinstance(id_value, int):
             return id_value
         return 0
@@ -65,7 +72,7 @@ class GraphDB:
         return result
 
     def execute_gremlin_dsl(self, payload):
-        """Execute the gremlin query and return the response."""
+        """Execute gremlin query and return the response."""
         try:
             response = get_session_retry().post(self._bayesian_graph_url, data=json.dumps(payload))
             if response.status_code != 200:
@@ -79,7 +86,8 @@ class GraphDB:
             _logger.error("Failed retrieving Gremlin data.")
             return None
 
-    def get_response_data(self, json_response, data_default):
+    @staticmethod
+    def get_response_data(json_response, data_default):
         """Return the result taken from the JSON response.
 
         The data_default parameter is used as an selector for data to be returned.
@@ -87,6 +95,7 @@ class GraphDB:
         return json_response.get("result", {}).get("data", data_default)
 
     def get_full_ref_stacks(self, list_packages):
+        """Get full reference stacks."""
         full_ref_stacks = []
         str_packages = []
         for package in list_packages:
@@ -114,7 +123,6 @@ class GraphDB:
         sim_score = count(input_stack intersection ref_stack) / max(len(input_stack, ref_stack))
         """
         str_packages = []
-        ref_stack_matching_components = {}
         ref_stack_full_components = {}
         list_stack_names = []
         for package in list_packages:
@@ -182,7 +190,9 @@ class GraphDB:
 
         return []
 
-    def get_top_5_ref_stack(self, full_ref_stacks):
+    @staticmethod
+    def get_top_5_ref_stack(full_ref_stacks):
+        """Return top 5 most common reference stacks."""
         frr = []
         top_ref_stacks = []
         for ref_stack in full_ref_stacks:
@@ -196,6 +206,7 @@ class GraphDB:
         return top_ref_stacks
 
     def get_ref_stack_component_list(self, refstackid):
+        """Get component list from reference stack."""
         components = []
         payload = {
             'gremlin': "g.V(refstackid).out().valueMap();",
@@ -210,7 +221,9 @@ class GraphDB:
                                                 data_default=[])
         return components
 
-    def get_ref_stack_properties(self, ref_stack):
+    @staticmethod
+    def get_ref_stack_properties(ref_stack):
+        """Generate reference stack map with properties from given ref_stack."""
         ref_stack_map = {
             'application_name': ref_stack.get('sname', [''])[0],
             'appstack_id': ref_stack.get('sid', [''])[0],
@@ -221,7 +234,9 @@ class GraphDB:
         }
         return ref_stack_map
 
-    def get_package_info(self, component):
+    @staticmethod
+    def get_package_info(component):
+        """Generate package info map with properties from given component."""
         package = {
                     'package_name': component.get('pname')[0],
                     'version_spec': {'spec': component.get('version', ['Error'])[0]},
@@ -293,7 +308,8 @@ class GraphDB:
         response = self.get_response_data(gremlin_response, [{0: 0}])
         return response
 
-    def filter_versions(self, epv_list, input_stack):
+    @staticmethod
+    def filter_versions(epv_list, input_stack):
         """Filter the EPVs according to following rules.
 
         First filter fetches only EPVs that
@@ -409,7 +425,8 @@ class GraphDB:
                     )
         return input_stack_list
 
-    def get_topics_for_alt(self, comp_list, pgm_dict):
+    @staticmethod
+    def get_topics_for_alt(comp_list, pgm_dict):
         """Get topics from pgm and associate with filtered versions from Graph."""
         for epv in comp_list:
             name = epv.get('pkg', {}).get('name', [''])[0]
@@ -421,7 +438,8 @@ class GraphDB:
 
         return comp_list
 
-    def get_topics_for_comp(self, comp_list, pgm_list):
+    @staticmethod
+    def get_topics_for_comp(comp_list, pgm_list):
         """Get topics from pgm and associate with filtered versions from Graph."""
         for epv in comp_list:
             name = epv.get('pkg', {}).get('name', [''])[0]
@@ -438,15 +456,20 @@ class GraphDB:
 
 
 class RelativeSimilarity:
+    """Relative similarity."""
 
     def __init__(self):
+        """Initialize object."""
         self.jaccard_threshold = float(os.environ.get('JACCARD_THRESHOLD', '0.3'))
         self.similarity_score_threshold = float(os.environ.get('SIMILARITY_SCORE_THRESHOLD', '0.3'))
 
-    def is_same_version(self, ref_component_version, input_component_version):
+    @staticmethod
+    def is_same_version(ref_component_version, input_component_version):
+        """Are the two versions the same ?."""
         return ref_component_version.strip() == input_component_version.strip()
 
-    def relative_similarity(self, x, y):
+    @staticmethod
+    def relative_similarity(x, y):
         """Measure the difference between two elements based on some vectors(list of values)."""
         nu = sum(abs(a - b) for a, b in zip(x, y))
         dnu = sum(x) + sum(y)
@@ -456,7 +479,8 @@ class RelativeSimilarity:
         sim = round(1 - diff, 4)
         return sim
 
-    def get_refstack_component_list(self, ref_stack):
+    @staticmethod
+    def get_refstack_component_list(ref_stack):
         """Create list of package names and list of corresponding versions.
 
         Breaks down reference stack elements into two separate lists of
@@ -471,7 +495,9 @@ class RelativeSimilarity:
                 corresponding_version.append(dependency['version_spec']['spec'])
         return refstack_component_list, corresponding_version
 
-    def get_code_metrics_info(self, comp):
+    @staticmethod
+    def get_code_metrics_info(comp):
+        """Get code metrics of specified component."""
         loc = comp.get('loc', 0)
         num_files = comp.get('num_files', 0)
         code_complexity = comp.get('code_complexity', 0)
@@ -502,7 +528,8 @@ class RelativeSimilarity:
         pvalue = self.relative_similarity(input_data, ref_data)
         return pvalue
 
-    def compute_modified_jaccard_similarity(self, len_input_stack, len_ref_stack, vcount):
+    @staticmethod
+    def compute_modified_jaccard_similarity(len_input_stack, len_ref_stack, vcount):
         """For two stacks A and B, it returns Count(A intersection B) / max(Count(A, B))."""
         return vcount / max(len_ref_stack, len_input_stack)
 
@@ -570,10 +597,13 @@ class RelativeSimilarity:
 
 
 class RecommendationTask(BaseTask):
+    """Recommendation task."""
+
     _analysis_name = 'recommendation'
     description = 'Get Recommendation'
 
     def execute(self, arguments=None):
+        """Execute task."""
         arguments = self.parent_task_result('GraphAggregatorTask')
         recommendations = []
         rs = RelativeSimilarity()
@@ -613,7 +643,8 @@ class RecommendationTask(BaseTask):
 
         return {"recommendations": recommendations}
 
-    def _get_stack_values(self, similar_stacks_list):
+    @staticmethod
+    def _get_stack_values(similar_stacks_list):
         """Convert the similarity score list to JSON based on the needs."""
         similarity_list = []
         for stack in similar_stacks_list:
@@ -633,6 +664,7 @@ class RecommendationTask(BaseTask):
 
 
 def invoke_license_analysis_service(user_stack_packages, alternate_packages, companion_packages):
+    """Pass given args to stack_license analysis."""
     license_url = LICENSE_SCORING_URL_REST + "/api/v1/stack_license"
 
     payload = {
@@ -654,6 +686,7 @@ def invoke_license_analysis_service(user_stack_packages, alternate_packages, com
 
 
 def apply_license_filter(user_stack_components, epv_list_alt, epv_list_com):
+    """License Filter."""
     license_score_list_alt = []
     for epv in epv_list_alt:
         license_scoring_input = {
@@ -711,6 +744,8 @@ def apply_license_filter(user_stack_components, epv_list_alt, epv_list_com):
 
 
 class RecommendationV2Task(BaseTask):
+    """Recommendation V2 task."""
+
     _analysis_name = 'recommendation_v2'
     description = 'Get Recommendation'
 
@@ -745,6 +780,7 @@ class RecommendationV2Task(BaseTask):
             return None
 
     def execute(self, parguments=None):
+        """Execute task."""
         arguments = self.parent_task_result('GraphAggregatorTask')
         results = arguments['result']
 

@@ -76,6 +76,7 @@ class BaseTask(SelinonTask):
     @classmethod
     def create_test_instance(cls, flow_name=None, task_name=None, parent=None, task_id=None,
                              dispatcher_id=None):
+        """Create instance of task for tests."""
         # used in tests so we do not do ugly things like this, this correctly done by dispatcher
         return cls(flow_name, task_name or cls.__name__, parent, task_id, dispatcher_id)
 

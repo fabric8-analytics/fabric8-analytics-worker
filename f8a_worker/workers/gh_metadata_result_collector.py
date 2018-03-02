@@ -1,3 +1,5 @@
+"""Collector for metadata retrieved from GitHub manifest files."""
+
 import requests
 from selinon import StoragePool
 from sqlalchemy.exc import SQLAlchemyError
@@ -16,6 +18,7 @@ class GitHubManifestMetadataResultCollector(BaseTask):
     GITHUB_CONTENT_URL = 'http://raw.githubusercontent.com/'
 
     def run(self, arguments):
+        """Run task."""
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('repo_name'))
         self._strict_assert(arguments.get('document_id'))
