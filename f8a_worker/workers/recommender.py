@@ -16,7 +16,6 @@ from f8a_worker.base import BaseTask
 from f8a_worker.utils import get_session_retry
 from f8a_worker.workers.stackaggregator_v2 import extract_user_stack_package_licenses
 
-
 danger_word_list = ["drop\(\)", "V\(\)", "count\(\)"]
 remove = '|'.join(danger_word_list)
 pattern = re.compile(r'(' + remove + ')', re.IGNORECASE)
@@ -44,7 +43,6 @@ class SimilarStack(object):
 
 
 class GraphDB:
-
     def __init__(self):
         self._bayesian_graph_url = GREMLIN_SERVER_URL_REST
 
@@ -161,7 +159,7 @@ class GraphDB:
             for key, val in ref_stack_matching_components[0].items():
                 if key in ref_stack_full_components[0]:
                     denominator = float(max(ref_stack_full_components[0].get(key),
-                                        len(list_packages)))
+                                            len(list_packages)))
                     ref_stk[key] = float(val) / denominator
 
             # Get the name of reference stack with topmost similarity score
@@ -201,7 +199,7 @@ class GraphDB:
             'gremlin': "g.V(refstackid).out().valueMap();",
             'bindings': {
                 "refstackid":
-                str(GraphDB.id_value_checker(refstackid))
+                    str(GraphDB.id_value_checker(refstackid))
             }
         }
         json_response = self.execute_gremlin_dsl(payload)
@@ -223,14 +221,14 @@ class GraphDB:
 
     def get_package_info(self, component):
         package = {
-                    'package_name': component.get('pname')[0],
-                    'version_spec': {'spec': component.get('version', ['Error'])[0]},
-                    'loc': float(component.get('cm_loc', [0.0])[0]),
-                    'num_files': float(component.get('cm_num_files', [0.0])[0]),
-                    'code_complexity': float(component.get('cm_avg_cyclomatic_complexity',
-                                             [0.0])[0]),
-                    'redistributed_by_redhat': component.get('shipped_as_downstream', [False])[0]
-                }
+            'package_name': component.get('pname')[0],
+            'version_spec': {'spec': component.get('version', ['Error'])[0]},
+            'loc': float(component.get('cm_loc', [0.0])[0]),
+            'num_files': float(component.get('cm_num_files', [0.0])[0]),
+            'code_complexity': float(component.get('cm_avg_cyclomatic_complexity',
+                                                   [0.0])[0]),
+            'redistributed_by_redhat': component.get('shipped_as_downstream', [False])[0]
+        }
         return package
 
     def get_reference_stacks_from_graph(self, list_packages):
@@ -323,7 +321,7 @@ class GraphDB:
                 if latest_version and latest_version == version:
                     try:
                         if sv.SpecItem('>=' + input_stack.get(name, '0.0.0')).match(
-                           sv.Version(semversion)):
+                                sv.Version(semversion)):
                             pkg_dict[name]['latest_version'] = latest_version
                             new_dict[name]['latest_version'] = epv.get('ver')
                             new_dict[name]['pkg'] = epv.get('pkg')
@@ -336,10 +334,10 @@ class GraphDB:
                 deps_count = epv.get('ver').get('dependents_count', [-1])[0]
                 if deps_count > 0:
                     if 'deps_count' not in pkg_dict[name] or \
-                       deps_count > pkg_dict[name].get('deps_count', {}).get('deps_count', 0):
+                                    deps_count > pkg_dict[name].get('deps_count', {}).get('deps_count', 0):
                         try:
                             if sv.SpecItem('>=' + input_stack.get(name, '0.0.0')).match(
-                               sv.Version(semversion)):
+                                    sv.Version(semversion)):
                                 pkg_dict[name]['deps_count'] = {"version": version,
                                                                 "deps_count": deps_count}
                                 new_dict[name]['deps_count'] = epv.get('ver')
@@ -353,11 +351,11 @@ class GraphDB:
                 gh_release_date = epv.get('ver').get('gh_release_date', [0])[0]
                 if gh_release_date > 0.0:
                     if 'gh_release_date' not in pkg_dict[name] or \
-                       gh_release_date > \
-                       pkg_dict[name].get('gh_release_date', {}).get('gh_release_date', 0):
+                                    gh_release_date > \
+                                    pkg_dict[name].get('gh_release_date', {}).get('gh_release_date', 0):
                         try:
                             if sv.SpecItem('>=' + input_stack.get(name, '0.0.0')).match(
-                               sv.Version(semversion)):
+                                    sv.Version(semversion)):
                                 pkg_dict[name]['gh_release_date'] = {
                                     "version": version,
                                     "gh_release_date": gh_release_date}
@@ -399,13 +397,13 @@ class GraphDB:
                 if len(response) > 0:
                     data = response[0]
                     input_stack_list.append({
-                            'package_name': package,
-                            'version': version,
-                            'loc': float(data.get('cm_loc', ['0'])[0]),
-                            'num_files': float(data.get('cm_num_files', ['0'])[0]),
-                            'code_complexity': float(data.get('cm_avg_cyclomatic_complexity',
-                                                              ['0'])[0])
-                        }
+                        'package_name': package,
+                        'version': version,
+                        'loc': float(data.get('cm_loc', ['0'])[0]),
+                        'num_files': float(data.get('cm_num_files', ['0'])[0]),
+                        'code_complexity': float(data.get('cm_avg_cyclomatic_complexity',
+                                                          ['0'])[0])
+                    }
                     )
         return input_stack_list
 
@@ -438,7 +436,6 @@ class GraphDB:
 
 
 class RelativeSimilarity:
-
     def __init__(self):
         self.jaccard_threshold = float(os.environ.get('JACCARD_THRESHOLD', '0.3'))
         self.similarity_score_threshold = float(os.environ.get('SIMILARITY_SCORE_THRESHOLD', '0.3'))
@@ -580,7 +577,7 @@ class RecommendationTask(BaseTask):
 
         for result in arguments.get('result', []):
             input_stack = {d["package"]: d["version"] for d in result.get("details", [])[0]
-                           .get("_resolved")}
+                .get("_resolved")}
             ecosystem = result["details"][0].get("ecosystem")
             manifest_file_path = result["details"][0].get('manifest_file_path')
 
@@ -680,10 +677,10 @@ def apply_license_filter(user_stack_components, epv_list_alt, epv_list_com):
     conflict_packages_alt = conflict_packages_com = []
     if la_output.get('status') == 'Successful' and la_output.get('license_filter') is not None:
         license_filter = la_output.get('license_filter', {})
-        conflict_packages_alt = license_filter.get('alternate_packages', {})\
-                                              .get('conflict_packages', [])
-        conflict_packages_com = license_filter.get('companion_packages', {})\
-                                              .get('conflict_packages', [])
+        conflict_packages_alt = license_filter.get('alternate_packages', {}) \
+            .get('conflict_packages', [])
+        conflict_packages_com = license_filter.get('companion_packages', {}) \
+            .get('conflict_packages', [])
 
     list_pkg_names_alt = []
     for epv in epv_list_alt[:]:
@@ -777,7 +774,7 @@ class RecommendationV2Task(BaseTask):
                 'unknown_packages_ratio_threshold':
                     float(os.environ.get('UNKNOWN_PACKAGES_THRESHOLD', 0.3)),
                 'user_persona': "1",  # TODO - remove janus hardcoded value
-                                      # completely and assing a cateogory here
+                # completely and assing a cateogory here
                 'package_list': new_arr
             }
             self.log.debug(json_object)
@@ -785,7 +782,28 @@ class RecommendationV2Task(BaseTask):
 
             # Call PGM and get the response
             start = datetime.datetime.utcnow()
-            pgm_response = self.call_pgm(input_task_for_pgm)
+            pgm_response = [{'user_persona': '1', 'alternate_packages': {}, 'ecosystem': 'maven',
+                             'companion_packages': [
+                                 {'cooccurrence_probability': 75, 'package_name': 'mysql:mysql-connector-java',
+                                  'topic_list': ['java', 'connector', 'mysql']}, {'cooccurrence_probability': 3,
+                                                                                  'package_name': 'org.springframework.boot:spring-boot-starter-web',
+                                                                                  'topic_list': [
+                                                                                      'spring-webapp-booster',
+                                                                                      'spring-starter-web',
+                                                                                      'spring-rest-api-starter',
+                                                                                      'spring-web-service']},
+                                 {'cooccurrence_probability': 1,
+                                  'package_name': 'org.springframework.boot:spring-boot-starter-data-jpa',
+                                  'topic_list': ['spring-persistence', 'spring-jpa', 'spring-data',
+                                                 'spring-jpa-adaptor']}, {'cooccurrence_probability': 2,
+                                                                          'package_name': 'org.springframework.boot:spring-boot-starter-actuator',
+                                                                          'topic_list': ['spring-rest-api',
+                                                                                         'spring-starter',
+                                                                                         'spring-actuator',
+                                                                                         'spring-http']}],
+                             'missing_packages': [], 'outlier_package_list': [],
+                             'package_to_topic_dict': {'io.vertx:vertx-web': ['vertx-web', 'webapp', 'auth', 'routing'],
+                                                       'io.vertx:vertx-core': ['http', 'socket', 'tcp', 'reactive']}}]
             elapsed_seconds = (datetime.datetime.utcnow() - start).total_seconds()
             msg = 'It took {t} seconds to get response from PGM ' \
                   'for external request {e}.'.format(t=elapsed_seconds,
@@ -880,19 +898,19 @@ class RecommendationV2Task(BaseTask):
                     if len(lic_filtered_list_alt) > 0:
                         s = set(filtered_alternate_packages).difference(set(lic_filtered_list_alt))
                         msg = \
-                            "Alternate Packages filtered (licenses) for external_request_id {} {}"\
-                            .format(parguments.get('external_request_id', ''), s)
+                            "Alternate Packages filtered (licenses) for external_request_id {} {}" \
+                                .format(parguments.get('external_request_id', ''), s)
                         _logger.info(msg)
 
                     if len(lic_filtered_list_com) > 0:
                         s = set(filtered_companion_packages).difference(set(lic_filtered_list_com))
                         msg = \
-                            "Companion Packages filtered (licenses) for external_request_id {} {}"\
-                            .format(parguments.get('external_request_id', ''), s)
+                            "Companion Packages filtered (licenses) for external_request_id {} {}" \
+                                .format(parguments.get('external_request_id', ''), s)
                         _logger.info(msg)
 
                     # Get Topics Added to Filtered Packages
-                    topics_comp_packages_graph = GraphDB().\
+                    topics_comp_packages_graph = GraphDB(). \
                         get_topics_for_comp(lic_filtered_comp_graph,
                                             pgm_result['companion_packages'])
 
@@ -901,7 +919,7 @@ class RecommendationV2Task(BaseTask):
                     recommendation['companion'] = comp_packages
 
                     # Get Topics Added to Filtered Packages
-                    topics_comp_packages_graph = GraphDB().\
+                    topics_comp_packages_graph = GraphDB(). \
                         get_topics_for_alt(lic_filtered_alt_graph,
                                            pgm_result['alternate_packages'])
 
