@@ -4,5 +4,7 @@
       queue: '{DEPLOYMENT_PREFIX}_api_osioAnalysisFlow_v0'
       edges:
         - from:
-          to:
-            - 'dependency_tree'
+          to: 'dependency_tree'
+        - from: 'dependency_tree'
+          to: 'UnknownDependencyFetcherTask'
+
