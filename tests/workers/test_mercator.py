@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 import pytest
 from flexmock import flexmock
 from f8a_worker.object_cache import EPVCache
@@ -41,10 +41,8 @@ class TestMercator(object):
         assert details['name'] == name
 
     @pytest.mark.usefixtures("no_s3_connection")
-    def test_execute_maven(self, tmpdir, maven):
-        pom_path = os.path.join(
-                    os.path.dirname(os.path.abspath(__file__)),
-                    '..', 'data', 'maven', 'com.networknt', 'mask', 'pom.xml')
+    def test_execute_maven(self, maven):
+        pom_path = str(Path(__file__).parent.parent / 'data/maven/com.networknt/mask/pom.xml')
         name = 'com.networknt:mask'
         version = '1.1.0'
         required = {'code_repository', 'declared_licenses', 'dependencies', 'description',
@@ -69,10 +67,7 @@ class TestMercator(object):
 
     @pytest.mark.usefixtures("no_s3_connection")
     def test_execute_go(self, go):
-        path = os.path.join(
-                    os.path.dirname(os.path.abspath(__file__)),
-                    '..', 'data', 'go', 'mercator-go')
-
+        path = str(Path(__file__).parent.parent / 'data/go/mercator-go')
         args = {'ecosystem': go.name, 'name': 'dummy', 'version': 'dummy'}
         flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(path)
         results = self.m.execute(arguments=args)

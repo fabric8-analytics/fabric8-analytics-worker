@@ -1,10 +1,9 @@
 """DataNormalizer tests."""
 
-from io import open
 import json
 import os
+from pathlib import Path
 import pytest
-from os import path
 
 from f8a_worker.data_normalizer import DataNormalizer
 
@@ -26,15 +25,13 @@ class TestDataNormalizer(object):
 
     def setup_method(self, method):
         """Set up any state tied to the execution of the given method in a class."""
-        self.data = os.path.join(
-            os.path.dirname(
-                os.path.abspath(__file__)), 'data', 'dataNormalizer')
+        self.data = Path(__file__).parent / 'data/dataNormalizer'
         self._dataNormalizer = DataNormalizer()
 
     def _load_json(self, f):
         """Load json from f."""
-        with open(os.path.join(self.data, f), encoding='utf-8') as f:
-            return json.load(f)
+        with (self.data / f).open(encoding='utf-8') as fd:
+            return json.load(fd)
 
     @pytest.mark.parametrize('args, expected', [
         ({'keywords': None},
@@ -258,7 +255,7 @@ class TestDataNormalizer(object):
     @staticmethod
     def sort_by_path(dict_):
         """Sort dict_ by length of 'path' of it's members."""
-        return sorted(dict_, key=lambda a: len(a['path'].split(path.sep)))
+        return sorted(dict_, key=lambda a: len(a['path'].split(os.path.sep)))
 
     def test_get_outermost_items(self):
         """Test DataNormalizer.get_outermost_items()."""

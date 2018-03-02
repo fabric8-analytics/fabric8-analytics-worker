@@ -1,5 +1,5 @@
-import os
 from flexmock import flexmock
+from pathlib import Path
 import pytest
 import f8a_worker
 from f8a_worker.workers.bigquery_gh import BigQueryProject, BigQueryTask, compute_percentile_ranks
@@ -8,7 +8,7 @@ from f8a_worker.workers.bigquery_gh import BigQueryProject, BigQueryTask, comput
 @pytest.mark.usefixtures("dispatcher_setup")
 class TestBigQueryGH(object):
 
-    json_key = os.path.join(os.path.dirname(__file__), '../data/bigquery.json')
+    json_key = str(Path(__file__).parent.parent / 'data/bigquery.json')
 
     def test_project_id(self):
         flexmock(f8a_worker.workers.bigquery_gh).should_receive('get_client').once()

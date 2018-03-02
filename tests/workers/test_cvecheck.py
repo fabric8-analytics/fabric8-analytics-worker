@@ -1,6 +1,6 @@
 from datadiff.tools import assert_equal
 from flexmock import flexmock
-import os
+from pathlib import Path
 import pytest
 from shutil import copy
 from tempfile import TemporaryDirectory
@@ -56,10 +56,7 @@ class TestCVEchecker(object):
         assert_equal(results.get('details'), expected_details)
 
     def test_maven_commons_collections(self):
-        jar_path = os.path.join(
-                    os.path.dirname(
-                     os.path.abspath(__file__)), '..', 'data', 'maven',
-                                                 'commons-collections-3.2.1.jar')
+        jar_path = str(Path(__file__).parent.parent / 'data/maven/commons-collections-3.2.1.jar')
         args = {'ecosystem': 'maven', 'name': 'commons-collections:commons-collections',
                 'version': '3.2.1'}
         flexmock(EPVCache).should_receive('get_source_tarball').and_return(jar_path)
@@ -141,9 +138,7 @@ class TestCVEchecker(object):
         assert_equal(results.get('details'), expected_details)
 
     def test_python_mako(self):
-        extracted = os.path.join(
-                        os.path.dirname(
-                         os.path.abspath(__file__)), '..', 'data', 'pypi', 'Mako-0.3.3')
+        extracted = str(Path(__file__).parent.parent / 'data/pypi/Mako-0.3.3')
         args = {'ecosystem': 'pypi', 'name': 'mako', 'version': '0.3.3'}
         flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(extracted)
         task = CVEcheckerTask.create_test_instance(task_name='security_issues')
@@ -175,9 +170,7 @@ class TestCVEchecker(object):
 
     def test_python_requests(self):
         """To make sure that python CPE suppression works (issue#131)."""
-        extracted = os.path.join(
-                        os.path.dirname(
-                         os.path.abspath(__file__)), '..', 'data', 'pypi', 'requests-2.5.3')
+        extracted = str(Path(__file__).parent.parent / 'data/pypi/requests-2.5.3')
         args = {'ecosystem': 'pypi', 'name': 'requests', 'version': '2.5.3'}
         flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(extracted)
         task = CVEcheckerTask.create_test_instance(task_name='security_issues')
@@ -214,8 +207,7 @@ class TestCVEchecker(object):
 
         https://github.com/jeremylong/DependencyCheck/issues/896
         """
-        pkg_info = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                '..', 'data', 'pypi', 'salt-2016.11.6', 'PKG-INFO')
+        pkg_info = str(Path(__file__).parent.parent / 'data/pypi/salt-2016.11.6/PKG-INFO')
         args = {'ecosystem': 'pypi', 'name': 'salt', 'version': '2016.11.6'}
         with TemporaryDirectory() as extracted:
             # We need a write-access into extracted/
