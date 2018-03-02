@@ -2,7 +2,7 @@
 
 from f8a_worker.base import BaseTask
 from f8a_worker.errors import TaskError
-from f8a_worker.utils import TimedCommand, cwd, MavenCoordinates, add_maven_coords_to_set
+from f8a_worker.utils import TimedCommand, cwd, add_maven_coords_to_set
 from f8a_worker.process import Git
 from tempfile import TemporaryDirectory
 from pathlib import Path
@@ -36,16 +36,16 @@ class GithubDependencyTreeTask(BaseTask):
             repo = Git.clone(url=github_repo, path=workdir, timeout=3600)
             repo.reset(revision=github_sha, hard=True)
             with cwd(repo.repo_path):
+                output_file = Path.cwd() / "dependency-tree.txt"
                 cmd = ["mvn", "org.apache.maven.plugins:maven-dependency-plugin:3.0.2:tree",
                        "-DoutputType=dot",
-                       "-DoutputFile={filename}".format(
-                           filename=Path.cwd().joinpath("dependency-tree.txt")),
+                       "-DoutputFile={filename}".format(filename=output_file),
                        "-DappendOutput=true"]
                 timed_cmd = TimedCommand(cmd)
                 status, output, error = timed_cmd.run(timeout=3600)
-                if status != 0 or not Path("dependency-tree.txt").is_file():
+                if status != 0 or not output_file.is_file():
                     raise TaskError(error)
-                with open("dependency-tree.txt") as f:
+                with output_file.open() as f:
                     return GithubDependencyTreeTask.parse_maven_dependency_tree(f.readlines())
 
     @staticmethod
