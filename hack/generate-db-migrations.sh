@@ -9,7 +9,7 @@ IMAGE_NAME="registry.devshift.net/bayesian/cucos-worker"
 MIGRATIONS_IMAGE_NAME="coreapi-worker-migrations"
 POSTGRES_CONTAINER_NAME="coreapi-migrations-postgres-${TIMESTAMP}"
 MIGRATIONS_CONTAINER_NAME="coreapi-worker-migrations-${TIMESTAMP}"
-POSTGRES_IMAGE_NAME="registry.centos.org/sclo/postgresql-94-centos7:latest"
+POSTGRES_IMAGE_NAME="registry.centos.org/centos/postgresql-94-centos7:latest"
 
 docker build --pull --tag=$IMAGE_NAME -f "${THISDIR}/../Dockerfile" "${THISDIR}/.."
 docker build -f "${THISDIR}/../Dockerfile.migrations" --tag=$MIGRATIONS_IMAGE_NAME "${THISDIR}/.."
