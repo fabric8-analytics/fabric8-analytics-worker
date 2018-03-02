@@ -5,38 +5,43 @@ from f8a_worker.base import BaseTask
 from f8a_worker.utils import get_session_retry
 
 class UnknownDependencyFetcherTask(BaseTask):
+    _analysis_name = 'unknown_deps_fetcher'
+    description = 'Fetch unknown dependencies'
 
-	def get_dependency_data(self, dependency_list):
-		ecosystem = "maven"
-		dep_pkg_list_unknown = []
-		dep_pkg_list_known = []
-		for item in dependency_list:
-			dependency_list = item.split(":")
-			result = []
-			name = dependency_list[0] + ":" + dependency_list[1]
-			version = dependency_list[2]
-			qstring = ("g.V().has('pecosystem','" + ecosystem + "').has('pname','" +
-					   name + "').has('version','" + version + "').tryNext()")
-			payload = {'gremlin': qstring}
+    def get_dependency_data(self, dependency_list):
+        ecosystem = "maven"
+        dep_pkg_list_unknown = []
+        dep_pkg_list_known = []
+        for item in dependency_list:
+            dependency_list = item.split(":")
+            result = []
+            name = dependency_list[0] + ":" + dependency_list[1]
+            version = dependency_list[2]
+            qstring = ("g.V().has('pecosystem','" + ecosystem + "').has('pname','" +
+                       name + "').has('version','" + version + "').tryNext()")
+            payload = {'gremlin': qstring}
 
-			graph_req = get_session_retry().post(GREMLIN_SERVER_URL_REST, data=json.dumps(payload))
-			if graph_req.status_code == 200:
-				graph_resp = graph_req.json()
-				if graph_resp.get('result', {}).get('data'):
-					result.append(graph_resp["result"])
-					if result[0]['data'][0]['present']:
-							dep_pkg_list_known.append(ecosystem + ":" + name + ":" + version)
-					elif not (result[0]['data'][0]['present']):
-							dep_pkg_list_unknown.append(ecosystem + ":" + name + ":" + version)
-					else:
-						continue
-				else:
-					continue
-		return dep_pkg_list_unknown
+            graph_req = get_session_retry().post(GREMLIN_SERVER_URL_REST, data=json.dumps(payload))
+            if graph_req.status_code == 200:
+                graph_resp = graph_req.json()
+                if graph_resp.get('result', {}).get('data'):
+                    result.append(graph_resp["result"])
+                    if result[0]['data'][0]['present']:
+                            dep_pkg_list_known.append(ecosystem + ":" + name + ":" + version)
+                    elif not (result[0]['data'][0]['present']):
+                            dep_pkg_list_unknown.append(ecosystem + ":" + name + ":" + version)
+                    else:
+                        continue
+                else:
+                    continue
+        return dep_pkg_list_unknown
 
-	def execute(self, arguments=None):
-		aggregated = self.parent_task_result('GithubDependencyTreeTask')
-		self.log.debug("Arguments passed from GithubDependencyTreeTask: {}".format(arguments))
-		result = self.get_dependency_data(arguments['dependencies'])
-		return {"result": result}
+    def execute(self, arguments=None):
+        aggregated = self.parent_task_result('GithubDependencyTreeTask')
+
+        self.log.info ("Arguments passed from GithubDependencyTreeTask: {}".format(arguments))
+        self.log.info ("Result returned by GithubDependencyTreeTask: {}".format(aggregated))
+
+        result = self.get_dependency_data(aggregated['dependencies'])
+        return {"result": result}
 

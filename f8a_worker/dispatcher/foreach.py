@@ -92,3 +92,23 @@ def iter_cvedb_updates(storage_pool, node_args):
     except Exception:
         logger.exception("Failed to collect OSS Index updates")
         return []
+
+def iter_unknown_dependencies(storage_pool, node_args):
+    # Be safe here as fatal errors will cause errors in Dispatcher
+    try:
+        aggregated = storage_pool.get('UnknownDependencyFetcherTask')
+        postgres = storage_pool.get_connected_storage('BayesianPostgres')
+
+        arguments = []
+        for element in aggregated["result"]:
+            ecosystem = element['ecosystem']
+            name = element['package']
+            version = element['version']
+
+            arguments.append(_create_analysis_arguments(ecosystem, name, version))
+
+        logger.info("Arguments for next flows: %s" % str(arguments))
+        return arguments
+    except Exception:
+        logger.exception("Failed to collect unknown dependencies")
+        return []
