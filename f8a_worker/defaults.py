@@ -170,6 +170,7 @@ class F8AConfiguration(object):
 
     @property
     def dependency_check_script_path(self):
+        """Get path to OWASP dependency-check script."""
         assert self.OWASP_DEP_CHECK_PATH, "OWASP_DEP_CHECK_PATH not set"
         return path.join(self.OWASP_DEP_CHECK_PATH, 'bin', 'dependency-check.sh')
 

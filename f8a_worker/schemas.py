@@ -35,6 +35,8 @@ def removed_in(role):
 
 
 class JSLWithSchemaAttribute(jsl.Document):
+    """JSL schema for name, version, url."""
+
     name = jsl.StringField(required=True, description='Name of the schema',
                            pattern=r'^[a-zA-Z0-9_]+$')
     version = jsl.StringField(required=True, description='Version of the schema',
@@ -50,7 +52,7 @@ class JSLSchemaBase(jsl.Document):
     """
 
     def get_schema(self, role, ordered=True):
-        """Override of jsl.Document.get_schema with these changes:
+        """Override of jsl.Document.get_schema with these changes.
 
         - an explicit *role* argument is required
         - the *ordered* parameter defaults to True
@@ -72,6 +74,8 @@ class JSLSchemaBase(jsl.Document):
 
 
 class JSLSchemaBaseWithRelease(JSLSchemaBase):
+    """JSL schema for release id."""
+
     _release = jsl.StringField(
         required=False,
         description='Unique release id in form of "ecosystem:package:version"'
@@ -84,25 +88,31 @@ class SchemaRef(namedtuple("SchemaRef", "name version")):
     __slots__ = ()  # 3.4.3 compatibility: prevent __dict__ override
 
     def __str__(self):
+        """Represent schema as string."""
         return "{} v{}".format(self.name, self.version)
 
     # Define new schema versions based on this one
     def _split_version_info(self):
+        """Split version info into tuple."""
         return tuple(map(int, self.version.split("-")))
 
     def _replace_version_info(self, model, revision, addition):
+        """Replace version info."""
         version = "-".join(map(str, (model, revision, addition)))
         return self._replace(version=version)
 
     def next_addition(self):
+        """Bump addition."""
         model, revision, addition = self._split_version_info()
         return self._replace_version_info(model, revision, addition + 1)
 
     def next_revision(self):
+        """Bump revision."""
         model, revision, addition = self._split_version_info()
         return self._replace_version_info(model, revision + 1, addition)
 
     def next_model(self):
+        """Bump model."""
         model, revision, addition = self._split_version_info()
         return self._replace_version_info(model + 1, revision, addition)
 
@@ -111,31 +121,43 @@ class SchemaLookupError(LookupError):
     """Failed to find requested schema in schema library."""
 
     def __init__(self, schema_ref):
+        """Initialize object."""
         self.schema_ref = schema_ref
 
     def __str__(self):
+        """Represent as a string."""
         return "Unknown schema: {}".format(self.schema_ref)
 
 
 class SchemaModuleAttributeError(AttributeError):
+    """No such attribute defined."""
+
     def __init__(self, mod, attribute):
+        """Initialize object."""
         self.mod = mod
         self.attribute = attribute
 
     def __str__(self):
+        """Represent as a string."""
         return "Module {} doesn't define attribute {} necessary for automatic schema load".\
             format(self.mod, self.attribute)
 
 
 class SchemaImportError(ImportError):
+    """Failed to import schema from module."""
+
     def __init__(self, mod):
+        """Initialize object."""
         self.mod = mod
 
     def __str__(self):
+        """Represent as a string."""
         return "Can't import schema from module {}".format(self.mod)
 
 
 class AbstractSchemaLibrary(object, metaclass=abc.ABCMeta):
+    """Abstract class for schema."""
+
     def load_schema(self, schema_ref):
         """Load and parse specified schema from the library."""
         try:
@@ -154,12 +176,14 @@ class SchemaLibrary(AbstractSchemaLibrary):
     """Load named and versioned JSON schemas."""
 
     def __init__(self, schema_dir):
+        """Initialize object."""
         # Py2 compatibility: use explicit super()
         super(SchemaLibrary, self).__init__()
         self.schema_dir = schema_dir
         self._schema_pattern = os.path.join(schema_dir, "{}-v{}.schema.json")
 
     def read_binary_schema(self, schema_ref):
+        """Read raw binary schema from path constructed from given schema ref."""
         schema_path = self._schema_pattern.format(*schema_ref)
         with open(schema_path, "rb") as schema_file:
             return schema_file.read()
@@ -169,26 +193,33 @@ class BundledSchemaLibrary(SchemaLibrary):
     """Load named and version JSON schemas bundled with a Python package."""
 
     def __init__(self, schema_dir, base_module):
+        """Initialize object."""
         # Py2 compatibility: use explicit super()
         super(BundledSchemaLibrary, self).__init__(schema_dir)
         self.base_module = base_module
 
     def read_binary_schema(self, schema_ref):
+        """Read raw binary schema from path constructed from given schema ref."""
         schema_path = self._schema_pattern.format(*schema_ref)
         return pkgutil.get_data(self.base_module, schema_path)
 
 
 class BundledDynamicSchemaLibrary(AbstractSchemaLibrary):
+    """Load named and version JSON schemas bundled with a Python package."""
+
     def __init__(self, schema_mod_fqn):
+        """Initialize object."""
         # Py2 compatibility: use explicit super()
         super(BundledDynamicSchemaLibrary, self).__init__()
         self.schema_mod_fqn = schema_mod_fqn
 
     def read_binary_schema(self, schema_ref):
+        """Read raw binary schema from path constructed from given schema ref."""
         result_class, role = self.load_schema_class_and_role(schema_ref)
         return json.dumps(result_class().get_schema(ordered=True, role=role)).encode('utf-8')
 
     def load_schema_class_and_role(self, schema_ref):
+        """Load schema class and role."""
         module_fqn = '.'.join([self.schema_mod_fqn, schema_ref.name.replace('-', '_')])
         try:
             mod = importlib.import_module(module_fqn)
@@ -203,7 +234,7 @@ class BundledDynamicSchemaLibrary(AbstractSchemaLibrary):
         return getattr(mod, result_class_name), getattr(mod, role_name)
 
     def _load_all_schema_refs(self):
-        """Returns all schema references from modules in `self.schema_mod_fqn`
+        """Return all schema references from modules in `self.schema_mod_fqn`.
 
         The result is an iterable of SchemaRef instances covering all known
         schema modules and references.
@@ -284,17 +315,21 @@ class SchemaValidator(object):
         >>>    return {'foo': 'bar'}
 
     """
+
     def __init__(self, library):
+        """Initialize object."""
         self._schema_cache = {}
         self._library = library
 
     def _ensure_schema(self, name):
+        """Load schema if not in cache."""
         if name not in self._schema_cache:
             self._schema_cache[name] = self._library.load_schema(name)
 
         return self._schema_cache[name]
 
     def input(self, *args):
+        """Define input decorator."""
         def decorator(func):
             """Inner function decorator."""
             @wraps(func)
@@ -313,6 +348,7 @@ class SchemaValidator(object):
         return decorator
 
     def result(self, *args):
+        """Define result decorator."""
         def decorator(func):
             """Inner function decorator."""
             @wraps(func)
