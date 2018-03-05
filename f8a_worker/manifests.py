@@ -1,3 +1,5 @@
+"""Classes and functions used to handling manifests files."""
+
 import json
 from io import StringIO
 from lxml import etree
