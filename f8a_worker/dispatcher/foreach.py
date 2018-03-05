@@ -93,6 +93,7 @@ def iter_cvedb_updates(storage_pool, node_args):
         logger.exception("Failed to collect OSS Index updates")
         return []
 
+
 def iter_unknown_dependencies(storage_pool, node_args):
     # Be safe here as fatal errors will cause errors in Dispatcher
     try:

@@ -4,6 +4,7 @@ from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST
 from f8a_worker.base import BaseTask
 from f8a_worker.utils import get_session_retry
 
+
 class UnknownDependencyFetcherTask(BaseTask):
     _analysis_name = 'unknown_deps_fetcher'
     description = 'Fetch unknown dependencies'
@@ -44,4 +45,3 @@ class UnknownDependencyFetcherTask(BaseTask):
 
         result = self.get_dependency_data(aggregated['dependencies'])
         return {"result": result}
-
