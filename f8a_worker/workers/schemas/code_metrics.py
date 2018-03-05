@@ -1,4 +1,5 @@
 """JSL schema for Code metrics worker."""
+
 import jsl
 from f8a_worker.schemas import JSLSchemaBaseWithRelease
 
@@ -10,7 +11,11 @@ ROLE_TITLE = jsl.roles.Var({
 
 
 class CodeMetricsLanguage(jsl.Document):
+    """JSL schema for Generic language specific statistics."""
+
     class Options(object):
+        """JSL schema for Generic language specific statistics."""
+
         definition_id = "languages"
         description = "Generic language specific statistics"
 
@@ -24,7 +29,11 @@ class CodeMetricsLanguage(jsl.Document):
 
 
 class CodeMetricsDetails(jsl.Document):
+    """JSL schema for Code metrics worker results details."""
+
     class Options(object):
+        """JSL schema for Code metrics worker results details."""
+
         definition_id = "code_metrics_result"
         description = "Details computed by CodeMetrics worker"
 
@@ -35,7 +44,11 @@ class CodeMetricsDetails(jsl.Document):
 
 
 class CodeMetricsSummary(jsl.Document):
+    """JSL schema for Code metrics worker results summary."""
+
     class Options(object):
+        """JSL schema for Code metrics worker results summary."""
+
         definition_id = "code_metrics_summary"
         description = "Summary computed by CodeMetrics worker"
 
@@ -47,7 +60,11 @@ class CodeMetricsSummary(jsl.Document):
 
 
 class CodeMetricsResult(JSLSchemaBaseWithRelease):
+    """JSL schema for Code metrics worker."""
+
     class Options(object):
+        """JSL schema for Code metrics worker."""
+
         definition_id = "crypto_algorithms_result"
         description = "Result of CodeMetrics worker"
 

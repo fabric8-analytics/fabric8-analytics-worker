@@ -1,3 +1,5 @@
+"""JSL schema for Dependency Snapshot worker results."""
+
 import jsl
 
 from f8a_worker.schemas import JSLSchemaBaseWithRelease
@@ -10,7 +12,11 @@ ROLE_TITLE = jsl.roles.Var({
 
 
 class Dependency(jsl.Document):
+    """JSL schema for Dependency object."""
+
     class Options(object):
+        """JSL schema for Dependency object."""
+
         definition_id = 'dependency_object'
         description = 'Dependency Object'
 
@@ -22,7 +28,11 @@ class Dependency(jsl.Document):
 
 
 class DependencySnapshotDetail(jsl.Document):
+    """JSL schema for Dependency Snapshot worker results details."""
+
     class Options(object):
+        """JSL schema for Dependency Snapshot worker results details."""
+
         definition_id = 'dependency_snapshot_detail'
         description = 'Details of Dependency Snapshot run on a component'
 
@@ -30,7 +40,11 @@ class DependencySnapshotDetail(jsl.Document):
 
 
 class DependenciesCounts(jsl.Document):
+    """JSL schema for Counts of various types of dependencies."""
+
     class Options(object):
+        """JSL schema for Counts of various types of dependencies."""
+
         definition_id = 'dependencies_counts'
         description = 'Counts of various types of dependencies'
 
@@ -38,7 +52,11 @@ class DependenciesCounts(jsl.Document):
 
 
 class DependencySnapshotSummary(jsl.Document):
+    """JSL schema for Dependency Snapshot worker results summary."""
+
     class Options(object):
+        """JSL schema for Dependency Snapshot worker results summary."""
+
         definition_id = 'dependency_snapshot_summary'
         description = 'Summary of Dependency Snapshot run on a component'
 
@@ -47,7 +65,11 @@ class DependencySnapshotSummary(jsl.Document):
 
 
 class DependencySnapshotResult(JSLSchemaBaseWithRelease):
+    """JSL schema for Dependency Snapshot worker results."""
+
     class Options(object):
+        """JSL schema for Dependency Snapshot worker results."""
+
         definition_id = 'dependency_snapshot'
         description = 'Result of Dependency Snapshot worker'
 

@@ -9,7 +9,11 @@ ROLE_v3_0_0 = "v3-0-0"
 
 
 class LicenseCount(jsl.Document):
+    """JSL schema for license count."""
+
     class Options(object):
+        """JSL schema for license count."""
+
         description = "Detected license with occurrence count"
         definition_id = "license_count"
 
@@ -24,7 +28,11 @@ class LicenseCount(jsl.Document):
 
 
 class LicenseScanSummary(jsl.Document):
+    """JSL schema for license scan summary."""
+
     class Options(object):
+        """JSL schema for license scan summary."""
+
         definition_id = "license_scan_summary"
 
     with removed_in(ROLE_v3_0_0) as removed_in_v3_0_0:
@@ -45,7 +53,11 @@ class LicenseScanSummary(jsl.Document):
 
 
 class FileDetails(jsl.Document):
+    """JSL schema for file details."""
+
     class Options(object):
+        """JSL schema for file details."""
+
         definition_id = "file_details"
 
     path = jsl.StringField(required=True)
@@ -53,7 +65,11 @@ class FileDetails(jsl.Document):
 
 
 class LicenseDetailsPre30(jsl.Document):
+    """JSL schema for license details before 3.0."""
+
     class Options(object):
+        """JSL schema for license details before 3.0."""
+
         definition_id = "license_details_pre_3_0"
 
     with jsl.Scope(ROLE_v1_0_0) as v1_0_0:
@@ -77,7 +93,11 @@ class LicenseDetailsPre30(jsl.Document):
 
 
 class LicenseDetails(jsl.Document):
+    """JSL schema for license details."""
+
     class Options(object):
+        """JSL schema for license details."""
+
         definition_id = "license_details"
 
     category = jsl.StringField(required=True)
@@ -91,13 +111,21 @@ class LicenseDetails(jsl.Document):
 
 
 class OSLCStats(jsl.Document):
+    """JSL schema for oslc."""
+
     class Options(object):
+        """JSL schema for oslc."""
+
         definition_id = "oslc_stats"
         additional_properties = True
 
 
 class LicenseScanDetails(jsl.Document):
+    """JSL schema for license scan worker details."""
+
     class Options(object):
+        """JSL schema for license scan worker details."""
+
         definition_id = "license_scan_details"
         additional_properties = True
 
@@ -120,7 +148,11 @@ class LicenseScanDetails(jsl.Document):
 
 
 class SuccessfulLicenseScan(JSLSchemaBaseWithRelease):
+    """JSL schema for successful license scan."""
+
     class Options(object):
+        """JSL schema for successful license scan."""
+
         definition_id = "successful_license_scan"
         description = "Successful automated software copyright license scan"
 
@@ -130,7 +162,11 @@ class SuccessfulLicenseScan(JSLSchemaBaseWithRelease):
 
 
 class FailedLicenseScan(JSLSchemaBaseWithRelease):
+    """JSL schema for failed license scan."""
+
     class Options(object):
+        """JSL schema for failed license scan."""
+
         definition_id = "failed_license_scan"
         description = "Failed automated software copyright license scan"
 
@@ -140,7 +176,11 @@ class FailedLicenseScan(JSLSchemaBaseWithRelease):
 
 
 class LicenseScanResult(SuccessfulLicenseScan, FailedLicenseScan):
+    """JSL schema for license scan worker."""
+
     class Options(object):
+        """JSL schema for license scan worker."""
+
         definition_id = "source_licenses"
         inheritance_mode = jsl.ONE_OF
 

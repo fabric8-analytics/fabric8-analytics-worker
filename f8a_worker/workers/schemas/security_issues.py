@@ -1,4 +1,5 @@
-"""JSL schema for cvechecker worker."""
+"""JSL schema for CVEchecker worker."""
+
 import jsl
 
 from f8a_worker.schemas import JSLSchemaBaseWithRelease, added_in, removed_in
@@ -16,7 +17,11 @@ ROLE_TITLE = jsl.roles.Var({
 
 
 class CVEImpact(jsl.Document):
+    """DSL schema for CVE impact."""
+
     class Options(object):
+        """DSL schema for CVE impact."""
+
         definition_id = "cve_impact"
 
     with jsl.Scope(ROLE_v1_0_0) as v1:
@@ -28,7 +33,11 @@ class CVEImpact(jsl.Document):
 
 
 class CVEAccess(jsl.Document):
+    """DSL schema for CVE access."""
+
     class Options(object):
+        """DSL schema for CVE access."""
+
         definition_id = "cve_access"
 
     authentication = jsl.StringField(enum=["NONE", "SINGLE", "MULTIPLE"], required=True)
@@ -40,7 +49,11 @@ class CVEAccess(jsl.Document):
 
 
 class CVSS(jsl.Document):
+    """DSL schema for CVSS."""
+
     class Options(object):
+        """DSL schema for CVSS."""
+
         definition_id = "cvss"
 
     score = jsl.NumberField(required=True)
@@ -48,7 +61,11 @@ class CVSS(jsl.Document):
 
 
 class CVEDetail(jsl.Document):
+    """DSL schema for CVEchecker task results details."""
+
     class Options(object):
+        """DSL schema for CVEchecker task results details."""
+
         definition_id = "cvecheck_details"
         description = "Detail of one CVE"
 
@@ -74,7 +91,11 @@ class CVEDetail(jsl.Document):
 
 
 class CVECheckResult(JSLSchemaBaseWithRelease):
+    """DSL schema for CVEchecker task results."""
+
     class Options(object):
+        """DSL schema for CVEchecker task results."""
+
         definition_id = "cvecheck_results"
         description = "CVEcheck worker results"
 

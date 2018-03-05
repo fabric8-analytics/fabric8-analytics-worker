@@ -1,3 +1,5 @@
+"""JSL schema for Binwalk worker results."""
+
 import jsl
 
 from f8a_worker.schemas import JSLSchemaBaseWithRelease
@@ -10,7 +12,11 @@ ROLE_TITLE = jsl.roles.Var({
 
 
 class BinwalkDetail(jsl.Document):
+    """JSL schema for Binwalk worker results details."""
+
     class Options(object):
+        """JSL schema for Binwalk worker results details."""
+
         definition_id = "binwalk_details"
         description = "Details of Binwalk run on one file"
 
@@ -19,7 +25,11 @@ class BinwalkDetail(jsl.Document):
 
 
 class BinwalkResult(JSLSchemaBaseWithRelease):
+    """JSL schema for Binwalk worker results."""
+
     class Options(object):
+        """JSL schema for Binwalk worker results."""
+
         definition_id = "binary_data"
         description = "Result of Binwalk worker"
 
