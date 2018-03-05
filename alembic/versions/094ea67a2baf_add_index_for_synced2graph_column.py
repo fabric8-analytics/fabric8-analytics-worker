@@ -1,4 +1,4 @@
-"""Add index for synced2graph column
+"""Add index for synced2graph column.
 
 Revision ID: 094ea67a2baf
 Revises: 5cf8c7dac1b6
