@@ -24,6 +24,7 @@ class AmazonS3(DataStorage):
     def __init__(self, aws_access_key_id=None, aws_secret_access_key=None, bucket_name=None,
                  region_name=None, endpoint_url=None, use_ssl=False, encryption=None,
                  versioned=None):
+        """Initialize object."""
         # Priority for configuration options:
         #   1. environment variables
         #   2. arguments passed to constructor
@@ -86,6 +87,7 @@ class AmazonS3(DataStorage):
                 raise
 
     def _create_bucket(self, tagged=True):
+        """Create bucket."""
         # Yes boto3, you are doing it right:
         #   https://github.com/boto/boto3/issues/125
         if self.region_name == 'us-east-1':
@@ -146,13 +148,16 @@ class AmazonS3(DataStorage):
         self._s3 = None
 
     def retrieve(self, flow_name, task_name, task_id):
+        """Not implemented."""
         raise NotImplementedError()
 
     def store(self, node_args, flow_name, task_name, task_id, result):
+        """Not implemented."""
         raise NotImplementedError()
 
     @staticmethod
     def _get_fake_version_id():
+        """Generate fake S3 object version id."""
         return uuid.uuid4().hex + '-unknown'
 
     def store_file(self, file_path, object_key):

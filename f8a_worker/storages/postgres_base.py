@@ -127,18 +127,19 @@ class PostgresBase(DataStorage):
             raise
 
     def store_error(self, node_args, flow_name, task_name, task_id, exc_info):
-        #
-        # We do not store errors in init tasks - the reasoning is that init
-        # tasks are responsible for creating database entries. We cannot rely
-        # that all database entries are successfully created. By doing this we
-        # remove weird-looking errors like (un-committed changes due to errors
-        # in init task):
-        #   DETAIL: Key (package_analysis_id)=(1113452) is not present in table "package_analyses".
-        #
-        # Note that raising NotImplementedError will cause Selinon to treat
-        # behaviour correctly - no error is permanently stored (but reported in
-        # logs).
-        #
+        """We do not store errors in init tasks.
+
+        The reasoning is that init
+        tasks are responsible for creating database entries. We cannot rely
+        that all database entries are successfully created. By doing this we
+        remove weird-looking errors like (un-committed changes due to errors
+        in init task):
+          DETAIL: Key (package_analysis_id)=(1113452) is not present in table "package_analyses".
+
+        Note that raising NotImplementedError will cause Selinon to treat
+        behaviour correctly - no error is permanently stored (but reported in
+        logs).
+        """
         if task_name in ('InitPackageFlow', 'InitAnalysisFlow'):
             raise NotImplementedError()
 
@@ -156,6 +157,7 @@ class PostgresBase(DataStorage):
             raise
 
     def get_ecosystem(self, name):
+        """Get ecosystem by name."""
         if not self.is_connected():
             self.connect()
 

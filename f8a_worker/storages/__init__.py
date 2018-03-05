@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+"""Import all storages."""
+
 from .postgres import BayesianPostgres
 from .package_postgres import PackagePostgres
 from .s3 import AmazonS3

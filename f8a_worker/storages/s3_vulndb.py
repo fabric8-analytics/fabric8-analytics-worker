@@ -1,3 +1,5 @@
+"""S3 storage for vulnerability databases."""
+
 from dateutil import parser as datetime_parser
 from datetime import datetime, timezone
 import os
@@ -10,6 +12,8 @@ from . import AmazonS3
 
 
 class S3VulnDB(AmazonS3):
+    """S3 storage for vulnerability databases."""
+
     DEPCHECK_DB_FILENAME = 'dc.h2.db'
     DEPCHECK_DB_ARCHIVE = DEPCHECK_DB_FILENAME + '.zip'
     VICTIMS_DB_ARCHIVE = 'victims-cve-db.zip'
