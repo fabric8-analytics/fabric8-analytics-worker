@@ -36,7 +36,7 @@ class TestUtilFunctions(object):
 
         def touch_file(path):
             try:
-                path.parent.mkdir()
+                path.parent.mkdir(parents=True)
             except OSError as e:
                 if e.errno != errno.EEXIST:
                     # was created in previous iteration
