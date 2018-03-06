@@ -25,7 +25,7 @@ COPY alembic/ ${ALEMBIC_DIR}/alembic
 
 # Install f8a_worker
 COPY ./ /tmp/f8a_worker/
-RUN cd /tmp/f8a_worker && pip3 install .
+RUN cd /tmp/f8a_worker && pip3 install . && rm -Rf /tmp/f8a_worker
 
 COPY hack/worker+pmcd.sh /usr/bin/
 EXPOSE 44321
