@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+
+"""Tests for the class DigesterTask."""
+
 from __future__ import unicode_literals
 import pytest
 from flexmock import flexmock
@@ -17,8 +20,11 @@ PYPI_MODULE_VERSION = "1.0.0"
 
 @pytest.mark.usefixtures("dispatcher_setup")
 class TestDigester(object):
+    """Tests for the class DigesterTask."""
+
     @pytest.mark.usefixtures("no_s3_connection")
     def test_execute(self, tmpdir):
+        """Check the method DigesterTask.execute()."""
         artifact_digest, artifact_path = IndianaJones.fetch_artifact(
             Ecosystem(name='pypi', backend=EcosystemBackend.pypi), artifact=PYPI_MODULE_NAME,
             version=PYPI_MODULE_VERSION, target_dir=str(tmpdir))
