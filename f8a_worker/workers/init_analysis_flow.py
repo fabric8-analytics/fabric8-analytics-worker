@@ -15,7 +15,11 @@ class InitAnalysisFlow(BaseTask):
     """Download source and start whole analysis."""
 
     def execute(self, arguments):
-        """Execute task."""
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))
         self._strict_assert(arguments.get('ecosystem'))

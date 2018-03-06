@@ -57,7 +57,7 @@ class BinwalkTask(BaseTask):
 
     @staticmethod
     def parse_binwalk(output):
-        """Parse binwalk tool output."""
+        """Parse binwalk tool output and accumulate descriptions."""
         if not output:
             return None
         import re
@@ -70,7 +70,11 @@ class BinwalkTask(BaseTask):
         return matched
 
     def execute(self, arguments):
-        """Execute task."""
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))

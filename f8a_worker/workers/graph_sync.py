@@ -8,7 +8,11 @@ class GraphSyncTask(BaseTask):
     """Sync package data to graph database."""
 
     def execute(self, arguments):
-        """Execute task."""
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         _RETRY_COUNTDOWN = 10
 
         ecosystem = arguments.get['ecosystem']

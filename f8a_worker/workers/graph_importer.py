@@ -22,7 +22,11 @@ class GraphImporterTask(BaseTask):
         endpoint=_SELECTIVE_SERVICE_ENDPOINT)
 
     def execute(self, arguments):
-        """Execute task."""
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('document_id'))
