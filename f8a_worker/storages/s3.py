@@ -24,7 +24,7 @@ class AmazonS3(DataStorage):
     def __init__(self, aws_access_key_id=None, aws_secret_access_key=None, bucket_name=None,
                  region_name=None, endpoint_url=None, use_ssl=False, encryption=None,
                  versioned=None):
-        """Initialize object."""
+        """Initialize object, setup connection to the AWS S3."""
         # Priority for configuration options:
         #   1. environment variables
         #   2. arguments passed to constructor
@@ -148,11 +148,11 @@ class AmazonS3(DataStorage):
         self._s3 = None
 
     def retrieve(self, flow_name, task_name, task_id):
-        """Not implemented."""
+        """Retrieve data from the storage. Method needs to be implemented by descendent classes."""
         raise NotImplementedError()
 
     def store(self, node_args, flow_name, task_name, task_id, result):
-        """Not implemented."""
+        """Save data to the storage. Method that needs to be implemented by descendent classes."""
         raise NotImplementedError()
 
     @staticmethod

@@ -29,7 +29,7 @@ class S3TempArtifacts(AmazonS3):
     def __init__(self, aws_access_key_id=None, aws_secret_access_key=None, bucket_name=None,
                  region_name=None, endpoint_url=None, use_ssl=False, encryption=None,
                  versioned=None, days_to_expire=None):
-        """Initialize object."""
+        """Construct for this class, initializes the connection to S3 and set expiration rules."""
         super().__init__(aws_access_key_id=aws_access_key_id,
                          aws_secret_access_key=aws_secret_access_key,
                          bucket_name=bucket_name, region_name=region_name,
