@@ -102,6 +102,7 @@ def iter_cvedb_updates(storage_pool, node_args):
 
 
 def iter_unknown_dependencies(storage_pool, node_args):
+    """Collect unknown dependencies."""
     # Be safe here as fatal errors will cause errors in Dispatcher
     try:
         aggregated = storage_pool.get('UnknownDependencyFetcherTask')
