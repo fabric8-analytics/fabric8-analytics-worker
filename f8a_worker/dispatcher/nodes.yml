@@ -280,11 +280,17 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_KeywordsSummaryTask_tagging_v0'
       storage: 'S3KeywordsSummary'
-    - name: 'dependency_tree'
+    - name: 'GithubDependencyTreeTask'
       classname: 'GithubDependencyTreeTask'
       import: 'f8a_worker.workers'
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GithubDependencyTreeTask_v0'
+      storage: 'BayesianPostgres'
+    - name: 'unknown_deps_fetcher'
+      classname: 'UnknownDependencyFetcherTask'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_UnknownDependencyFetcherTask_v0'
       storage: 'BayesianPostgres'
 
   flows:
