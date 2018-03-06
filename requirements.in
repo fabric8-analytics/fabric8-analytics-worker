@@ -13,7 +13,6 @@ jsl
 jsonschema
 BigQuery-Python
 unidiff
-requests
 git2json
 numpy
 scikit-learn
