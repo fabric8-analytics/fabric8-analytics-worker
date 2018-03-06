@@ -13,7 +13,11 @@ class GithubDependencyTreeTask(BaseTask):
     """Finds out direct and indirect dependencies from a given github repository."""
 
     def execute(self, arguments=None):
-        """Execute task."""
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('github_repo'))
         self._strict_assert(arguments.get('github_sha'))
         self._strict_assert(arguments.get('email_ids'))

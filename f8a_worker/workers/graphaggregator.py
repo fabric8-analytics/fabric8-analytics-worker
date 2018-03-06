@@ -32,7 +32,11 @@ class GraphAggregatorTask(BaseTask):
         return [{"package": k, "version": v} for k, v in versions.items()]
 
     def execute(self, arguments):
-        """Execute task."""
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('data'))
         self._strict_assert(arguments.get('external_request_id'))
 

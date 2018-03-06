@@ -385,7 +385,11 @@ class StackAggregatorV2Task(BaseTask):
     _analysis_name = 'stack_aggregator_v2'
 
     def execute(self, arguments=None):
-        """Execute task."""
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         stack_data = []
         aggregated = self.parent_task_result('GraphAggregatorTask')
 

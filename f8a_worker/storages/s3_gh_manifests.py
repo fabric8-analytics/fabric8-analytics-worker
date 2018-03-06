@@ -27,6 +27,6 @@ class S3GitHubManifestMetadata(AmazonS3):
         return version_id
 
     def store_raw_manifest(self, ecosystem, repo_path, filename, manifest):
-        """Store manifest."""
+        """Store manifest as a blob into the AWS S3."""
         path = self.get_object_key_path(ecosystem, repo_path)
         self.store_blob(manifest, "{path}/{filename}".format(path=path, filename=filename))

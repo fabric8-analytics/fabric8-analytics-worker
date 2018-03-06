@@ -1,5 +1,6 @@
 directories="alembic f8a_worker tests hack"
 separate_files="setup.py"
+exclude_files="tests/data/license/license.py"
 pass=0
 fail=0
 
@@ -47,8 +48,7 @@ echo
 # checks for the whole directories
 for directory in $directories
 do
-    files=`find $directory -path $directory/venv -prune -o -name '*.py' -print`
-
+    files=`find $directory -path $directory/venv -prune -o -name '*.py' ! -path $exclude_files -print`
     check_files "$files"
 done
 

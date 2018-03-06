@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Selinon/Celery setup."""
+"""Functions to setup Selinon/Celery."""
 
 import os
 import logging

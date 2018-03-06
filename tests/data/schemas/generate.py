@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""Script to generate all new schemas for workers."""
+
 from collections import OrderedDict
 import json
 from pathlib import Path

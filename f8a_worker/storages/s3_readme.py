@@ -12,7 +12,7 @@ class S3Readme(AmazonS3):
         return "{ecosystem}/{name}/README.json".format(**arguments)
 
     def retrieve_readme_json(self, ecosystem, name):
-        """Retrieve README.json."""
+        """Retrieve README.json from the storage."""
         object_key = self._construct_object_key(ecosystem=ecosystem, name=name)
         return self.retrieve_dict(object_key)
 

@@ -20,7 +20,11 @@ class LibrariesIoTask(BaseTask):
         return sorted(versions, key=itemgetter('published_at'))[-count:]
 
     def execute(self, arguments):
-        """Task entrypoint."""
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
 

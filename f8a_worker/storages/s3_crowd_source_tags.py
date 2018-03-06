@@ -12,7 +12,7 @@ class S3CrowdSourceTags(AmazonS3):
         return "{ecosystem}/github/data_input_raw_package_list/".format(ecosystem=ecosystem)
 
     def retrieve_package_topic(self, ecosystem):
-        """Retrieve package_topic.json."""
+        """Retrieve package_topic.json from the storage."""
         path = self.get_object_key_path(ecosystem)
         object_key = "{path}/package_topic.json".format(path=path)
         return self.retrieve_dict(object_key)

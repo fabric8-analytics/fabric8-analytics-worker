@@ -66,7 +66,11 @@ class LinguistTask(BaseTask):
         return data
 
     def execute(self, arguments):
-        """Start the task."""
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))

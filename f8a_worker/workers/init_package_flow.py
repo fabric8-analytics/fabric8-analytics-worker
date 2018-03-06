@@ -95,7 +95,11 @@ class InitPackageFlow(BaseTask):
         return entry
 
     def execute(self, arguments):
-        """Execute task."""
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('ecosystem'))
 

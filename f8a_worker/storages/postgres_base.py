@@ -127,7 +127,9 @@ class PostgresBase(DataStorage):
             raise
 
     def store_error(self, node_args, flow_name, task_name, task_id, exc_info):
-        """We do not store errors in init tasks.
+        """Store error info to the Postgress database.
+
+        Note: We do not store errors in init tasks.
 
         The reasoning is that init
         tasks are responsible for creating database entries. We cannot rely

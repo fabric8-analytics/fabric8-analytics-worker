@@ -358,7 +358,11 @@ class CVEcheckerTask(BaseTask):
         return self._query_ossindex(arguments)
 
     def execute(self, arguments):
-        """Tasks workhorse."""
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))

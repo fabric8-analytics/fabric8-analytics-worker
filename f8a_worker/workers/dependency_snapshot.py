@@ -80,7 +80,11 @@ class DependencySnapshotTask(BaseTask):
         return ret
 
     def execute(self, arguments):
-        """Start the task that analyzes dependencies."""
+        """Start the task that analyzes dependencies.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('ecosystem'))
 
         result = {'summary': {'errors': [], 'dependency_counts': {}},

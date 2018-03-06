@@ -13,7 +13,11 @@ class ManifestKeeperTask(BaseTask):
     add_audit_info = False
 
     def execute(self, arguments):
-        """Execute task."""
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('external_request_id'))
 
         postgres = StoragePool.get_connected_storage('BayesianPostgres')

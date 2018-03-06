@@ -10,6 +10,7 @@ class S3Manifests(AmazonS3):
 
     @staticmethod
     def _construct_object_key(node_args, manifest):
+        """Construct object key path."""
         assert 'filename' in manifest
         return "{}/{}".format(node_args['external_request_id'], manifest['filename'])
 

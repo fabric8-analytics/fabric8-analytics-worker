@@ -1,3 +1,5 @@
+"""Tests for BigQueryProject and BigQueryTask classes."""
+
 from flexmock import flexmock
 from pathlib import Path
 import pytest
@@ -7,15 +9,18 @@ from f8a_worker.workers.bigquery_gh import BigQueryProject, BigQueryTask, comput
 
 @pytest.mark.usefixtures("dispatcher_setup")
 class TestBigQueryGH(object):
+    """Tests for BigQueryProject and BigQueryTask classes."""
 
     json_key = str(Path(__file__).parent.parent / 'data/bigquery.json')
 
     def test_project_id(self):
+        """Test if the project_id property is set up properly."""
         flexmock(f8a_worker.workers.bigquery_gh).should_receive('get_client').once()
         bq = BigQueryProject(json_key=TestBigQueryGH.json_key)
         assert bq.project_id == 'test-project-000001'
 
     def test_process_results(self):
+        """Start the BigQueryTask task and check its results."""
         data = [{'name': 'underscore', 'version': '1.8.3', 'count': 101},
                 {'name': 'isarray', 'version': '2.0.2', 'count': 345}]
 
@@ -36,4 +41,5 @@ class TestBigQueryGH(object):
         ([1, 1, 1, 2, 5, 5, 11, 11, 17, 21], {1: 30, 2: 40, 5: 60, 11: 80, 17: 90, 21: 100})
     ])
     def test_compute_percentile_ranks(self, test_input, expected):
+        """Check the behaviour of function workers.bigquery_gh.compute_percentile_ranks."""
         assert compute_percentile_ranks(test_input) == expected

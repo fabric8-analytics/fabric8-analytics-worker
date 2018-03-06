@@ -68,7 +68,11 @@ class GithubTask(BaseTask):
         return parsed
 
     def execute(self, arguments):
-        """Task's workhorse."""
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         result_data = {'status': 'unknown',
                        'summary': [],
                        'details': {}}

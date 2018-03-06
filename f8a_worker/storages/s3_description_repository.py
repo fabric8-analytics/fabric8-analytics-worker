@@ -17,7 +17,7 @@ class S3RepositoryDescription(AmazonS3):
         return self.retrieve_blob(object_key).decode()
 
     def store(self, node_args, flow_name, task_name, task_id, result):
-        """Store."""
+        """Save repository description into the storage."""
         assert 'ecosystem' in node_args
         assert 'name' in node_args
 
