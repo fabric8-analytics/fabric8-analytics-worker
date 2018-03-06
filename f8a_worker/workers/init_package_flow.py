@@ -1,3 +1,5 @@
+"""Initialize package level analysis."""
+
 import datetime
 from sqlalchemy import desc
 from f8a_worker.base import BaseTask
@@ -5,9 +7,12 @@ from f8a_worker.models import Ecosystem, Package, Upstream, PackageAnalysis
 
 
 class InitPackageFlow(BaseTask):
+    """Initialize package-level analysis."""
+
     _UPDATE_INTERVAL = datetime.timedelta(days=5)
 
     def get_upstream_url(self, arguments):
+        """Get upstream URL from metadata."""
         if 'url' not in arguments:
             if 'metadata' not in self.parent.keys():
                 self.log.info('No upstream URL provided, will reuse URL from previous runs')
@@ -90,6 +95,7 @@ class InitPackageFlow(BaseTask):
         return entry
 
     def execute(self, arguments):
+        """Execute task."""
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('ecosystem'))
 

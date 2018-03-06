@@ -1,3 +1,5 @@
+"""SQLAlchemy domain models."""
+
 from sqlalchemy import (Column, DateTime, Enum, ForeignKey, Integer, String, UniqueConstraint,
                         create_engine, func, Boolean, Text)
 from sqlalchemy.dialects.postgresql import ENUM
@@ -15,6 +17,7 @@ from f8a_worker.enums import EcosystemBackend
 
 
 def create_db_scoped_session(connection_string=None):
+    """Create scoped session."""
     # we use NullPool, so that SQLAlchemy doesn't pool local connections
     #  and only really uses connections while writing results
     return scoped_session(
@@ -35,6 +38,7 @@ class BayesianModelMixin(object):
     """
 
     def to_dict(self):
+        """Convert table to dictionary."""
         d = {}
         for column in self.__table__.columns:
             d[column.name] = getattr(self, column.name)
@@ -43,6 +47,7 @@ class BayesianModelMixin(object):
 
     @classmethod
     def _by_attrs(cls, session, **attrs):
+        """Get one row with attrs."""
         try:
             return session.query(cls).filter_by(**attrs).one()
         except NoResultFound:
@@ -53,6 +58,7 @@ class BayesianModelMixin(object):
 
     @classmethod
     def by_id(cls, session, id):
+        """Get a row with id."""
         try:
             return cls._by_attrs(session, id=id)
         except NoResultFound:
@@ -61,6 +67,7 @@ class BayesianModelMixin(object):
 
     @classmethod
     def get_or_create(cls, session, **attrs):
+        """Try to get by attrs or create new record if no result found."""
         try:
             return cls._by_attrs(session, **attrs)
         except NoResultFound:
@@ -81,6 +88,8 @@ Base = declarative_base(cls=BayesianModelMixin)
 
 
 class Ecosystem(Base):
+    """Table for Ecosystem."""
+
     __tablename__ = 'ecosystems'
 
     id = Column(Integer, primary_key=True)
@@ -96,17 +105,21 @@ class Ecosystem(Base):
 
     @property
     def backend(self):
+        """Get backend property."""
         return EcosystemBackend[self._backend]
 
     @backend.setter
     def backend(self, backend):
+        """Set backend property."""
         self._backend = EcosystemBackend(backend).name
 
     def is_backed_by(self, backend):
+        """Is this ecosystem backed by specified backend?."""
         return self.backend == backend
 
     @classmethod
     def by_name(cls, session, name):
+        """Get a row with specified name."""
         try:
             return cls._by_attrs(session, name=name)
         except NoResultFound:
@@ -115,6 +128,8 @@ class Ecosystem(Base):
 
 
 class Package(Base):
+    """Table for Package."""
+
     __tablename__ = 'packages'
     # ecosystem_id together with name must be unique
     __table_args__ = (UniqueConstraint(
@@ -130,6 +145,7 @@ class Package(Base):
 
     @classmethod
     def by_name(cls, session, name):
+        """Get a row with specified name."""
         # TODO: this is dangerous at is does not consider Ecosystem
         try:
             return cls._by_attrs(session, name=name)
@@ -139,6 +155,8 @@ class Package(Base):
 
 
 class Version(Base):
+    """Table for Version."""
+
     __tablename__ = 'versions'
     # package_id together with version identifier must be unique
     __table_args__ = (UniqueConstraint(
@@ -154,6 +172,7 @@ class Version(Base):
 
     @classmethod
     def by_identifier(cls, session, identifier):
+        """Get a row with specified identifier."""
         try:
             return cls._by_attrs(session, identifier=identifier)
         except NoResultFound:
@@ -162,6 +181,8 @@ class Version(Base):
 
 
 class Analysis(Base):
+    """Table for Analysis."""
+
     __tablename__ = 'analyses'
 
     id = Column(Integer, primary_key=True)
@@ -178,6 +199,7 @@ class Analysis(Base):
 
     @property
     def analyses(self):
+        """Get all worker results for this analysis."""
         s = Session.object_session(self)
         if s:
             worker_results = s.query(WorkerResult).filter(
@@ -187,6 +209,7 @@ class Analysis(Base):
 
     @property
     def raw_analyses(self):
+        """Get all worker results for this analysis."""
         s = Session.object_session(self)
         if s:
             return s.query(WorkerResult).filter(WorkerResult.analysis_id == self.id)
@@ -194,6 +217,7 @@ class Analysis(Base):
 
     @property
     def package_info(self):
+        """Get dependents_count and relative_usage."""
         s = Session.object_session(self)
         if s:
             # to avoid cyclic import
@@ -214,6 +238,7 @@ class Analysis(Base):
 
     @property
     def dependents_count(self):
+        """Get dependents_count."""
         count = -1  # we don't know the count
         s = Session.object_session(self)
         if s:
@@ -227,6 +252,7 @@ class Analysis(Base):
         return count
 
     def to_dict(self, omit_analyses=False):
+        """Convert to dictionary."""
         res = Base.to_dict(self)
         res['analyses'] = {} if omit_analyses else self.analyses
         res.pop('version_id')
@@ -239,6 +265,8 @@ class Analysis(Base):
 
 
 class WorkerResult(Base):
+    """Table for package-version level worker result."""
+
     __tablename__ = 'worker_results'
 
     id = Column(Integer, primary_key=True)
@@ -258,18 +286,23 @@ class WorkerResult(Base):
 
     @property
     def ecosystem(self):
+        """Get ecosystem."""
         return self.analysis.version.package.ecosystem
 
     @property
     def package(self):
+        """Get package."""
         return self.analysis.version.package
 
     @property
     def version(self):
+        """Get version."""
         return self.analysis.version
 
 
 class Upstream(Base):
+    """Table for upstream."""
+
     __tablename__ = "monitored_upstreams"
 
     id = Column(Integer, primary_key=True)
@@ -283,10 +316,13 @@ class Upstream(Base):
 
     @property
     def ecosystem(self):
+        """Get ecosystem."""
         return self.package.ecosystem
 
 
 class PackageAnalysis(Base):
+    """Table for package level analysis."""
+
     __tablename__ = "package_analyses"
 
     id = Column(Integer, primary_key=True)
@@ -298,10 +334,12 @@ class PackageAnalysis(Base):
 
     @property
     def ecosystem(self):
+        """Get ecosystem."""
         return self.package.ecosystem
 
     @property
     def raw_analyses(self):
+        """Get all worker results for this analysis."""
         s = Session.object_session(self)
         if s:
             return s.query(PackageWorkerResult).filter(
@@ -310,6 +348,8 @@ class PackageAnalysis(Base):
 
 
 class PackageWorkerResult(Base):
+    """Table for package level worker result."""
+
     __tablename__ = "package_worker_results"
 
     id = Column(Integer, primary_key=True)
@@ -328,14 +368,18 @@ class PackageWorkerResult(Base):
 
     @property
     def ecosystem(self):
+        """Get ecosystem."""
         return self.diagnosis.package.ecosystem
 
     @property
     def package(self):
+        """Get package."""
         return self.diagnosis.package
 
 
 class StackAnalysisRequest(Base):
+    """Table for stack analysis request."""
+
     __tablename__ = "stack_analyses_request"
     id = Column(String(64), primary_key=True)
     submitTime = Column(DateTime, nullable=False)
@@ -349,6 +393,8 @@ class StackAnalysisRequest(Base):
 
 
 class APIRequests(Base):
+    """Table for API request."""
+
     __tablename__ = "api_requests"
     id = Column(String(64), primary_key=True)
     api_name = Column(String(256), nullable=False)
@@ -400,6 +446,8 @@ class ComponentGHUsage(Base):
 
 
 class RecommendationFeedback(Base):
+    """Table for recommendation feedback."""
+
     __tablename__ = "recommendation_feedback"
 
     id = Column(Integer, autoincrement=True, primary_key=True)
@@ -414,6 +462,8 @@ class RecommendationFeedback(Base):
 
 
 class OSIORegisteredRepos(Base):
+    """Table for OSIO registered repos."""
+
     __tablename__ = "osio_registered_repos"
 
     git_url = Column(Text, nullable=False, primary_key=True)

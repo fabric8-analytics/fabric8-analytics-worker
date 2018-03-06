@@ -29,6 +29,7 @@ class CVEcheckerTask(BaseTask):
 
     @staticmethod
     def get_cve_impact(cve_id):
+        """Get more details about cve_id from NVD."""
         score = 0
         vector = ''
         severity = ''
@@ -61,6 +62,7 @@ class CVEcheckerTask(BaseTask):
 
     @staticmethod
     def _filter_ossindex_fields(entry):
+        """Create a result record for ossindex entry."""
         score, vector, severity = CVEcheckerTask.get_cve_impact(entry.get('cve'))
         result = {
             'id': entry.get('cve') or entry.get('title'),
@@ -76,6 +78,7 @@ class CVEcheckerTask(BaseTask):
 
     @staticmethod
     def _filter_victims_db_entry(entry):
+        """Create a result record for ossindex entry."""
         if 'cve' not in entry:
             return None
         _, vector, severity = CVEcheckerTask.get_cve_impact(entry.get('cve'))
@@ -94,17 +97,20 @@ class CVEcheckerTask(BaseTask):
 
     @staticmethod
     def query_url(url):
+        """Query url and return json."""
         response = requests.get(url)
         response.raise_for_status()
         return response.json()
 
     @staticmethod
     def _query_ossindex_package(ecosystem, name):
+        """Get vulnerabilities for a given package ecosystem:name from OSSIndex."""
         url = "https://ossindex.net/v2.0/package/{pm}/{package}".format(pm=ecosystem, package=name)
         return CVEcheckerTask.query_url(url)
 
     @staticmethod
     def query_ossindex_vulnerability_fromtill(ecosystem, from_time=0, till_time=-1):
+        """From OSSIndex get vulnerabilities which changed between from_time and till_time."""
         # OSS Index uses timestamp in milliseconds
         from_time = int(from_time * 1000)
         till_time = int(till_time * 1000)
@@ -152,6 +158,7 @@ class CVEcheckerTask(BaseTask):
                 'details': list(entries.values())}
 
     def _npm_scan(self, arguments):
+        """Get vulnerabilities info about given npm package."""
         return self._query_ossindex(arguments)
 
     @staticmethod
@@ -170,6 +177,7 @@ class CVEcheckerTask(BaseTask):
             os.environ['JAVA_OPTS'] = old_java_opts
 
     def _run_owasp_dep_check(self, scan_path, experimental=False):
+        """Run OWASP Dependency-Check."""
         def _clean_dep_check_tmp():
             for dcdir in glob(os.path.join(gettempdir(), 'dctemp*')):
                 rmtree(dcdir)
@@ -346,9 +354,11 @@ class CVEcheckerTask(BaseTask):
         return self._run_owasp_dep_check(scan_path, experimental=True)
 
     def _nuget_scan(self, arguments):
+        """Get vulnerabilities info about given nuget package."""
         return self._query_ossindex(arguments)
 
     def execute(self, arguments):
+        """Tasks workhorse."""
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))

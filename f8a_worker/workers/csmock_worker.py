@@ -29,7 +29,10 @@ def csmock(args):
 
 
 class StaticAnalysis(object):
+    """Static analysis of archive."""
+
     def __init__(self, archive_path):
+        """Initialize object."""
         self.archive_path = archive_path
 
     def analyze(self):

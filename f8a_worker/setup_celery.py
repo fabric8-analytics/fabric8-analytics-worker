@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+"""Selinon/Celery setup."""
+
 import os
 import logging
 from celery import Celery
@@ -13,6 +16,7 @@ _logger = logging.getLogger(__name__)
 
 
 def get_dispatcher_config_files():
+    """Get config files (nodes and flows) for dispatcher/selinon."""
     nodes_yml = os.path.join(YAML_FILES_DIR, 'nodes.yml')
 
     if not os.path.isfile(nodes_yml):

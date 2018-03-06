@@ -1,3 +1,5 @@
+"""Initialize package-version level analysis."""
+
 import os
 import datetime
 import shutil
@@ -10,7 +12,10 @@ from f8a_worker.utils import normalize_package_name
 
 
 class InitAnalysisFlow(BaseTask):
+    """Download source and start whole analysis."""
+
     def execute(self, arguments):
+        """Execute task."""
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))
         self._strict_assert(arguments.get('ecosystem'))
@@ -79,6 +84,7 @@ class InitAnalysisFlow(BaseTask):
 
     @staticmethod
     def _download_source_jar(target, ecosystem, arguments):
+        """Download sources jar."""
         artifact_coords = MavenCoordinates.from_str(arguments['name'])
         artifact_coords.packaging = 'jar'  # source is always jar even for war/aar etc.
         sources_classifiers = ['sources', 'src']
@@ -102,6 +108,7 @@ class InitAnalysisFlow(BaseTask):
 
     @staticmethod
     def _download_pom_xml(target, ecosystem, arguments):
+        """Download pom.xml."""
         artifact_coords = MavenCoordinates.from_str(arguments['name'])
         artifact_coords.packaging = 'pom'
         artifact_coords.classifier = ''  # pom.xml files have no classifiers

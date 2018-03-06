@@ -1,9 +1,13 @@
+"""Import to graph task."""
+
 from f8a_worker.base import BaseTask
 import requests
 from os import environ
 
 
 class GraphImporterTask(BaseTask):
+    """Import to graph task."""
+
     _SERVICE_HOST = environ.get("BAYESIAN_DATA_IMPORTER_SERVICE_HOST", "bayesian-data-importer")
     _SERVICE_PORT = environ.get("BAYESIAN_DATA_IMPORTER_SERVICE_PORT", "9192")
     _INGEST_SERVICE_ENDPOINT = "api/v1/ingest_to_graph"
@@ -18,6 +22,7 @@ class GraphImporterTask(BaseTask):
         endpoint=_SELECTIVE_SERVICE_ENDPOINT)
 
     def execute(self, arguments):
+        """Execute task."""
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('document_id'))

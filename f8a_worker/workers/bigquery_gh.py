@@ -78,6 +78,8 @@ _DEFAULT_BUCKET_NAME = 'bayesian-core-bigquery-data'
 
 
 class BigQueryTask(SelinonTask):
+    """Worker for querying GitHub package/component usage data from BigQuery."""
+
     def run(self, node_args):
         """Get package usage information from BigQuery's public GitHub dataset."""
         dataset = 'bayesian'
@@ -152,6 +154,7 @@ class BigQueryTask(SelinonTask):
 
     @staticmethod
     def process_results(bq_results, percentile_rank=False):
+        """Add percentile ranks to results."""
         if percentile_rank:
             counts = [x['count'] for x in bq_results]
             counts.sort()
@@ -177,6 +180,7 @@ class BigQueryTask(SelinonTask):
 
 
 class BigQueryProject(object):
+    """BigQuery project."""
 
     def __init__(self, json_key):
         """Initialize the object.
@@ -258,6 +262,7 @@ class BigQueryProject(object):
             logger.debug("'{ds}' dataset already exists.".format(ds=dataset_name))
 
     def _extract_project_id(self):
+        """Extract project_id from JSON key."""
         with open(self._json_key, 'r') as f:
             key = json.load(f)
             return key['project_id']

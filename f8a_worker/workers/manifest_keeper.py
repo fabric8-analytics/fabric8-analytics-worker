@@ -1,4 +1,5 @@
-import os
+"""Class to keep manifest stored on S3."""
+
 from selinon import StoragePool
 from f8a_worker.base import BaseTask
 from f8a_worker.models import StackAnalysisRequest
@@ -12,6 +13,7 @@ class ManifestKeeperTask(BaseTask):
     add_audit_info = False
 
     def execute(self, arguments):
+        """Execute task."""
         self._strict_assert(arguments.get('external_request_id'))
 
         postgres = StoragePool.get_connected_storage('BayesianPostgres')

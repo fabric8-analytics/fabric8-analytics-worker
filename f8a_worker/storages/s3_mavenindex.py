@@ -1,3 +1,5 @@
+"""S3 storage for maven index."""
+
 import botocore
 import os
 from tempfile import TemporaryDirectory
@@ -9,6 +11,8 @@ from . import AmazonS3
 
 
 class S3MavenIndex(AmazonS3):
+    """S3 storage for maven index."""
+
     _INDEX_DIRNAME = 'central-index'
     _INDEX_ARCHIVE = _INDEX_DIRNAME + '.zip'
 

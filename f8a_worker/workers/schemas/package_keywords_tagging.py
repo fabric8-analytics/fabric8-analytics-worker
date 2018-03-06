@@ -1,4 +1,5 @@
-"""JSL schema for keywords tagging worker."""
+"""JSL schema for PackageKeywordsTagging worker."""
+
 import jsl
 from f8a_worker.schemas import JSLSchemaBaseWithRelease
 
@@ -10,7 +11,11 @@ ROLE_TITLE = jsl.roles.Var({
 
 
 class PackageKeywordsTaggingDetails(jsl.Document):
+    """JSL schema for PackageKeywordsTagging worker details."""
+
     class Options(object):
+        """JSL schema for PackageKeywordsTagging worker details."""
+
         definition_id = "package_keywords_tagging_details"
         description = "Details computed by PackageKeywordsTagging worker"
 
@@ -21,7 +26,11 @@ class PackageKeywordsTaggingDetails(jsl.Document):
 
 
 class PackageKeywordsTaggingResult(JSLSchemaBaseWithRelease):
+    """JSL schema for PackageKeywordsTagging worker."""
+
     class Options(object):
+        """JSL schema for PackageKeywordsTagging worker."""
+
         definition_id = "package_keywords_tagging"
         description = "Result of PackageKeywordsTagging worker"
 
