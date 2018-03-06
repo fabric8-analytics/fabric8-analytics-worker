@@ -14,6 +14,7 @@ boto3==1.5.34
 boto==2.48.0
 botocore==1.8.48          # via boto3, s3transfer
 celery==4.1.0             # via selinon
+certifi==2018.1.18        # via requests
 chardet==3.0.4            # via requests
 click==6.7                # via selinon
 codegen==1.0              # via selinon
@@ -46,7 +47,6 @@ requests==2.18.4
 rsa==3.4.2                # via oauth2client
 s3transfer==0.1.13        # via boto3
 scikit-learn==0.19.1
-scipy==1.0.0
 selinon[celery,sentry]==1.0.0rc4
 semantic-version==2.6.0
 six==1.11.0               # via anymarkup-core, configobj, google-api-python-client, oauth2client, python-dateutil
