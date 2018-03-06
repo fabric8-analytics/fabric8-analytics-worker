@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Tests for the BinwalkTask worker task."""
+
 import os
 import pytest
 from flexmock import flexmock
@@ -8,15 +10,19 @@ from f8a_worker.workers import BinwalkTask
 
 
 def is_executable(fpath):
+    """Check if the given file is executable."""
     return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
 
 @pytest.mark.usefixtures("dispatcher_setup")
 class TestBinwalk(object):
+    """Tests for the BinwalkTask worker task."""
+
     @pytest.mark.skipif(not os.path.isfile('/usr/bin/binwalk'),
                         reason="requires binwalk")
     @pytest.mark.usefixtures("no_s3_connection")
     def test_execute(self):
+        """Start the BinwalkTask worker task and test its result."""
         path = os.path.join(
                    os.path.dirname(
                        os.path.abspath(__file__)), '..', '..', 'hack')  # various executable scripts

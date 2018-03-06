@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Tests for the GithubTask worker task."""
+
 import pytest
 
 from f8a_worker.workers import GithubTask
@@ -7,11 +9,13 @@ from f8a_worker.workers import GithubTask
 
 @pytest.mark.usefixtures("dispatcher_setup")
 class TestGithuber(object):
+    """Tests for the GithubTask worker task."""
 
     @pytest.mark.parametrize(('repo_name', 'repo_url'), [
         ('projectatomic/atomic-reactor', 'https://github.com/projectatomic/atomic-reactor'),
     ])
     def test_execute(self, repo_name, repo_url):
+        """Start the GithubTask worker task and test its results."""
         task = GithubTask.create_test_instance(repo_name, repo_url)
         results = task.execute(arguments={})
         assert results is not None

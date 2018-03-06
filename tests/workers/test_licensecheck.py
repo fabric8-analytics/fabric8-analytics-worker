@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Tests for the LicenseCheckTask worker task."""
+
 import jsonschema
 from flexmock import flexmock
 from pathlib import Path
@@ -13,9 +15,11 @@ from f8a_worker.object_cache import EPVCache
 @pytest.mark.offline
 @pytest.mark.usefixtures("dispatcher_setup")
 class TestLicenseCheck(object):
+    """Tests for the LicenseCheckTask worker task."""
 
     @pytest.mark.usefixtures("no_s3_connection")
     def test_error(self):
+        """Start the LicenseCheckTask worker task with improper parameters and test its results."""
         data = "/this-is-not-a-real-directory"
         args = dict.fromkeys(('ecosystem', 'name', 'version'), 'some-value')
         flexmock(EPVCache).should_receive('get_sources').and_return(data)
@@ -27,6 +31,7 @@ class TestLicenseCheck(object):
                         reason="requires scancode")
     @pytest.mark.usefixtures("no_s3_connection")
     def test_execute(self):
+        """Start the LicenseCheckTask task and test its results."""
         data = str(Path(__file__).parent.parent / 'data/license')
         args = dict.fromkeys(('ecosystem', 'name', 'version'), 'some-value')
         flexmock(EPVCache).should_receive('get_sources').and_return(data)
