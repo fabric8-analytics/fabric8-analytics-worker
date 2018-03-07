@@ -28,14 +28,14 @@ def _is_url_dependency(dep):
     return False
 
 
-def iter_unknown_dependencies(storage_pool,node_args):
+def iter_unknown_dependencies(storage_pool, node_args):
     # Be safe here as fatal errors will cause errors in Dispatcher
     try:
         aggregated = storage_pool.get('unknown_deps_fetcher')
         postgres = storage_pool.get_connected_storage('BayesianPostgres')
         arguments = []
         for element in aggregated['result']:
-            element_list=element.split(":")
+            element_list = element.split(":")
             ecosystem = element_list[0]
             name = element_list[1] + ":" + element_list[2]
             version = element_list[3]
@@ -45,7 +45,7 @@ def iter_unknown_dependencies(storage_pool,node_args):
         return arguments
     except Exception:
         logger.exception("Failed to collect unknown dependencies")
-        return []  
+        return []
 
 
 def iter_dependencies_analysis(storage_pool, node_args):
@@ -118,26 +118,4 @@ def iter_cvedb_updates(storage_pool, node_args):
         return modified
     except Exception:
         logger.exception("Failed to collect OSS Index updates")
-        return []
-
-
-def iter_unknown_dependencies(storage_pool, node_args):
-    """Collect unknown dependencies."""
-    # Be safe here as fatal errors will cause errors in Dispatcher
-    try:
-        aggregated = storage_pool.get('UnknownDependencyFetcherTask')
-        postgres = storage_pool.get_connected_storage('BayesianPostgres')
-
-        arguments = []
-        for element in aggregated["result"]:
-            ecosystem = element['ecosystem']
-            name = element['package']
-            version = element['version']
-
-            arguments.append(_create_analysis_arguments(ecosystem, name, version))
-
-        logger.info("Arguments for next flows: %s" % str(arguments))
-        return arguments
-    except Exception:
-        logger.exception("Failed to collect unknown dependencies")
         return []
