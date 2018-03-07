@@ -22,6 +22,7 @@ _logger = logging.getLogger(__name__)
 
 
 def extract_component_details(component):
+    """Extract details from given component."""
     github_details = {
         "dependent_projects":
             component.get("package", {}).get("libio_dependents_projects", [-1])[0],
@@ -223,6 +224,7 @@ def _extract_license_outliers(license_service_output):
 
 
 def perform_license_analysis(license_score_list, dependencies):
+    """Pass given license_score_list to stack_license analysis and process response."""
     license_url = LICENSE_SCORING_URL_REST + "/api/v1/stack_license"
 
     payload = {
@@ -271,6 +273,7 @@ def perform_license_analysis(license_score_list, dependencies):
 
 
 def extract_user_stack_package_licenses(resolved, ecosystem):
+    """Extract user stack package licenses."""
     user_stack = get_dependency_data(resolved, ecosystem)
     list_package_licenses = []
     if user_stack is not None:
@@ -289,6 +292,7 @@ def extract_user_stack_package_licenses(resolved, ecosystem):
 
 
 def aggregate_stack_data(stack, manifest_file, ecosystem, deps, manifest_file_path):
+    """Aggregate stack data."""
     dependencies = []
     licenses = []
     license_score_list = []
@@ -340,6 +344,7 @@ def aggregate_stack_data(stack, manifest_file, ecosystem, deps, manifest_file_pa
 
 
 def get_dependency_data(resolved, ecosystem):
+    """Get dependency data from graph."""
     result = []
     for elem in resolved:
         if elem["package"] is None or elem["version"] is None:
@@ -380,7 +385,11 @@ class StackAggregatorV2Task(BaseTask):
     _analysis_name = 'stack_aggregator_v2'
 
     def execute(self, arguments=None):
-        finished = []
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         stack_data = []
         aggregated = self.parent_task_result('GraphAggregatorTask')
 

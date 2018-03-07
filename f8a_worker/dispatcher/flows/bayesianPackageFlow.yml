@@ -45,7 +45,11 @@
         - from: 'PackageResultCollector'
           to: 'PackageGraphImporterTask'
         - from: 'PackageFinalizeTaskError'
-          to: 'PackageGraphImporterTask'
+          to: 'PackageResultCollector'
+          condition:
+            name: 'argsFieldExist'
+            args:
+              key: 'document_id'
         - from: 'InitPackageFlow'
           to: 'PackageGraphImporterTask'
           condition:

@@ -241,7 +241,7 @@ class TimedCommand(object):
 
     @staticmethod
     def get_command_output(args, graceful=True, is_json=False, timeout=300, **kwargs):
-        """Wrap get_command_output() with implicit timeout of 5 minutes."""
+        """Wrap the function to get command output with implicit timeout of 5 minutes."""
         kwargs['timeout'] = timeout
         return get_command_output(args, graceful, is_json, **kwargs)
 
@@ -326,6 +326,8 @@ def skip_git_files(path):
 
 
 class ThreadPool(object):
+    """Implementation of thread pool."""
+
     def __init__(self, target, num_workers=10, timeout=3):
         """Initialize `ThreadPool`.
 
@@ -351,6 +353,7 @@ class ThreadPool(object):
         [t.start() for t in self._threads]
 
     def join(self):
+        """Join all threads."""
         [t.join() for t in self._threads]
         self.queue.join()
 
@@ -651,6 +654,7 @@ def get_response(url, headers=None, sleep_time=2, retry_count=10):
 
 
 def add_maven_coords_to_set(coordinates_str, gav_set):
+    """Add Maven coordinates to the gav_set set."""
     artifact_coords = MavenCoordinates.from_str(coordinates_str)
     gav_set.add("{group_id}:{artifact_id}:{version}".format(
         group_id=artifact_coords.groupId,

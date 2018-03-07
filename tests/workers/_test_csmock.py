@@ -1,3 +1,5 @@
+"""Tests for classes and functions from the csmock_worker module."""
+
 import json
 import os
 
@@ -24,11 +26,13 @@ dummy_results_path = os.path.join(
 
 
 def mock_csmock(args):
+    """Read mock data from JSON file."""
     with open(dummy_results_path) as fp:
         return json.load(fp)
 
 
 def test_csmock_tool(tmpdir):
+    """Test for the StaticAnalysis class."""
     t = str(tmpdir)
     os.chdir(t)
     sa = csmock_worker.StaticAnalysis(dummy_package_path)
@@ -41,6 +45,7 @@ def test_csmock_tool(tmpdir):
 
 @pytest.mark.offline
 def test_offline_csmock_tool():
+    """Test for the StaticAnalysis class."""
     flexmock.flexmock(csmock_worker, csmock=mock_csmock)
     task = csmock_worker.StaticAnalysis(dummy_package_path)
     results = task.analyze()
@@ -51,6 +56,7 @@ def test_offline_csmock_tool():
 
 
 def test_csmock_worker(tmpdir):
+    """Start the CsmockTask with package from PyPi and check its result."""
     six_tb_url = "https://pypi.python.org/packages/b3/b2/" + \
         "238e2590826bfdd113244a40d9d3eb26918bd798fc187e2360a8367068db/six-1.10.0.tar.gz"
     tb_path = os.path.join(str(tmpdir), "six-1.10.0.tar.gz")
@@ -79,6 +85,7 @@ def test_csmock_worker(tmpdir):
 
 @pytest.mark.offline
 def test_offline_csmock_worker(tmpdir):
+    """Start the CsmockTask with mock data and check its result."""
     flexmock.flexmock(csmock_worker, csmock=mock_csmock)
     t = csmock_worker.CsmockTask.create_test_instance(task_name='static_analysis')
     args = {'source_tarball_path': dummy_package_path, 'cache_path': str(tmpdir)}

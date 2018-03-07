@@ -1,4 +1,5 @@
-# TODO: mercator is very different than other workers - do we want to change that?
+"""JSL schemas for Mercator worker results."""
+
 import jsl
 
 from f8a_worker.schemas import JSLSchemaBaseWithRelease, added_in, removed_in
@@ -40,7 +41,11 @@ _type_field_required = jsl.Var(
 
 
 class CodeRepository(jsl.Document):
+    """JSL schema for code repository description."""
+
     class Options(object):
+        """JSL schema for code repository description."""
+
         definition_id = "metadata_code_repository"
         description = "Code repository description"
 
@@ -49,7 +54,11 @@ class CodeRepository(jsl.Document):
 
 
 class Maintainer(jsl.Document):
+    """JSL schema for maintainer description."""
+
     class Options(object):
+        """JSL schema for maintainer description."""
+
         definition_id = "metadata_maintainer"
         description = "Maintainer description"
 
@@ -59,7 +68,11 @@ class Maintainer(jsl.Document):
 
 
 class LockedDependency(jsl.Document):
+    """JSL schema for locked dependency description."""
+
     class Options(object):
+        """JSL schema for locked dependency description."""
+
         definition_id = "metadata_locked_dependency"
         description = "Locked dependency description"
 
@@ -71,7 +84,11 @@ class LockedDependency(jsl.Document):
 
 
 class LockFile(jsl.Document):
+    """JSL schema for dependency lock file description."""
+
     class Options(object):
+        """JSL schema for dependency lock file description."""
+
         definition_id = "metadata_lockfile"
         description = "Dependency lock file description"
 
@@ -83,7 +100,11 @@ class LockFile(jsl.Document):
 
 
 class NpmShrinkwrap(jsl.Document):
+    """JSL schema for npm-shrinkwrap description."""
+
     class Options(object):
+        """JSL schema for npm-shrinkwrap description."""
+
         definition_id = "npm_shrinkwrap"
         description = "npm-shrinkwrap description"
 
@@ -99,7 +120,11 @@ class NpmShrinkwrap(jsl.Document):
 
 
 class MetadataDict(jsl.Document):
+    """JSL schema for generic metadata dict in details list."""
+
     class Options(object):
+        """JSL schema for generic metadata dict in details list."""
+
         definition_id = "details_metadata"
         description = "generic metadata dict in details list"
 
@@ -181,7 +206,11 @@ class MetadataDict(jsl.Document):
 
 
 class MercatorResult(JSLSchemaBaseWithRelease):
+    """JSL schema for Mercator worker results."""
+
     class Options(object):
+        """JSL schema for Mercator worker results."""
+
         definition_id = "metadata"
         description = "Result of Mercator worker"
 

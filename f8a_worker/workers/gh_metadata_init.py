@@ -1,10 +1,19 @@
+"""Class to initialize Analysis."""
+
 import datetime
 from f8a_worker.base import BaseTask
 from f8a_worker.models import Analysis
 
 
 class InitGitHubManifestMetadata(BaseTask):
+    """Initialize Analysis."""
+
     def execute(self, arguments):
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('url'))
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('repo_name'))

@@ -55,7 +55,9 @@ class BinwalkTask(BaseTask):
     _analysis_name = 'binary_data'
     schema_ref = SchemaRef(_analysis_name, '1-0-0')
 
-    def parse_binwalk(self, output):
+    @staticmethod
+    def parse_binwalk(output):
+        """Parse binwalk tool output and accumulate descriptions."""
         if not output:
             return None
         import re
@@ -68,6 +70,11 @@ class BinwalkTask(BaseTask):
         return matched
 
     def execute(self, arguments):
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))

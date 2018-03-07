@@ -1,6 +1,8 @@
+"""Tests for the CVEcheckerTask worker task."""
+
 from datadiff.tools import assert_equal
 from flexmock import flexmock
-import os
+from pathlib import Path
 import pytest
 from shutil import copy
 from tempfile import TemporaryDirectory
@@ -11,11 +13,14 @@ from f8a_worker.workers import CVEcheckerTask
 
 @pytest.mark.usefixtures("dispatcher_setup")
 class TestCVEchecker(object):
+    """Tests for the CVEcheckerTask worker task."""
+
     @pytest.mark.parametrize(('cve_id', 'score', 'vector', 'severity'), [
         ('CVE-2017-0249', 7.3, 'CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L', 'high'),
         ('cve-2015-1164', 4.3, 'AV:N/AC:M/Au:N/C:N/I:P/A:N', 'medium')
     ])
     def test_get_cve_impact(self, cve_id, score, vector, severity):
+        """Test the method CVEcheckerTask.get_cve_impact."""
         score_, vector_, severity_ = CVEcheckerTask.get_cve_impact(cve_id)
         assert score_ == score
         assert vector_ == vector
@@ -23,6 +28,7 @@ class TestCVEchecker(object):
 
     @pytest.mark.usefixtures('npm')
     def test_npm_geddy(self):
+        """Tests CVE reports for selected package from NPM ecosystem."""
         args = {'ecosystem': 'npm', 'name': 'geddy', 'version': '13.0.7'}
         task = CVEcheckerTask.create_test_instance(task_name='security_issues')
         results = task.execute(args)
@@ -56,10 +62,8 @@ class TestCVEchecker(object):
         assert_equal(results.get('details'), expected_details)
 
     def test_maven_commons_collections(self):
-        jar_path = os.path.join(
-                    os.path.dirname(
-                     os.path.abspath(__file__)), '..', 'data', 'maven',
-                                                 'commons-collections-3.2.1.jar')
+        """Tests CVE reports for selected packages from Maven ecosystem."""
+        jar_path = str(Path(__file__).parent.parent / 'data/maven/commons-collections-3.2.1.jar')
         args = {'ecosystem': 'maven', 'name': 'commons-collections:commons-collections',
                 'version': '3.2.1'}
         flexmock(EPVCache).should_receive('get_source_tarball').and_return(jar_path)
@@ -141,9 +145,8 @@ class TestCVEchecker(object):
         assert_equal(results.get('details'), expected_details)
 
     def test_python_mako(self):
-        extracted = os.path.join(
-                        os.path.dirname(
-                         os.path.abspath(__file__)), '..', 'data', 'pypi', 'Mako-0.3.3')
+        """Tests CVE reports for selected package from PyPi ecosystem."""
+        extracted = str(Path(__file__).parent.parent / 'data/pypi/Mako-0.3.3')
         args = {'ecosystem': 'pypi', 'name': 'mako', 'version': '0.3.3'}
         flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(extracted)
         task = CVEcheckerTask.create_test_instance(task_name='security_issues')
@@ -175,9 +178,7 @@ class TestCVEchecker(object):
 
     def test_python_requests(self):
         """To make sure that python CPE suppression works (issue#131)."""
-        extracted = os.path.join(
-                        os.path.dirname(
-                         os.path.abspath(__file__)), '..', 'data', 'pypi', 'requests-2.5.3')
+        extracted = str(Path(__file__).parent.parent / 'data/pypi/requests-2.5.3')
         args = {'ecosystem': 'pypi', 'name': 'requests', 'version': '2.5.3'}
         flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(extracted)
         task = CVEcheckerTask.create_test_instance(task_name='security_issues')
@@ -214,8 +215,7 @@ class TestCVEchecker(object):
 
         https://github.com/jeremylong/DependencyCheck/issues/896
         """
-        pkg_info = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                '..', 'data', 'pypi', 'salt-2016.11.6', 'PKG-INFO')
+        pkg_info = str(Path(__file__).parent.parent / 'data/pypi/salt-2016.11.6/PKG-INFO')
         args = {'ecosystem': 'pypi', 'name': 'salt', 'version': '2016.11.6'}
         with TemporaryDirectory() as extracted:
             # We need a write-access into extracted/
@@ -300,6 +300,7 @@ class TestCVEchecker(object):
 
     @pytest.mark.usefixtures('nuget')
     def test_nuget_system_net_http(self):
+        """Tests CVE reports for selected package from Nuget ecosystem."""
         args = {'ecosystem': 'nuget', 'name': 'System.Net.Http', 'version': '4.1.1'}
         task = CVEcheckerTask.create_test_instance(task_name='security_issues')
         results = task.execute(arguments=args)

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""Class for using S3 for storing tasks` results."""
+
 import json
 import botocore
 from f8a_worker.utils import json_serial
@@ -7,6 +9,8 @@ from . import AmazonS3
 
 
 class S3DataBase(AmazonS3):
+    """Use S3 for storing tasks` results."""
+
     @staticmethod
     def _base_file_content(old_file_content, result):
         # remove entries we don't want to keep

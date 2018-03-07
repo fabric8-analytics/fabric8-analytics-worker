@@ -1,3 +1,5 @@
+"""Class to run mercator on stack analysis manifests."""
+
 import os
 import json
 from selinon import FatalTaskError
@@ -12,6 +14,8 @@ from f8a_worker.workers.mercator import MercatorTask
 
 
 class GraphAggregatorTask(BaseTask):
+    """Run mercator on stack analysis manifests."""
+
     _analysis_name = 'graph_aggregator'
     schema_ref = None
 
@@ -28,6 +32,11 @@ class GraphAggregatorTask(BaseTask):
         return [{"package": k, "version": v} for k, v in versions.items()]
 
     def execute(self, arguments):
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('data'))
         self._strict_assert(arguments.get('external_request_id'))
 

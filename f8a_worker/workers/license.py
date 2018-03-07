@@ -17,6 +17,7 @@ class LicenseCheckTask(BaseTask):
 
     @staticmethod
     def process_output(data):
+        """Process output from scancode tool."""
         # not interested in these
         keys_to_remove = ['start_line', 'end_line', 'matched_rule', 'score', 'key']
         # 'files' is a list of file paths along with info about detected licenses.
@@ -45,6 +46,7 @@ class LicenseCheckTask(BaseTask):
 
     @staticmethod
     def run_scancode(scan_path):
+        """Run scancode tool."""
         result_data = {'status': 'unknown',
                        'summary': {},
                        'details': {}}
@@ -82,6 +84,11 @@ class LicenseCheckTask(BaseTask):
         return result_data
 
     def execute(self, arguments):
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))

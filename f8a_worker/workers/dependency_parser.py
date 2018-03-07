@@ -1,7 +1,4 @@
-"""
-Output: TBD
-
-"""
+"""Output: TBD."""
 
 from f8a_worker.base import BaseTask
 from f8a_worker.errors import TaskError
@@ -18,7 +15,11 @@ class GithubDependencyTreeTask(BaseTask):
     _analysis_name = 'dependency_tree'
     
     def execute(self, arguments=None):
-        """Main execute method """
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('github_repo'))
         self._strict_assert(arguments.get('github_sha'))
         self._strict_assert(arguments.get('email_ids'))
@@ -29,12 +30,10 @@ class GithubDependencyTreeTask(BaseTask):
 
     @staticmethod
     def extract_dependencies(github_repo, github_sha):
-
         """Extract the dependencies information.
 
-           Currently assuming repository is maven repository.
+        Currently assuming repository is maven repository.
         """
-
         with TemporaryDirectory() as workdir:
             repo = Git.clone(url=github_repo, path=workdir, timeout=3600)
             repo.reset(revision=github_sha, hard=True)
@@ -53,11 +52,10 @@ class GithubDependencyTreeTask(BaseTask):
 
     @staticmethod
     def parse_maven_dependency_tree(dependency_tree):
+        """Parse the dot representation of maven dependency tree.
 
-        """Parses the dot representation of maven dependency tree.
-
-           For available representations of dependency tree see
-           http://maven.apache.org/plugins/maven-dependency-plugin/tree-mojo.html#outputType
+        For available representations of dependency tree see
+        http://maven.apache.org/plugins/maven-dependency-plugin/tree-mojo.html#outputType
         """
         dot_file_parser_regex = re.compile('"(.*?)"')
         set_pom_names = set()

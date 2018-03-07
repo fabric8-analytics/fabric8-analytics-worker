@@ -127,7 +127,11 @@ class GitStats(BaseTask):
         }
 
     def execute(self, arguments):
-        """Execute the task."""
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert('ecosystem' in arguments)
         self._strict_assert('name' in arguments)
         self._strict_assert('url' in arguments)

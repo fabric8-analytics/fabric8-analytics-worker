@@ -1,15 +1,18 @@
-from f8a_worker.base import BaseTask
-from f8a_worker.object_cache import ObjectCache
-from f8a_worker.models import Analysis, EcosystemBackend, Ecosystem, Version, Package
-from f8a_worker.utils import get_latest_analysis
-from celery.utils.log import get_task_logger
+"""Sync package data to graph database."""
 
-import json
 from requests import post
+from f8a_worker.base import BaseTask
 
 
 class GraphSyncTask(BaseTask):
+    """Sync package data to graph database."""
+
     def execute(self, arguments):
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         _RETRY_COUNTDOWN = 10
 
         ecosystem = arguments.get['ecosystem']

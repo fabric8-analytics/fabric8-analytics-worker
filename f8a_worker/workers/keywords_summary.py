@@ -4,8 +4,6 @@ import operator
 from f8a_worker.base import BaseTask
 from selinon import StoragePool
 
-# from f8a_worker.schemas import SchemaRef
-
 
 class KeywordsSummaryTask(BaseTask):
     """Aggregate keywords computed, prioritize keywords different sources and threshold them."""
@@ -87,6 +85,11 @@ class KeywordsSummaryTask(BaseTask):
         }
 
     def execute(self, arguments):
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
 

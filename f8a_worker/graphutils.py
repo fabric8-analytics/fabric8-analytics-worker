@@ -1,3 +1,5 @@
+"""Miscellaneous functions."""
+
 import os
 import logging
 import json
@@ -18,6 +20,7 @@ LICENSE_SCORING_URL_REST = "http://{host}:{port}".format(
 
 
 def get_stack_usage_data_graph(components):
+    """Get average usage for components."""
     components_with_usage_data = 0
     total_dependents_count = 0
     rh_distributed_comp_count = 0
@@ -47,6 +50,7 @@ def get_stack_usage_data_graph(components):
 
 
 def get_stack_popularity_data_graph(components):
+    """Get average stars/forks for components` github details."""
     components_with_stargazers = 0
     components_with_forks = 0
     total_stargazers = 0
@@ -85,7 +89,7 @@ def get_stack_popularity_data_graph(components):
 
 
 def extract_component_details(component):
-    component_summary = []
+    """Extract component details."""
     github_details = {
         "issues": {
             "month": {
@@ -159,6 +163,7 @@ def extract_component_details(component):
 
 
 def aggregate_stack_data(stack, manifest_file, ecosystem, manifest_file_path):
+    """Aggregate stack data."""
     components = []
     licenses = []
     for component in stack.get('result', []):
@@ -184,6 +189,7 @@ def aggregate_stack_data(stack, manifest_file, ecosystem, manifest_file_path):
 
 
 def get_osio_user_count(ecosystem, name, version):
+    """Get OSIO user count."""
     str_gremlin = "g.V().has('pecosystem','{}').has('pname','{}').has('version','{}').".format(
         ecosystem, name, version)
     str_gremlin += "in('uses').count();"
@@ -290,6 +296,7 @@ def create_package_dict(graph_results, alt_dict=None):
 
 
 def select_latest_version(libio, anitya):
+    """Select latest version from libraries.io or anitya."""
     # anitya does not provide latest version anymore, but it's kept for
     # compatibility
     libio_latest_version = libio if libio else '0.0.0'
@@ -303,6 +310,6 @@ def select_latest_version(libio, anitya):
         if sv.SpecItem('<' + anitya_latest_version).match(sv.Version(libio_latest_version)):
             latest_version = anitya
     except ValueError:
-        pass
+        latest_version = ''
 
     return latest_version

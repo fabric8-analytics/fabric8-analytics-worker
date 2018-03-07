@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+"""Base class for selinon tasks."""
+
 import jsonschema
 from celery.utils.log import get_task_logger
 from f8a_worker.defaults import configuration
@@ -12,12 +15,15 @@ from f8a_worker.storages import PackagePostgres
 
 
 class BaseTask(SelinonTask):
+    """Base class for selinon tasks."""
+
     description = 'Root of the Task object hierarchy'
     schema_ref = _schema = None
     # set this to False if your task shouldn't get the `_audit` value added to result dict
     add_audit_info = True
 
     def __init__(self, *args, **kwargs):
+        """Initialize object."""
         super().__init__(*args, **kwargs)
         self.log = get_task_logger(self.__class__.__name__)
         self.configuration = configuration
@@ -76,6 +82,7 @@ class BaseTask(SelinonTask):
     @classmethod
     def create_test_instance(cls, flow_name=None, task_name=None, parent=None, task_id=None,
                              dispatcher_id=None):
+        """Create instance of task for tests."""
         # used in tests so we do not do ugly things like this, this correctly done by dispatcher
         return cls(flow_name, task_name or cls.__name__, parent, task_id, dispatcher_id)
 

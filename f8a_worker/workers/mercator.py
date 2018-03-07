@@ -168,6 +168,7 @@ class MercatorTask(BaseTask):
         return self.run_mercator(arguments, cache_path)
 
     def run_mercator_on_git_repo(self, arguments):
+        """Clone specified git url and run mercator on it."""
         self._strict_assert(arguments.get('url'))
 
         with TemporaryDirectory() as workdir:
@@ -191,6 +192,7 @@ class MercatorTask(BaseTask):
 
     def run_mercator(self, arguments, cache_path,
                      keep_path=False, outermost_only=True, timeout=300, resolve_poms=True):
+        """Run mercator tool."""
         result_data = {'status': 'unknown',
                        'summary': [],
                        'details': []}

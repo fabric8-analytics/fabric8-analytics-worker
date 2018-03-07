@@ -1,4 +1,6 @@
-import os
+"""Tests for the MercatorTask worker task."""
+
+from pathlib import Path
 import pytest
 from flexmock import flexmock
 from f8a_worker.object_cache import EPVCache
@@ -7,6 +9,7 @@ from f8a_worker.workers.mercator import MercatorTask
 
 
 def compare_dictionaries(a, b):
+    """Compare two dictionaries (shape+content)."""
     def mapper(item):
         if isinstance(item, list):
             return frozenset(map(mapper, item))
@@ -19,11 +22,15 @@ def compare_dictionaries(a, b):
 
 @pytest.mark.usefixtures("dispatcher_setup")
 class TestMercator(object):
+    """Tests for the MercatorTask worker task."""
+
     def setup_method(self, method):
+        """Set up the MercatorTask."""
         self.m = MercatorTask.create_test_instance(task_name='metadata')
 
     @pytest.mark.usefixtures("no_s3_connection")
     def test_execute_npm(self, tmpdir, npm):
+        """Test the MercatorTask for the NPM ecosystem."""
         name = 'wrappy'
         version = '1.0.2'
         required = {'homepage', 'version', 'declared_licenses', 'code_repository',
@@ -41,10 +48,9 @@ class TestMercator(object):
         assert details['name'] == name
 
     @pytest.mark.usefixtures("no_s3_connection")
-    def test_execute_maven(self, tmpdir, maven):
-        pom_path = os.path.join(
-                    os.path.dirname(os.path.abspath(__file__)),
-                    '..', 'data', 'maven', 'com.networknt', 'mask', 'pom.xml')
+    def test_execute_maven(self, maven):
+        """Test the MercatorTask for the Maven ecosystem."""
+        pom_path = str(Path(__file__).parent.parent / 'data/maven/com.networknt/mask/pom.xml')
         name = 'com.networknt:mask'
         version = '1.1.0'
         required = {'code_repository', 'declared_licenses', 'dependencies', 'description',
@@ -69,10 +75,8 @@ class TestMercator(object):
 
     @pytest.mark.usefixtures("no_s3_connection")
     def test_execute_go(self, go):
-        path = os.path.join(
-                    os.path.dirname(os.path.abspath(__file__)),
-                    '..', 'data', 'go', 'mercator-go')
-
+        """Test the MercatorTask for the Go ecosystem."""
+        path = str(Path(__file__).parent.parent / 'data/go/mercator-go')
         args = {'ecosystem': go.name, 'name': 'dummy', 'version': 'dummy'}
         flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(path)
         results = self.m.execute(arguments=args)

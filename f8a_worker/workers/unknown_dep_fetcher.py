@@ -1,3 +1,5 @@
+"""Task to fetch unknown dependencies."""
+
 from __future__ import division
 import json
 from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST
@@ -6,10 +8,13 @@ from f8a_worker.utils import get_session_retry
 
 
 class UnknownDependencyFetcherTask(BaseTask):
+    """Task to fetch unknown dependencies."""
+
     _analysis_name = 'unknown_deps_fetcher'
     description = 'Fetch unknown dependencies'
 
     def get_dependency_data(self, dependency_list):
+        """Prepare list of unknown dependencies from given list of dependencies."""
         ecosystem = "maven"
         dep_pkg_list_unknown = ['maven:org.apache.maven.resolver:maven-resolver-transport-wagon:1.0.3']
         dep_pkg_list_known = []
@@ -38,6 +43,11 @@ class UnknownDependencyFetcherTask(BaseTask):
         return dep_pkg_list_unknown
 
     def execute(self, arguments=None):
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         aggregated = self.parent_task_result('GithubDependencyTreeTask')
 
         self.log.info ("Arguments passed from GithubDependencyTreeTask: {}".format(arguments))

@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+
+"""Tests for the LinguistTask worker task."""
+
 from os.path import isfile
 import pytest
 from flexmock import flexmock
@@ -15,10 +18,13 @@ MODULE_VERSION = '1.10.0'
 
 @pytest.mark.usefixtures("dispatcher_setup")
 class TestLinguist(object):
+    """Tests for the LinguistTask worker task."""
+
     @pytest.mark.skipif(not isfile('/usr/local/bin/linguist'),
                         reason="requires linguist")
     @pytest.mark.usefixtures("no_s3_connection")
     def test_execute(self, tmpdir):
+        """Start the LinguistTask worker task and check its results."""
         IndianaJones.fetch_artifact(
             ecosystem=ECOSYSTEM, artifact=MODULE_NAME,
             version=MODULE_VERSION, target_dir=str(tmpdir))

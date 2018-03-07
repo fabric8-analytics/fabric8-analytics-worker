@@ -1,3 +1,5 @@
+"""JSL schema for Digester worker results."""
+
 import jsl
 
 from f8a_worker.schemas import JSLSchemaBaseWithRelease
@@ -10,7 +12,11 @@ ROLE_TITLE = jsl.roles.Var({
 
 
 class DigesterDetail(jsl.Document):
+    """JSL schema for Digester worker results details."""
+
     class Options(object):
+        """JSL schema for Digester worker results details."""
+
         definition_id = "digester_details"
         description = "Details of Digester run on one file"
 
@@ -23,7 +29,11 @@ class DigesterDetail(jsl.Document):
 
 
 class DigesterResult(JSLSchemaBaseWithRelease):
+    """JSL schema for Digester worker results."""
+
     class Options(object):
+        """JSL schema for Digester worker results."""
+
         definition_id = "digests"
         description = "Result of Digester worker"
 

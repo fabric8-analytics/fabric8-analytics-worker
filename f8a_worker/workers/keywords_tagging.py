@@ -105,6 +105,7 @@ class KeywordsTaggingTaskBase(BaseTask):
         return keywords_yaml, stopwords_txt
 
     def execute(self, arguments):
+        """Not implemented."""
         raise NotImplementedError("Please derive from base task for specific tagging tasks")
 
 
@@ -115,6 +116,7 @@ class KeywordsTaggingTask(KeywordsTaggingTaskBase):
     schema_ref = SchemaRef(_analysis_name, '1-0-0')
 
     def _package_version_level_keywords(self, keywords_file_name, stopwords_file_name, arguments):
+        """Compute package-version level keywords from metadata."""
         # Keep f8a_tagger import local as other components dependent on
         # f8a_worker do not require it installed.
         from f8a_tagger import lookup_text as keywords_lookup_text
@@ -138,6 +140,11 @@ class KeywordsTaggingTask(KeywordsTaggingTaskBase):
         return details
 
     def execute(self, arguments):
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))
@@ -156,6 +163,7 @@ class PackageKeywordsTaggingTask(KeywordsTaggingTaskBase):
     schema_ref = SchemaRef(_analysis_name, '1-0-0')
 
     def _package_level_keywords(self, keywords_file_name, stopwords_file_name, arguments):
+        """Compute package level keywords."""
         # Keep f8a_tagger import local as other components dependent on
         # f8a_worker do not require it installed.
         from f8a_tagger import lookup_readme as keywords_lookup_readme
@@ -211,6 +219,11 @@ class PackageKeywordsTaggingTask(KeywordsTaggingTaskBase):
         return details
 
     def execute(self, arguments):
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
 
