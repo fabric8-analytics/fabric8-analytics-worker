@@ -11,7 +11,7 @@ class UnknownDependencyFetcherTask(BaseTask):
 
     def get_dependency_data(self, dependency_list):
         ecosystem = "maven"
-        dep_pkg_list_unknown = []
+        dep_pkg_list_unknown = ['maven:org.apache.maven.resolver:maven-resolver-transport-wagon:1.0.3']
         dep_pkg_list_known = []
         for item in dependency_list:
             dependency_list = item.split(":")

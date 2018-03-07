@@ -13,4 +13,20 @@
             import: 'f8a_worker.dispatcher.foreach'
             function: 'iter_unknown_dependencies'
             # result of the function is used as sub-flow arguments
-         
+            propagate_result: true
+          condition:
+            and:
+              - &recursiveAnalysisCheck
+                or:
+                - not:
+                    name: 'argsFieldExist'
+                    args:
+                      key: 'recursive_limit'
+                - name: 'argsFieldGreater'
+                  args:
+                     key: 'recursive_limit'
+                     value: 0
+              - name: 'envEqual'
+                args:
+                  env: 'WORKER_ADMINISTRATION_REGION'
+                  value: 'api'
