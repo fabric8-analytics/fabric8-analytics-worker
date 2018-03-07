@@ -27,7 +27,7 @@ def _is_url_dependency(dep):
 def iter_unknown_dependencies(storage_pool,node_args):
     # Be safe here as fatal errors will cause errors in Dispatcher
     try:
-        aggregated = storage_pool.get('UnknownDependencyFetcherTask')
+        aggregated = storage_pool.get('unknown_deps_fetcher')
         postgres = storage_pool.get_connected_storage('BayesianPostgres')
         arguments = []
         for element in aggregated['result']:
