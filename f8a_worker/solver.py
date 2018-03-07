@@ -8,6 +8,7 @@ import logging
 from lxml import etree
 from operator import itemgetter
 from pip.req.req_file import parse_requirements
+from pip._vendor.packaging.specifiers import _version_split
 import re
 from requests import get
 from xmlrpc.client import ServerProxy
@@ -475,10 +476,12 @@ class PypiDependencyParser(DependencyParser):
         def _extract_op_version(spec):
             # https://www.python.org/dev/peps/pep-0440/#compatible-release
             if spec.operator == '~=':
-                version = spec.version.split('.')
-                if len(version) in {2, 3, 4}:
-                    if len(version) in {3, 4}:
-                        del version[-1]  # will increase the last but one in next line
+                version = _version_split(spec.version)
+                if len(version) > 1:
+                    # ignore pre-release, post-release or developmental release
+                    while not version[-1].isdigit():
+                        del version[-1]
+                    del version[-1]  # will increase the last but one in next line
                     version[-1] = str(int(version[-1]) + 1)
                 else:
                     raise ValueError('%r must not be used with %r' % (spec.operator, spec.version))
