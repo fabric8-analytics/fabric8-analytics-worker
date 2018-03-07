@@ -20,6 +20,7 @@ class InitAnalysisFlow(BaseTask):
         :param arguments: dictionary with task arguments
         :return: {}, results
         """
+        self.log.info("Arguments passed by UnknownDependencyFetcherTask: {}".format(arguments))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))
         self._strict_assert(arguments.get('ecosystem'))
@@ -43,6 +44,7 @@ class InitAnalysisFlow(BaseTask):
                 arguments.pop('name')
                 arguments.pop('version')
                 arguments.pop('ecosystem')
+                self.log.info("Arguments returned by initAnalysisFlow without force: {}".format(arguments))
                 return arguments
 
         cache_path = mkdtemp(dir=self.configuration.WORKER_DATA_DIR)
@@ -84,6 +86,7 @@ class InitAnalysisFlow(BaseTask):
         db.commit()
 
         arguments['document_id'] = a.id
+        self.log.info("Arguments returned by InitAnalysisFlow are: {}".format(arguments))
         return arguments
 
     @staticmethod
