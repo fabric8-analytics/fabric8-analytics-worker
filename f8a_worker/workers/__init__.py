@@ -7,6 +7,7 @@ from f8a_worker.workers.code_metrics import CodeMetricsTask
 from f8a_worker.workers.csmock_worker import CsmockTask
 from f8a_worker.workers.CVEchecker import CVEcheckerTask
 from f8a_worker.workers.cvedbsync import CVEDBSyncTask
+from f8a_worker.workers.dependency_parser import GithubDependencyTreeTask
 from f8a_worker.workers.dependency_snapshot import DependencySnapshotTask
 from f8a_worker.workers.digester import DigesterTask
 from f8a_worker.workers.finalize import FinalizeTask, PackageFinalizeTask
@@ -33,5 +34,4 @@ from f8a_worker.workers.repository_description import RepositoryDescCollectorTas
 from f8a_worker.workers.result_collector import ResultCollector, PackageResultCollector
 from f8a_worker.workers.stackaggregator import StackAggregatorTask
 from f8a_worker.workers.stackaggregator_v2 import StackAggregatorV2Task
-from f8a_worker.workers.dependency_parser import GithubDependencyTreeTask
 from f8a_worker.workers.unknown_dep_fetcher import UnknownDependencyFetcherTask
