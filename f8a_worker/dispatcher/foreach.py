@@ -28,26 +28,6 @@ def _is_url_dependency(dep):
     return False
 
 
-def iter_unknown_dependencies(storage_pool, node_args):
-    # Be safe here as fatal errors will cause errors in Dispatcher
-    try:
-        aggregated = storage_pool.get('unknown_deps_fetcher')
-        postgres = storage_pool.get_connected_storage('BayesianPostgres')
-        arguments = []
-        for element in aggregated['result']:
-            element_list = element.split(":")
-            ecosystem = element_list[0]
-            name = element_list[1] + ":" + element_list[2]
-            version = element_list[3]
-            arguments.append(_create_analysis_arguments(ecosystem, name, version))
-
-        logger.info("Arguments for next flows: %s" % str(arguments))
-        return arguments
-    except Exception:
-        logger.exception("Failed to collect unknown dependencies")
-        return []
-
-
 def iter_dependencies_analysis(storage_pool, node_args):
     """Collect analysis dependencies."""
     # Be safe here as fatal errors will cause errors in Dispatcher
@@ -118,4 +98,30 @@ def iter_cvedb_updates(storage_pool, node_args):
         return modified
     except Exception:
         logger.exception("Failed to collect OSS Index updates")
+        return []
+
+
+def iter_unknown_dependencies(storage_pool, node_args):
+    # Be safe here as fatal errors will cause errors in Dispatcher
+    try:
+        aggregated = storage_pool.get('unknown_deps_fetcher')
+        postgres = storage_pool.get_connected_storage('BayesianPostgres')
+
+        arguments = []
+        for element in aggregated["result"]:
+            epv = element.split(':')
+            ecosystem = epv[0]
+            if ecosystem == 'maven':
+                name = '{}:{}'.format(epv[1],epv[2])
+                version = epv[3]
+            else:
+                name = epv[1]
+                version = epv[2]
+            arguments.append(_create_analysis_arguments(ecosystem, name, version))
+
+        print('Arguments appended: %s' % ', '.join(arguments))
+        logger.info("Arguments for next flows: %s" % str(arguments))
+        return arguments
+    except Exception:
+        logger.exception("Failed to collect unknown dependencies")
         return []
