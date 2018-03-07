@@ -112,7 +112,7 @@ def iter_unknown_dependencies(storage_pool, node_args):
                 version = epv[2]
             arguments.append(_create_analysis_arguments(ecosystem, name, version))
 
-        print('Arguments appended: %s' % ', '.join(arguments))
+        print('Arguments appended: %s' % ', '.join(str(item) for item in arguments))
         logger.info("Arguments for next flows: %s" % str(arguments))
         return arguments
     except Exception:
