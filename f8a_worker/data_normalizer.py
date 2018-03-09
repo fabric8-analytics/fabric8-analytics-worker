@@ -303,6 +303,11 @@ class DataNormalizer(object):
 
         return result
 
+    def _handle_python_requirementstxt(self, data):
+        """Handle requirements.txt."""
+        result = {'dependencies': data.get('dependencies', [])}
+        return result
+
     def _handle_java(self, data):
         """Handle data from pom.xml."""
         # we expect pom.xml to be there, since it's always downloaded to top level by InitTask
@@ -517,7 +522,7 @@ class DataNormalizer(object):
         # TODO: some fallback if ecosystem is not matched
         switch = {'python': self._handle_python,
                   'python-dist': self._handle_python_dist,
-                  'python-requirementstxt': self._handle_python_dist,
+                  'python-requirementstxt': self._handle_python_requirementstxt,
                   'npm': self._handle_javascript,
                   'java-pom': self._handle_java,
                   'ruby': self._handle_rubygems,
