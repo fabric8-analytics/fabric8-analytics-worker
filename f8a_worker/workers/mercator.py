@@ -75,6 +75,9 @@ class MercatorTask(BaseTask):
                 return True
             return get_depth(item1['path']) > get_depth(item2['path'])
 
+        if not data.get('items'):
+            return None
+
         # find outermost PKG_INFO/metadata.json/requirements.txt - there can be
         #  testing ones etc.
         for item in data['items']:
@@ -199,23 +202,14 @@ class MercatorTask(BaseTask):
                        'details': []}
         mercator_target = arguments.get('cache_sources_path', cache_path)
 
-        if arguments['ecosystem'] == 'go':
-            # no Go support in Mercator-go yet, we handle it separately here
-            tc = TimedCommand(['gofedlib-cli', '--dependencies-main', '--dependencies-packages',
-                               '--dependencies-test', '--skip-errors',
-                               mercator_target])
-            status, data, err = tc.run(timeout=timeout)
-        else:
-            tc = TimedCommand(['mercator', mercator_target])
-            update_env = {'MERCATOR_JAVA_RESOLVE_POMS': 'true'} if resolve_poms else {}
-            status, data, err = tc.run(timeout=timeout,
-                                       is_json=True,
-                                       update_env=update_env)
+        tc = TimedCommand(['mercator', mercator_target])
+        update_env = {'MERCATOR_JAVA_RESOLVE_POMS': 'true'} if resolve_poms else {}
+        status, data, err = tc.run(timeout=timeout,
+                                   is_json=True,
+                                   update_env=update_env)
         if status != 0:
             self.log.error(err)
             raise FatalTaskError(err)
-        if isinstance(data, dict) and not data.get('items'):
-            raise FatalTaskError('No usable items from mercator')
 
         ecosystem_object = self.storage.get_ecosystem(arguments['ecosystem'])
         if ecosystem_object.is_backed_by(EcosystemBackend.pypi):
@@ -223,19 +217,6 @@ class MercatorTask(BaseTask):
             items = [self._merge_python_items(mercator_target, data)]
             if items == [None]:
                 raise FatalTaskError('Found no usable PKG-INFO/metadata.json/requirements.txt')
-        elif arguments['ecosystem'] == 'go':
-            result = json.loads(data[0])
-            main_deps_count = len(result.get('deps-main', []))
-            packages_count = len(result.get('deps-packages', []))
-            self.log.debug('gofedlib found %i dependencies', main_deps_count + packages_count)
-
-            result['code_repository'] = {
-                'type': 'git',
-                'url': 'https://{name}'.format(name=arguments.get('name'))
-            }
-            result['name'] = arguments.get('name')
-            result['version'] = arguments.get('version')
-            items = [{'ecosystem': 'gofedlib', 'result': result}]
         else:
             if outermost_only:
                 # process only root level manifests (or the ones closest to the root level)
@@ -250,8 +231,37 @@ class MercatorTask(BaseTask):
                 #  source of information and don't want to duplicate info by including
                 #  data from pom included in artifact (assuming it's included)
                 items = [d for d in items if d['ecosystem'].lower() == 'java-pom']
+            elif arguments['ecosystem'] == 'go':
+                items = [d for d in items if d['ecosystem'].lower() == 'go-glide']
+                if not items:
+                    # Mercator found no Go Glide files, run gofedlib
+                    items = self.run_gofedlib(topdir=mercator_target,
+                                              name=arguments.get('name'),
+                                              version=arguments.get('version'),
+                                              timeout=timeout)
 
         result_data['details'] = [self._data_normalizer.handle_data(d, keep_path=keep_path)
                                   for d in items]
         result_data['status'] = 'success'
         return result_data
+
+    def run_gofedlib(self, topdir, name, version, timeout):
+        """Run gofedlib-cli to extract dependencies from golang sources."""
+        tc = TimedCommand(
+            ['gofedlib-cli', '--dependencies-main', '--dependencies-packages',
+             '--dependencies-test', '--skip-errors',
+             topdir])
+        status, data, err = tc.run(timeout=timeout)
+        result = json.loads(data[0])
+        main_deps_count = len(result.get('deps-main', []))
+        packages_count = len(result.get('deps-packages', []))
+        self.log.debug('gofedlib found %i dependencies',
+                       main_deps_count + packages_count)
+
+        result['code_repository'] = {
+            'type': 'git',
+            'url': 'https://{name}'.format(name=name)
+        }
+        result['name'] = name
+        result['version'] = version
+        return [{'ecosystem': 'gofedlib', 'result': result}]

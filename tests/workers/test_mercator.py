@@ -76,7 +76,7 @@ class TestMercator(object):
     @pytest.mark.usefixtures("no_s3_connection")
     def test_execute_go(self, go):
         """Test the MercatorTask for the Go ecosystem."""
-        path = str(Path(__file__).parent.parent / 'data/go/mercator-go')
+        path = str(Path(__file__).parent.parent / 'data/go/no-glide')
         args = {'ecosystem': go.name, 'name': 'dummy', 'version': 'dummy'}
         flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(path)
         results = self.m.execute(arguments=args)
@@ -85,3 +85,19 @@ class TestMercator(object):
         details = results['details'][0]
         assert set(details['dependencies']) == {'github.com/fabric8-analytics/mercator-go',
                                                 'github.com/go-yaml/yaml'}
+
+    @pytest.mark.usefixtures("no_s3_connection")
+    def test_execute_go_glide(self, go):
+        """Test the MercatorTask for the Go ecosystem (project includes Glide files)."""
+        path = str(Path(__file__).parent.parent / 'data/go/glide')
+        args = {'ecosystem': go.name, 'name': 'dummy', 'version': 'dummy'}
+        flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(path)
+        results = self.m.execute(arguments=args)
+
+        assert isinstance(results, dict) and results
+        details = results['details'][0]
+        assert details['ecosystem'] == 'go-glide'
+        assert details['name'] == 'github.com/fabric8-analytics/mercator-go/handlers/golang_handler'
+        assert set(details['dependencies']) == {'github.com/Masterminds/glide ~0.13.1'}
+        assert set(details['_dependency_tree_lock'].keys()) == {'dependencies', 'hash', 'updated'}
+        assert set(details['_dependency_tree_lock']['dependencies'][0].keys()) > {'name', 'version'}
