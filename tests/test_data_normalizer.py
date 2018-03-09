@@ -140,6 +140,12 @@ class TestDataNormalizer(object):
         expected = self._load_json('PKG-INFO-expected')
         assert self._dataNormalizer.handle_data(data['items'][0]) == expected
 
+    def test_transforming_requirements_txt(self):
+        """Test normalizing of data from requirements.txt."""
+        data = self._load_json('requirements-txt-from-mercator')
+        expected = self._load_json('requirements-txt-expected')
+        assert self._dataNormalizer.handle_data(data['items'][0]) == expected
+
     def test_transforming_metadata_json(self):
         """Test normalizing of data from metadata.json."""
         data = self._load_json('metadata-json-from-mercator')
