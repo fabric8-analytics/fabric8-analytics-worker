@@ -15,6 +15,7 @@ ROLE_v3_0_1 = "v3-0-1"
 ROLE_v3_1_0 = "v3-1-0"
 ROLE_v3_1_1 = "v3-1-1"
 ROLE_v3_2_0 = "v3-2-0"
+ROLE_v3_3_0 = "v3-3-0"
 ROLE_TITLE = jsl.roles.Var({
     ROLE_v1_0_0: "Package Metadata v1-0-0",
     ROLE_v1_0_1: "Package Metadata v1-0-1",
@@ -32,6 +33,8 @@ ROLE_TITLE = jsl.roles.Var({
     ROLE_v3_1_1: "Package Metadata v3-1-0",
     # declared_license (str) -> declared_licenses (list)
     ROLE_v3_2_0: "Package Metadata v3-2-0",
+    # go glide
+    ROLE_v3_3_0: "Package Metadata v3-3-0",
 })
 
 _type_field_required = jsl.Var(
@@ -81,6 +84,8 @@ class LockedDependency(jsl.Document):
     specification = jsl.OneOfField([jsl.StringField(), jsl.NullField()])
     resolved = jsl.OneOfField([jsl.StringField(), jsl.NullField()])
     dependencies = jsl.ArrayField(jsl.DocumentField(jsl.RECURSIVE_REFERENCE_CONSTANT, as_ref=True))
+    with added_in(ROLE_v3_3_0) as added_in_v3_3_0:
+        added_in_v3_3_0.subpackages = jsl.ArrayField(jsl.StringField())  # go glide
 
 
 class LockFile(jsl.Document):
@@ -97,6 +102,9 @@ class LockFile(jsl.Document):
     dependencies = jsl.ArrayField(jsl.DocumentField(LockedDependency, as_ref=True))
     with added_in(ROLE_v3_0_0) as since_v3_0_0:
         since_v3_0_0.name = jsl.StringField()
+    with added_in(ROLE_v3_3_0) as added_in_v3_3_0:  # go glide
+        added_in_v3_3_0.hash = jsl.StringField()
+        added_in_v3_3_0.updated = jsl.StringField()
 
 
 class NpmShrinkwrap(jsl.Document):
@@ -129,6 +137,8 @@ class MetadataDict(jsl.Document):
         description = "generic metadata dict in details list"
 
     # some of these may be missing in some ecosystem, so no required=True
+
+    # 'author' should have been list of 'authors', but it's too late now
     author = jsl.OneOfField([jsl.StringField(), jsl.NullField()])
     bug_reporting = jsl.OneOfField([jsl.StringField(), jsl.NullField()])
     code_repository = jsl.OneOfField(

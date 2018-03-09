@@ -1,0 +1,47 @@
+{
+        "_dependency_tree_lock": {
+          "dependencies": [
+            {
+              "name": "github.com/andybalholm/cascadia",
+              "version": "349dd0209470eabd9514242c688c403c0926d266"
+            },
+            {
+              "name": "github.com/tdewolff/parse",
+              "subpackages": [
+                "buffer",
+                "css"
+              ],
+              "version": "d1b40c5152f1c23fea7ca5c58bf53db817128061"
+            },
+            {
+              "name": "golang.org/x/net",
+              "subpackages": [
+                "html",
+                "html/atom"
+              ],
+              "version": "c7086645de248775cbf2373cf5ca4d2fa664b8c1"
+            },
+            {
+              "name": "gopkg.in/yaml.v2",
+              "version": "287cf08546ab5e7e37d55a84f7ed3fd1db036de5"
+            }
+          ],
+          "hash": "7212c93931b28dba262f6e96671fc435d2562b8f91fad6ec10eacdf54607b4aa",
+          "updated": "2017-11-24T18:28:39.35898979+01:00"
+        },
+        "author": "Matt Butcher <technosophos@gmail.com>, Matt Farina <matt@mattfarina.com>",
+        "dependencies": [
+          "gopkg.in/yaml.v2",
+          "github.com/Masterminds/vcs ^1.2.0",
+          "github.com/codegangsta/cli f89effe81c1ece9c5b0fda359ebd9cf65f169a51",
+          "github.com/Masterminds/semver ^1.0.0",
+          "github.com/Masterminds/glide ~0.13.1"
+        ],
+        "devel_dependencies": [
+          "github.com/arschles/assert"
+        ],
+        "ecosystem": "go-glide",
+        "homepage": "https://masterminds.github.io/glide",
+        "declared_licenses": ["MIT"],
+        "name": "github.com/Masterminds/glide"
+}

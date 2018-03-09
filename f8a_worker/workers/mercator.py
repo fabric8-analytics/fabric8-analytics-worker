@@ -42,7 +42,7 @@ class MercatorTask(BaseTask):
 
     _analysis_name = 'metadata'
     _dependency_tree_lock = '_dependency_tree_lock'
-    schema_ref = SchemaRef(_analysis_name, '3-2-0')
+    schema_ref = SchemaRef(_analysis_name, '3-3-0')
     _data_normalizer = DataNormalizer()
 
     def _parse_requires_txt(self, path):
