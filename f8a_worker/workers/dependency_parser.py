@@ -12,6 +12,8 @@ import re
 class GithubDependencyTreeTask(BaseTask):
     """Finds out direct and indirect dependencies from a given github repository."""
 
+    _analysis_name = 'dependency_tree'
+    
     def execute(self, arguments=None):
         """Task code.
 

@@ -2,9 +2,19 @@
   flow-definitions:
     - name: 'osioAnalysisFlow'
       queue: '{DEPLOYMENT_PREFIX}_api_osioAnalysisFlow_v0'
+      propagate_node_args: true
+      node_args_from_first: true
       edges:
         - from:
           to: 'GithubDependencyTreeTask'
         - from: 'GithubDependencyTreeTask'
-          to: 'unknown_deps_fetcher'
-
+          to: 'UnknownDependencyFetcherTask'
+        - from: 'UnknownDependencyFetcherTask'
+          to: 'bayesianApiFlow'
+          foreach:
+            import: 'f8a_worker.dispatcher.foreach'
+            function: 'iter_unknown_dependencies'
+            # result of the function is used as sub-flow arguments
+            propagate_result: true
+        - from: 'bayesianApiFlow'
+          to: 'ReportGenerationTask'

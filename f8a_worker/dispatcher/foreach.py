@@ -2,6 +2,7 @@
 
 import logging
 from urllib.parse import urlparse
+
 from f8a_worker.utils import MavenCoordinates
 
 logger = logging.getLogger(__name__)
@@ -102,7 +103,6 @@ def iter_cvedb_updates(storage_pool, node_args):
 
 
 def iter_unknown_dependencies(storage_pool, node_args):
-    """Collect unknown dependencies."""
     # Be safe here as fatal errors will cause errors in Dispatcher
     try:
         aggregated = storage_pool.get('UnknownDependencyFetcherTask')
@@ -110,12 +110,19 @@ def iter_unknown_dependencies(storage_pool, node_args):
 
         arguments = []
         for element in aggregated["result"]:
-            ecosystem = element['ecosystem']
-            name = element['package']
-            version = element['version']
+            epv = element.split(':')
+            ecosystem = epv[0]
+            if ecosystem == 'maven':
+                name = '{}:{}'.format(epv[1], epv[2])
+                version = epv[3]
+            else:
+                name = epv[1]
+                version = epv[2]
+            analysis_arguments = _create_analysis_arguments(ecosystem, name, version)
+            analysis_arguments.update({"recursive_limit": 0})
+            arguments.append(analysis_arguments)
 
-            arguments.append(_create_analysis_arguments(ecosystem, name, version))
-
+        print('Arguments appended: %s' % ', '.join(str(item) for item in arguments))
         logger.info("Arguments for next flows: %s" % str(arguments))
         return arguments
     except Exception:
