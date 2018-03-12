@@ -27,9 +27,6 @@ class GraphImporterTask(BaseTask):
         :param arguments: dictionary with task arguments
         :return: {}, results
         """
-        self.log.info("Arguments passed from InitAnalysisFlow: {}".format(arguments))
-        aggregated = self.parent_task_result("InitAnalysisFlow")
-        self.log.info("Result returned by InitAnalysisFlow: {}".format(aggregated))
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('document_id'))
