@@ -2,6 +2,7 @@
 
 import logging
 from urllib.parse import urlparse
+
 from f8a_worker.utils import MavenCoordinates
 
 logger = logging.getLogger(__name__)
@@ -102,6 +103,7 @@ def iter_cvedb_updates(storage_pool, node_args):
 
 
 def iter_unknown_dependencies(storage_pool, node_args):
+    """Collect unknown dependencies."""
     # Be safe here as fatal errors will cause errors in Dispatcher
     try:
         aggregated = storage_pool.get('UnknownDependencyFetcherTask')
@@ -119,7 +121,6 @@ def iter_unknown_dependencies(storage_pool, node_args):
                 version = epv[2]
             analysis_arguments = _create_analysis_arguments(ecosystem, name, version)
             analysis_arguments.update({"recursive_limit": 0})
-            analysis_arguments.update({"force_graph_sync": True})
             arguments.append(analysis_arguments)
 
         print('Arguments appended: %s' % ', '.join(str(item) for item in arguments))
