@@ -23,6 +23,7 @@ CONTAINER_NAME="worker-tests-${TIMESTAMP}"
 TESTDB_CONTAINER_NAME="worker-tests-db-${TIMESTAMP}"
 TESTS3_CONTAINER_NAME="worker-tests-s3-${TIMESTAMP}"
 TESTCVEDB_S3_DUMP_CONTAINER_NAME="worker-tests-cvedb-s3-dump-${TIMESTAMP}"
+DOCKER_NETWORK="F8aWorkerTest"
 
 gc() {
   retval=$?
@@ -31,6 +32,8 @@ gc() {
   docker stop ${CONTAINER_NAME} ${TESTDB_CONTAINER_NAME} ${TESTS3_CONTAINER_NAME} ${TESTCVEDB_S3_DUMP_CONTAINER_NAME} || :
   echo "Removing test containers"
   docker rm -v ${CONTAINER_NAME} ${TESTDB_CONTAINER_NAME} ${TESTS3_CONTAINER_NAME} ${TESTCVEDB_S3_DUMP_CONTAINER_NAME} || :
+  echo "Removing network ${DOCKER_NETWORK}"
+  docker network rm ${DOCKER_NETWORK} || :
   exit $retval
 }
 
@@ -52,13 +55,17 @@ echo "Removing database"
 docker kill ${TESTDB_CONTAINER_NAME} ${TESTS3_CONTAINER_NAME} || :
 docker rm -vf ${TESTDB_CONTAINER_NAME} ${TESTS3_CONTAINER_NAME} || :
 
+echo "Creating network ${DOCKER_NETWORK}"
+docker network create ${DOCKER_NETWORK}
+
 echo "Starting/creating containers:"
 # first start the database under different name, so that we don't overwrite a non-testing db
 # NOTE: we omit pgbouncer while running tests
 docker run -d \
     --env-file tests/postgres.env \
+    --network ${DOCKER_NETWORK} \
     --name ${TESTDB_CONTAINER_NAME} ${POSTGRES_IMAGE_NAME}
-DB_CONTAINER_IP=$(docker inspect --format '{{.NetworkSettings.IPAddress}}' ${TESTDB_CONTAINER_NAME})
+DB_CONTAINER_IP=$(docker inspect --format "{{.NetworkSettings.Networks.${DOCKER_NETWORK}.IPAddress}}" ${TESTDB_CONTAINER_NAME})
 
 # TODO: this is duplicating code with server's runtest, we should refactor
 echo "Waiting for postgres to fully initialize"
@@ -75,20 +82,20 @@ set -x
 docker run -d \
     --env-file tests/minio.env \
     --name ${TESTS3_CONTAINER_NAME} \
+    --network ${DOCKER_NETWORK} \
     ${S3_IMAGE_NAME} server --address :33000 /export
-S3_CONTAINER_IP=$(docker inspect --format '{{.NetworkSettings.IPAddress}}' ${TESTS3_CONTAINER_NAME})
+S3_CONTAINER_IP=$(docker inspect --format "{{.NetworkSettings.Networks.${DOCKER_NETWORK}.IPAddress}}" ${TESTS3_CONTAINER_NAME})
 S3_ENDPOINT_URL="http://${S3_CONTAINER_IP}:33000"
 docker run \
     -e S3_ENDPOINT_URL=${S3_ENDPOINT_URL} \
     --env-file tests/cvedb_s3_dump.env \
-    --link=${TESTS3_CONTAINER_NAME} \
+    --network ${DOCKER_NETWORK} \
     --name ${TESTCVEDB_S3_DUMP_CONTAINER_NAME} ${CVEDB_S3_DUMP_IMAGE_NAME}
 
 echo "Starting test suite"
 docker run -t \
   -v "${here}:/f8a_worker:ro,Z" \
-  --link=${TESTDB_CONTAINER_NAME} \
-  --link=${TESTS3_CONTAINER_NAME} \
+  --network ${DOCKER_NETWORK} \
   -e PGBOUNCER_SERVICE_HOST=${TESTDB_CONTAINER_NAME} \
   -e S3_ENDPOINT_URL=${S3_ENDPOINT_URL} \
   -e DEPLOYMENT_PREFIX='test' \
