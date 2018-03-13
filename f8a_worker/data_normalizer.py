@@ -123,8 +123,12 @@ class DataNormalizer(object):
         #  'email': 'project@name.com'} -> 'https://github.com/o/p/issues <project@name.com>'
         if isinstance(base.get('bug_reporting'), dict):
             base['bug_reporting'] = self._join_name_email(base['bug_reporting'], 'url')
-        if isinstance(base.get('author'), dict):
-            base['author'] = self._join_name_email(base['author'])
+        if base.get('author'):
+            if isinstance(base.get('author'), dict):
+                base['author'] = self._join_name_email(base['author'])
+            elif isinstance(base.get('author'), list) and isinstance(base['author'][0], dict):
+                # Process it even it violates https://docs.npmjs.com/files/package.json
+                base['author'] = self._join_name_email(base['author'][0])
         if isinstance(base.get('contributors'), list):
             base['contributors'] = [self._join_name_email(m) for m in base['contributors']]
         if isinstance(base.get('maintainers'), list):
