@@ -8,7 +8,7 @@ import requests
 
 from git2json.parser import parse_commits
 from git2json import run_git_log
-
+from pathlib import Path
 from re import compile as re_compile
 from urllib.parse import urljoin, urlparse
 
@@ -53,10 +53,16 @@ class Git(object):
         :return: instance of Git()
         """
         orig_url = url
-        cls.config()
         # git clone doesn't understand urls starting with: git+ssh, git+http, git+https
         url = url2git_repo(url)
-        cmd = ["git", "clone", url, path]
+
+        orig_path = path
+        path = Path(path)
+        mode = 0
+        if path.is_dir():
+            mode = path.stat().st_mode
+
+        cmd = ["git", "clone", url, orig_path]
         if depth is not None:
             cmd.extend(["--depth", depth])
         if branch is not None:
@@ -64,10 +70,18 @@ class Git(object):
         if single_branch:
             cmd.extend(["--single-branch"])
         try:
+            cls.config()
             TimedCommand.get_command_output(cmd, graceful=False, timeout=timeout)
         except TaskError as exc:
+            if not path.is_dir() and mode:
+                # 'git clone repo dir/' deletes (no way to turn this off) dir/ if cloning fails.
+                # This might confuse caller of this method, so we recreate the dir on error here.
+                try:
+                    path.mkdir(mode)
+                except OSError:
+                    logger.error("Unable to re-create dir: %s", str(path))
             raise TaskError("Unable to clone: %s" % orig_url) from exc
-        return cls(path=path)
+        return cls(path=orig_path)
 
     @classmethod
     def create_git(cls, path):
