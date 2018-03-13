@@ -203,6 +203,9 @@ class DataNormalizer(object):
                     # ">= 0.8.0"  ~>  ">=0.8.0"
                     base['engines'][name] = version_spec.replace(' ', '')
 
+        if isinstance(base['keywords'], str):
+            base['keywords'] = self._split_keywords(base['keywords'], separator=',')
+
         def _process_level(level, collect):
             """Process a `level` of dependency tree and store data in `collect`."""
             for name, data in level.items():
