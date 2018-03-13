@@ -214,6 +214,8 @@ class MercatorTask(BaseTask):
         if status != 0:
             self.log.error(err)
             raise FatalTaskError(err)
+        if isinstance(data, dict) and not data.get('items'):
+            raise FatalTaskError('No usable items from mercator')
 
         ecosystem_object = self.storage.get_ecosystem(arguments['ecosystem'])
         if ecosystem_object.is_backed_by(EcosystemBackend.pypi):
