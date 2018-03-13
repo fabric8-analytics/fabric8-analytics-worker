@@ -1,7 +1,5 @@
 """Tests covering code in process.py."""
 
-import glob
-import os
 from pathlib import Path
 import pytest
 import subprocess
@@ -14,15 +12,14 @@ class TestGit(object):
 
     def test_git_add_and_commit_everything_with_dotgit(self, tmpdir):
         """Test Git.add_and_commit_everything()."""
+        tmpdir = Path(str(tmpdir))
         # if there's a .git file somewhere in the archive, we don't want it to fail adding
         subprocess.check_output(['git', 'init', str(tmpdir)], universal_newlines=True)
-        d = os.path.join(str(tmpdir), 'foo')
-        os.makedirs(d)
-        with open(os.path.join(d, '.git'), 'w') as f:
-            f.write('gitdir: /this/doesnt/exist/hehehe')
+        d = tmpdir / 'foo'
+        d.mkdir(parents=True)
+        (d / '.git').touch()
         # we need at least one normal file for git to commit
-        with open(os.path.join(d, 'foo'), 'w'):
-            pass
+        (d / 'foo').touch()
         g = Git.create_git(str(tmpdir))
         g.add_and_commit_everything()
 
