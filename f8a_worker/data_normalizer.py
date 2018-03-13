@@ -198,8 +198,13 @@ class DataNormalizer(object):
             base['engines'] = {}
             for engine in engines:
                 # ["node >= 0.8.0"]  ->  {"node": ">=0.8.0"}
-                name, operator, version = engine.split()
-                base['engines'][name] = operator + version
+                splits = engine.split()
+                if len(splits) == 3:
+                    name, operator, version = splits
+                    base['engines'][name] = operator + version
+                elif len(splits) == 2:
+                    name, operator_version = splits
+                    base['engines'][name] = operator_version
         if base['engines'] is not None:
             for name, version_spec in base['engines'].items():
                 if ' ' in version_spec:
