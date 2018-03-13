@@ -118,9 +118,10 @@ class MercatorTask(BaseTask):
         # figure out if this was packaged as sdist => PKG_INFO would
         #  have depth of topdir + 3 (e.g. requests-2.18.1/requests.egg-info/PKG-INFO)
         #             or topdir + 4 (e.g. pydocstyle-2.0.0/src/pydocstyle.egg-info/PKG-INFO)
+        #             or topdir + 5 (dxl-cluster-0.0.2/src/python/dxl_cluster.egg-info/PKG-INFO)
         #  (and perhaps there are requires.txt or requirements.txt that we could use)
         # NOTE: for now, we always treat requirements.txt as requires_dist
-        elif pkg_info and get_depth(pkg_info['path']) <= get_depth(topdir) + 4:
+        elif pkg_info and get_depth(pkg_info['path']) <= get_depth(topdir) + 5:
             self.log.info('Seems like this is sdist or egg, using PKG-INFO ...')
             requires_dist = []
             # in well-made sdists, there are requires.txt next to PKG_INFO
@@ -218,6 +219,8 @@ class MercatorTask(BaseTask):
         if ecosystem_object.is_backed_by(EcosystemBackend.pypi):
             # TODO: attempt static setup.py parsing with mercator
             items = [self._merge_python_items(mercator_target, data)]
+            if items == [None]:
+                raise FatalTaskError('Found no usable PKG-INFO/metadata.json/requirements.txt')
         elif arguments['ecosystem'] == 'go':
             result = json.loads(data[0])
             main_deps_count = len(result.get('deps-main', []))
