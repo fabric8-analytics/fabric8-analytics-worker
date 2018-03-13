@@ -126,9 +126,12 @@ class DataNormalizer(object):
         if base.get('author'):
             if isinstance(base.get('author'), dict):
                 base['author'] = self._join_name_email(base['author'])
-            elif isinstance(base.get('author'), list) and isinstance(base['author'][0], dict):
+            elif isinstance(base.get('author'), list):
                 # Process it even it violates https://docs.npmjs.com/files/package.json
-                base['author'] = self._join_name_email(base['author'][0])
+                if isinstance(base['author'][0], dict):
+                    base['author'] = self._join_name_email(base['author'][0])
+                elif isinstance(base['author'][0], str):
+                    base['author'] = base['author'][0]
         if isinstance(base.get('contributors'), list):
             base['contributors'] = [self._join_name_email(m) for m in base['contributors']]
         if isinstance(base.get('maintainers'), list):
