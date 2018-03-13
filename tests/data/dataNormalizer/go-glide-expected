@@ -35,7 +35,7 @@
           "github.com/Masterminds/vcs ^1.2.0",
           "github.com/codegangsta/cli f89effe81c1ece9c5b0fda359ebd9cf65f169a51",
           "github.com/Masterminds/semver ^1.0.0",
-          "github.com/Masterminds/glide ~0.13.1"
+          "github.com/Masterminds/glide/cfg ~0.13.1"
         ],
         "devel_dependencies": [
           "github.com/arschles/assert"

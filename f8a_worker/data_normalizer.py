@@ -467,17 +467,25 @@ class DataNormalizer(object):
         """
         def _import2dependencies(import_list):
             # transform
-            # [{"package": "github.com/Masterminds/vcs", "version": "^1.2.0"},
-            #  {"package": "github.com/codegangsta/cli", "version": "f89effe8"}]
+            # [{"package": "github.com/Masterminds/glide",
+            #   "subpackages": ["cfg, util"],
+            #   "version": "~0.13.1"}]
             # to
-            # ["github.com/Masterminds/vcs ^1.2.0",
-            #  "github.com/codegangsta/cli f89effe81c1ece9c5b0fda359ebd9cf65f169a51"]
+            # ["github.com/Masterminds/glide/cfg ~0.13.1",
+            #  "github.com/Masterminds/glide/util ~0.13.1"]
             dependencies = []
             for dep in import_list:
-                _dep = "{name} {version}".format(name=dep['package'],
-                                                 version=dep.get('version', '')).strip()
-                # TODO: there might be also dep['subpackages'], do we want to include them too ?
-                dependencies.append(_dep)
+                if dep.get('subpackages'):
+                    for sp in dep['subpackages']:
+                        _dep = "{name}/{subpackage} {version}".\
+                            format(name=dep['package'],
+                                   subpackage=sp,
+                                   version=dep.get('version', '')).strip()
+                        dependencies.append(_dep)
+                else:
+                    _dep = "{name} {version}".format(name=dep['package'],
+                                                     version=dep.get('version', '')).strip()
+                    dependencies.append(_dep)
             return dependencies
 
         key_map = (('package', 'name'),

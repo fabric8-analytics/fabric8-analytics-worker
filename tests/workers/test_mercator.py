@@ -98,6 +98,6 @@ class TestMercator(object):
         details = results['details'][0]
         assert details['ecosystem'] == 'go-glide'
         assert details['name'] == 'github.com/fabric8-analytics/mercator-go/handlers/golang_handler'
-        assert set(details['dependencies']) == {'github.com/Masterminds/glide ~0.13.1'}
+        assert set(details['dependencies']) == {'github.com/Masterminds/glide/cfg ~0.13.1'}
         assert set(details['_dependency_tree_lock'].keys()) == {'dependencies', 'hash', 'updated'}
         assert set(details['_dependency_tree_lock']['dependencies'][0].keys()) > {'name', 'version'}
