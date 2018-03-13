@@ -132,8 +132,11 @@ class DataNormalizer(object):
                     base['author'] = self._join_name_email(base['author'][0])
                 elif isinstance(base['author'][0], str):
                     base['author'] = base['author'][0]
-        if isinstance(base.get('contributors'), list):
-            base['contributors'] = [self._join_name_email(m) for m in base['contributors']]
+        if base['contributors'] is not None:
+            if isinstance(base['contributors'], list):
+                base['contributors'] = [self._join_name_email(m) for m in base['contributors']]
+            elif isinstance(base['contributors'], dict):
+                base['contributors'] = [self._join_name_email(base['contributors'])]
         if isinstance(base.get('maintainers'), list):
             base['maintainers'] = [self._join_name_email(m) for m in base['maintainers']]
 
