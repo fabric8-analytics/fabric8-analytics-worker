@@ -12,7 +12,7 @@
    "_dependency_tree_lock":{
       "runtime":"2.2.2",
       "name":"tar",
-      "version":null,
+      "version":"",
       "dependencies":[
          {
             "resolved":"https://registry.npmjs.org/fstream/-/fstream-1.0.10.tgz",

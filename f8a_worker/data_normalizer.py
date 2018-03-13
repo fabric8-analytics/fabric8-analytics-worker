@@ -221,7 +221,7 @@ class DataNormalizer(object):
         if lockfile is not None:
             dependencies = []
             _process_level(lockfile.get('dependencies', {}), dependencies)
-            lockfile['version'] = lockfile.pop('npm-shrinkwrap-version', None)
+            lockfile['version'] = lockfile.pop('npm-shrinkwrap-version', "")
             lockfile['runtime'] = data.get('_nodeVersion', "")
             lockfile['dependencies'] = dependencies
             lockfile.pop('node-version', None)
