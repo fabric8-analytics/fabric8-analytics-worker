@@ -258,6 +258,21 @@ class TestFetcher(object):
         _, releases = f.fetch_releases(package)
         assert set(releases) >= expected
 
+    @pytest.mark.parametrize('package, expected, ok', [
+        ('serve-static', {'1.7.1', '1.7.2', '1.13.2'}, True),
+        ('@slicemenice/event-utils', {'1.0.0', '1.0.1', '1.1.0', '1.1.1'}, True),
+        ('somereallydummynonexistentpackage', {'1.0.0'}, False)
+    ])
+    def test_npm_fetcher(self, npm, package, expected, ok):
+        """Test NpmReleasesFetcher."""
+        f = NpmReleasesFetcher(npm)
+        if ok:
+            _, releases = f.fetch_releases(package)
+            assert set(releases) >= expected
+        else:
+            with pytest.raises(ValueError):
+                f.fetch_releases(package)
+
     @pytest.mark.parametrize('package, expected', [
         ('AjaxControlToolkit',
          {'4.1.60919', '7.1005.0', '17.1.1'}),

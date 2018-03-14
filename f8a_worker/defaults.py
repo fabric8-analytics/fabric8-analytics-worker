@@ -150,6 +150,10 @@ class F8AConfiguration(object):
     @classmethod
     def libraries_io_project_url(cls, ecosystem, name):
         """Construct url to endpoint, which gets information about a project and it's versions."""
+        if ecosystem == 'npm':
+            # quote '/' (but not '@') in scoped package name, e.g. in '@slicemenice/item-layouter'
+            name = quote(name, safe='@')
+
         url = '{api}/{platform}/{name}'. \
             format(api=cls.LIBRARIES_IO_API,
                    platform=ecosystem,

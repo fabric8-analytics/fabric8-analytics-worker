@@ -15,7 +15,7 @@ from xmlrpc.client import ServerProxy
 from semantic_version import Version as semver_version
 from subprocess import check_output
 from tempfile import NamedTemporaryFile, TemporaryDirectory
-from urllib.parse import urljoin
+from urllib.parse import urljoin, quote
 
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.models import Analysis, Ecosystem, Package, Version
@@ -189,7 +189,8 @@ class NpmReleasesFetcher(ReleasesFetcher):
         if not package:
             raise ValueError("package")
 
-        r = get(self.ecosystem.fetch_url + package)
+        # quote '/' (but not '@') in scoped package name, e.g. in '@slicemenice/item-layouter'
+        r = get(self.ecosystem.fetch_url + quote(package, safe='@'))
         if r.status_code == 404:
             if package.lower() != package:
                 return self.fetch_releases(package.lower())
