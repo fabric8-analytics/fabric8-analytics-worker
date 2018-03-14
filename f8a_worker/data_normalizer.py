@@ -208,6 +208,10 @@ class DataNormalizer(object):
                 elif len(splits) == 2:
                     name, operator_version = splits
                     base['engines'][name] = operator_version
+        elif isinstance(engines, str):
+            # 'node 4.2.3' -> {"node": "4.2.3"}
+            name, version = engines.split()
+            base['engines'] = {name: version}
         if base['engines'] is not None:
             for name, version_spec in base['engines'].items():
                 if ' ' in version_spec:
