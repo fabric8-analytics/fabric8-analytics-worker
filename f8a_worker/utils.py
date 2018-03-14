@@ -581,6 +581,9 @@ def url2git_repo(url):
             raise ValueError("Unable to parse git repo URL '%s'" % str(url))
         return 'https://{}/{}'.format(url[0], url[1])
 
+    if not url.startswith(('http://', 'https://', 'git://')):
+        return 'http://' + url
+
     return url
 
 
