@@ -84,11 +84,12 @@ class DataNormalizer(object):
             if data['scripts'] is None:
                 return False
             else:
-                test_script = data.get('scripts', {}).get('test', '')
+                test_script = data['scripts'].get('test', '')
                 # Existing test_script doesn't say much about whether it really runs some tests.
                 # For example: 'npm init' uses 'echo "Error: no test specified" && exit 1'
                 # as a default value of 'scripts'.'test'
-                return test_script != '' and 'Error: no test specified' not in test_script
+                return isinstance(test_script, str) and test_script != '' \
+                    and 'Error: no test specified' not in test_script
 
         # Python: metadata can contain 'test_requires'/'tests_require'.
         # Even it doesn't say anything about whether there really are any tests implemented,
