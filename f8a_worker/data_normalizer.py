@@ -123,10 +123,20 @@ class DataNormalizer(object):
         #  'email': 'project@name.com'} -> 'https://github.com/o/p/issues <project@name.com>'
         if isinstance(base.get('bug_reporting'), dict):
             base['bug_reporting'] = self._join_name_email(base['bug_reporting'], 'url')
-        if isinstance(base.get('author'), dict):
-            base['author'] = self._join_name_email(base['author'])
-        if isinstance(base.get('contributors'), list):
-            base['contributors'] = [self._join_name_email(m) for m in base['contributors']]
+        if base.get('author'):
+            if isinstance(base.get('author'), dict):
+                base['author'] = self._join_name_email(base['author'])
+            elif isinstance(base.get('author'), list):
+                # Process it even it violates https://docs.npmjs.com/files/package.json
+                if isinstance(base['author'][0], dict):
+                    base['author'] = self._join_name_email(base['author'][0])
+                elif isinstance(base['author'][0], str):
+                    base['author'] = base['author'][0]
+        if base['contributors'] is not None:
+            if isinstance(base['contributors'], list):
+                base['contributors'] = [self._join_name_email(m) for m in base['contributors']]
+            elif isinstance(base['contributors'], dict):
+                base['contributors'] = [self._join_name_email(base['contributors'])]
         if isinstance(base.get('maintainers'), list):
             base['maintainers'] = [self._join_name_email(m) for m in base['maintainers']]
 
@@ -188,13 +198,21 @@ class DataNormalizer(object):
             base['engines'] = {}
             for engine in engines:
                 # ["node >= 0.8.0"]  ->  {"node": ">=0.8.0"}
-                name, operator, version = engine.split()
-                base['engines'][name] = operator + version
+                splits = engine.split()
+                if len(splits) == 3:
+                    name, operator, version = splits
+                    base['engines'][name] = operator + version
+                elif len(splits) == 2:
+                    name, operator_version = splits
+                    base['engines'][name] = operator_version
         if base['engines'] is not None:
             for name, version_spec in base['engines'].items():
                 if ' ' in version_spec:
                     # ">= 0.8.0"  ~>  ">=0.8.0"
                     base['engines'][name] = version_spec.replace(' ', '')
+
+        if isinstance(base['keywords'], str):
+            base['keywords'] = self._split_keywords(base['keywords'], separator=',')
 
         def _process_level(level, collect):
             """Process a `level` of dependency tree and store data in `collect`."""
@@ -214,7 +232,7 @@ class DataNormalizer(object):
         if lockfile is not None:
             dependencies = []
             _process_level(lockfile.get('dependencies', {}), dependencies)
-            lockfile['version'] = lockfile.pop('npm-shrinkwrap-version', None)
+            lockfile['version'] = lockfile.pop('npm-shrinkwrap-version', "")
             lockfile['runtime'] = data.get('_nodeVersion', "")
             lockfile['dependencies'] = dependencies
             lockfile.pop('node-version', None)
