@@ -193,13 +193,15 @@ class TestSolver(object):
         deps = ['django == 1.9.10',
                 'pymongo >=3.0, <3.2.2',
                 'six~=1.7.1',
-                'pyasn1>=0.2.2,~=0.2',
+                'coverage~=3.5.1b1.dev',
+                'pyasn1>=0.2.2,~=0.2.2',
                 'requests===2.16.2',
                 'click==0.*']
         out = solver.solve(deps)
         assert out == {'django': '1.9.10',
                        'pymongo': '3.2.1',
                        'six': '1.7.3',
+                       'coverage': '3.5.3',
                        'pyasn1': '0.2.3',
                        'requests': '2.16.2',
                        'click': '0.7'}
