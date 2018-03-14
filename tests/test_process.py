@@ -1,12 +1,11 @@
 """Tests covering code in process.py."""
 
-import glob
-import os
 from pathlib import Path
 import pytest
 import subprocess
 
 from f8a_worker.process import Git, IndianaJones
+from f8a_worker.errors import TaskError
 
 
 class TestGit(object):
@@ -14,17 +13,31 @@ class TestGit(object):
 
     def test_git_add_and_commit_everything_with_dotgit(self, tmpdir):
         """Test Git.add_and_commit_everything()."""
+        tmpdir = Path(str(tmpdir))
         # if there's a .git file somewhere in the archive, we don't want it to fail adding
         subprocess.check_output(['git', 'init', str(tmpdir)], universal_newlines=True)
-        d = os.path.join(str(tmpdir), 'foo')
-        os.makedirs(d)
-        with open(os.path.join(d, '.git'), 'w') as f:
-            f.write('gitdir: /this/doesnt/exist/hehehe')
+        d = tmpdir / 'foo'
+        d.mkdir(parents=True)
+        (d / '.git').touch()
         # we need at least one normal file for git to commit
-        with open(os.path.join(d, 'foo'), 'w'):
-            pass
+        (d / 'foo').touch()
         g = Git.create_git(str(tmpdir))
         g.add_and_commit_everything()
+
+    @pytest.mark.parametrize("url, ok", [
+        ("https://github.com/fabric8-analytics/fabric8-analytics-pgbouncer", True),
+        ("https://github.com/somedummy/somereallydummy", False)
+    ])
+    def test_clone(self, tmpdir, url, ok):
+        """Test Git.clone()."""
+        tmpdir = str(tmpdir)
+        if ok:
+            Git.clone(url, tmpdir)
+            assert (Path(tmpdir) / '.git').is_dir()
+            assert (Path(tmpdir) / 'README.md').is_file()
+        else:
+            with pytest.raises(TaskError):
+                Git.clone(url, tmpdir)
 
 
 class TestIndianaJones(object):
