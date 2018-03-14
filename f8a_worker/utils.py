@@ -4,8 +4,6 @@ import getpass
 import json
 import logging
 import datetime
-import tempfile
-import shutil
 import signal
 import time
 from os import path as os_path, walk, getcwd, chdir, environ as os_environ, killpg, getpgid
@@ -15,15 +13,14 @@ from traceback import format_exc
 from shlex import split
 from queue import Queue, Empty
 from contextlib import contextmanager
-from urllib.parse import unquote
+from urllib.parse import unquote, urlparse
 import requests
-from urllib.parse import urlparse
 from requests.adapters import HTTPAdapter
+from requests.exceptions import HTTPError
 from requests.packages.urllib3.util.retry import Retry
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import desc
 
-from f8a_worker.defaults import configuration
 from f8a_worker.errors import TaskError
 from f8a_worker.models import (Analysis, Ecosystem, Package, Version,
                                PackageGHUsage, ComponentGHUsage)
@@ -644,13 +641,16 @@ def get_response(url, headers=None, sleep_time=2, retry_count=10):
         for _ in range(retry_count):
             response = requests.get(url, headers=headers)
             response.raise_for_status()
+            if response.status_code == 204:
+                # json() below would otherwise fail with JSONDecodeError
+                raise HTTPError('No content')
             response = response.json()
             if response:
                 return response
             time.sleep(sleep_time)
         else:
             raise TaskError("Number of retries exceeded")
-    except requests.exceptions.HTTPError as err:
+    except HTTPError as err:
         message = "Failed to get results from {url} with {err}".format(url=url, err=err)
         logger.error(message)
         raise TaskError(message) from err
