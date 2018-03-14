@@ -141,21 +141,24 @@ class DataNormalizer(object):
             base['maintainers'] = [self._join_name_email(m) for m in base['maintainers']]
 
         # 'a/b' -> {'type': 'git', 'url': 'https://github.com/a/b.git'}
-        if isinstance(base.get('code_repository'), str):
-            k = 'code_repository'
-            url = base[k]
-            if url.count('/') == 1:  # e.g. 'expressjs/express'
-                if ':' in url:
-                    if url.startswith('bitbucket:'):
-                        owner, repo = url[len('bitbucket:'):].split('/')
-                        url = 'https://{owner}@bitbucket.org/{owner}/{repo}.git'.format(
-                            owner=owner, repo=repo)
-                    if url.startswith('gitlab:'):
-                        url = 'https://gitlab.com/' + url[len('gitlab:'):] + '.git'
-                else:  # default is github
-                    url = 'https://github.com/' + url + '.git'
-            repository_dict = {'type': 'git', 'url': url}
-            base[k] = repository_dict
+        k = 'code_repository'
+        if base[k]:
+            if isinstance(base[k], str):
+                url = base[k]
+                if url.count('/') == 1:  # e.g. 'expressjs/express'
+                    if ':' in url:
+                        if url.startswith('bitbucket:'):
+                            owner, repo = url[len('bitbucket:'):].split('/')
+                            url = 'https://{owner}@bitbucket.org/{owner}/{repo}.git'.format(
+                                owner=owner, repo=repo)
+                        if url.startswith('gitlab:'):
+                            url = 'https://gitlab.com/' + url[len('gitlab:'):] + '.git'
+                    else:  # default is github
+                        url = 'https://github.com/' + url + '.git'
+                repository_dict = {'type': 'git', 'url': url}
+                base[k] = repository_dict
+        else:
+            base[k] = None
 
         # transform 'declared_licenses' to a list
         if 'declared_licenses' in base:
