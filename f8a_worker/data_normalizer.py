@@ -84,11 +84,12 @@ class DataNormalizer(object):
             if data['scripts'] is None:
                 return False
             else:
-                test_script = data.get('scripts', {}).get('test', '')
+                test_script = data['scripts'].get('test', '')
                 # Existing test_script doesn't say much about whether it really runs some tests.
                 # For example: 'npm init' uses 'echo "Error: no test specified" && exit 1'
                 # as a default value of 'scripts'.'test'
-                return test_script != '' and 'Error: no test specified' not in test_script
+                return isinstance(test_script, str) and test_script != '' \
+                    and 'Error: no test specified' not in test_script
 
         # Python: metadata can contain 'test_requires'/'tests_require'.
         # Even it doesn't say anything about whether there really are any tests implemented,
@@ -141,21 +142,24 @@ class DataNormalizer(object):
             base['maintainers'] = [self._join_name_email(m) for m in base['maintainers']]
 
         # 'a/b' -> {'type': 'git', 'url': 'https://github.com/a/b.git'}
-        if isinstance(base.get('code_repository'), str):
-            k = 'code_repository'
-            url = base[k]
-            if url.count('/') == 1:  # e.g. 'expressjs/express'
-                if ':' in url:
-                    if url.startswith('bitbucket:'):
-                        owner, repo = url[len('bitbucket:'):].split('/')
-                        url = 'https://{owner}@bitbucket.org/{owner}/{repo}.git'.format(
-                            owner=owner, repo=repo)
-                    if url.startswith('gitlab:'):
-                        url = 'https://gitlab.com/' + url[len('gitlab:'):] + '.git'
-                else:  # default is github
-                    url = 'https://github.com/' + url + '.git'
-            repository_dict = {'type': 'git', 'url': url}
-            base[k] = repository_dict
+        k = 'code_repository'
+        if base[k]:
+            if isinstance(base[k], str):
+                url = base[k]
+                if url.count('/') == 1:  # e.g. 'expressjs/express'
+                    if ':' in url:
+                        if url.startswith('bitbucket:'):
+                            owner, repo = url[len('bitbucket:'):].split('/')
+                            url = 'https://{owner}@bitbucket.org/{owner}/{repo}.git'.format(
+                                owner=owner, repo=repo)
+                        if url.startswith('gitlab:'):
+                            url = 'https://gitlab.com/' + url[len('gitlab:'):] + '.git'
+                    else:  # default is github
+                        url = 'https://github.com/' + url + '.git'
+                repository_dict = {'type': 'git', 'url': url}
+                base[k] = repository_dict
+        else:
+            base[k] = None
 
         # transform 'declared_licenses' to a list
         if 'declared_licenses' in base:
@@ -205,6 +209,10 @@ class DataNormalizer(object):
                 elif len(splits) == 2:
                     name, operator_version = splits
                     base['engines'][name] = operator_version
+        elif isinstance(engines, str):
+            # 'node 4.2.3' -> {"node": "4.2.3"}
+            name, version = engines.split()
+            base['engines'] = {name: version}
         if base['engines'] is not None:
             for name, version_spec in base['engines'].items():
                 if ' ' in version_spec:
