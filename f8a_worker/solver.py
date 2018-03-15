@@ -944,7 +944,7 @@ class MavenSolver(object):
             dependencies = [dependencies]
         for dependency in dependencies:
             name = "{}:{}".format(dependency['groupId'], dependency['artifactId'])
-            solved[name] = dependency['version']
+            solved[name] = str(dependency['version'])
         return solved
 
     @staticmethod
