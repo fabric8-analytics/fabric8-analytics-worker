@@ -106,7 +106,7 @@ class DependencySnapshotTask(BaseTask):
                 result['status'] = 'error'
                 # Is this fatal, i.e. should we 'raise FatalTaskError from e' ?
                 break
-            self.log.info('resolved dependency %s as %s', resolved, dep)
+            self.log.info('resolved dependency %r as %s', dep, resolved)
             resolved_deps.append(resolved)
         # in future, we may want to provide also build/test dependencies, not just runtime
         result['details']['runtime'] = resolved_deps
