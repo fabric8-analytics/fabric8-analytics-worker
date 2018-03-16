@@ -1,0 +1,100 @@
+{
+   "versions": {
+      "Go-Glide": "37ac713fa439617f4717e033549bb29dc012e35f"
+   },
+   "items": [
+      {
+         "time": "2018-03-09T14:19:57.279045087+01:00",
+         "path": "/github.com/Masterminds/glide/glide.yaml",
+         "ecosystem": "Go-Glide",
+         "result": {
+            "_dependency_tree_lock_file": {
+               "hash": "7212c93931b28dba262f6e96671fc435d2562b8f91fad6ec10eacdf54607b4aa",
+               "import": [
+                  {
+                     "name": "github.com/andybalholm/cascadia",
+                     "version": "349dd0209470eabd9514242c688c403c0926d266"
+                  },
+                  {
+                     "name": "github.com/tdewolff/parse",
+                     "subpackages": [
+                        "buffer",
+                        "css"
+                     ],
+                     "version": "d1b40c5152f1c23fea7ca5c58bf53db817128061"
+                  },
+                  {
+                     "name": "golang.org/x/net",
+                     "subpackages": [
+                        "html",
+                        "html/atom"
+                     ],
+                     "version": "c7086645de248775cbf2373cf5ca4d2fa664b8c1"
+                  },
+                  {
+                     "name": "gopkg.in/yaml.v2",
+                     "version": "287cf08546ab5e7e37d55a84f7ed3fd1db036de5"
+                  }
+               ],
+               "updated": "2017-11-24T18:28:39.35898979+01:00"
+            },
+            "excludeDirs": [
+               "node_modules"
+            ],
+            "homepage": "https://masterminds.github.io/glide",
+            "ignore": [
+               "appengine"
+            ],
+            "import": [
+               {
+                  "package": "gopkg.in/yaml.v2"
+               },
+               {
+                  "package": "github.com/Masterminds/vcs",
+                  "repo": "git@github.com:Masterminds/vcs",
+                  "vcs": "git",
+                  "version": "^1.2.0"
+               },
+               {
+                  "package": "github.com/codegangsta/cli",
+                  "version": "f89effe81c1ece9c5b0fda359ebd9cf65f169a51"
+               },
+               {
+                  "package": "github.com/Masterminds/semver",
+                  "version": "^1.0.0"
+               },
+               {
+                  "package": "github.com/Masterminds/glide",
+                  "subpackages": [
+                     "cfg"
+                  ],
+                  "version": "~0.13.1"
+               }
+            ],
+            "license": "MIT",
+            "owners": [
+               {
+                  "email": "technosophos@gmail.com",
+                  "homepage": "http://technosophos.com",
+                  "name": "Matt Butcher"
+               },
+               {
+                  "email": "matt@mattfarina.com",
+                  "homepage": "https://www.mattfarina.com",
+                  "name": "Matt Farina"
+               }
+            ],
+            "package": "github.com/Masterminds/glide",
+            "testImport": [
+               {
+                  "package": "github.com/arschles/assert"
+               }
+            ]
+         },
+         "digests": {
+            "manifest": "6f40cd940047e7120c3985f92337a446d0de15da",
+            "lockfile": "d33a9bbc82c409839259f3ebab5c1849bfb70086"
+         }
+      }
+   ]
+}

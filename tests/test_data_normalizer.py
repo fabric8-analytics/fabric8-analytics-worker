@@ -241,6 +241,12 @@ class TestDataNormalizer(object):
         expected = self._load_json('nuspec-expected')
         assert compare_dictionaries(self._dataNormalizer.handle_data(data['items'][0]), expected)
 
+    def test_transforming_go_glide(self):
+        """Test normalizing of go glide (with locked deps) data."""
+        data = self._load_json('go-glide-from-mercator')
+        expected = self._load_json('go-glide-expected')
+        assert compare_dictionaries(self._dataNormalizer.handle_data(data['items'][0]), expected)
+
     @pytest.mark.parametrize('transformed_data, expected', [
         ({'dependencies': ["escape-html 1.0.1"]},
          {'dependencies': ["escape-html 1.0.1"]}),

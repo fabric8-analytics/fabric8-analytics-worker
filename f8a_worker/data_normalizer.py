@@ -468,6 +468,60 @@ class DataNormalizer(object):
         transformed['dependencies'] = dependencies
         return transformed
 
+    def _handle_go_glide(self, data):
+        """Handle metadata from golang's glide.
+
+        https://glide.readthedocs.io/en/latest/glide.yaml
+        """
+        def _import2dependencies(import_list):
+            # transform
+            # [{"package": "github.com/Masterminds/glide",
+            #   "subpackages": ["cfg, util"],
+            #   "version": "~0.13.1"}]
+            # to
+            # ["github.com/Masterminds/glide/cfg ~0.13.1",
+            #  "github.com/Masterminds/glide/util ~0.13.1"]
+            dependencies = []
+            for dep in import_list:
+                if dep.get('subpackages'):
+                    for sp in dep['subpackages']:
+                        _dep = "{name}/{subpackage} {version}".\
+                            format(name=dep['package'],
+                                   subpackage=sp,
+                                   version=dep.get('version', '')).strip()
+                        dependencies.append(_dep)
+                else:
+                    _dep = "{name} {version}".format(name=dep['package'],
+                                                     version=dep.get('version', '')).strip()
+                    dependencies.append(_dep)
+            return dependencies
+
+        key_map = (('package', 'name'),
+                   ('homepage',),
+                   ('_dependency_tree_lock_file', '_dependency_tree_lock'),)
+        transformed = self.transform_keys(data, key_map)
+
+        # transform
+        # [{"email": "technosophos@gmail.com", "name": "Matt Butcher"},
+        #  {"email": "matt@mattfarina.com", "name": "Matt Farina"}]
+        # to
+        # "Matt Butcher <technosophos@gmail.com>, Matt Farina <matt@mattfarina.com>"
+        if data.get('owners'):
+            transformed['author'] = ', '.join((self._join_name_email(o)
+                                               for o in data['owners']))
+
+        if data.get('license'):
+            transformed['declared_licenses'] = [data['license']]
+
+        transformed['dependencies'] = _import2dependencies(data.get('import', []))
+        transformed['devel_dependencies'] = _import2dependencies(data.get('testImport', []))
+        # rename 'import' key to 'dependencies'
+        if 'import' in transformed.get('_dependency_tree_lock', {}):
+            transformed['_dependency_tree_lock']['dependencies'] =\
+                transformed['_dependency_tree_lock'].pop('import')
+
+        return transformed
+
     def _handle_dotnet_solution(self, data):
         """Handle nuget package metadata."""
         if not data.get('Metadata'):
@@ -553,7 +607,8 @@ class DataNormalizer(object):
                   'java-pom': self._handle_java,
                   'ruby': self._handle_rubygems,
                   'dotnetsolution': self._handle_dotnet_solution,
-                  'gofedlib': self._handle_gofedlib}
+                  'gofedlib': self._handle_gofedlib,
+                  'go-glide': self._handle_go_glide}
 
         result = switch.get(data['ecosystem'].lower(), _passthrough)(data.get('result', {}))
         if result is None:
