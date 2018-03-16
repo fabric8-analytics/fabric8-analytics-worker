@@ -1,10 +1,11 @@
 """Classes and functions used to handling manifests files."""
 
-import json
 from io import StringIO
+import json
 from lxml import etree
 from pip.req import parse_requirements
 from pip.exceptions import RequirementsFileParseError
+import yaml
 
 _registered_manifest_descriptors = []
 
@@ -71,6 +72,15 @@ def xml_validator(data):
     return True
 
 
+def yaml_validator(data):
+    """Very simple YAML validator."""
+    try:
+        yaml.load(data)
+    except yaml.YAMLError:
+        return False
+    return True
+
+
 def python_validator(data):
     """Very simple Python requirements.txt validator."""
     requirements_txt = StringIO()
@@ -95,3 +105,11 @@ register_manifest_descriptor(ManifestDescriptor('pom.xml', 'maven', has_resolved
 register_manifest_descriptor(ManifestDescriptor('requirements.txt', 'pypi',
                                                 has_resolved_deps=False, has_recursive_deps=False,
                                                 validator=python_validator))
+
+register_manifest_descriptor(ManifestDescriptor('glide.yaml', 'go',
+                                                has_resolved_deps=False, has_recursive_deps=False,
+                                                validator=yaml_validator))
+
+register_manifest_descriptor(ManifestDescriptor('glide.lock', 'go',
+                                                has_resolved_deps=True, has_recursive_deps=True,
+                                                validator=yaml_validator))
