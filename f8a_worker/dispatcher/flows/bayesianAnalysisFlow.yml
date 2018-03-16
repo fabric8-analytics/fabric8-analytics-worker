@@ -8,7 +8,7 @@
        - 'bayesianFlow'
        - 'bayesianApiFlow'
        - 'bayesianPriorityFlow'
-       - 'bayesianPackageFlow'
+       # - 'bayesianPackageFlow'
        - 'bayesianApiPackageFlow'
        - 'bayesianPriorityPackageFlow'
       propagate_parent:
