@@ -310,7 +310,7 @@ class IndianaJones(object):
                 a=artifact_coords.to_str()))
 
         # lxml can't handle HTTPS URLs
-        maven_url = "http://repo1.maven.org/maven2/"
+        maven_url = "https://repo.maven.apache.org/maven2/"
         artifact_url = urljoin(maven_url, artifact_coords.to_repo_url())
         local_filepath = IndianaJones.download_file(artifact_url, target_dir)
         if local_filepath is None:
