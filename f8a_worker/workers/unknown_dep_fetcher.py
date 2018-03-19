@@ -16,8 +16,7 @@ class UnknownDependencyFetcherTask(BaseTask):
     def get_dependency_data(self, dependency_list):
         """Prepare list of unknown dependencies from given list of dependencies."""
         ecosystem = "maven"
-        dep_pkg_list_unknown = []
-        # TODO: do we need this list? it is filled in the code and then the results are forgotten
+        dep_pkg_list_unknown = ['maven:org.apache.maven.resolver:maven-resolver-transport-wagon:1.0.3']
         dep_pkg_list_known = []
         for item in dependency_list:
             dependency_list = item.split(":")

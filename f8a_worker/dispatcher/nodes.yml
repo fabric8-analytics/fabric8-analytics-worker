@@ -294,6 +294,7 @@
       storage: 'BayesianPostgres'
 
   flows:
+    - 'osioAnalysisFlow'
     - 'bayesianFlow'
     - 'bayesianApiFlow'
     - 'bayesianPriorityFlow'
@@ -313,7 +314,6 @@
     - 'keywordsSummaryFlow'
     - 'keywordsApiSummaryFlow'
     - 'keywordsPrioritySummaryFlow'
-    - 'osioAnalysisFlow'
 
   storages:
     - name: 'BayesianPostgres'
