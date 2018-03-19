@@ -125,7 +125,7 @@ class InitPackageFlow(BaseTask):
             # can potentially schedule two flows of a same type at the same
             # time as there is no lock, but let's say it's OK
             if upstream.updated_at is not None \
-                    and upstream.updated_at - datetime.datetime.utcnow() < self._UPDATE_INTERVAL:
+                    and datetime.datetime.utcnow() - upstream.updated_at < self._UPDATE_INTERVAL:
                 self.log.info('Skipping upstream package check as data are considered as recent - '
                               'last update %s.',
                               upstream.updated_at)
