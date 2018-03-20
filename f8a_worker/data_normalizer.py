@@ -201,14 +201,15 @@ class DataNormalizer(object):
         if isinstance(engines, list):
             base['engines'] = {}
             for engine in engines:
-                # ["node >= 0.8.0"]  ->  {"node": ">=0.8.0"}
-                splits = engine.split()
-                if len(splits) == 3:
-                    name, operator, version = splits
-                    base['engines'][name] = operator + version
-                elif len(splits) == 2:
-                    name, operator_version = splits
-                    base['engines'][name] = operator_version
+                if isinstance(engine, str):
+                    # ["node >= 0.8.0"]  ->  {"node": ">=0.8.0"}
+                    splits = engine.split()
+                    if len(splits) == 3:
+                        name, operator, version = splits
+                        base['engines'][name] = operator + version
+                    elif len(splits) == 2:
+                        name, operator_version = splits
+                        base['engines'][name] = operator_version
         elif isinstance(engines, str):
             # 'node 4.2.3' -> {"node": "4.2.3"}
             name, version = engines.split()
