@@ -201,12 +201,38 @@ class MercatorTask(BaseTask):
                        'summary': [],
                        'details': []}
         mercator_target = arguments.get('cache_sources_path', cache_path)
+        print(mercator_target)
+        print("data at mercator_target should be printed above")
 
         tc = TimedCommand(['mercator', mercator_target])
         update_env = {'MERCATOR_JAVA_RESOLVE_POMS': 'true'} if resolve_poms else {}
         status, data, err = tc.run(timeout=timeout,
                                    is_json=True,
                                    update_env=update_env)
+        tc2 = TimedCommand(['ls', mercator_target])
+
+        status2, data2, err2 = tc2.run(timeout=timeout,
+                                       is_json=False,
+                                       update_env=update_env)
+
+        print("data is ")
+        print(data)
+        print("error is")
+        print(err)
+        print("status is")
+        print(status)
+
+        print("data is ")
+        print(data2)
+        print("error is")
+        print(err2)
+        print("status is")
+        print(status2)
+
+        with open(os.path.join(cache_path, 'glide.lock'), 'r') as fp:
+            output = fp.read()
+            print("data in the cache_path is :" + str(output))
+
         if status != 0:
             self.log.error(err)
             raise FatalTaskError(err)
