@@ -67,7 +67,7 @@ class DataNormalizer(object):
             return name_email_dict
 
         name_email_str = name_email_dict.get(name_key, '')
-        if name_email_dict.get(email_key):
+        if isinstance(name_email_dict.get(email_key), str):
             if name_email_str:
                 name_email_str += ' '
             name_email_str += '<' + name_email_dict[email_key] + '>'
