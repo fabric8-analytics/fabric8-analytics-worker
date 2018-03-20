@@ -20,7 +20,7 @@ class CVEDBSyncTask(BaseTask):
         :return: generator of e:p:v
         """
         to_scan = []
-        for ecosystem in ['maven', 'npm', 'nuget']:
+        for ecosystem in ['npm', 'nuget']:
             ecosystem_solver = get_ecosystem_solver(self.storage.get_ecosystem(ecosystem),
                                                     with_parser=OSSIndexDependencyParser())
             self.log.debug("Retrieving new %s vulnerabilities from OSS Index", ecosystem)
@@ -77,7 +77,6 @@ class CVEDBSyncTask(BaseTask):
                                     if arguments else False)
 
         CVEcheckerTask.update_depcheck_db_on_s3()
-        CVEcheckerTask.update_victims_cve_db_on_s3()
 
         self.log.debug('Updating sync associated metadata')
         s3 = StoragePool.get_connected_storage('S3VulnDB')

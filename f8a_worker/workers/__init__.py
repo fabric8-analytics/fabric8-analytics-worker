@@ -36,3 +36,4 @@ from f8a_worker.workers.result_collector import ResultCollector, PackageResultCo
 from f8a_worker.workers.stackaggregator import StackAggregatorTask
 from f8a_worker.workers.stackaggregator_v2 import StackAggregatorV2Task
 from f8a_worker.workers.unknown_dep_fetcher import UnknownDependencyFetcherTask
+from f8a_worker.workers.victims import VictimsCheck

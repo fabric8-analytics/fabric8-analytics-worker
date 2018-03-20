@@ -1,0 +1,11 @@
+---
+  flow-definitions:
+    - name: 'victimsFlow'
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_victimsFlow_v0'
+      sampling:
+        name: 'constant'
+        args:
+          retry: 20
+      edges:
+        - from:
+          to: 'VictimsCheck'

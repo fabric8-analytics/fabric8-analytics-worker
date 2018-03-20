@@ -13,10 +13,10 @@ from f8a_worker.base import BaseTask
 from f8a_worker.defaults import configuration
 from f8a_worker.errors import TaskError
 from f8a_worker.object_cache import ObjectCache
-from f8a_worker.process import Git
 from f8a_worker.schemas import SchemaRef
 from f8a_worker.solver import get_ecosystem_solver, OSSIndexDependencyParser
 from f8a_worker.utils import TimedCommand
+from f8a_worker.victims import VictimsDB
 
 
 class CVEcheckerTask(BaseTask):
@@ -283,11 +283,8 @@ class CVEcheckerTask(BaseTask):
     @staticmethod
     def update_victims_cve_db_on_s3():
         """Update Victims CVE DB on S3."""
-        repo_url = 'https://github.com/victims/victims-cve-db.git'
-        s3 = StoragePool.get_connected_storage('S3VulnDB')
-        with TemporaryDirectory() as temp_dir:
-            Git.clone(repo_url, temp_dir, depth="1")
-            s3.store_victims_db(temp_dir)
+        with VictimsDB.build_from_git() as db:
+            db.store_on_s3()
 
     def _run_victims_cve_db_cli(self, arguments):
         """Run Victims CVE DB CLI."""
@@ -316,12 +313,12 @@ class CVEcheckerTask(BaseTask):
         return output
 
     def _maven_scan(self, arguments):
-        """Run OWASP dependency-check & Victims CVE DB CLI."""
-        jar_path = ObjectCache.get_from_dict(arguments).get_source_tarball()
-        results = self._run_owasp_dep_check(jar_path, experimental=False)
-        if results.get('status') != 'success':
-            return results
-        # merge with Victims CVE DB results
+        """Run Victims CVE DB CLI."""
+        results = {
+            'summary': [],
+            'status': 'success',
+            'details': []
+        }
         victims_cve_db_results = self._run_victims_cve_db_cli(arguments)
         for vulnerability in victims_cve_db_results:
             vulnerability = self._filter_victims_db_entry(vulnerability)
