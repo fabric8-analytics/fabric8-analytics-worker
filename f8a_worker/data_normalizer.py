@@ -188,9 +188,8 @@ class DataNormalizer(object):
         # transform dict dependencies into flat list of strings
         # name and version spec are separated by ' ' space
         for dep_section in ('dependencies', 'devel_dependencies'):
-            # the "is not None" part is important, since we also want to translate empty dict
-            #   to empty list
-            if dep_section in base and base[dep_section] is not None:
+            # we also want to translate empty dict to empty list
+            if isinstance(base.get(dep_section), dict):
                 flat_deps = []
                 for name, spec in base[dep_section].items():
                     flat_deps.append('{} {}'.format(name, spec))
