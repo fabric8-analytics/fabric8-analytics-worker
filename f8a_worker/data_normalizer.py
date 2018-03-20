@@ -141,9 +141,9 @@ class DataNormalizer(object):
         if isinstance(base.get('maintainers'), list):
             base['maintainers'] = [self._join_name_email(m) for m in base['maintainers']]
 
-        # 'a/b' -> {'type': 'git', 'url': 'https://github.com/a/b.git'}
         k = 'code_repository'
         if base[k]:
+            # 'a/b' -> {'type': 'git', 'url': 'https://github.com/a/b.git'}
             if isinstance(base[k], str):
                 url = base[k]
                 if url.count('/') == 1:  # e.g. 'expressjs/express'
@@ -158,6 +158,9 @@ class DataNormalizer(object):
                         url = 'https://github.com/' + url + '.git'
                 repository_dict = {'type': 'git', 'url': url}
                 base[k] = repository_dict
+            elif isinstance(base[k], dict):
+                base[k] = {'type': base[k].get('type', 'git'),
+                           'url': base[k].get('url', '')}
         else:
             base[k] = None
 
