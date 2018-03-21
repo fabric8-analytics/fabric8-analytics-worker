@@ -118,6 +118,10 @@ class DataNormalizer(object):
                    (('engine', 'engines'), 'engines'), ('gitHead', 'git_head'), ('readme',),
                    ('scripts',), ('files',), ('keywords',))
 
+        def _rf(iterable):
+            """Remove false/empty/None items from iterable."""
+            return list(filter(None, iterable))
+
         base = self.transform_keys(data, key_map)
 
         # {'url': 'https://github.com/o/p/issues',
@@ -135,11 +139,11 @@ class DataNormalizer(object):
                     base['author'] = base['author'][0]
         if base['contributors'] is not None:
             if isinstance(base['contributors'], list):
-                base['contributors'] = [self._join_name_email(m) for m in base['contributors']]
+                base['contributors'] = _rf(self._join_name_email(m) for m in base['contributors'])
             elif isinstance(base['contributors'], dict):
-                base['contributors'] = [self._join_name_email(base['contributors'])]
+                base['contributors'] = _rf([self._join_name_email(base['contributors'])])
         if isinstance(base.get('maintainers'), list):
-            base['maintainers'] = [self._join_name_email(m) for m in base['maintainers']]
+            base['maintainers'] = _rf(self._join_name_email(m) for m in base['maintainers'])
 
         k = 'code_repository'
         if base[k]:
