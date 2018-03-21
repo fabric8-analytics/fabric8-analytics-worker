@@ -233,7 +233,7 @@ class DataNormalizer(object):
                     base['engines'][name] = version_spec.replace(' ', '')
 
         if isinstance(base['keywords'], str):
-            base['keywords'] = self._split_keywords(base['keywords'], separator=',')
+            base['keywords'] = self._split_keywords(base['keywords'])
 
         if isinstance(base['files'], str):
             base['files'] = self._split_keywords(base['files'])
