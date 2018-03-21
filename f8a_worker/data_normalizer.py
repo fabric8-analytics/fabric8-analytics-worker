@@ -171,9 +171,9 @@ class DataNormalizer(object):
             base[k] = None
 
         # transform 'declared_licenses' to a list
-        if 'declared_licenses' in base:
-            k = 'declared_licenses'
-            value = base[k]
+        k = 'declared_licenses'
+        value = base[k]
+        if value:
             # e.g. "(ISC OR GPL-3.0)"
             if isinstance(value, str):
                 if ' OR ' in value:
@@ -181,17 +181,21 @@ class DataNormalizer(object):
                 else:
                     base[k] = [value]
             # e.g. {"license": {"type": "ISC", "url": "http://opensource.org/licenses/ISC"}}
-            elif (isinstance(value, dict) and
-                  "type" in value and isinstance(value["type"], str)):
-                base[k] = [value["type"]]
+            elif isinstance(value, dict):
+                if isinstance(value.get("type"), str):
+                    base[k] = [value["type"]]
+                elif isinstance(value.get("name"), str):
+                    base[k] = [value["name"]]
             # e.g. {"licenses": [{"type": "MIT", "url": "http://..."},
             #                    {"type": "Apache-2.0", "url": "http://..."}]}
             elif isinstance(value, list):
                 licenses = []
                 for l in value:
-                    if isinstance(l, dict) and \
-                       "type" in l and isinstance(l["type"], str):
-                        licenses.append(l["type"])
+                    if isinstance(l, dict):
+                        if isinstance(l.get("type"), str):
+                            licenses.append(l["type"])
+                        elif isinstance(l.get("name"), str):
+                            licenses.append(l["name"])
                 base[k] = licenses
 
         # transform dict dependencies into flat list of strings
