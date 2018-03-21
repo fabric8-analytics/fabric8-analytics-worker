@@ -238,6 +238,9 @@ class DataNormalizer(object):
         if isinstance(base['files'], str):
             base['files'] = self._split_keywords(base['files'])
 
+        if isinstance(base['homepage'], dict):
+            base['homepage'] = base['homepage'].get('url', '')
+
         def _process_level(level, collect):
             """Process a `level` of dependency tree and store data in `collect`."""
             for name, data in level.items():
