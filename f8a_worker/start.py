@@ -8,7 +8,7 @@ from f8a_worker.setup_celery import init_celery, init_selinon
 from raven.contrib.celery import register_signal, register_logger_signal
 
 
-class Celery(celery.Celery):
+class SentryCelery(celery.Celery):
     """Celery class to configure sentry."""
 
     def on_configure(self):
@@ -19,6 +19,6 @@ class Celery(celery.Celery):
         register_signal(client)
 
 
-app = Celery('tasks')
+app = SentryCelery('tasks')
 init_celery(app)
 init_selinon(app)
