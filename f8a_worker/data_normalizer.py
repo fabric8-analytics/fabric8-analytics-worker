@@ -142,6 +142,8 @@ class DataNormalizer(object):
                 base['contributors'] = _rf(self._join_name_email(m) for m in base['contributors'])
             elif isinstance(base['contributors'], dict):
                 base['contributors'] = _rf([self._join_name_email(base['contributors'])])
+            elif isinstance(base['contributors'], str):
+                base['contributors'] = _rf([base['contributors']])
         if isinstance(base.get('maintainers'), list):
             base['maintainers'] = _rf(self._join_name_email(m) for m in base['maintainers'])
 
