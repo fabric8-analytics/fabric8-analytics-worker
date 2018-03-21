@@ -66,7 +66,7 @@ class DataNormalizer(object):
         if not isinstance(name_email_dict, dict):
             return name_email_dict
 
-        name_email_str = name_email_dict.get(name_key, '')
+        name_email_str = name_email_dict.get(name_key) or ''
         if isinstance(name_email_dict.get(email_key), str):
             if name_email_str:
                 name_email_str += ' '
