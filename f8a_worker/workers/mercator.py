@@ -231,6 +231,9 @@ class MercatorTask(BaseTask):
                 #  source of information and don't want to duplicate info by including
                 #  data from pom included in artifact (assuming it's included)
                 items = [d for d in items if d['ecosystem'].lower() == 'java-pom']
+            elif ecosystem_object.is_backed_by(EcosystemBackend.npm):
+                # ignore other metadata files, e.g. requirements.txt
+                items = [d for d in items if d['ecosystem'].lower() == 'npm']
             elif arguments['ecosystem'] == 'go':
                 items = [d for d in items if d['ecosystem'].lower() == 'go-glide']
                 if not items:

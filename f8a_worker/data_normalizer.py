@@ -329,7 +329,8 @@ class DataNormalizer(object):
 
         return result
 
-    def _handle_python_requirementstxt(self, data):
+    @staticmethod
+    def _handle_python_requirementstxt(data):
         """Handle requirements.txt."""
         result = {'dependencies': data.get('dependencies', [])}
         return result
