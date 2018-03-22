@@ -5,6 +5,7 @@
 import celery
 import os
 from f8a_worker.setup_celery import init_celery, init_selinon
+import raven
 from raven.contrib.celery import register_signal, register_logger_signal
 
 
