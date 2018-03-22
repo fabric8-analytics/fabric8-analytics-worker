@@ -29,10 +29,14 @@ class RepositoryDescCollectorTask(BaseTask):
         :return: plain text description
         """
         url = self._NPM_PACKAGE_URL.format(package=name)
-        content = self._scrape_page(url).find(class_='content-column')
+        content = self._scrape_page(url).body
 
         if not content:
             raise FatalTaskError("No content was found at '%s' for NPM package '%s'", name)
+
+        # rip out all script and style elements
+        for script in content(["script", "style"]):
+            script.extract()
 
         return content.text
 
