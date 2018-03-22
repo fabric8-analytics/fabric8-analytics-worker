@@ -298,6 +298,12 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_ReportGenerationTask_v0'
       storage: 'BayesianPostgres'
+    - name: 'GithubIssueCreator'
+      classname: 'GithubIssueCreator'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GithubIssueCreator_v0'
+      storage: 'BayesianPostgres'
 
   flows:
     - 'osioAnalysisFlow'
