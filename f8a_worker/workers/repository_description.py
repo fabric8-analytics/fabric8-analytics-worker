@@ -34,6 +34,10 @@ class RepositoryDescCollectorTask(BaseTask):
         if not content:
             raise FatalTaskError("No content was found at '%s' for NPM package '%s'", name)
 
+        # rip out all script and style elements
+        for script in content(["script", "style"]):
+            script.extract()
+
         return content.text
 
     def collect_pypi(self, name):
