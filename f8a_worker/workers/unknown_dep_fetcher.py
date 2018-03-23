@@ -10,18 +10,13 @@ from f8a_worker.utils import get_session_retry
 class UnknownDependencyFetcherTask(BaseTask):
     """Task to fetch unknown dependencies."""
 
-    _analysis_name = 'unknown_deps_fetcher'
-    description = 'Fetch unknown dependencies'
-
     def get_dependency_data(self, dependency_list):
         """Prepare list of unknown dependencies from given list of dependencies."""
         ecosystem = "maven"
-        dep_pkg_list_unknown = []
-        # TODO: do we need this list? it is filled in the code and then the results are forgotten
-        dep_pkg_list_known = []
-        for item in dependency_list:
-            dependency_list = item.split(":")
-            result = []
+        dep_pkg_list_unknown = list()
+        dep_pkg_list_known = list()
+        for dependency in dependency_list:
+            dependency_list = dependency.split(":")
             name = dependency_list[0] + ":" + dependency_list[1]
             version = dependency_list[2]
             qstring = ("g.V().has('pecosystem','" + ecosystem + "').has('pname','" +
@@ -30,29 +25,29 @@ class UnknownDependencyFetcherTask(BaseTask):
 
             graph_req = get_session_retry().post(GREMLIN_SERVER_URL_REST, data=json.dumps(payload))
             if graph_req.status_code == 200:
-                graph_resp = graph_req.json()
-                if graph_resp.get('result', {}).get('data'):
-                    result.append(graph_resp["result"])
-                    if result[0]['data'][0]['present']:
-                            dep_pkg_list_known.append(ecosystem + ":" + name + ":" + version)
-                    elif not (result[0]['data'][0]['present']):
-                            dep_pkg_list_unknown.append(ecosystem + ":" + name + ":" + version)
-                    else:
-                        continue
+                graph_resp_data = graph_req.json().get('result', {}).get('data')
+                if graph_resp_data[0].get('present'):
+                    dep_pkg_list_known.append(ecosystem + ":" + name + ":" + version)
                 else:
-                    continue
+                    dep_pkg_list_unknown.append(ecosystem + ":" + name + ":" + version)
+            else:
+                self.log.error("Error response from graph for {dependency} " +
+                               "with status code as {status_code}"
+                               .format(dependency=dependency, status_code=graph_req.status_code))
+                continue
+
+        self.log.info("Known dependencies are: {}".format(dep_pkg_list_known))
+        self.log.info("Unknown dependencies are: {}".format(dep_pkg_list_unknown))
         return dep_pkg_list_unknown
 
     def execute(self, arguments=None):
-        """Task code.
+        """
+        Task code.
 
         :param arguments: dictionary with task arguments
         :return: {}, results
         """
-        aggregated = self.parent_task_result('GithubDependencyTreeTask')
+        self.log.info("Arguments passed from GithubDependencyTreeTask: {}".format(arguments))
 
-        self.log.info ("Arguments passed from GithubDependencyTreeTask: {}".format(arguments))
-        self.log.info ("Result returned by GithubDependencyTreeTask: {}".format(aggregated))
-
-        result = self.get_dependency_data(aggregated['dependencies'])
+        result = self.get_dependency_data(arguments.get('dependencies', []))
         return {"result": result}

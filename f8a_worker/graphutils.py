@@ -11,8 +11,8 @@ from f8a_worker.defaults import configuration
 logger = logging.getLogger(__name__)
 
 GREMLIN_SERVER_URL_REST = "http://{host}:{port}".format(
-    host=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_HOST", "localhost"),
-    port=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_PORT", "8182"))
+    host=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_HOST"),
+    port=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_PORT"))
 
 LICENSE_SCORING_URL_REST = "http://{host}:{port}".format(
     host=os.environ.get("LICENSE_SERVICE_HOST"),

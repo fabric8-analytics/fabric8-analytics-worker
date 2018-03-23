@@ -286,14 +286,27 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GithubDependencyTreeTask_v0'
       storage: 'BayesianPostgres'
-    - name: 'unknown_deps_fetcher'
+    - name: 'UnknownDependencyFetcherTask'
       classname: 'UnknownDependencyFetcherTask'
       import: 'f8a_worker.workers'
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_UnknownDependencyFetcherTask_v0'
       storage: 'BayesianPostgres'
+    - name: 'ReportGenerationTask'
+      classname: 'ReportGenerationTask'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_ReportGenerationTask_v0'
+      storage: 'BayesianPostgres'
+    - name: 'GithubIssueCreator'
+      classname: 'GithubIssueCreator'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GithubIssueCreator_v0'
+      storage: 'BayesianPostgres'
 
   flows:
+    - 'osioAnalysisFlow'
     - 'bayesianFlow'
     - 'bayesianApiFlow'
     - 'bayesianPriorityFlow'
@@ -313,7 +326,7 @@
     - 'keywordsSummaryFlow'
     - 'keywordsApiSummaryFlow'
     - 'keywordsPrioritySummaryFlow'
-    - 'osioAnalysisFlow'
+    - 'dependencyIngestFlow'
 
   storages:
     - name: 'BayesianPostgres'
