@@ -12,6 +12,8 @@ import re
 class GithubDependencyTreeTask(BaseTask):
     """Finds out direct and indirect dependencies from a given github repository."""
 
+    _analysis_name = 'dependency_tree'
+
     def execute(self, arguments=None):
         """Task code.
 
@@ -24,7 +26,8 @@ class GithubDependencyTreeTask(BaseTask):
         github_repo = arguments.get('github_repo')
         github_sha = arguments.get('github_sha')
         dependencies = list(GithubDependencyTreeTask.extract_dependencies(github_repo, github_sha))
-        return {"dependencies": dependencies}
+        return {"dependencies": dependencies, "github_repo": github_repo,
+                "github_sha": github_sha, "email_ids": arguments.get('email_ids')}
 
     @staticmethod
     def extract_dependencies(github_repo, github_sha):

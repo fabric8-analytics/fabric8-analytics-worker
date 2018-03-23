@@ -18,7 +18,7 @@ class TestGithubDependencyTreeTask(object):
         results = task.execute(args)
 
         assert isinstance(results, dict)
-        assert set(results.keys()) == {'dependencies'}
+        assert set(results.keys()) == {'dependencies', 'github_repo', 'github_sha', 'email_ids'}
         obtained_dependencies = set(results['dependencies'])
         expected_direct_dependencies = {'com.googlecode.json-simple:json-simple:1.1.1',
                                         'org.apache.maven.indexer:indexer-core:6.0.0'}

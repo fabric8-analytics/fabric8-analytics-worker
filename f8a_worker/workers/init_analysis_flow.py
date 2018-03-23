@@ -23,6 +23,7 @@ class InitAnalysisFlow(BaseTask):
         :param arguments: dictionary with task arguments
         :return: {}, results
         """
+        self.log.debug("Input Arguments: {}".format(arguments))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))
         self._strict_assert(arguments.get('ecosystem'))
@@ -50,13 +51,16 @@ class InitAnalysisFlow(BaseTask):
                 arguments.pop('name')
                 arguments.pop('version')
                 arguments.pop('ecosystem')
+                self.log.debug("Arguments returned by initAnalysisFlow without force: {}"
+                               .format(arguments))
                 return arguments
 
         cache_path = mkdtemp(dir=self.configuration.WORKER_DATA_DIR)
         epv_cache = ObjectCache.get_from_dict(arguments)
 
         try:
-            if not epv_cache.has_source_tarball():
+            if not epv_cache.\
+                    has_source_tarball():
                 _, source_tarball_path = IndianaJones.fetch_artifact(
                     ecosystem=ecosystem,
                     artifact=arguments['name'],
@@ -91,6 +95,7 @@ class InitAnalysisFlow(BaseTask):
         db.commit()
 
         arguments['document_id'] = a.id
+        self.log.debug("Arguments returned by InitAnalysisFlow are: {}".format(arguments))
         return arguments
 
     @staticmethod
