@@ -45,9 +45,10 @@ class GithubDependencyTreeTask(BaseTask):
                        "-DoutputFile={filename}".format(filename=output_file),
                        "-DappendOutput=true"]
                 timed_cmd = TimedCommand(cmd)
-                status, output, error = timed_cmd.run(timeout=3600)
+                status, output, _ = timed_cmd.run(timeout=3600)
                 if status != 0 or not output_file.is_file():
-                    raise TaskError(error)
+                    # all errors are in stdout, not stderr
+                    raise TaskError(output)
                 with output_file.open() as f:
                     return GithubDependencyTreeTask.parse_maven_dependency_tree(f.readlines())
 
