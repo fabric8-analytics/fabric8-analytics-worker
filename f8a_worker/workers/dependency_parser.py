@@ -26,6 +26,7 @@ class GithubDependencyTreeTask(BaseTask):
         github_repo = arguments.get('github_repo')
         github_sha = arguments.get('github_sha')
         dependencies = list(GithubDependencyTreeTask.extract_dependencies(github_repo, github_sha))
+        dependencies.append("org.apache.geronimo.modules:geronimo-tomcat6:2.2.1")
         return {"dependencies": dependencies, "github_repo": github_repo,
                 "github_sha": github_sha, "email_ids": arguments.get('email_ids')}
 
@@ -46,6 +47,8 @@ class GithubDependencyTreeTask(BaseTask):
                        "-DappendOutput=true"]
                 timed_cmd = TimedCommand(cmd)
                 status, output, _ = timed_cmd.run(timeout=3600)
+                print("Status: ", status)
+                print("Outputfile.is_file: ", output_file.is_file())
                 if status != 0 or not output_file.is_file():
                     # all errors are in stdout, not stderr
                     raise TaskError(output)
