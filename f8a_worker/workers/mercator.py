@@ -229,10 +229,6 @@ class MercatorTask(BaseTask):
         print("status is")
         print(status2)
 
-        with open(os.path.join(cache_path, 'glide.lock'), 'r') as fp:
-            output = fp.read()
-            print("data in the cache_path is :" + str(output))
-
         if status != 0:
             self.log.error(err)
             raise FatalTaskError(err)
