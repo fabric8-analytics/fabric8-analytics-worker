@@ -66,8 +66,8 @@ class DataNormalizer(object):
         if not isinstance(name_email_dict, dict):
             return name_email_dict
 
-        name_email_str = name_email_dict.get(name_key, '')
-        if name_email_dict.get(email_key):
+        name_email_str = name_email_dict.get(name_key) or ''
+        if isinstance(name_email_dict.get(email_key), str):
             if name_email_str:
                 name_email_str += ' '
             name_email_str += '<' + name_email_dict[email_key] + '>'
@@ -118,6 +118,10 @@ class DataNormalizer(object):
                    (('engine', 'engines'), 'engines'), ('gitHead', 'git_head'), ('readme',),
                    ('scripts',), ('files',), ('keywords',))
 
+        def _rf(iterable):
+            """Remove false/empty/None items from iterable."""
+            return list(filter(None, iterable))
+
         base = self.transform_keys(data, key_map)
 
         # {'url': 'https://github.com/o/p/issues',
@@ -135,15 +139,19 @@ class DataNormalizer(object):
                     base['author'] = base['author'][0]
         if base['contributors'] is not None:
             if isinstance(base['contributors'], list):
-                base['contributors'] = [self._join_name_email(m) for m in base['contributors']]
+                base['contributors'] = _rf(self._join_name_email(m) for m in base['contributors'])
             elif isinstance(base['contributors'], dict):
-                base['contributors'] = [self._join_name_email(base['contributors'])]
-        if isinstance(base.get('maintainers'), list):
-            base['maintainers'] = [self._join_name_email(m) for m in base['maintainers']]
+                base['contributors'] = _rf([self._join_name_email(base['contributors'])])
+            elif isinstance(base['contributors'], str):
+                base['contributors'] = _rf([base['contributors']])
+        if isinstance(base['maintainers'], list):
+            base['maintainers'] = _rf(self._join_name_email(m) for m in base['maintainers'])
+        elif isinstance(base['maintainers'], str):
+            base['maintainers'] = _rf([base['maintainers']])
 
-        # 'a/b' -> {'type': 'git', 'url': 'https://github.com/a/b.git'}
         k = 'code_repository'
         if base[k]:
+            # 'a/b' -> {'type': 'git', 'url': 'https://github.com/a/b.git'}
             if isinstance(base[k], str):
                 url = base[k]
                 if url.count('/') == 1:  # e.g. 'expressjs/express'
@@ -158,13 +166,16 @@ class DataNormalizer(object):
                         url = 'https://github.com/' + url + '.git'
                 repository_dict = {'type': 'git', 'url': url}
                 base[k] = repository_dict
+            elif isinstance(base[k], dict):
+                base[k] = {'type': base[k].get('type', 'git'),
+                           'url': base[k].get('url', '')}
         else:
             base[k] = None
 
         # transform 'declared_licenses' to a list
-        if 'declared_licenses' in base:
-            k = 'declared_licenses'
-            value = base[k]
+        k = 'declared_licenses'
+        value = base[k]
+        if value:
             # e.g. "(ISC OR GPL-3.0)"
             if isinstance(value, str):
                 if ' OR ' in value:
@@ -172,25 +183,28 @@ class DataNormalizer(object):
                 else:
                     base[k] = [value]
             # e.g. {"license": {"type": "ISC", "url": "http://opensource.org/licenses/ISC"}}
-            elif (isinstance(value, dict) and
-                  "type" in value and isinstance(value["type"], str)):
-                base[k] = [value["type"]]
+            elif isinstance(value, dict):
+                if isinstance(value.get("type"), str):
+                    base[k] = [value["type"]]
+                elif isinstance(value.get("name"), str):
+                    base[k] = [value["name"]]
             # e.g. {"licenses": [{"type": "MIT", "url": "http://..."},
             #                    {"type": "Apache-2.0", "url": "http://..."}]}
             elif isinstance(value, list):
                 licenses = []
                 for l in value:
-                    if isinstance(l, dict) and \
-                       "type" in l and isinstance(l["type"], str):
-                        licenses.append(l["type"])
+                    if isinstance(l, dict):
+                        if isinstance(l.get("type"), str):
+                            licenses.append(l["type"])
+                        elif isinstance(l.get("name"), str):
+                            licenses.append(l["name"])
                 base[k] = licenses
 
         # transform dict dependencies into flat list of strings
         # name and version spec are separated by ' ' space
         for dep_section in ('dependencies', 'devel_dependencies'):
-            # the "is not None" part is important, since we also want to translate empty dict
-            #   to empty list
-            if dep_section in base and base[dep_section] is not None:
+            # we also want to translate empty dict to empty list
+            if isinstance(base.get(dep_section), dict):
                 flat_deps = []
                 for name, spec in base[dep_section].items():
                     flat_deps.append('{} {}'.format(name, spec))
@@ -201,14 +215,15 @@ class DataNormalizer(object):
         if isinstance(engines, list):
             base['engines'] = {}
             for engine in engines:
-                # ["node >= 0.8.0"]  ->  {"node": ">=0.8.0"}
-                splits = engine.split()
-                if len(splits) == 3:
-                    name, operator, version = splits
-                    base['engines'][name] = operator + version
-                elif len(splits) == 2:
-                    name, operator_version = splits
-                    base['engines'][name] = operator_version
+                if isinstance(engine, str):
+                    # ["node >= 0.8.0"]  ->  {"node": ">=0.8.0"}
+                    splits = engine.split()
+                    if len(splits) == 3:
+                        name, operator, version = splits
+                        base['engines'][name] = operator + version
+                    elif len(splits) == 2:
+                        name, operator_version = splits
+                        base['engines'][name] = operator_version
         elif isinstance(engines, str):
             # 'node 4.2.3' -> {"node": "4.2.3"}
             name, version = engines.split()
@@ -220,7 +235,13 @@ class DataNormalizer(object):
                     base['engines'][name] = version_spec.replace(' ', '')
 
         if isinstance(base['keywords'], str):
-            base['keywords'] = self._split_keywords(base['keywords'], separator=',')
+            base['keywords'] = self._split_keywords(base['keywords'])
+
+        if isinstance(base['files'], str):
+            base['files'] = self._split_keywords(base['files'])
+
+        if isinstance(base['homepage'], dict):
+            base['homepage'] = base['homepage'].get('url', '')
 
         def _process_level(level, collect):
             """Process a `level` of dependency tree and store data in `collect`."""
