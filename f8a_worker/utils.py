@@ -1,31 +1,31 @@
 """Module containing helper functions that are used by other parts of worker."""
 
+import datetime
 import getpass
 import json
 import logging
-import datetime
 import signal
 import time
-from os import path as os_path, walk, getcwd, chdir, environ as os_environ, killpg, getpgid
-from threading import Thread
-from subprocess import Popen, PIPE, check_output, CalledProcessError, TimeoutExpired
-from traceback import format_exc
-from shlex import split
-from queue import Queue, Empty
 from contextlib import contextmanager
+from os import path as os_path, walk, getcwd, chdir, environ as os_environ, killpg, getpgid
+from queue import Queue, Empty
+from shlex import split
+from subprocess import Popen, PIPE, check_output, CalledProcessError, TimeoutExpired
+from threading import Thread
+from traceback import format_exc
 from urllib.parse import unquote, urlparse
+
 import requests
 from requests.adapters import HTTPAdapter
 from requests.exceptions import HTTPError
 from requests.packages.urllib3.util.retry import Retry
-from sqlalchemy.exc import SQLAlchemyError
+from selinon import StoragePool
 from sqlalchemy import desc
+from sqlalchemy.exc import SQLAlchemyError
 
 from f8a_worker.errors import TaskError
 from f8a_worker.models import (Analysis, Ecosystem, Package, Version,
                                PackageGHUsage, ComponentGHUsage)
-
-from selinon import StoragePool
 
 logger = logging.getLogger(__name__)
 
@@ -44,9 +44,9 @@ def get_package_dependents_count(ecosystem_backend, package, db_session=None):
 
     try:
         count = db_session.query(PackageGHUsage.count).filter(PackageGHUsage.name == package) \
-                          .filter(PackageGHUsage.ecosystem_backend == ecosystem_backend) \
-                          .order_by(desc(PackageGHUsage.timestamp)) \
-                          .first()
+            .filter(PackageGHUsage.ecosystem_backend == ecosystem_backend) \
+            .order_by(desc(PackageGHUsage.timestamp)) \
+            .first()
     except SQLAlchemyError:
         db_session.rollback()
         raise
@@ -71,11 +71,11 @@ def get_dependents_count(ecosystem_backend, package, version, db_session=None):
 
     try:
         count = db_session.query(ComponentGHUsage.count) \
-                          .filter(ComponentGHUsage.name == package) \
-                          .filter(ComponentGHUsage.version == version) \
-                          .filter(ComponentGHUsage.ecosystem_backend == ecosystem_backend) \
-                          .order_by(desc(ComponentGHUsage.timestamp)) \
-                          .first()
+            .filter(ComponentGHUsage.name == package) \
+            .filter(ComponentGHUsage.version == version) \
+            .filter(ComponentGHUsage.ecosystem_backend == ecosystem_backend) \
+            .order_by(desc(ComponentGHUsage.timestamp)) \
+            .first()
     except SQLAlchemyError:
         db_session.rollback()
         raise
@@ -92,11 +92,11 @@ def get_latest_analysis(ecosystem, package, version, db_session=None):
         db_session = storage.session
 
     try:
-        return db_session.query(Analysis).\
-            filter(Ecosystem.name == ecosystem).\
-            filter(Package.name == package).\
-            filter(Version.identifier == version).\
-            order_by(Analysis.started_at.desc()).\
+        return db_session.query(Analysis). \
+            filter(Ecosystem.name == ecosystem). \
+            filter(Package.name == package). \
+            filter(Version.identifier == version). \
+            order_by(Analysis.started_at.desc()). \
             first()
     except SQLAlchemyError:
         db_session.rollback()
@@ -659,8 +659,18 @@ def get_response(url, headers=None, sleep_time=2, retry_count=10):
 def add_maven_coords_to_set(coordinates_str, gav_set):
     """Add Maven coordinates to the gav_set set."""
     artifact_coords = MavenCoordinates.from_str(coordinates_str)
-    gav_set.add("{group_id}:{artifact_id}:{version}".format(
+    gav_set.add("{ecosystem}:{group_id}:{artifact_id}:{version}".format(
+        ecosystem="maven",
         group_id=artifact_coords.groupId,
         artifact_id=artifact_coords.artifactId,
         version=artifact_coords.version
     ))
+
+
+def peek(iterable):
+    """Peeks the iterable to check if it's empty."""
+    try:
+        first = next(iterable)
+    except StopIteration:
+        return None
+    return first

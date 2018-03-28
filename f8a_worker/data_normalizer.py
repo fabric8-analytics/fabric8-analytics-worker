@@ -7,10 +7,10 @@ Code to transform data from Mercator [1] into a common scheme.
 """
 
 import argparse
-from itertools import zip_longest
 import json
-from os import path
 import sys
+from itertools import zip_longest
+from os import path
 from tempfile import TemporaryDirectory
 from urllib.parse import urlparse
 
@@ -116,7 +116,7 @@ class DataNormalizer(object):
                    ('bugs', 'bug_reporting'), ('author',), ('contributors',), ('maintainers',),
                    ('repository', 'code_repository'), ('name',),
                    (('engine', 'engines'), 'engines'), ('gitHead', 'git_head'), ('readme',),
-                   ('scripts',), ('files',), ('keywords',))
+                   ('scripts',), ('files',), ('keywords',),)
 
         def _rf(iterable):
             """Remove false/empty/None items from iterable."""
@@ -252,7 +252,8 @@ class DataNormalizer(object):
                     'version': data.get('version', ''),
                     'specification': data.get('from', None),
                     'resolved': data.get('resolved', None),
-                    'dependencies': deps
+                    'dependencies': deps,
+                    'dev': data.get('dev', False)
                 }
                 collect.append(item)
                 _process_level(data.get('dependencies', {}), deps)
@@ -338,7 +339,7 @@ class DataNormalizer(object):
                       'declared_licenses': self._split_keywords(data.get('license'), separator=',')}
         else:
             key_map = (('summary', 'description'), ('requires_dist', 'dependencies'), ('name',),
-                       ('home-page', 'homepage'), ('version',), ('platform',), )
+                       ('home-page', 'homepage'), ('version',), ('platform',),)
 
             result = self.transform_keys(data, key_map)
             result['author'] = self._join_name_email(data, 'author', 'author-email')
@@ -363,7 +364,7 @@ class DataNormalizer(object):
         if pom is None:
             return None
 
-        key_map = (('name',), ('version', ), ('description', ), ('url', 'homepage'),
+        key_map = (('name',), ('version',), ('description',), ('url', 'homepage'),
                    ('licenses', 'declared_licenses'))
         # handle licenses
         transformed = self.transform_keys(pom, key_map)
@@ -418,12 +419,12 @@ class DataNormalizer(object):
         key_map = (('author',), ('authors',), ('email',), ('name',), ('version',), ('homepage',),
                    (('license', 'licenses',), 'declared_licenses'),
                    ('dependencies',), ('devel_dependencies',), ('description',),
-                   ('metadata',), ('platform',), )
+                   ('metadata',), ('platform',),)
         transformed = self.transform_keys(data, key_map)
 
         # 'authors' (list of strings) or 'author' (string) is required attribute
         authors = transformed.get('authors') or [transformed.get('author')]
-        transformed.pop('authors')   # we don't want this one
+        transformed.pop('authors')  # we don't want this one
         emails = []
         if transformed.get('email'):
             # 'email' can also be either a list or string
@@ -507,7 +508,7 @@ class DataNormalizer(object):
             for dep in import_list:
                 if dep.get('subpackages'):
                     for sp in dep['subpackages']:
-                        _dep = "{name}/{subpackage} {version}".\
+                        _dep = "{name}/{subpackage} {version}". \
                             format(name=dep['package'],
                                    subpackage=sp,
                                    version=dep.get('version', '')).strip()
@@ -539,7 +540,7 @@ class DataNormalizer(object):
         transformed['devel_dependencies'] = _import2dependencies(data.get('testImport', []))
         # rename 'import' key to 'dependencies'
         if 'import' in transformed.get('_dependency_tree_lock', {}):
-            transformed['_dependency_tree_lock']['dependencies'] =\
+            transformed['_dependency_tree_lock']['dependencies'] = \
                 transformed['_dependency_tree_lock'].pop('import')
 
         return transformed
@@ -570,7 +571,7 @@ class DataNormalizer(object):
                     if IndianaJones.download_file(data['LicenseUrl'], tmpdir):
                         scancode_results = LicenseCheckTask.run_scancode(tmpdir)
                         if scancode_results.get('summary', {}).get('sure_licenses'):
-                            transformed['declared_licenses'] =\
+                            transformed['declared_licenses'] = \
                                 scancode_results['summary']['sure_licenses']
                 except Exception:
                     # Don't raise if IndianaJones or LicenseCheckTask fail

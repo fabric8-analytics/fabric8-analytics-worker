@@ -12,13 +12,23 @@ class UnknownDependencyFetcherTask(BaseTask):
 
     def get_dependency_data(self, dependency_list):
         """Prepare list of unknown dependencies from given list of dependencies."""
-        ecosystem = "maven"
         dep_pkg_list_unknown = list()
         dep_pkg_list_known = list()
         for dependency in dependency_list:
+            n_colons = dependency.count(":")
             dependency_list = dependency.split(":")
-            name = dependency_list[0] + ":" + dependency_list[1]
-            version = dependency_list[2]
+            ecosystem = dependency_list[0]
+            version = dependency_list[-1]
+
+            if n_colons == 3:
+                name = dependency_list[1] + ":" + dependency_list[2]
+            elif n_colons == 2:
+                name = dependency_list[1]
+            else:
+                self.log.error("No valid dependency format found: {}"
+                               .format(dependency))
+                name = ""
+
             qstring = ("g.V().has('pecosystem','" + ecosystem + "').has('pname','" +
                        name + "').has('version','" + version + "').tryNext()")
             payload = {'gremlin': qstring}
