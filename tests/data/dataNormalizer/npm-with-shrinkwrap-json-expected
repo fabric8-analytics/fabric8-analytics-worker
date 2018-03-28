@@ -21,7 +21,8 @@
             "version":"1.0.10",
             "dependencies":[
 
-            ]
+            ],
+            "dev":false
          },
          {
             "resolved":"https://registry.npmjs.org/block-stream/-/block-stream-0.0.9.tgz",
@@ -30,7 +31,8 @@
             "version":"0.0.9",
             "dependencies":[
 
-            ]
+            ],
+            "dev":false
          },
          {
             "resolved":"https://registry.npmjs.org/inherits/-/inherits-2.0.3.tgz",
@@ -39,7 +41,8 @@
             "version":"2.0.3",
             "dependencies":[
 
-            ]
+            ],
+            "dev":false
          },
          {
             "resolved":"https://registry.npmjs.org/mkdirp/-/mkdirp-0.5.1.tgz",
@@ -48,7 +51,8 @@
             "version":"0.5.1",
             "dependencies":[
 
-            ]
+            ],
+            "dev":false
          },
          {
             "resolved":"https://registry.npmjs.org/minimist/-/minimist-0.0.8.tgz",
@@ -57,7 +61,8 @@
             "version":"0.0.8",
             "dependencies":[
 
-            ]
+            ],
+            "dev":false
          },
          {
             "resolved":"https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.1.11.tgz",
@@ -66,7 +71,8 @@
             "version":"4.1.11",
             "dependencies":[
 
-            ]
+            ],
+            "dev":false
          }
       ]
    },

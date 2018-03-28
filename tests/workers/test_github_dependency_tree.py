@@ -20,10 +20,10 @@ class TestGithubDependencyTreeTask(object):
         assert isinstance(results, dict)
         assert set(results.keys()) == {'dependencies', 'github_repo', 'github_sha', 'email_ids'}
         obtained_dependencies = set(results['dependencies'])
-        expected_direct_dependencies = {'com.googlecode.json-simple:json-simple:1.1.1',
-                                        'org.apache.maven.indexer:indexer-core:6.0.0'}
+        expected_direct_dependencies = {'maven:com.googlecode.json-simple:json-simple:1.1.1',
+                                        'maven:org.apache.maven.indexer:indexer-core:6.0.0'}
         assert expected_direct_dependencies.issubset(obtained_dependencies)
-        expected_transitive_dependencies = {'commons-io:commons-io:2.0.1',
-                                            'com.google.guava:guava:20.0',
-                                            'junit:junit:4.10'}
+        expected_transitive_dependencies = {'maven:commons-io:commons-io:2.0.1',
+                                            'maven:com.google.guava:guava:20.0',
+                                            'maven:junit:junit:4.10'}
         assert expected_transitive_dependencies.issubset(obtained_dependencies)

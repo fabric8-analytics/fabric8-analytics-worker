@@ -1,13 +1,12 @@
 """Output: TBD."""
 
-from f8a_worker.base import BaseTask
-from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST
-from f8a_worker.utils import MavenCoordinates
-from f8a_worker.utils import get_session_retry
 import json
 import operator
 from time import gmtime, strftime
-import semantic_version as sv
+
+from f8a_worker.base import BaseTask
+from f8a_worker.graphutils import GREMLIN_SERVER_URL_REST
+from f8a_worker.utils import get_session_retry
 
 
 class ReportGenerationTask(BaseTask):
@@ -49,34 +48,30 @@ class ReportGenerationTask(BaseTask):
         self.log.debug("Package data received is: {}".format(data))
         name = data.get('name', [''])[0]
         package_data = {"name": name}
-        latest_version_list = data.get('latest_version')
-        libio_latest_version_list = data.get('libio_latest_version')
-        latest_version = latest_version_list[0] if latest_version_list else '0.0.0'
-        libio_latest_version = libio_latest_version_list[0] if \
-            libio_latest_version_list else '0.0.0'
-        # Handle latest_version = '-1'
-        latest_version = '0.0.0' if latest_version == '-1' else latest_version
-        latest_version = latest_version.replace('.', '-', 3).replace('-', '.', 2)
-        libio_latest_version = libio_latest_version.replace('.', '-', 3).replace('-', '.', 2)
-        try:
-            if sv.Version.coerce(libio_latest_version) >= sv.Version.coerce(latest_version):
-                latest_version = libio_latest_version
-        except ValueError:
-            self.log.error("Unexpected ValueError while selecting latest version!")
-            latest_version = ''
-        package_data.update({"latest_version": latest_version})
+        # Removed latest_version_logic as of now. Might want to add it back in future.
         self.log.debug("Parsed package data is: {}".format(package_data))
         return package_data
 
-    def _get_dependency_data(self, dependencies, ecosystem):
+    def _get_dependency_data(self, dependencies):
         dependency_data_list = list()
         self.log.debug("Dependencies are: {}".format(dependencies))
         for dependency in dependencies:
             self.log.info("Analyzing dependency: {}".format(dependency))
-            artifact_coords = MavenCoordinates.from_str(dependency)
+            n_colons = dependency.count(":")
+            dependency_list = dependency.split(":")
+            ecosystem = dependency_list[0]
+            version = dependency_list[-1]
+            if n_colons == 3:
+                name = dependency_list[1] + ":" + dependency_list[2]
+            elif n_colons == 2:
+                name = dependency_list[1]
+            else:
+                self.log.error("No valid dependency format found: {}"
+                               .format(dependency))
+                name = ""
+
             qstring = ("g.V().has('pecosystem','" + ecosystem + "').has('pname','" +
-                       artifact_coords.groupId + ":" + artifact_coords.artifactId + "')"
-                       ".has('version','" + artifact_coords.version + "').")
+                       name + "')"".has('version','" + version + "').")
             qstring += ("as('version').in('has_version').as('package').dedup()." +
                         "select('version','package').by(valueMap());")
             payload = {'gremlin': qstring}
@@ -114,8 +109,7 @@ class ReportGenerationTask(BaseTask):
         self._strict_assert(arguments.get('github_repo'))
         resolved_dependencies = arguments.get('dependencies')
         self.log.debug("Resolved dependencies are: {}".format(resolved_dependencies))
-        dependency_list = self._get_dependency_data(dependencies=resolved_dependencies,
-                                                    ecosystem="maven")
+        dependency_list = self._get_dependency_data(dependencies=resolved_dependencies)
         self.log.debug("Result returned by Report Generation task is: {}".format(dependency_list))
         arguments.update({"external_request_id": arguments.get('github_sha')})
         return {"dependencies": dependency_list, "git_url": arguments.get('github_repo'),
