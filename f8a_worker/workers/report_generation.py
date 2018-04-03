@@ -59,7 +59,7 @@ class ReportGenerationTask(BaseTask):
         latest_version = latest_version.replace('.', '-', 3).replace('-', '.', 2)
         libio_latest_version = libio_latest_version.replace('.', '-', 3).replace('-', '.', 2)
         try:
-            if sv.Version(libio_latest_version) >= sv.Version(latest_version):
+            if sv.Version.coerce(libio_latest_version) >= sv.Version.coerce(latest_version):
                 latest_version = libio_latest_version
         except ValueError:
             self.log.error("Unexpected ValueError while selecting latest version!")
