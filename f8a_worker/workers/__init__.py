@@ -10,6 +10,7 @@ from f8a_worker.workers.cvedbsync import CVEDBSyncTask
 from f8a_worker.workers.dependency_parser import GithubDependencyTreeTask
 from f8a_worker.workers.dependency_snapshot import DependencySnapshotTask
 from f8a_worker.workers.digester import DigesterTask
+from f8a_worker.workers.upstream import UpstreamUpdateTask
 from f8a_worker.workers.finalize import FinalizeTask, PackageFinalizeTask
 from f8a_worker.workers.gh_metadata_init import InitGitHubManifestMetadata
 from f8a_worker.workers.gh_metadata_result_collector import GitHubManifestMetadataResultCollector

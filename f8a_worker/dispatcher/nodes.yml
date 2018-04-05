@@ -216,6 +216,11 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_InitPackageFlow_v0'
       storage: 'PackagePostgres'
+    - name: 'UpstreamUpdateTask'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_UpstreamUpdateTask_v0'
+      storage: 'PackagePostgres'
     - name: 'GitHubManifestMetadataResultCollector'
       import: 'f8a_worker.workers'
       max_retry: 0
