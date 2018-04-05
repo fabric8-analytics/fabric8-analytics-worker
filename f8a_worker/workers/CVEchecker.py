@@ -28,6 +28,18 @@ class CVEcheckerTask(BaseTask):
     dependency_check_jvm_mem_limit = '-Xmx768m'
 
     @staticmethod
+    def _parse_severity_and_score(input_tag):
+        """Parse BeatifulSoup tag and return CVE's score and severity from it."""
+        score, severity = input_tag.text.strip().split()
+        return float(score), severity.lower()
+
+    @staticmethod
+    def _parse_vector(input_tag):
+        """Parse BeatifulSoup tag and return CVE vector from it."""
+        vector, *_, = input_tag.text.split()
+        return vector.strip().lstrip('(').rstrip(')')
+
+    @staticmethod
     def get_cve_impact(cve_id):
         """Get more details about cve_id from NVD."""
         score = 0
@@ -42,17 +54,16 @@ class CVEcheckerTask(BaseTask):
             score_v3 = score_v2 = 0
             severity_v3 = severity_v2 = vector_v3 = vector_v2 = ''
             page = BeautifulSoup(response.text, 'html.parser')
-            for tag in page.find_all(href=re_compile('calculator')):
+            for tag in page.find_all():
                 if tag.attrs.get('data-testid') == 'vuln-cvssv3-base-score-link':
-                    score_v3 = float(tag.text.strip())
-                    severity_v3 = tag.find_next().text.lower()
-                elif tag.attrs.get('data-testid') == 'vuln-cvssv3-vector-link':
-                    vector_v3 = tag.text.strip()
+                    score_v3, severity_v3 = CVEcheckerTask._parse_severity_and_score(tag)
+                elif tag.attrs.get('data-testid') == 'vuln-cvssv3-vector':
+                    # I am prefixing CVSS:3.0 to preserve compatibility
+                    vector_v3 = "CVSS:3.0/{}".format(CVEcheckerTask._parse_vector(tag))
                 elif tag.attrs.get('data-testid') == 'vuln-cvssv2-base-score-link':
-                    score_v2 = float(tag.text.strip())
-                    severity_v2 = tag.find_next().text.lower()
-                elif tag.attrs.get('data-testid') == 'vuln-cvssv2-vector-link':
-                    vector_v2 = tag.text.strip().lstrip('(').rstrip(')')
+                    score_v2, severity_v2 = CVEcheckerTask._parse_severity_and_score(tag)
+                elif tag.attrs.get('data-testid') == 'vuln-cvssv2-vector':
+                    vector_v2 = CVEcheckerTask._parse_vector(tag)
             # Prefer CVSS v3.0 over v2
             score = score_v3 or score_v2
             severity = severity_v3 or severity_v2
