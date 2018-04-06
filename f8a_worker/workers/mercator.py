@@ -22,10 +22,11 @@ sample output:
  'version': '1.6.7.2'}
 """
 
-import os
 import json
-from selinon import FatalTaskError
+import os
 from tempfile import TemporaryDirectory
+
+from selinon import FatalTaskError
 
 from f8a_worker.base import BaseTask
 from f8a_worker.data_normalizer import DataNormalizer
@@ -146,7 +147,7 @@ class MercatorTask(BaseTask):
         elif requirements_txt:
             self.log.info('Only requirements.txt found, going to use it ...')
             requirements_txt['result']['requires_dist'] = \
-                requirements_txt['result'].pop('dependencies')
+                requirements_txt['result'].get('dependencies')
             ret = requirements_txt
 
         return ret
