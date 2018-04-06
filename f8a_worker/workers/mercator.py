@@ -22,10 +22,11 @@ sample output:
  'version': '1.6.7.2'}
 """
 
-import os
 import json
-from selinon import FatalTaskError
+import os
 from tempfile import TemporaryDirectory
+
+from selinon import FatalTaskError
 
 from f8a_worker.base import BaseTask
 from f8a_worker.data_normalizer import DataNormalizer
@@ -102,8 +103,9 @@ class MercatorTask(BaseTask):
                     elif not (item_in_egg or pkg_info_in_egg) and is_deeper(pkg_info, item):
                         # if none of them are in .egg-info, but current pkg_info is deeper
                         pkg_info = item
-            elif item['ecosystem'] == 'Python-RequirementsTXT' and is_deeper(pkg_info, item):
-                requirements_txt = item
+            elif item['ecosystem'] == 'Python-RequirementsTXT':
+                if not requirements_txt or is_deeper(requirements_txt, item):
+                    requirements_txt = item
 
         if pkg_info:
             self.log.info('Found PKG-INFO at {p}'.format(p=pkg_info['path']))
