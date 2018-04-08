@@ -61,8 +61,9 @@ class ReportGenerationTask(BaseTask):
         try:
             if sv.Version.coerce(libio_latest_version) >= sv.Version.coerce(latest_version):
                 latest_version = libio_latest_version
-        except ValueError:
-            self.log.error("Unexpected ValueError while selecting latest version!")
+        except ValueError as e:
+            self.log.error("Unexpected ValueError while selecting latest version: "
+                           "{}".format(e))
             latest_version = ''
         package_data.update({"latest_version": latest_version})
         self.log.debug("Parsed package data is: {}".format(package_data))
