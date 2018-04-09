@@ -148,7 +148,7 @@ class MercatorTask(BaseTask):
         elif requirements_txt:
             self.log.info('Only requirements.txt found, going to use it ...')
             requirements_txt['result']['requires_dist'] = \
-                requirements_txt['result'].pop('dependencies')
+                requirements_txt['result'].get('dependencies')
             ret = requirements_txt
 
         return ret
