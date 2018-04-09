@@ -36,14 +36,26 @@ push_image() {
     image_name=$(make get-image-name)
     image_repository=$(make get-image-repository)
     short_commit=$(git rev-parse --short=7 HEAD)
-    push_registry="push.registry.devshift.net"
 
-    # login first
-    if [ -n "${DEVSHIFT_USERNAME}" -a -n "${DEVSHIFT_PASSWORD}" ]; then
-        docker login -u ${DEVSHIFT_USERNAME} -p ${DEVSHIFT_PASSWORD} ${push_registry}
+    if [ "$TARGET" = "rhel" ]; then
+        if [ -z "${DOCKER_REGISTRY}" ]; then
+            echo "DOCKER_REGISTRY must be defined for TARGET=rhel" >&2
+            exit 1
+        fi
+
+        push_registry="${DOCKER_REGISTRY}"
     else
-        echo "Could not login, missing credentials for the registry"
-        exit 1
+        push_registry="push.registry.devshift.net"
+    fi
+
+    if [ "$TARGET" != "rhel" ]; then
+        # login first
+        if [ -n "${DEVSHIFT_USERNAME}" -a -n "${DEVSHIFT_PASSWORD}" ]; then
+            docker login -u ${DEVSHIFT_USERNAME} -p ${DEVSHIFT_PASSWORD} ${push_registry}
+        else
+            echo "Could not login, missing credentials for the registry"
+            exit 1
+        fi
     fi
 
     if [ -n "${ghprbPullId}" ]; then
