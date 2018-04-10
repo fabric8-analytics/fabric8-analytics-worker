@@ -11,7 +11,7 @@ from f8a_worker.schemas import SchemaRef
 from f8a_worker.solver import get_ecosystem_solver
 from f8a_worker.utils import json_serial
 
-gh_dep = regexp('@?[\w-]+/[\w-]+')
+gh_dep = regexp(r'@?[\w-]+/[\w-]+')
 
 
 class DependencySnapshotTask(BaseTask):

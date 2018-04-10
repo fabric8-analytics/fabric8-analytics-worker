@@ -18,10 +18,10 @@ from f8a_worker.utils import get_session_retry
 from f8a_worker.workers.stackaggregator_v2 import extract_user_stack_package_licenses
 
 
-danger_word_list = ["drop\(\)", "V\(\)", "count\(\)"]
+danger_word_list = [r"drop\(\)", r"V\(\)", r"count\(\)"]
 remove = '|'.join(danger_word_list)
 pattern = re.compile(r'(' + remove + ')', re.IGNORECASE)
-pattern_to_save = '[^\w\*\.Xx\-\>\=\<\~\^\|\/\:]'
+pattern_to_save = r'[^\w\*\.Xx\-\>\=\<\~\^\|\/\:]'
 pattern_n2_remove = re.compile(pattern_to_save)
 
 _logger = logging.getLogger(__name__)
