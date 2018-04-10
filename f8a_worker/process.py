@@ -473,6 +473,7 @@ class IndianaJones(object):
         """Fetch go artifact using 'go get' command."""
         env = dict(os.environ)
         env['GOPATH'] = target_dir
+        Git.config()
         TimedCommand.get_command_output(['go', 'get', '-d', name],
                                         timeout=300,
                                         env=env,
