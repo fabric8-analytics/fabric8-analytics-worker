@@ -547,6 +547,10 @@ class DataNormalizer(object):
 
         return transformed
 
+    def _handle_gradle(self, data):
+        """Handle gradle package metadata."""
+        pass
+
     def _handle_dotnet_solution(self, data):
         """Handle nuget package metadata."""
         # TODO: reduce cyclomatic complexity
@@ -634,7 +638,8 @@ class DataNormalizer(object):
                   'ruby': self._handle_rubygems,
                   'dotnetsolution': self._handle_dotnet_solution,
                   'gofedlib': self._handle_gofedlib,
-                  'go-glide': self._handle_go_glide}
+                  'go-glide': self._handle_go_glide,
+                  'gradle': self._handle_gradle}
 
         result = switch.get(data['ecosystem'].lower(), _passthrough)(data.get('result', {}))
         if result is None:
