@@ -149,19 +149,20 @@ class Git(object):
         self.add(self.repo_path)
         self.commit(message=message)
 
-    def archive(self, basename, sub_path=None):
+    def archive(self, basename, basedir=None, sub_path=None, format="tar.gz"):
         """Create an archive; simply calls `git archive`.
 
         :param basename: str, name of the resulting archive, without file extension (suffix)
+        :param basedir: str, path to a directory where to store the resulting archive
         :param sub_path: str, only add files found under this path to the archive;
                           default: add all files from the repository (.git/ is always excluded)
+        :param format: str, format of the resulting archive, default: 'tar.gz'
         :return: str, filename
         """
-        suffix = "tar.gz"
-        filename = basename + "." + suffix
+        filename = os.path.join(basedir or "", basename + "." + format)
         with cwd(self.repo_path):
             cmd = ["git", "archive",
-                   "--format={}".format(suffix),
+                   "--format={}".format(format),
                    "--output={}".format(filename),
                    "HEAD"]
             if sub_path:

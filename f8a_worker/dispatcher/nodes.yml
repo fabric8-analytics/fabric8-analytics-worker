@@ -298,6 +298,11 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_ReportGenerationTask_v0'
       storage: 'BayesianPostgres'
+    - name: 'VictimsCheck'
+      classname: 'VictimsCheck'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_VictimsCheck_v0'
 
   flows:
     - 'osioAnalysisFlow'
@@ -321,6 +326,7 @@
     - 'keywordsApiSummaryFlow'
     - 'keywordsPrioritySummaryFlow'
     - 'dependencyIngestFlow'
+    - 'victimsFlow'
 
   storages:
     - name: 'BayesianPostgres'
