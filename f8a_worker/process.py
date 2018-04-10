@@ -47,9 +47,10 @@ class Git(object):
 
         :param url: str
         :param path: str
+        :param timeout: int
         :param depth: str
         :param branch: str
-        :param timeout: int
+        :param single_branch: bool, only checkout single branch
         :return: instance of Git()
         """
         orig_url = url
