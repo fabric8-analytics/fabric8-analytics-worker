@@ -203,7 +203,7 @@ class Git(object):
 class Archive(object):
     """Extract different kind of archives."""
 
-    TarMatcher = re_compile('\.tar\..{1,3}$')
+    TarMatcher = re_compile(r'\.tar\..{1,3}$')
 
     @staticmethod
     def extract(target, dest):

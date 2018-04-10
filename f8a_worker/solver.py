@@ -667,7 +667,7 @@ class NugetDependencyParser(object):
             name, version_range = spec.split(' ', 1)
 
             # 1.0 -> 1.0≤x
-            if re.search('[,()\[\]]', version_range) is None:
+            if re.search(r'[,()\[\]]', version_range) is None:
                 dep = Dependency(name, [('>=', version_range)])
             # [1.0,2.0] -> 1.0≤x≤2.0
             elif re.fullmatch(r'\[(.+),(.+)\]', version_range):
@@ -965,7 +965,7 @@ class MavenSolver(object):
     def is_version_range(ver_spec):
         """Check whether ver_spec contains version range."""
         # http://maven.apache.org/enforcer/enforcer-rules/versionRanges.html
-        return re.search('[,()\[\]]', ver_spec) is not None
+        return re.search(r'[,()\[\]]', ver_spec) is not None
 
     def solve(self, dependencies):
         """Solve version ranges in dependencies."""

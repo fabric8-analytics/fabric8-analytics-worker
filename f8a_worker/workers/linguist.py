@@ -53,7 +53,7 @@ class LinguistTask(BaseTask):
             """Extract the language name: `language:   Python` -> `Python`."""
             return line.split(':', 1)[1].strip()
 
-        lines_matcher = re.compile('(\d+) lines \((\d+) sloc\)')
+        lines_matcher = re.compile(r'(\d+) lines \((\d+) sloc\)')
         m = lines_matcher.search(output[0])
         lines, sloc = 0, 0
         if m:

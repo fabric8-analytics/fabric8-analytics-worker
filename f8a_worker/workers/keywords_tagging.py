@@ -209,7 +209,7 @@ class PackageKeywordsTaggingTask(KeywordsTaggingTaskBase):
 
         if self.task_name == 'package_keywords_tagging':
             # We are tagging on package level, add also tags that are found in package name
-            name_parts = re.split('[\.\-_:]', arguments['name'])
+            name_parts = re.split(r'[.\-_:]', arguments['name'])
             self.log.debug("Computing keywords from package name %s", name_parts)
             details['package_name'] = keywords_lookup_text(" ".join(name_parts),
                                                            keywords_file=keywords_file_name,

@@ -61,7 +61,7 @@ class BinwalkTask(BaseTask):
         if not output:
             return None
         import re
-        matcher = re.compile('^\d{,8}\s*0x[A-Fa-f0-9]{,8}\s*(.*)$')
+        matcher = re.compile(r'^\d{,8}\s*0x[A-Fa-f0-9]{,8}\s*(.*)$')
         matched = []
         for line in output:
             match = matcher.match(line)
