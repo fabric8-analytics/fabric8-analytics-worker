@@ -108,6 +108,7 @@ class InitPackageFlow(BaseTask):
 
         # get rid of version if scheduled from the core analyses
         arguments.pop('version', None)
+        arguments.pop('document_id', None)
 
         db = self.storage.session
         try:
