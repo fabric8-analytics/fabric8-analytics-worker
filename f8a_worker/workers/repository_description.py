@@ -12,7 +12,7 @@ class RepositoryDescCollectorTask(BaseTask):
     add_audit_info = False
 
     _NPM_PACKAGE_URL = 'https://www.npmjs.com/package/{package}'
-    _PYPI_PACKAGE_URL = 'https://pypi.python.org/pypi/{package}'
+    _PYPI_PACKAGE_URL = 'https://pypi.org/project/{package}'
 
     @staticmethod
     def _scrape_page(url):
@@ -47,7 +47,7 @@ class RepositoryDescCollectorTask(BaseTask):
         :return: plain text description
         """
         url = self._PYPI_PACKAGE_URL.format(package=name)
-        content = self._scrape_page(url).find(id='content').find(class_='section')
+        content = self._scrape_page(url).find(class_='project-description')
 
         if not content:
             raise FatalTaskError("No content was found at '%s' for PyPI package '%s'", name)
