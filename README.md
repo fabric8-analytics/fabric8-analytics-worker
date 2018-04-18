@@ -99,3 +99,17 @@ When some changes are made to code that will change the docker image, it is good
 ```
 REBUILD=1 ./runtest.sh 
 ```
+
+## Coding standards
+
+
+- You can use scripts `run-linter.sh` and `check-docstyle.sh` to check if the code follows [PEP 8](https://www.python.org/dev/peps/pep-0008/) and [PEP 257](https://www.python.org/dev/peps/pep-0257/) coding standards. These scripts can be run w/o any arguments:
+
+```
+./run-linter.sh
+./check-docstyle.sh
+```
+
+The first script checks the indentation, line lengths, variable names, white space around operators etc. The second
+script checks all documentation strings - its presence and format. Please fix any warnings and errors reported by these
+scripts.
