@@ -547,9 +547,36 @@ class DataNormalizer(object):
 
         return transformed
 
+    @staticmethod
+    def _parse_gradle_dependencies(dependency_entry):
+        """Parse Gradle dependency entry"""
+        # I am not using our GAV converter since output coming mercator is rather broken
+        a = dict(groupId='', artifactId='', version='')
+
+        a['artifactId'] = dependency_entry.get('name')
+        a['groupId'] = dependency_entry.get('group')
+        a['version'] = dependency_entry.get('version')
+
+        if dependency_entry.get('name').count(':') == 2:
+            a['groupId'], a['artifactId'], a['version'] = dependency_entry.get('name').split(':')
+            a['groupId'] = a['groupId'].replace("\"", "")
+
+        return a
+
     def _handle_gradle(self, data):
         """Handle gradle package metadata."""
-        pass
+        ret = {}
+        build_dependencies = list()
+        for d in data.get('buildscript', {}).get('dependencies', {}):
+            build_dependencies.append(self._parse_gradle_dependencies(d))
+        ret['devel_dependencies'] = build_dependencies
+        dependencies = []
+        for d in data.get('subprojects', {}).get('dependencies', {}):
+            dependencies.append(self._parse_gradle_dependencies(d))
+        for d in data.get('dependencies', {}):
+            dependencies.append(self._parse_gradle_dependencies(d))
+        ret['dependencies'] = dependencies
+        return ret
 
     def _handle_dotnet_solution(self, data):
         """Handle nuget package metadata."""
@@ -639,7 +666,7 @@ class DataNormalizer(object):
                   'dotnetsolution': self._handle_dotnet_solution,
                   'gofedlib': self._handle_gofedlib,
                   'go-glide': self._handle_go_glide,
-                  'gradle': self._handle_gradle}
+                  'gradlebuild': self._handle_gradle}
 
         result = switch.get(data['ecosystem'].lower(), _passthrough)(data.get('result', {}))
         if result is None:
