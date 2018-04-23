@@ -235,6 +235,12 @@ class TestDataNormalizer(object):
         expected = self._load_json('pom-xml-expected')
         assert compare_dictionaries(self._dataNormalizer.handle_data(data['items'][0]), expected)
 
+    def test_transforming_gradle(self):
+        """Test normalizing of pom.xml data."""
+        data = self._load_json('gradle-from-mercator')
+        expected = self._load_json('gradle-expected')
+        assert compare_dictionaries(self._dataNormalizer.handle_data(data['items'][0]), expected)
+
     def test_transforming_nuspec(self):
         """Test normalizing of nuspec data."""
         data = self._load_json('nuspec-from-mercator')
