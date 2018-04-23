@@ -549,7 +549,7 @@ class DataNormalizer(object):
 
     @staticmethod
     def _parse_gradle_dependencies(dependency_entry):
-        """Parse Gradle dependency entry"""
+        """Parse Gradle dependency entry."""
         # I am not using our GAV converter since output coming mercator is rather broken
         a = dict(groupId='', artifactId='', version='')
 
