@@ -42,6 +42,10 @@ class GithubDependencyTreeTask(BaseTask):
             repo.reset(revision=github_sha, hard=True)
             with cwd(repo.repo_path):
                 # TODO: Make this task also work for files not present in root directory.
+
+                # First change the package-lock.json to npm-shrinkwrap.json
+                GithubDependencyTreeTask.change_package_lock_to_shrinkwrap()
+
                 if peek(Path.cwd().glob("pom.xml")):
                     return GithubDependencyTreeTask.get_maven_dependencies()
                 elif peek(Path.cwd().glob("npm-shrinkwrap.json")) \
@@ -144,3 +148,17 @@ class GithubDependencyTreeTask(BaseTask):
                                       package=name, version=version))
 
         return set_package_names
+
+    @staticmethod
+    def change_package_lock_to_shrinkwrap():
+        """Rename package-lock.json to npm-shrinkwrap.json.
+
+        For more information about package-lock.json please visit
+        https://docs.npmjs.com/files/package-lock.json
+        """
+        # TODO: Remove this method once mercator has support for package-lock.json
+
+        package_lock_path = Path.cwd() / "package-lock.json"
+
+        if package_lock_path.is_file():
+            package_lock_path.rename("npm-shrinkwrap.json")
