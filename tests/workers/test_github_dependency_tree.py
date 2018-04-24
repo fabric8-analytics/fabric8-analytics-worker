@@ -27,3 +27,18 @@ class TestGithubDependencyTreeTask(object):
                                             'maven:com.google.guava:guava:20.0',
                                             'maven:junit:junit:4.10'}
         assert expected_transitive_dependencies.issubset(obtained_dependencies)
+
+    @pytest.mark.usefixtures("npm")
+    def test_npm_repo_with_shrinkwrap(self):
+        args = {
+            'github_repo': 'https://github.com/abs51295/node-js-sample',
+            'github_sha': '01fe0580c697d34118baef3b9e5fe3edf64bc4e3',
+            'email_ids': 'dummy'
+        }
+        task = GithubDependencyTreeTask.create_test_instance(task_name='dependency_tree')
+        results = task.execute(args)
+
+        assert isinstance(results, dict)
+        assert set(results.keys()) == {'dependencies', 'github_repo', 'github_sha', 'email_ids'}
+        obtained_dependencies = set(results['dependencies'])
+        print("Obtained dependencies: ", obtained_dependencies)
