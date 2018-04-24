@@ -118,7 +118,7 @@ class GithubDependencyTreeTask(BaseTask):
             dependencies = dependency_tree_lock.get('dependencies')
 
             for dependency in dependencies:
-                transitive_deps = dependency.get('dependencies')
+                transitive_deps = dependency.get('dependencies', [])
                 name = dependency.get('name')
                 version = dependency.get('version')
                 dev_dependency = dependency.get('dev')
@@ -126,8 +126,8 @@ class GithubDependencyTreeTask(BaseTask):
                     set_package_names.add("{ecosystem}:{package}:{version}".format(ecosystem="npm",
                                           package=name, version=version))
 
-                if transitive_deps:
-                    t_dep = transitive_deps[0]
+                # There can be multiple transitive dependencies.
+                for t_dep in transitive_deps:
                     name = t_dep.get('name')
                     version = t_dep.get('version')
                     dev_dependency = dependency.get('dev')
