@@ -7,7 +7,7 @@ from functools import cmp_to_key
 import logging
 from lxml import etree
 from operator import itemgetter
-from pip.req.req_file import parse_requirements
+from pip._internal.req.req_file import parse_requirements
 from pip._vendor.packaging.specifiers import _version_split
 import re
 from requests import get

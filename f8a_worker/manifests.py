@@ -3,8 +3,8 @@
 from io import StringIO
 import json
 from lxml import etree
-from pip.req import parse_requirements
-from pip.exceptions import RequirementsFileParseError
+from pip._internal.req.req_file import parse_requirements
+from pip._internal.exceptions import RequirementsFileParseError
 import yaml
 
 _registered_manifest_descriptors = []
