@@ -31,7 +31,6 @@ from f8a_worker.workers.mercator import MercatorTask
 from f8a_worker.workers.oscryptocatcher import OSCryptoCatcherTask
 from f8a_worker.workers.recommender import RecommendationTask, RecommendationV2Task
 from f8a_worker.workers.report_generation import ReportGenerationTask
-from f8a_worker.workers.gemini_report_notifier import GeminiNotifierTask
 from f8a_worker.workers.repository_description import RepositoryDescCollectorTask
 from f8a_worker.workers.result_collector import ResultCollector, PackageResultCollector
 from f8a_worker.workers.stackaggregator import StackAggregatorTask
