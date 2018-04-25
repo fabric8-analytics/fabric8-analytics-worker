@@ -3,14 +3,16 @@
 """Base class for PostgreSQL related adapters."""
 
 import os
+
+from selinon import DataStorage
 from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
-from selinon import DataStorage
-from f8a_worker.models import Ecosystem
 
+from f8a_worker.errors import TaskAlreadyExistsError
+from f8a_worker.models import Ecosystem
 
 Base = declarative_base()
 
@@ -85,9 +87,9 @@ class PostgresBase(DataStorage):
             self.connect()
 
         try:
-            record = PostgresBase.session.query(self.query_table).\
-                                          filter_by(worker_id=task_id).\
-                                          one()
+            record = PostgresBase.session.query(self.query_table). \
+                filter_by(worker_id=task_id). \
+                one()
         except (NoResultFound, MultipleResultsFound):
             raise
         except SQLAlchemyError:
@@ -144,6 +146,9 @@ class PostgresBase(DataStorage):
         """
         if task_name in ('InitPackageFlow', 'InitAnalysisFlow'):
             raise NotImplementedError()
+
+        if issubclass(exc_info[0], TaskAlreadyExistsError):
+            return
 
         # Sanity checks
         if not self.is_connected():

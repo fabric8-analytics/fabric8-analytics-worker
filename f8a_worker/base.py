@@ -7,6 +7,8 @@ from celery.utils.log import get_task_logger
 from f8a_worker.defaults import configuration
 from selinon import SelinonTask, FatalTaskError
 from datetime import datetime
+
+from f8a_worker.errors import TaskAlreadyExistsError
 from f8a_worker.schemas import load_worker_schema, set_schema_ref
 from f8a_worker.utils import json_serial
 from f8a_worker.object_cache import ObjectCache
@@ -47,7 +49,8 @@ class BaseTask(SelinonTask):
         # messages of a type, give up immediately
         if self.storage and isinstance(self.storage, (BayesianPostgres, PackagePostgres)):
             if self.storage.get_worker_id_count(self.task_id) > 0:
-                raise FatalTaskError("Task with ID '%s' was already processed" % self.task_id)
+                raise TaskAlreadyExistsError("Task with ID '%s'"
+                                             " was already processed" % self.task_id)
 
         start = datetime.utcnow()
         try:
