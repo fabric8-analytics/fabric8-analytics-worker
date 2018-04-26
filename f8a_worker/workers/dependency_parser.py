@@ -1,4 +1,4 @@
-"""Output: TBD."""
+"""Output: List of direct and indirect dependencies."""
 
 import re
 from pathlib import Path
@@ -35,7 +35,11 @@ class GithubDependencyTreeTask(BaseTask):
     def extract_dependencies(github_repo, github_sha):
         """Extract the dependencies information.
 
-        Currently assuming repository is maven/npm repository.
+        Currently assuming repository is maven/npm/python repository.
+
+        :param github_repo: repository url
+        :param github_sha: commit hash
+        :return: set of direct (and indirect) dependencies
         """
         with TemporaryDirectory() as workdir:
             repo = Git.clone(url=github_repo, path=workdir, timeout=3600)
@@ -51,14 +55,17 @@ class GithubDependencyTreeTask(BaseTask):
                 elif peek(Path.cwd().glob("npm-shrinkwrap.json")) \
                         or peek(Path.cwd().glob("package.json")):
                     return GithubDependencyTreeTask.get_npm_dependencies(repo.repo_path)
+                elif peek(Path.cwd().glob("requirements.txt")):
+                    return GithubDependencyTreeTask.get_python_dependencies(repo.repo_path)
                 else:
-                    raise TaskError("Please provide maven or npm repository for scanning!")
+                    raise TaskError("Please provide maven or npm or "
+                                    "python repository for scanning!")
 
     @staticmethod
     def get_maven_dependencies():
         """Get direct and indirect dependencies from pom.xml by using maven dependency tree plugin.
 
-        :return: a list of direct and indirect dependencies
+        :return: set of direct and indirect dependencies
         """
         output_file = Path.cwd() / "dependency-tree.txt"
         cmd = ["mvn", "org.apache.maven.plugins:maven-dependency-plugin:3.0.2:tree",
@@ -79,6 +86,9 @@ class GithubDependencyTreeTask(BaseTask):
 
         For available representations of dependency tree see
         http://maven.apache.org/plugins/maven-dependency-plugin/tree-mojo.html#outputType
+
+        :param dependency_tree: DOT representation of maven dependency tree
+        :return: set of direct and indirect dependencies
         """
         dot_file_parser_regex = re.compile('"(.*?)"')
         set_pom_names = set()
@@ -107,7 +117,7 @@ class GithubDependencyTreeTask(BaseTask):
         and provides only the list of direct dependencies.
 
         :param path: path to run the mercator
-        :return: list of direct (and indirect) dependencies
+        :return: set of direct (and indirect) dependencies
         """
         mercator_output = cls._mercator.run_mercator(arguments={"ecosystem": "npm"},
                                                      cache_path=path,
@@ -146,6 +156,31 @@ class GithubDependencyTreeTask(BaseTask):
                 name, version = dependency.split()
                 set_package_names.add("{ecosystem}:{package}:{version}".format(ecosystem="npm",
                                       package=name, version=version))
+
+        return set_package_names
+
+    @classmethod
+    def get_python_dependencies(cls, path):
+        """Get a list of direct and indirect dependencies from requirements.txt.
+
+        To get a list of direct and transitive dependencies the requirements.txt
+        file has to be generated through `pip-compile` else only direct dependencies
+        can be extracted.
+
+        :param path: path to run the mercator
+        :return: set of direct (and indirect) dependencies
+        """
+        mercator_output = cls._mercator.run_mercator(arguments={"ecosystem": "pypi"},
+                                                     cache_path=path,
+                                                     resolve_poms=False)
+
+        set_package_names = set()
+        mercator_output_details = mercator_output['details'][0]
+        dependencies = mercator_output_details.get('dependencies', [])
+        for dependency in dependencies:
+            name, version = dependency.split("==")
+            set_package_names.add("{ecosystem}:{package}:{version}".format(ecosystem="pypi",
+                                  package=name, version=version))
 
         return set_package_names
 
