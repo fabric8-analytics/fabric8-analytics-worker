@@ -28,6 +28,28 @@ class TestGithubDependencyTreeTask(object):
                                             'maven:junit:junit:4.10'}
         assert expected_transitive_dependencies.issubset(obtained_dependencies)
 
+    @pytest.mark.usefixtures("pypi")
+    def test_python_requirements_txt(self):
+        """Test python repository with requirements.txt."""
+        args = {
+            "github_repo": "https://github.com/abs51295/status-api",
+            "github_sha": "229f47d3a634ae6a6e660228c7ceaeb70bb4cfaa",
+            "email_ids": "dummy"
+        }
+        task = GithubDependencyTreeTask.create_test_instance(task_name='dependency_tree')
+        results = task.execute(args)
+        assert isinstance(results, dict)
+        assert set(results.keys()) == {'dependencies', 'github_repo', 'github_sha', 'email_ids'}
+        obtained_dependencies = set(results['dependencies'])
+        expected_dependencies = {'pypi:py-zabbix:1.1.0', 'pypi:uwsgi:2.0.15',
+                                 'pypi:werkzeug:0.14.1', 'pypi:jinja2:2.10',
+                                 'pypi:flask:0.12.1', 'pypi:click:6.7',
+                                 'pypi:six:1.11.0', 'pypi:aniso8601:3.0.0',
+                                 'pypi:itsdangerous:0.24', 'pypi:markupsafe:1.0',
+                                 'pypi:flask-restful:0.3.5', 'pypi:pytz:2018.4'}
+
+        assert obtained_dependencies == expected_dependencies
+
     @pytest.mark.usefixtures("npm")
     def test_npm_repo_with_package_lock(self):
         """Test npm repository with package-lock.json."""
