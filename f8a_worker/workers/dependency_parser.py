@@ -176,7 +176,7 @@ class GithubDependencyTreeTask(BaseTask):
 
         set_package_names = set()
         mercator_output_details = mercator_output['details'][0]
-        dependencies = mercator_output_details.get('dependencies')
+        dependencies = mercator_output_details.get('dependencies', [])
         for dependency in dependencies:
             name, version = dependency.split("==")
             set_package_names.add("{ecosystem}:{package}:{version}".format(ecosystem="pypi",
