@@ -217,16 +217,20 @@ class GithubDependencyTreeTask(BaseTask):
                 for sub_package in sub_packages:
                     # Ignore sub-packages like '.', '..', '...' etc.
                     if sub_package != len(sub_package) * '.':
-                        # We need to come up with a unified format of how sub-packages are presented.
+                        # We need to come up with a unified format
+                        # of how sub-packages are presented.
                         sub_package_name = name + '/{}'.format(sub_package)
-                        set_package_names.add("{ecosystem}:{package}:{version}".format(ecosystem="go",
-                                              package=sub_package_name, version=version))
+                        set_package_names.add("{ecosystem}:{package}:{version}"
+                                              .format(ecosystem="go",
+                                                      package=sub_package_name, version=version))
                     else:
-                        set_package_names.add("{ecosystem}:{package}:{version}".format(ecosystem="go",
-                                              package=name, version=version))
+                        set_package_names.add("{ecosystem}:{package}:{version}"
+                                              .format(ecosystem="go",
+                                                      package=name, version=version))
             else:
-                set_package_names.add("{ecosystem}:{package}:{version}".format(ecosystem="go",
-                                      package=name, version=version))
+                set_package_names.add("{ecosystem}:{package}:{version}"
+                                      .format(ecosystem="go",
+                                              package=name, version=version))
 
         return set_package_names
 
@@ -250,14 +254,17 @@ class GithubDependencyTreeTask(BaseTask):
                     # Ignore sub-packages like '.', '..', '...' etc.
                     if sub_package != len(sub_package) * '.':
                         sub_package_name = name + '/{}'.format(sub_package)
-                        set_package_names.add("{ecosystem}:{package}:{version}".format(ecosystem="go",
-                                              package=sub_package_name, version=version))
+                        set_package_names.add("{ecosystem}:{package}:{version}"
+                                              .format(ecosystem="go",
+                                                      package=sub_package_name, version=version))
                     else:
-                        set_package_names.add("{ecosystem}:{package}:{version}".format(ecosystem="go",
-                                              package=name, version=version))
+                        set_package_names.add("{ecosystem}:{package}:{version}"
+                                              .format(ecosystem="go",
+                                                      package=name, version=version))
             else:
-                set_package_names.add("{ecosystem}:{package}:{version}".format(ecosystem="go",
-                                      package=name, version=version))
+                set_package_names.add("{ecosystem}:{package}:{version}"
+                                      .format(ecosystem="go",
+                                              package=name, version=version))
 
         return set_package_names
 
