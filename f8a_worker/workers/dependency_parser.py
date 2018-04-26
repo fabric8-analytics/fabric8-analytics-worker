@@ -1,6 +1,7 @@
 """Output: List of direct and indirect dependencies."""
 
 import re
+import anymarkup
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -57,9 +58,13 @@ class GithubDependencyTreeTask(BaseTask):
                     return GithubDependencyTreeTask.get_npm_dependencies(repo.repo_path)
                 elif peek(Path.cwd().glob("requirements.txt")):
                     return GithubDependencyTreeTask.get_python_dependencies(repo.repo_path)
+                elif peek(Path.cwd().glob("glide.lock")):
+                    return GithubDependencyTreeTask.get_go_glide_dependencies(repo.repo_path)
+                elif peek(Path.cwd().glob("Gopkg.lock")):
+                    return GithubDependencyTreeTask.get_go_pkg_dependencies()
                 else:
                     raise TaskError("Please provide maven or npm or "
-                                    "python repository for scanning!")
+                                    "python or Go repository for scanning!")
 
     @staticmethod
     def get_maven_dependencies():
@@ -181,6 +186,85 @@ class GithubDependencyTreeTask(BaseTask):
             name, version = dependency.split("==")
             set_package_names.add("{ecosystem}:{package}:{version}".format(ecosystem="pypi",
                                   package=name, version=version))
+
+        return set_package_names
+
+    @classmethod
+    def get_go_glide_dependencies(cls, path):
+        """Get all direct and transitive dependencies by parsing glide.lock.
+
+        :param path: path to run the mercator
+        :return: set of direct and indirect dependencies
+        """
+        mercator_output = cls._mercator.run_mercator(arguments={"ecosystem": "go"},
+                                                     cache_path=path,
+                                                     resolve_poms=False)
+
+        set_package_names = set()
+
+        mercator_output_details = mercator_output['details'][0]
+        dependency_tree_lock = mercator_output_details \
+            .get('_dependency_tree_lock')
+
+        dependencies = dependency_tree_lock.get('dependencies')
+
+        for dependency in dependencies:
+            sub_packages = dependency.get('subpackages')
+            name = dependency.get('name')
+            version = dependency.get('version')
+
+            if sub_packages:
+                for sub_package in sub_packages:
+                    # Ignore sub-packages like '.', '..', '...' etc.
+                    if sub_package != len(sub_package) * '.':
+                        # We need to come up with a unified format
+                        # of how sub-packages are presented.
+                        sub_package_name = name + '/{}'.format(sub_package)
+                        set_package_names.add("{ecosystem}:{package}:{version}"
+                                              .format(ecosystem="go",
+                                                      package=sub_package_name, version=version))
+                    else:
+                        set_package_names.add("{ecosystem}:{package}:{version}"
+                                              .format(ecosystem="go",
+                                                      package=name, version=version))
+            else:
+                set_package_names.add("{ecosystem}:{package}:{version}"
+                                      .format(ecosystem="go",
+                                              package=name, version=version))
+
+        return set_package_names
+
+    @staticmethod
+    def get_go_pkg_dependencies():
+        """Get all direct and indirect dependencies by parsing Gopkg.lock.
+
+        :return: set of direct and indirect dependencies
+        """
+        # TODO: Run mercator instead of this custom parsing logic, once mercator supports this.
+        set_package_names = set()
+        lock_file_contents = anymarkup.parse_file('Gopkg.lock', format='toml')
+        packages = lock_file_contents.get('projects')
+        for package in packages:
+            name = package.get('name')
+            sub_packages = package.get('packages')
+            version = package.get('revision')
+
+            if sub_packages:
+                for sub_package in sub_packages:
+                    # Ignore sub-packages like '.', '..', '...' etc.
+                    if sub_package != len(sub_package) * '.':
+                        sub_package_name = name + '/{}'.format(sub_package)
+                        set_package_names.add("{ecosystem}:{package}:{version}"
+                                              .format(ecosystem="go",
+                                                      package=sub_package_name, version=version))
+                    else:
+                        set_package_names.add("{ecosystem}:{package}:{version}"
+                                              .format(ecosystem="go",
+                                                      package=name, version=version))
+            else:
+                set_package_names.add("{ecosystem}:{package}:{version}"
+                                      .format(ecosystem="go",
+                                              package=name, version=version))
 
         return set_package_names
 
