@@ -20,7 +20,7 @@ class CVEDBSyncTask(BaseTask):
         :return: generator of e:p:v
         """
         to_scan = []
-        for ecosystem in ['npm', 'nuget']:
+        for ecosystem in ['nuget']:
             ecosystem_solver = get_ecosystem_solver(self.storage.get_ecosystem(ecosystem),
                                                     with_parser=OSSIndexDependencyParser())
             self.log.debug("Retrieving new %s vulnerabilities from OSS Index", ecosystem)

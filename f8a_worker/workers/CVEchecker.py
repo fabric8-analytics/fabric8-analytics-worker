@@ -1,21 +1,11 @@
 """Security issues scanner."""
 
-import anymarkup
 from bs4 import BeautifulSoup
-from glob import glob
-import os
-from re import compile as re_compile
 import requests
-from shutil import rmtree, copy
-from tempfile import gettempdir, TemporaryDirectory
-from selinon import StoragePool, FatalTaskError, RequestError
+from selinon import RequestError
 from f8a_worker.base import BaseTask
-from f8a_worker.defaults import configuration
-from f8a_worker.errors import TaskError
-from f8a_worker.object_cache import ObjectCache
 from f8a_worker.schemas import SchemaRef
 from f8a_worker.solver import get_ecosystem_solver, OSSIndexDependencyParser
-from f8a_worker.utils import TimedCommand
 from f8a_worker.victims import VictimsDB
 
 
@@ -168,158 +158,37 @@ class CVEcheckerTask(BaseTask):
                 'status': 'success',
                 'details': list(entries.values())}
 
-    def _npm_scan(self, arguments):
-        """Get vulnerabilities info about given npm package."""
-        return self._query_ossindex(arguments)
-
-    @staticmethod
-    def update_depcheck_db_on_s3():
-        """Update OWASP Dependency-check DB on S3."""
-        s3 = StoragePool.get_connected_storage('S3VulnDB')
-        depcheck = configuration.dependency_check_script_path
-        with TemporaryDirectory() as temp_data_dir:
-            s3.retrieve_depcheck_db_if_exists(temp_data_dir)
-            old_java_opts = os.getenv('JAVA_OPTS', '')
-            os.environ['JAVA_OPTS'] = CVEcheckerTask.dependency_check_jvm_mem_limit
-            # give DependencyCheck 25 minutes to download the DB
-            if TimedCommand.get_command_output([depcheck, '--updateonly', '--data', temp_data_dir],
-                                               timeout=1500):
-                s3.store_depcheck_db(temp_data_dir)
-            os.environ['JAVA_OPTS'] = old_java_opts
-
-    def _run_owasp_dep_check(self, scan_path, experimental=False):
-        """Run OWASP Dependency-Check."""
-        def _clean_dep_check_tmp():
-            for dcdir in glob(os.path.join(gettempdir(), 'dctemp*')):
-                rmtree(dcdir)
-
-        s3 = StoragePool.get_connected_storage('S3VulnDB')
-        depcheck = configuration.dependency_check_script_path
-        with TemporaryDirectory() as temp_data_dir:
-            if not s3.retrieve_depcheck_db_if_exists(temp_data_dir):
-                self.log.debug('No cached OWASP Dependency-Check DB, generating fresh now ...')
-                self.update_depcheck_db_on_s3()
-                s3.retrieve_depcheck_db_if_exists(temp_data_dir)
-
-            report_path = os.path.join(temp_data_dir, 'report.xml')
-            command = [depcheck,
-                       '--noupdate',
-                       '--format', 'XML',
-                       '--project', 'CVEcheckerTask',
-                       '--data', temp_data_dir,
-                       '--scan', scan_path,
-                       '--out', report_path]
-            if experimental:
-                command.extend(['--enableExperimental'])
-            for suppress_xml in glob(os.path.join(os.environ['OWASP_DEP_CHECK_SUPPRESS_PATH'],
-                                                  '*.xml')):
-                command.extend(['--suppress', suppress_xml])
-
-            output = []
-            old_java_opts = os.getenv('JAVA_OPTS', '')
-            try:
-                self.log.debug('Running OWASP Dependency-Check to scan %s for vulnerabilities' %
-                               scan_path)
-                os.environ['JAVA_OPTS'] = CVEcheckerTask.dependency_check_jvm_mem_limit
-                output = TimedCommand.get_command_output(command,
-                                                         graceful=False,
-                                                         timeout=600)  # 10 minutes
-                with open(report_path) as r:
-                    report_dict = anymarkup.parse(r.read())
-            except (TaskError, FileNotFoundError) as e:
-                _clean_dep_check_tmp()
-                for line in output:
-                    self.log.warning(line)
-                self.log.exception(str(e))
-                raise FatalTaskError('OWASP Dependency-Check scan failed') from e
-            finally:
-                os.environ['JAVA_OPTS'] = old_java_opts
-            _clean_dep_check_tmp()
-
-        results = []
-        dependencies = report_dict.get('analysis', {}).get('dependencies')  # value can be None
-        dependencies = dependencies.get('dependency', []) if dependencies else []
-        if not isinstance(dependencies, list):
-            dependencies = [dependencies]
-        for dependency in dependencies:
-            vulnerabilities = dependency.get('vulnerabilities')  # value can be None
-            vulnerabilities = vulnerabilities.get('vulnerability', []) if vulnerabilities else []
-            if not isinstance(vulnerabilities, list):
-                vulnerabilities = [vulnerabilities]
-            for vulnerability in vulnerabilities:
-                av = vulnerability.get('cvssAccessVector')
-                av = av[0] if av else '?'
-                ac = vulnerability.get('cvssAccessComplexity')
-                ac = ac[0] if ac else '?'
-                au = vulnerability.get('cvssAuthenticationr')
-                au = au[0] if au else '?'
-                c = vulnerability.get('cvssConfidentialImpact')
-                c = c[0] if c else '?'
-                i = vulnerability.get('cvssIntegrityImpact')
-                i = i[0] if i else '?'
-                a = vulnerability.get('cvssAvailabilityImpact')
-                a = a[0] if a else '?'
-                vector = "AV:{AV}/AC:{AC}/Au:{Au}/C:{C}/I:{Integrity}/A:{A}".\
-                    format(AV=av, AC=ac, Au=au, C=c, Integrity=i, A=a)
-                result = {
-                    'cvss': {
-                        'score': vulnerability.get('cvssScore'),
-                        'vector': vector
-                    }
-                }
-                references = vulnerability.get('references', {}).get('reference', [])
-                if not isinstance(references, list):
-                    references = [references]
-                result['references'] = [r.get('url') for r in references]
-                for field in ['severity', 'description']:
-                    result[field] = vulnerability.get(field)
-                result['id'] = vulnerability.get('name')
-                results.append(result)
-
-        return {'summary': [r['id'] for r in results],
-                'status': 'success',
-                'details': results}
-
     @staticmethod
     def update_victims_cve_db_on_s3():
         """Update Victims CVE DB on S3."""
         with VictimsDB.build_from_git() as db:
             db.store_on_s3()
 
-    def _run_victims_cve_db_cli(self, arguments):
-        """Run Victims CVE DB CLI."""
-        s3 = StoragePool.get_connected_storage('S3VulnDB')
-        output = []
-
-        with TemporaryDirectory() as temp_victims_db_dir:
-            if not s3.retrieve_victims_db_if_exists(temp_victims_db_dir):
+    def _query_victims(self, arguments, ecosystem):
+        """Check EPV with VictimsDB."""
+        db = None
+        try:
+            db = VictimsDB.from_s3()
+            if not db:
                 self.log.debug('No Victims CVE DB found on S3, cloning from github')
-                self.update_victims_cve_db_on_s3()
-                s3.retrieve_victims_db_if_exists(temp_victims_db_dir)
+                db = VictimsDB.build_from_git()
+                db.store_on_s3()
 
-            try:
-                cli = os.path.join(temp_victims_db_dir, 'victims-cve-db-cli.py')
-                command = [cli, 'search',
-                           '--ecosystem', 'java',
-                           '--name', arguments['name'],
-                           '--version', arguments['version']]
-                output = TimedCommand.get_command_output(command,
-                                                         graceful=False,
-                                                         is_json=True,
-                                                         timeout=60)  # 1 minute
-            except TaskError as e:
-                self.log.exception(e)
+            return db.get_vulnerabilities_for_epv(ecosystem,
+                                                  arguments['name'],
+                                                  arguments['version'])
+        finally:
+            if db:
+                db.close()
 
-        return output
-
-    def _maven_scan(self, arguments):
+    def _victims_scan(self, arguments, ecosystem):
         """Run Victims CVE DB CLI."""
         results = {
             'summary': [],
             'status': 'success',
             'details': []
         }
-        victims_cve_db_results = self._run_victims_cve_db_cli(arguments)
+        victims_cve_db_results = self._query_victims(arguments, ecosystem)
         for vulnerability in victims_cve_db_results:
             vulnerability = self._filter_victims_db_entry(vulnerability)
             if not vulnerability:
@@ -328,38 +197,6 @@ class CVEcheckerTask(BaseTask):
                 results['summary'].append(vulnerability['id'])
                 results['details'].append(vulnerability)
         return results
-
-    def _python_scan(self, arguments):
-        """Run OWASP dependency-check experimental analyzer for Python artifacts.
-
-        https://jeremylong.github.io/DependencyCheck/analyzers/python.html
-        """
-        extracted_tarball = ObjectCache.get_from_dict(arguments).get_extracted_source_tarball()
-        # depcheck needs to be pointed to a specific file, we can't just scan whole directory
-        egg_info = pkg_info = metadata = None
-        for root, _, files in os.walk(extracted_tarball):
-            if root.endswith('.egg-info') or root.endswith('.dist-info'):
-                egg_info = root
-            if 'PKG-INFO' in files:
-                pkg_info = os.path.join(root, 'PKG-INFO')
-            if 'METADATA' in files:
-                metadata = os.path.join(root, 'METADATA')
-        scan_path = egg_info or pkg_info or metadata
-        if pkg_info and not egg_info:
-            # Work-around for dependency-check ignoring PKG-INFO outside .dist-info/
-            # https://github.com/jeremylong/DependencyCheck/issues/896
-            egg_info_dir = os.path.join(extracted_tarball, arguments['name'] + '.egg-info')
-            try:
-                os.mkdir(egg_info_dir)
-                copy(pkg_info, egg_info_dir)
-                scan_path = egg_info_dir
-            except os.error:
-                self.log.warning('Failed to copy %s to %s', pkg_info, egg_info_dir)
-
-        if not scan_path:
-            raise FatalTaskError('File types not supported by OWASP dependency-check')
-
-        return self._run_owasp_dep_check(scan_path, experimental=True)
 
     def _nuget_scan(self, arguments):
         """Get vulnerabilities info about given nuget package."""
@@ -375,12 +212,8 @@ class CVEcheckerTask(BaseTask):
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))
 
-        if arguments['ecosystem'] == 'maven':
-            return self._maven_scan(arguments)
-        elif arguments['ecosystem'] == 'npm':
-            return self._npm_scan(arguments)
-        elif arguments['ecosystem'] == 'pypi':
-            return self._python_scan(arguments)
+        if arguments['ecosystem'] in ('maven', 'pypi', 'npm'):
+            return self._victims_scan(arguments, arguments['ecosystem'])
         elif arguments['ecosystem'] == 'nuget':
             return self._nuget_scan(arguments)
         else:

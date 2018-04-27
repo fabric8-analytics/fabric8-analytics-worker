@@ -8,7 +8,7 @@ def test_get_vulnerable_packages(victims_zip):
     """Test VictimsCheck.get_vulnerable_packages()."""
     with VictimsDB.from_zip(victims_zip) as db:
         task = VictimsCheck.create_test_instance()
-        packages = task.get_vulnerable_packages(db)
+        packages = task.get_vulnerable_packages(db, 'maven')
         assert len(packages) == 2
 
         expected_packages = [
@@ -34,7 +34,7 @@ def test_mark_in_graph(victims_zip, mocker):
 
     with VictimsDB.from_zip(victims_zip) as db:
         task = VictimsCheck.create_test_instance()
-        packages = task.get_vulnerable_packages(db)
-        task.mark_in_graph(packages)
+        packages = task.get_vulnerable_packages(db, 'maven')
+        task.mark_in_graph(packages, 'maven')
 
     assert graph_mock.call_count == vuln_count
