@@ -76,6 +76,3 @@ target/
 *.swo
 *.swp
 .idea/*
-
-# RHEL Dockerfile generated from a template
-Dockerfile.rhel
