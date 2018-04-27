@@ -13,7 +13,7 @@ def test_java_vulnerabilities(victims_zip):
 def test_get_vulnerable_java_packages(victims_zip):
     """Test VictimsDB.get_vulnerable_java_packages()."""
     with VictimsDB.from_zip(victims_zip) as db:
-        vulns = [x for x in db.get_vulnerable_java_packages()]
+        vulns = [x for x in db.get_details_for_ecosystem('maven')]
         assert len(vulns) == 3
 
         expected_packages = [

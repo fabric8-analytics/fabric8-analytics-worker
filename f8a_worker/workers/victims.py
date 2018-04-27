@@ -8,10 +8,7 @@ from selinon import run_flow
 
 
 class VictimsCheck(BaseTask):
-    """Victims CVE Check task.
-
-    Only for Maven at the moment.
-    """
+    """Victims CVE Check task."""
 
     def execute(self, arguments):
         """Task to analyze vulnerable packages and mark them in graph as such.
@@ -19,39 +16,44 @@ class VictimsCheck(BaseTask):
         :param arguments: dictionary with task arguments
         :return: None
         """
+        self._strict_assert(arguments.get('ecosystem'))
+        ecosystem = arguments.get('ecosystem')
+
         with VictimsDB.build_from_git() as db:
 
             self.log.info('Storing the VictimsDB zip on S3')
             db.store_on_s3()
 
-            vulnerable_packages = self.get_vulnerable_packages(db)
-            self.analyze_vulnerable_components(vulnerable_packages)
+            vulnerable_packages = self.get_vulnerable_packages(db, ecosystem)
+            self.analyze_vulnerable_components(vulnerable_packages, ecosystem)
 
-            self.mark_in_graph(vulnerable_packages)
+            self.mark_in_graph(vulnerable_packages, ecosystem)
 
-    def get_vulnerable_packages(self, db):
+    def get_vulnerable_packages(self, db, ecosystem):
         """Get vulnerable packages.
 
         Constructs a dict where keys are package names
         and values are details about vulnerabilities.
 
         :param db: VictimsDB
+        :param ecosystem: str, ecosystem
         :return: dict, a dict of vulnerable packages with details
         """
         vulnerable_packages = {}
-        for pkg in db.get_vulnerable_java_packages():
+        for pkg in db.get_details_for_ecosystem(ecosystem):
             ga = pkg['package']
             ga_data = vulnerable_packages.get(ga, [])
             ga_data.append(pkg)
             vulnerable_packages[ga] = ga_data
         return vulnerable_packages
 
-    def analyze_vulnerable_components(self, vulnerable_packages):
+    def analyze_vulnerable_components(self, vulnerable_packages, ecosystem):
         """Make sure we have all packages with known vulnerabilities ingested.
 
         Runs non-forced bayesianPriorityFlow analysis.
 
         :param vulnerable_packages: dict, a dict of vulnerable packages with details
+        :param ecosystem: str, ecosystem
         :return: None
         """
         for ga, data in vulnerable_packages.items():
@@ -59,7 +61,7 @@ class VictimsCheck(BaseTask):
                 versions = data[0].get('affected', []) + data[0].get('not_affected', [])
                 for version in versions:
                     node_args = {
-                        'ecosystem': 'maven',
+                        'ecosystem': ecosystem,
                         'force': False,
                         'force_graph_sync': False,
                         'name': ga,
@@ -70,10 +72,11 @@ class VictimsCheck(BaseTask):
                                   "with known vulnerabilities: {ga}:{v}".format(ga=ga, v=version))
                     run_flow('bayesianPriorityFlow', node_args)
 
-    def mark_in_graph(self, vulnerable_packages):
+    def mark_in_graph(self, vulnerable_packages, ecosystem):
         """Mark vulnerable components in graph.
 
         :param vulnerable_packages: dict, a dict of vulnerable packages with details
+        :param ecosystem: str, ecosystem
         :return: None
         """
         packages = {}
@@ -102,4 +105,4 @@ class VictimsCheck(BaseTask):
                 self.log.info('Marking {ga}:{v} as vulnerable in graph: {vulns}'.format(
                     ga=ga, v=version, vulns=str(cves))
                 )
-                update_properties('maven', ga, version, properties)
+                update_properties(ecosystem, ga, version, properties)

@@ -10,6 +10,7 @@ from f8a_worker.enums import EcosystemBackend
 from f8a_worker.models import Base, Ecosystem, create_db_scoped_session
 from f8a_worker.setup_celery import get_dispatcher_config_files
 from f8a_worker.storages import AmazonS3
+from f8a_worker.victims import VictimsDB
 from selinon import Config
 
 # To use fixtures from this file, either name them as an input argument or use 'usefixtures' marker
@@ -115,3 +116,12 @@ def victims_zip():
     victims_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/victimsdb/')
     archive = shutil.make_archive(dbzip, 'zip', victims_dir)
     return archive
+
+
+@pytest.fixture()
+def victims_zip_s3():
+    """Upload VictimsDB zip file to S3."""
+    dispatcher_setup()
+    archive = victims_zip()
+    with VictimsDB.from_zip(archive) as db:
+        db.store_on_s3()

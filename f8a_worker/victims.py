@@ -4,6 +4,7 @@ import zipfile
 import tempfile
 import os
 import logging
+import requests
 from lxml import etree
 from yaml import YAMLError, safe_load
 from selinon import StoragePool
@@ -26,13 +27,26 @@ class VictimsDB(object):
 
     ARCHIVE_NAME = 'victims-cve-db.zip'
 
+    ECOSYSTEM_MAP = {
+        'maven': 'java',
+        'pypi': 'python',
+        'npm': 'javascript'
+    }
+
     def __init__(self, db_path, _cleanup=True):
         """Construct VictimsDB."""
         self._java_vulnerabilities = []
         self._python_vulnerabilities = []
+        self._javascript_vulnerabilities = []
         self._db_path = db_path
+
         self._java_versions_cache = {}
+        self._python_versions_cache = {}
+        self._javascript_versions_cache = {}
+
         self._cleanup = _cleanup  # perform clean up?
+
+        self._read_db()
 
     def close(self):
         """Perform cleanup."""
@@ -42,10 +56,34 @@ class VictimsDB(object):
     @property
     def java_vulnerabilities(self):
         """Yield Java vulnerabilities, one at a time."""
-        if not self._java_vulnerabilities:
-            self._read_db()
         for vulnerability in self._java_vulnerabilities:
             yield vulnerability
+
+    @property
+    def python_vulnerabilities(self):
+        """Yield Python vulnerabilities, one at a time."""
+        for vulnerability in self._python_vulnerabilities:
+            yield vulnerability
+
+    @property
+    def javascript_vulnerabilities(self):
+        """Yield JavaScript vulnerabilities, one at a time."""
+        for vulnerability in self._javascript_vulnerabilities:
+            yield vulnerability
+
+    def get_vulnerabilities_for_epv(self, ecosystem, package, version):
+        """Get list of vulnerabilities for given EPV."""
+        all_vulnerabilities = self.get_vulnerabilities_for_ecosystem(ecosystem)
+        package = package.strip().lower()
+
+        vulnerabilities = []
+        for vulnerability in all_vulnerabilities:
+            for affected in vulnerability.get('affected', []):
+                norm_affected = self._get_package_name(ecosystem, affected).lower()
+                if norm_affected == package and \
+                   self.is_version_affected(affected.get('version', []), version):
+                    vulnerabilities.append(vulnerability)
+        return vulnerabilities
 
     def _read_db(self):
         with zipfile.ZipFile(self._db_path) as zipf:
@@ -55,20 +93,35 @@ class VictimsDB(object):
                 stream = zipf.read(zip_info)
                 try:
                     vulnerability = safe_load(stream)
-                    # Only Java/Maven is supported at the moment
                     if zip_info.filename.startswith('database/java/'):
                         self._java_vulnerabilities.append(vulnerability)
+                    if zip_info.filename.startswith('database/python/'):
+                        self._python_vulnerabilities.append(vulnerability)
+                    if zip_info.filename.startswith('database/javascript/'):
+                        self._javascript_vulnerabilities.append(vulnerability)
                 except YAMLError:
                     logger.exception('Failed to load YAML file: {f}'.format(f=zip_info.filename))
 
-    def get_vulnerable_java_packages(self):
-        """Yield simplified details about Java vulnerable packages."""
-        for vulnerability in self.java_vulnerabilities:
-            for affected in vulnerability.get('affected', []):
-                ga = '{g}:{a}'.format(g=affected.get('groupId'),
-                                      a=affected.get('artifactId'))
+    def get_vulnerabilities_for_ecosystem(self, ecosystem):
+        """Get all vulnerabilities for given ecosystem."""
+        if ecosystem == 'maven':
+            return self.java_vulnerabilities
+        elif ecosystem == 'pypi':
+            return self.python_vulnerabilities
+        elif ecosystem == 'npm':
+            return self.javascript_vulnerabilities
+        else:
+            raise ValueError('Unsupported ecosystem: {e}'.format(e=ecosystem))
 
-                all_versions = self.get_package_versions(ga)
+    def get_details_for_ecosystem(self, ecosystem):
+        """Yield simplified details about vulnerable packages from given ecosystem."""
+        vulnerabilities = self.get_vulnerabilities_for_ecosystem(ecosystem)
+
+        for vulnerability in vulnerabilities:
+            for affected in vulnerability.get('affected', []):
+                package_name = self._get_package_name(ecosystem, affected)
+
+                all_versions = self._get_package_versions(ecosystem, package_name)
                 try:
                     affected_versions = [x for x in all_versions
                                          if self.is_version_affected(affected.get('version'), x)]
@@ -80,7 +133,7 @@ class VictimsDB(object):
                 not_affected_versions = list(set(all_versions) - set(affected_versions))
 
                 yield {
-                    'package': ga,
+                    'package': package_name,
                     'cve_id': 'CVE-' + vulnerability.get('cve'),
                     'cvss_v2': vulnerability.get('cvss_v2'),
                     'cvss_v3': vulnerability.get('cvss_v3'),
@@ -88,19 +141,33 @@ class VictimsDB(object):
                     'not_affected': not_affected_versions
                 }
 
-    def get_package_versions(self, ga):
-        """Get all versions for given groupId:artifactId.
+    def _get_package_name(self, ecosystem, affected):
+        if ecosystem == 'maven':
+            return '{g}:{a}'.format(g=affected.get('groupId').strip(),
+                                    a=affected.get('artifactId').strip())
+        return affected.get('name').strip()
 
-        Only Maven is supported at the moment.
+    def _get_package_versions(self, ecosystem, package_name):
+        """Get all versions for given package name.
 
-        :param ga: str, package name in form of groupId:artifactId
+        :param package_name: str, package name
         :return: list of all package versions
         """
-        cached = self._java_versions_cache.get(ga)
+        if ecosystem == 'maven':
+            return self._get_maven_versions(package_name)
+        if ecosystem == 'pypi':
+            return self._get_pypi_versions(package_name)
+        if ecosystem == 'npm':
+            return self._get_npm_versions(package_name)
+        return []
+
+    def _get_maven_versions(self, package_name):
+        """Get all versions for given Maven package."""
+        cached = self._java_versions_cache.get(package_name)
         if cached is not None:
             return cached
 
-        g, a = ga.split(':')
+        g, a = package_name.split(':')
         g = g.replace('.', '/')
 
         metadata_filenames = {'maven-metadata.xml', 'maven-metadata-local.xml'}
@@ -124,9 +191,39 @@ class VictimsDB(object):
             logger.error('Unable to obtain a list of versions for {ga}'.format(ga=ga))
 
         versions = list(versions)
-        self._java_versions_cache[ga] = versions
+        self._java_versions_cache[package_name] = versions
 
         return versions
+
+    def _get_pypi_versions(self, package_name):
+        """Get all versions for given Python package."""
+        pypi_package_url = 'https://pypi.python.org/pypi/{pkg_name}/json'.format(
+            pkg_name=package_name
+        )
+
+        response = requests.get(pypi_package_url)
+        if response.status_code != 200:
+            logger.error('Unable to obtain a list of versions for {pkg_name}'.format(
+                pkg_name=package_name
+            ))
+            return []
+
+        return list({x for x in response.json().get('releases', {})})
+
+    def _get_npm_versions(self, package_name):
+        """Get all versions for given NPM package."""
+        url = 'https://registry.npmjs.org/{pkg_name}'.format(pkg_name=package_name)
+
+        response = requests.get(url)
+
+        if response.status_code != 200:
+            logger.error('Unable to fetch versions for package {pkg_name}'.format(
+                pkg_name=package_name
+            ))
+            return []
+
+        versions = {x for x in response.json().get('versions')}
+        return list(versions)
 
     @staticmethod
     def is_version_affected(affected_versions, checked_version):
@@ -197,11 +294,12 @@ class VictimsDB(object):
     @classmethod
     def from_s3(cls):
         """Retrieve the database from S3."""
-        db_path = tempfile.mkstemp(prefix='victims-db-')
+        db_path = tempfile.mkstemp(prefix='victims-db-')[1]
         try:
             s3 = StoragePool.get_connected_storage('S3VulnDB')
-            if s3.object_exists(cls.ARCHIVE_NAME):
-                s3.retrieve_file(cls.ARCHIVE_NAME, db_path)
+            if not s3.object_exists(cls.ARCHIVE_NAME):
+                return None
+            s3.retrieve_file(cls.ARCHIVE_NAME, db_path)
             return cls(db_path=db_path)
         except Exception:
             os.remove(db_path)
