@@ -1,11 +1,12 @@
+REGISTRY?=registry.devshift.net
+REPOSITORY?=bayesian/cucos-worker
+DEFAULT_TAG=latest
+
 ifeq ($(TARGET), rhel)
     DOCKERFILE := Dockerfile.rhel
 else
     DOCKERFILE := Dockerfile
 endif
-
-REPOSITORY?=bayesian/cucos-worker
-DEFAULT_TAG=latest
 
 .PHONY: all docker-build fast-docker-build test get-image-name get-image-repository
 
