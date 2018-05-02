@@ -2,12 +2,6 @@
 
 REGISTRY="push.registry.devshift.net"
 
-if [ "$TARGET" = "rhel" ]; then
-    IMAGE_URL=${REGISTRY}/osio-prod/${image_repository}
-else
-    IMAGE_URL=${REGISTRY}/${image_repository}
-fi
-
 load_jenkins_vars() {
     if [ -e "jenkins-env" ]; then
         cat jenkins-env \
@@ -52,6 +46,12 @@ push_image() {
     image_name=$(make get-image-name)
     image_repository=$(make get-image-repository)
     short_commit=$(git rev-parse --short=7 HEAD)
+
+    if [ "$TARGET" = "rhel" ]; then
+        IMAGE_URL="${REGISTRY}/osio-prod/${image_repository}"
+    else
+        IMAGE_URL="${REGISTRY}/${image_repository}"
+    fi
 
     if [ -n "${ghprbPullId}" ]; then
         # PR build
