@@ -1,4 +1,4 @@
-FROM prod.registry.devshift.net/osio-prod/fabric8-analytics/f8a-worker-base:bfb2ff4
+FROM prod.registry.devshift.net/osio-prod/fabric8-analytics/f8a-worker-base:0bcf081
 
 ENV LANG=en_US.UTF-8 \
     # place where to download & unpack artifacts
