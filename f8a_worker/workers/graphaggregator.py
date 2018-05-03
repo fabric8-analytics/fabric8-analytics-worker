@@ -37,6 +37,7 @@ class GraphAggregatorTask(BaseTask):
         :param arguments: dictionary with task arguments
         :return: {}, results
         """
+        # TODO: reduce cyclomatic complexity
         self._strict_assert(arguments.get('data'))
         self._strict_assert(arguments.get('external_request_id'))
 

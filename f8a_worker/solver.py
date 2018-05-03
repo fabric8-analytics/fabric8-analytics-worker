@@ -662,6 +662,7 @@ class NugetDependencyParser(object):
         :param specs:  list of dependencies (strings)
         :return: list of Dependency
         """
+        # TODO: reduce cyclomatic complexity
         deps = []
         for spec in specs:
             name, version_range = spec.split(' ', 1)

@@ -320,6 +320,7 @@ class GraphDB:
         4. Dependents Count in Github Manifest Data
         5. Github Release Date
         """
+        # TODO: reduce cyclomatic complexity
         pkg_dict = defaultdict(dict)
         new_dict = defaultdict(dict)
         filtered_comp_list = []
@@ -781,6 +782,7 @@ class RecommendationV2Task(BaseTask):
 
     def execute(self, parguments=None):
         """Execute task."""
+        # TODO: reduce cyclomatic complexity
         arguments = self.parent_task_result('GraphAggregatorTask')
         results = arguments['result']
 

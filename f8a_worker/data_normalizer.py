@@ -109,6 +109,7 @@ class DataNormalizer(object):
 
     def _handle_javascript(self, data):
         """Handle Javascript package (package.json) analysis data."""
+        # TODO: reduce cyclomatic complexity
         key_map = ((('license', 'licenses',), 'declared_licenses'),
                    ('_dependency_tree_lock_file', '_dependency_tree_lock'), ('homepage',),
                    ('version',),
@@ -416,6 +417,7 @@ class DataNormalizer(object):
 
     def _handle_rubygems(self, data):
         """Handle metadata from rubygems` metadata.yaml."""
+        # TODO: reduce cyclomatic complexity
         key_map = (('author',), ('authors',), ('email',), ('name',), ('version',), ('homepage',),
                    (('license', 'licenses',), 'declared_licenses'),
                    ('dependencies',), ('devel_dependencies',), ('description',),
@@ -547,6 +549,7 @@ class DataNormalizer(object):
 
     def _handle_dotnet_solution(self, data):
         """Handle nuget package metadata."""
+        # TODO: reduce cyclomatic complexity
         if not data.get('Metadata'):
             return {}
         data = data['Metadata']
