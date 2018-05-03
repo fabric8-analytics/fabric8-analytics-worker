@@ -50,6 +50,7 @@ class TestMercator(object):
     @pytest.mark.usefixtures("no_s3_connection")
     def test_execute_maven(self, maven):
         """Test the MercatorTask for the Maven ecosystem."""
+        # TODO: reduce cyclomatic complexity
         pom_path = str(Path(__file__).parent.parent / 'data/maven/com.networknt/mask/pom.xml')
         name = 'com.networknt:mask'
         version = '1.1.0'
