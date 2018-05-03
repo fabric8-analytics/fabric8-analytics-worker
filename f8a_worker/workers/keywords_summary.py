@@ -42,6 +42,7 @@ class KeywordsSummaryTask(BaseTask):
 
     def _threshold_found_keywords(self, keywords):
         """Threshold found keywords based on keywords source priority and resulting count."""
+        # TODO: reduce cyclomatic complexity
         readme_kw = {kw: s * self._README_PRIORITY
                      for kw, s in keywords.get('package', {}).get('README', {}).items()}
         repository_description_kw = {kw: s * self._REPOSITORY_DESCRIPTION_PRIORITY

@@ -32,6 +32,7 @@ class CVEcheckerTask(BaseTask):
     @staticmethod
     def get_cve_impact(cve_id):
         """Get more details about cve_id from NVD."""
+        # TODO: reduce cyclomatic complexity
         score = 0
         vector = ''
         severity = ''

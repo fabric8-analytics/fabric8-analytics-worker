@@ -57,6 +57,7 @@ def test_offline_csmock_tool():
 
 def test_csmock_worker(tmpdir):
     """Start the CsmockTask with package from PyPi and check its result."""
+    # TODO: reduce cyclomatic complexity
     six_tb_url = "https://pypi.python.org/packages/b3/b2/" + \
         "238e2590826bfdd113244a40d9d3eb26918bd798fc187e2360a8367068db/six-1.10.0.tar.gz"
     tb_path = os.path.join(str(tmpdir), "six-1.10.0.tar.gz")

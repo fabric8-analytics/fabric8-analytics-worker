@@ -25,6 +25,7 @@ class TestLinguist(object):
     @pytest.mark.usefixtures("no_s3_connection")
     def test_execute(self, tmpdir):
         """Start the LinguistTask worker task and check its results."""
+        # TODO: reduce cyclomatic complexity
         IndianaJones.fetch_artifact(
             ecosystem=ECOSYSTEM, artifact=MODULE_NAME,
             version=MODULE_VERSION, target_dir=str(tmpdir))

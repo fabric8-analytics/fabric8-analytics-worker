@@ -536,6 +536,7 @@ def parse_gh_repo(potential_url):
     Notably, the Github repo *must* have exactly username and reponame, nothing else and nothing
     more. E.g. `github.com/<username>/<reponame>/<something>` is *not* recognized.
     """
+    # TODO: reduce cyclomatic complexity
     if not potential_url:
         return None
 

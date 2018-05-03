@@ -25,6 +25,7 @@ class AmazonS3(DataStorage):
                  region_name=None, endpoint_url=None, use_ssl=False, encryption=None,
                  versioned=None):
         """Initialize object, setup connection to the AWS S3."""
+        # TODO: reduce cyclomatic complexity
         # Priority for configuration options:
         #   1. environment variables
         #   2. arguments passed to constructor

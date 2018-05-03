@@ -19,6 +19,7 @@ class CVEDBSyncTask(BaseTask):
         :param only_already_scanned: include already scanned components only
         :return: generator of e:p:v
         """
+        # TODO: reduce cyclomatic complexity
         to_scan = []
         for ecosystem in ['nuget']:
             ecosystem_solver = get_ecosystem_solver(self.storage.get_ecosystem(ecosystem),

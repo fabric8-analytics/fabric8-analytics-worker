@@ -155,6 +155,7 @@ def _extract_unknown_licenses(license_service_output):
     :param license_service_output: output of license analysis REST service
     :return: list of packages with unknown licenses and/or conflicting licenses
     """
+    # TODO: reduce cyclomatic complexity
     really_unknown_licenses = []
     lic_conflict_licenses = []
     if not license_service_output:

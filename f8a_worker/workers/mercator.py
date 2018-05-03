@@ -63,6 +63,7 @@ class MercatorTask(BaseTask):
         return requires
 
     def _merge_python_items(self, topdir, data):
+        # TODO: reduce cyclomatic complexity
         metadata_json = None
         pkg_info = None
         requirements_txt = None
@@ -199,6 +200,7 @@ class MercatorTask(BaseTask):
     def run_mercator(self, arguments, cache_path,
                      keep_path=False, outermost_only=True, timeout=300, resolve_poms=True):
         """Run mercator tool."""
+        # TODO: reduce cyclomatic complexity
         result_data = {'status': 'unknown',
                        'summary': [],
                        'details': []}
