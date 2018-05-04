@@ -1,16 +1,16 @@
 """Core classes for working with git, archives and downloading of artifacts."""
+import glob
+import logging
+import string
+from pathlib import Path
+from urllib.parse import urljoin, urlparse
 
 import os
-import glob
-import shutil
-import logging
 import requests
-
-from git2json.parser import parse_commits
+import shutil
 from git2json import run_git_log
-from pathlib import Path
+from git2json.parser import parse_commits
 from re import compile as re_compile
-from urllib.parse import urljoin, urlparse
 
 from f8a_worker.defaults import configuration
 from f8a_worker.enums import EcosystemBackend
@@ -145,7 +145,7 @@ class Git(object):
         #  directions that would break adding (e.g. Flask 0.10 contains .git with gitpath
         #  pointing to Mitsuhiko's home dir)
         TimedCommand.get_command_output(['find', self.repo_path, '-mindepth', '2', '-name', '.git',
-                                        '-exec', 'rm', '-rf', '{}', ';'])
+                                         '-exec', 'rm', '-rf', '{}', ';'])
         # add everything
         self.add(self.repo_path)
         self.commit(message=message)
@@ -362,8 +362,14 @@ class IndianaJones(object):
         #      └── package.tgz
         # 3 directories, 6 files
         name_ver = name
+        npm_command = ['npm', 'show', name_ver, 'versions', '--json']
+        version_list = TimedCommand.get_command_output(npm_command, graceful=False, is_json=True)
         if version:
-            name_ver = "{}@{}".format(name, version)
+            if version not in version_list:
+                raise ValueError("Provided version is not supported '%s'" % name)
+            else:
+                name_ver = "{}@{}".format(name, version)
+
         # make sure the artifact is not in the cache yet
         TimedCommand.get_command_output(['npm', 'cache', 'clean', name], graceful=False)
         logger.info("downloading npm module %s", name_ver)
