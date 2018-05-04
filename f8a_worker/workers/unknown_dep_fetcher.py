@@ -45,8 +45,8 @@ class UnknownDependencyFetcherTask(BaseTask):
                                "with status code as {status_code}"
                                .format(dependency=dependency, status_code=graph_req.status_code))
 
-        self.log.debug("Known dependencies are: {}".format(dep_pkg_list_known))
-        self.log.debug("Unknown dependencies are: {}".format(dep_pkg_list_unknown))
+        self.log.info("Known dependencies are: {}".format(dep_pkg_list_known))
+        self.log.info("Unknown dependencies are: {}".format(dep_pkg_list_unknown))
         return dep_pkg_list_unknown
 
     def execute(self, arguments=None):

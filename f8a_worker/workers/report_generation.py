@@ -110,7 +110,7 @@ class ReportGenerationTask(BaseTask):
         resolved_dependencies = arguments.get('dependencies')
         self.log.debug("Resolved dependencies are: {}".format(resolved_dependencies))
         dependency_list = self._get_dependency_data(dependencies=resolved_dependencies)
-        self.log.debug("Result returned by Report Generation task is: {}".format(dependency_list))
+        self.log.info("Result returned by Report Generation task is: {}".format(dependency_list))
         arguments.update({"external_request_id": arguments.get('github_sha')})
         return {"dependencies": dependency_list, "git_url": arguments.get('github_repo'),
                 "scanned_at": strftime("%Y-%m-%dT%H:%M:%S", gmtime())}
