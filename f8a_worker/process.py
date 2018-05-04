@@ -245,7 +245,13 @@ class Archive(object):
     @staticmethod
     def extract_tar(target, dest):
         """Extract target tarball into dest using system 'tar' command."""
-        TimedCommand.get_command_output(['tar', 'xf', target, '-C', dest])
+        TimedCommand.get_command_output(['tar', "--delay-directory-restore", '-xf', target, '-C',
+                                         dest])
+
+    @staticmethod
+    def fix_permissions(target):
+        """Fix extracted folder permissions, so it will be readable for user."""
+        TimedCommand.get_command_output(['chmod', "-R", "u+rwx", target])
 
     @staticmethod
     def extract_gem(target, dest):
@@ -379,6 +385,7 @@ class IndianaJones(object):
         # digest was different then of a tarball downloaded directly from registry.npmjs.org.
         digest = compute_digest(artifact_path)
         Archive.extract(artifact_path, target_dir)
+        Archive.fix_permissions(os.path.join(cache_abs_path, 'package'))
 
         # copy package/package.json over the extracted one,
         # because it contains (since npm >= 2.x.x) more information.
