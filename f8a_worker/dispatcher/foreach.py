@@ -107,7 +107,6 @@ def iter_unknown_dependencies(storage_pool, node_args):
     # Be safe here as fatal errors will cause errors in Dispatcher
     try:
         aggregated = storage_pool.get('UnknownDependencyFetcherTask')
-        postgres = storage_pool.get_connected_storage('BayesianPostgres')
 
         arguments = []
         for element in aggregated["result"]:
@@ -120,12 +119,14 @@ def iter_unknown_dependencies(storage_pool, node_args):
                 name = epv[1]
                 version = epv[2]
             analysis_arguments = _create_analysis_arguments(ecosystem, name, version)
-            analysis_arguments.update({"recursive_limit": 0})
+            # TODO: Remove force=True once data-importer is smart enough
+            # to ingest missing packages from s3.
+            analysis_arguments.update({"recursive_limit": 0, "force": True})
             arguments.append(analysis_arguments)
 
         print('Arguments appended: %s' % ', '.join(str(item) for item in arguments))
         logger.info("Arguments for next flows: %s" % str(arguments))
         return arguments
-    except Exception:
-        logger.exception("Failed to collect unknown dependencies")
+    except Exception as e:
+        logger.exception("Failed to collect unknown dependencies due to {}".format(e))
         return []
