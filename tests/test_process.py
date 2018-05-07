@@ -3,8 +3,11 @@
 from pathlib import Path
 import pytest
 import subprocess
+import requests
+import tempfile
+import shutil
 
-from f8a_worker.process import Git, IndianaJones
+from f8a_worker.process import Git, IndianaJones, Archive
 from f8a_worker.errors import TaskError
 
 
@@ -146,3 +149,19 @@ class TestIndianaJones(object):
         path = Path(path)
         assert path.name == '{}.tar.gz'.format(version)
         assert path.exists()
+
+
+class TestArchive(object):
+    """Test Archive class."""
+
+    @pytest.mark.fail(raises=PermissionError)
+    def test_for_archive_create_by_root(self):
+        """Test extracting archives created by root."""
+        response = requests.get("https://registry.npmjs.org/ajax-worker/-/ajax-worker-1.2.3.tgz")
+        with tempfile.NamedTemporaryFile(suffix=".tgz") as package, tempfile.TemporaryDirectory() \
+                as extracted:
+            package.write(response.content)
+            Archive.extract(package.name, extracted)
+            with pytest.raises(PermissionError):
+                shutil.rmtree(extracted)
+            Archive.fix_permissions(extracted + "/package")
