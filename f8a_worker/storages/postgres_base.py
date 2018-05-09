@@ -6,7 +6,7 @@ import os
 
 from selinon import DataStorage
 from sqlalchemy import create_engine
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
@@ -128,7 +128,7 @@ class PostgresBase(DataStorage):
             PostgresBase.session.rollback()
             raise
 
-    def store_error(self, node_args, flow_name, task_name, task_id, exc_info):
+    def store_error(self, node_args, flow_name, task_name, task_id, exc_info, result=None):
         """Store error info to the Postgress database.
 
         Note: We do not store errors in init tasks.
@@ -154,11 +154,15 @@ class PostgresBase(DataStorage):
         if not self.is_connected():
             self.connect()
 
-        res = self._create_result_entry(node_args, flow_name, task_name, task_id, result=None,
+        res = self._create_result_entry(node_args, flow_name, task_name, task_id, result=result,
                                         error=True)
         try:
             PostgresBase.session.add(res)
             PostgresBase.session.commit()
+        except IntegrityError:
+            # the result has been already stored before the error occurred
+            # hence there is no reason to re-raise
+            PostgresBase.session.rollback()
         except SQLAlchemyError:
             PostgresBase.session.rollback()
             raise
