@@ -2,6 +2,7 @@
 
 """Base class for selinon tasks."""
 
+import sys
 import jsonschema
 from celery.utils.log import get_task_logger
 from f8a_worker.defaults import configuration
@@ -39,6 +40,29 @@ class BaseTask(SelinonTask):
         if not assert_cond:
             raise FatalTaskError("Strict assert failed in task '%s'" % cls.__name__)
 
+    @staticmethod
+    def _add_audit_info(task_result: dict,
+                        task_start: datetime,
+                        task_end: datetime,
+                        node_args):
+        """Add the audit and release information to the result dictionary.
+
+        :param task_result: dict, task result
+        :param task_start: datetime, the start of the task
+        :param task_end: datetime, the end of the task
+        :param node_args: arguments passed to flow/node
+        """
+        task_result['_audit'] = {
+            'started_at': json_serial(task_start),
+            'ended_at': json_serial(task_end),
+            'version': 'v1'
+        }
+
+        ecosystem_name = node_args.get('ecosystem')
+        task_result['_release'] = '{}:{}:{}'.format(ecosystem_name,
+                                                    node_args.get('name'),
+                                                    node_args.get('version'))
+
     def run(self, node_args):
         """To be transparently called by Selinon.
 
@@ -55,9 +79,36 @@ class BaseTask(SelinonTask):
         start = datetime.utcnow()
         try:
             result = self.execute(node_args)
+
+        except Exception as exc:
+            if self.add_audit_info:
+                # `_audit` key is added to every analysis info submitted
+                end = datetime.utcnow()
+                result = dict()
+
+                self._add_audit_info(
+                    task_result=result,
+                    task_start=start,
+                    task_end=end,
+                    node_args=node_args,
+                )
+
+                # write the audit info to the storage
+                self.storage.store_error(
+                    node_args=node_args,
+                    flow_name=self.flow_name,
+                    task_name=self.task_name,
+                    task_id=self.task_id,
+                    exc_info=sys.exc_info(),
+                    result=result
+                )
+
+            raise exc
+
         finally:
             # remove all files that were downloaded for this task
             ObjectCache.wipe()
+
         end = datetime.utcnow()
 
         if result:
@@ -70,16 +121,13 @@ class BaseTask(SelinonTask):
 
         if self.add_audit_info:
             # `_audit` key is added to every analysis info submitted
-            result['_audit'] = {
-                    'started_at': json_serial(start),
-                    'ended_at': json_serial(end),
-                    'version': 'v1'
-            }
+            self._add_audit_info(
+                task_result=result,
+                task_start=start,
+                task_end=end,
+                node_args=node_args,
+            )
 
-            ecosystem_name = node_args.get('ecosystem')
-            result['_release'] = '{}:{}:{}'.format(ecosystem_name,
-                                                   node_args.get('name'),
-                                                   node_args.get('version'))
         return result
 
     @classmethod
