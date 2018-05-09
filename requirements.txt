@@ -61,4 +61,4 @@ xmltodict==0.11.0         # via anymarkup
 radon==2.0.0
 
 # Celery debugging
-watchdog
+watchdog==0.8.3
