@@ -47,7 +47,10 @@ objects:
           - name: WORKER_RUN_DB_MIGRATIONS
             value: "${WORKER_RUN_DB_MIGRATIONS}"
           - name: SENTRY_DSN
-            value: "${SENTRY_DSN}"
+            valueFrom:
+              secretKeyRef:
+                name: worker 
+                key: sentry_dsn
           - name: POSTGRESQL_DATABASE
             valueFrom:
               secretKeyRef:
