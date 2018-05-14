@@ -67,7 +67,7 @@ class F8AConfiguration(object):
     SCANCODE_PROCESSES = environ.get('SCANCODE_PROCESSES', '1')  # scancode's default is 1
     SCANCODE_PATH = environ.get('SCANCODE_PATH', '/opt/scancode-toolkit/')
     SCANCODE_IGNORE = ['*.pyc', '*.so', '*.dll', '*.rar', '*.jar',
-                       '*.zip', '*.tar', '*.tar.gz', '*.tar.xz']  # don't scan binaries
+                       '*.zip', '*.tar', '*.tar.gz', '*.tar.xz', '*.png']  # don't scan binaries
 
     # AWS S3
     AWS_S3_REGION = environ.get('AWS_S3_REGION')
