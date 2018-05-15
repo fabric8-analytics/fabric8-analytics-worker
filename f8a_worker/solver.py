@@ -267,7 +267,7 @@ class NugetReleasesFetcher(ReleasesFetcher):
         page = BeautifulSoup(page.text, 'html.parser')
         version_history = page.find(class_="version-history")
         for version in version_history.find_all(href=re.compile('/packages/')):
-            version_text = version.text.replace('(current version)', '').strip()
+            version_text = version.text.replace('(current)', '').strip()
             try:
                 semver_version.coerce(version_text)
                 downloads = int(version.find_next('td').text.strip().replace(',', ''))
