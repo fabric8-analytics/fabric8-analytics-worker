@@ -5,7 +5,6 @@ from f8a_worker.workers.bigquery_gh import BigQueryTask
 from f8a_worker.workers.binwalk import BinwalkTask
 from f8a_worker.workers.bookkeeper import BookkeeperTask
 from f8a_worker.workers.code_metrics import CodeMetricsTask
-from f8a_worker.workers.csmock_worker import CsmockTask
 from f8a_worker.workers.cvedbsync import CVEDBSyncTask
 from f8a_worker.workers.dependency_parser import GithubDependencyTreeTask
 from f8a_worker.workers.dependency_snapshot import DependencySnapshotTask
