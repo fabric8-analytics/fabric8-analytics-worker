@@ -3,7 +3,6 @@
 from f8a_worker.workers.CVEchecker import CVEcheckerTask
 from f8a_worker.workers.binwalk import BinwalkTask
 from f8a_worker.workers.bookkeeper import BookkeeperTask
-from f8a_worker.workers.code_metrics import CodeMetricsTask
 from f8a_worker.workers.cvedbsync import CVEDBSyncTask
 from f8a_worker.workers.dependency_parser import GithubDependencyTreeTask
 from f8a_worker.workers.dependency_snapshot import DependencySnapshotTask
