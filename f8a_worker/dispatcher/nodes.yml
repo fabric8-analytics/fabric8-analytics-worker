@@ -168,10 +168,6 @@
       import: 'f8a_worker.workers'
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_PackageResultCollector_v0'
-    - name: 'BigQueryTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_BigQueryTask_v0'
     - name: 'CVEDBSyncTask'
       import: 'f8a_worker.workers'
       max_retry: 0
@@ -301,7 +297,6 @@
     - 'bayesianApiFlow'
     - 'bayesianPriorityFlow'
     - 'bayesianAnalysisFlow'
-    - 'bigQueryFlow'
     - 'stackApiGraphFlow'
     - 'stackApiGraphV2Flow'
     - 'livenessFlow'
@@ -349,15 +344,6 @@
         region_name: 'us-east-1'
         encryption: false
         versioned: false
-
-    - name: 'S3BigQuery'
-      import: 'f8a_worker.storages'
-      configuration:
-        <<: *configurationS3
-        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-big-query'
-        region_name: 'us-east-1'
-        encryption: false
-        versioned: true
 
     - name: 'S3Data'
       import: 'f8a_worker.storages'

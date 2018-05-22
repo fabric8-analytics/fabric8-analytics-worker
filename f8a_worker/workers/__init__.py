@@ -1,7 +1,6 @@
 """Import all tasks."""
 
 from f8a_worker.workers.CVEchecker import CVEcheckerTask
-from f8a_worker.workers.bigquery_gh import BigQueryTask
 from f8a_worker.workers.binwalk import BinwalkTask
 from f8a_worker.workers.bookkeeper import BookkeeperTask
 from f8a_worker.workers.code_metrics import CodeMetricsTask
