@@ -215,6 +215,8 @@ class TestDataNormalizer(object):
          {'dependencies': ["escape-html 1.0.1"]}),
         ({'devDependencies': {'mocha': '~2.0.0'}},
          {'devel_dependencies': ['mocha ~2.0.0']}),
+        ({'author': {'name': 'Santa Claus', 'email': 'santa@SantaClaus.com'}, 'engines': '8.6'},
+         {'author': 'Santa Claus <santa@SantaClaus.com>', 'engines': {}}),
     ])
     def test_transforming_javascript_data(self, data, expected):
         """Test normalizing of npm package metadata."""

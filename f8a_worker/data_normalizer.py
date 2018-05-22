@@ -124,7 +124,6 @@ class DataNormalizer(object):
             return list(filter(None, iterable))
 
         base = self.transform_keys(data, key_map)
-
         # {'url': 'https://github.com/o/p/issues',
         #  'email': 'project@name.com'} -> 'https://github.com/o/p/issues <project@name.com>'
         if isinstance(base.get('bug_reporting'), dict):
@@ -227,8 +226,13 @@ class DataNormalizer(object):
                         base['engines'][name] = operator_version
         elif isinstance(engines, str):
             # 'node 4.2.3' -> {"node": "4.2.3"}
-            name, version = engines.split()
-            base['engines'] = {name: version}
+            try:
+                name, version = engines.split()
+                base['engines'] = {name: version}
+            except ValueError:
+                # For malformed data: '8.3' -> {}
+                base['engines'] = {}
+
         if base['engines'] is not None:
             for name, version_spec in base['engines'].items():
                 if ' ' in version_spec:

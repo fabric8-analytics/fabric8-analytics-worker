@@ -1,16 +1,16 @@
 """Core classes for working with git, archives and downloading of artifacts."""
+import glob
+import logging
+import string
+from pathlib import Path
+from urllib.parse import urljoin, urlparse
 
 import os
-import glob
-import shutil
-import logging
 import requests
-
-from git2json.parser import parse_commits
+import shutil
 from git2json import run_git_log
-from pathlib import Path
+from git2json.parser import parse_commits
 from re import compile as re_compile
-from urllib.parse import urljoin, urlparse
 
 from f8a_worker.defaults import configuration
 from f8a_worker.enums import EcosystemBackend
@@ -145,7 +145,7 @@ class Git(object):
         #  directions that would break adding (e.g. Flask 0.10 contains .git with gitpath
         #  pointing to Mitsuhiko's home dir)
         TimedCommand.get_command_output(['find', self.repo_path, '-mindepth', '2', '-name', '.git',
-                                        '-exec', 'rm', '-rf', '{}', ';'])
+                                         '-exec', 'rm', '-rf', '{}', ';'])
         # add everything
         self.add(self.repo_path)
         self.commit(message=message)
@@ -245,7 +245,13 @@ class Archive(object):
     @staticmethod
     def extract_tar(target, dest):
         """Extract target tarball into dest using system 'tar' command."""
-        TimedCommand.get_command_output(['tar', 'xf', target, '-C', dest])
+        TimedCommand.get_command_output(['tar', "--delay-directory-restore", '-xf', target, '-C',
+                                         dest])
+
+    @staticmethod
+    def fix_permissions(target):
+        """Fix extracted folder permissions, so it will be readable for user."""
+        TimedCommand.get_command_output(['chmod', "-R", "u+rwx", target])
 
     @staticmethod
     def extract_gem(target, dest):
@@ -356,8 +362,14 @@ class IndianaJones(object):
         #      └── package.tgz
         # 3 directories, 6 files
         name_ver = name
+        npm_command = ['npm', 'show', name_ver, 'versions', '--json']
+        version_list = TimedCommand.get_command_output(npm_command, graceful=False, is_json=True)
         if version:
-            name_ver = "{}@{}".format(name, version)
+            if version not in version_list:
+                raise ValueError("Provided version is not supported '%s'" % name)
+            else:
+                name_ver = "{}@{}".format(name, version)
+
         # make sure the artifact is not in the cache yet
         TimedCommand.get_command_output(['npm', 'cache', 'clean', name], graceful=False)
         logger.info("downloading npm module %s", name_ver)
@@ -379,6 +391,7 @@ class IndianaJones(object):
         # digest was different then of a tarball downloaded directly from registry.npmjs.org.
         digest = compute_digest(artifact_path)
         Archive.extract(artifact_path, target_dir)
+        Archive.fix_permissions(os.path.join(cache_abs_path, 'package'))
 
         # copy package/package.json over the extracted one,
         # because it contains (since npm >= 2.x.x) more information.

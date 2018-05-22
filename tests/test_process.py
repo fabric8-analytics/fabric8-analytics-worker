@@ -1,11 +1,17 @@
 """Tests covering code in process.py."""
 
+import subprocess
 from pathlib import Path
+
 import pytest
 import subprocess
+import requests
+import tempfile
+import shutil
 
-from f8a_worker.process import Git, IndianaJones
+from f8a_worker.process import Git, IndianaJones, Archive
 from f8a_worker.errors import TaskError
+from f8a_worker.process import Git, IndianaJones
 
 
 class TestGit(object):
@@ -64,12 +70,26 @@ class TestIndianaJones(object):
                                                            artifact=name,
                                                            version=version,
                                                            target_dir=str(tmpdir))
-        assert len(list((cache_path / name).glob('*'))) == 1,\
+        assert len(list((cache_path / name).glob('*'))) == 1, \
             "there should be just one version of the artifact in the NPM cache"
         assert package_digest == expected_digest
         assert Path(path).exists()
         assert (cache_path / name / version).exists()
         assert Path(str(tmpdir / "package.tgz")).exists()
+
+    @pytest.mark.parametrize("name, version, expected_digest", [
+        ("abbrev", ">1.0.7", "30f6880e415743312a0021a458dd6d26a7211f803a42f1e4a30ebff44d26b7de"),
+        ("abbrev", "~1.0.4", "8dc0f480571a4a19e74f1abd4f31f6a70f94953d1ccafa16ed1a544a19a6f3a8")
+    ])
+    def test_fetch_version_range_npm_specific(self, tmpdir, npm, name, version, expected_digest):
+        """Test fetching of npm artifact with version range."""
+        with pytest.raises(ValueError) as excinfo:
+            cache_path = Path(subprocess.check_output(["npm", "config", "get", "cache"],
+                                                      universal_newlines=True).strip())
+            package_digest, path = IndianaJones.fetch_artifact(npm,
+                                                               artifact=name,
+                                                               version=version,
+                                                               target_dir=str(tmpdir))
 
     @pytest.mark.parametrize('name, version, expected_digest', [
         ('six', '1.0.0', 'ca79c14c8cb5e58912d185f0e07ca9c687e232b7c68c4b73bf1c83ef5979333e'),
@@ -146,3 +166,19 @@ class TestIndianaJones(object):
         path = Path(path)
         assert path.name == '{}.tar.gz'.format(version)
         assert path.exists()
+
+
+class TestArchive(object):
+    """Test Archive class."""
+
+    @pytest.mark.fail(raises=PermissionError)
+    def test_for_archive_create_by_root(self):
+        """Test extracting archives created by root."""
+        response = requests.get("https://registry.npmjs.org/ajax-worker/-/ajax-worker-1.2.3.tgz")
+        with tempfile.NamedTemporaryFile(suffix=".tgz") as package, tempfile.TemporaryDirectory() \
+                as extracted:
+            package.write(response.content)
+            Archive.extract(package.name, extracted)
+            with pytest.raises(PermissionError):
+                shutil.rmtree(extracted)
+            Archive.fix_permissions(extracted + "/package")
