@@ -49,15 +49,6 @@
       selective_run_function:
         name: 'selective_run_function'
         import: 'f8a_worker.dispatcher.selective'
-    - name: 'binary_data'
-      classname: 'BinwalkTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      storage: 'BayesianPostgres'
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_BinwalkTask_v0'
-      selective_run_function:
-        name: 'selective_run_function'
-        import: 'f8a_worker.dispatcher.selective'
     - name: 'metadata'
       classname: 'MercatorTask'
       import: 'f8a_worker.workers'
