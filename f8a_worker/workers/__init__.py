@@ -14,7 +14,6 @@ from f8a_worker.workers.git_stats import GitStats
 from f8a_worker.workers.githuber import GithubTask, GitReadmeCollectorTask
 from f8a_worker.workers.graph_importer import GraphImporterTask
 from f8a_worker.workers.graph_sync import GraphSyncTask
-from f8a_worker.workers.graphaggregator import GraphAggregatorTask
 from f8a_worker.workers.init_analysis_flow import InitAnalysisFlow
 from f8a_worker.workers.init_package_flow import InitPackageFlow
 from f8a_worker.workers.keywords_summary import KeywordsSummaryTask
