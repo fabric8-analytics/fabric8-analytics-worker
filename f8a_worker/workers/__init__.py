@@ -26,7 +26,6 @@ from f8a_worker.workers.license import LicenseCheckTask
 from f8a_worker.workers.linguist import LinguistTask
 from f8a_worker.workers.manifest_keeper import ManifestKeeperTask
 from f8a_worker.workers.mercator import MercatorTask
-from f8a_worker.workers.oscryptocatcher import OSCryptoCatcherTask
 from f8a_worker.workers.recommender import RecommendationTask, RecommendationV2Task
 from f8a_worker.workers.report_generation import ReportGenerationTask
 from f8a_worker.workers.repository_description import RepositoryDescCollectorTask
