@@ -13,7 +13,6 @@ Workers not included here are ecosystem agnostic.
 | `githuber.GithubTask`                        | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:
 | `init_analysis_flow.InitAnalysisFlow`        | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:
 | `license.LicenseCheckTask`                   | :white_check_mark:                 | :grey_exclamation:  (4)            | :white_check_mark:                 | :grey_exclamation:  (5)            | :white_check_mark:
-| `linguist.LinguistTask`                      | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :grey_exclamation:  (5)            | :grey_question:
 | `mercator.MercatorTask`                      | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:
 
 
