@@ -1,11 +1,7 @@
 """Import all tasks."""
 
 from f8a_worker.workers.CVEchecker import CVEcheckerTask
-from f8a_worker.workers.bigquery_gh import BigQueryTask
-from f8a_worker.workers.binwalk import BinwalkTask
 from f8a_worker.workers.bookkeeper import BookkeeperTask
-from f8a_worker.workers.code_metrics import CodeMetricsTask
-from f8a_worker.workers.csmock_worker import CsmockTask
 from f8a_worker.workers.cvedbsync import CVEDBSyncTask
 from f8a_worker.workers.dependency_parser import GithubDependencyTreeTask
 from f8a_worker.workers.dependency_snapshot import DependencySnapshotTask
@@ -28,7 +24,6 @@ from f8a_worker.workers.license import LicenseCheckTask
 from f8a_worker.workers.linguist import LinguistTask
 from f8a_worker.workers.manifest_keeper import ManifestKeeperTask
 from f8a_worker.workers.mercator import MercatorTask
-from f8a_worker.workers.oscryptocatcher import OSCryptoCatcherTask
 from f8a_worker.workers.recommender import RecommendationTask, RecommendationV2Task
 from f8a_worker.workers.report_generation import ReportGenerationTask
 from f8a_worker.workers.repository_description import RepositoryDescCollectorTask

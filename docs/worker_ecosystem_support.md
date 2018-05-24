@@ -6,10 +6,6 @@ Workers not included here are ecosystem agnostic.
 
 | Worker/Ecosystem                             | npm                                | maven                              | pypi                               | nuget                              | go                                 |
 |----------------------------------------------|------------------------------------|------------------------------------|------------------------------------|------------------------------------|------------------------------------|
-| `bigquery.BigQueryTask`                      | :white_check_mark:                 | :negative_squared_cross_mark:  (1) | :negative_squared_cross_mark:      | :grey_question:                    | :negative_squared_cross_mark:
-| `binwalk.BinwalkTask`                        | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :grey_exclamation:  (5)            | :grey_question:
-| `code_metrics.CodeMetricsTask`               | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :grey_exclamation:  (5)            | :negative_squared_cross_mark:
-| `csmock_worker.CsmockTask`                   | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :grey_exclamation:  (5)            | :grey_question:
 | `CVEchecker.CVEcheckerTask`                  | :white_check_mark:                 | :grey_exclamation:  (2)            | :white_check_mark:                 | :white_check_mark:                 | :negative_squared_cross_mark: (6)
 | `dependency_snapshot.DependencySnapshotTask` | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:
 | `digester.DigesterTask`                      | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:
@@ -19,10 +15,7 @@ Workers not included here are ecosystem agnostic.
 | `license.LicenseCheckTask`                   | :white_check_mark:                 | :grey_exclamation:  (4)            | :white_check_mark:                 | :grey_exclamation:  (5)            | :white_check_mark:
 | `linguist.LinguistTask`                      | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :grey_exclamation:  (5)            | :grey_question:
 | `mercator.MercatorTask`                      | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:
-| `oscryptocatcher.OSCryptoCatcher`            | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :grey_question:                    | :grey_question:
 
-
-**(1)**: Due to `pom.xml` dynamic nature (they support templating and inheritance, but we can't expand them in BigQuery queries, so the data that we'd get would be partial and possibly misleading.
 
 **(2)**: CVE checker theoretically works, but the problem is that component naming in the CVE DB is very inaccurate/random for Java. E.g. for `org.apache.taglibs:taglibs-standard-spec` component, the CVE DB contains `apache:standard_taglibs`. There's pretty much no way to match these with a decent certainty.
 

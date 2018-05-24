@@ -22,24 +22,6 @@
       selective_run_function:
         name: 'selective_run_function'
         import: 'f8a_worker.dispatcher.selective'
-    - name: 'static_analysis'
-      classname: 'CsmockTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      storage: 'BayesianPostgres'
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_CsmockTask_v0'
-      selective_run_function:
-        name: 'selective_run_function'
-        import: 'f8a_worker.dispatcher.selective'
-    - name: 'crypto_algorithms'
-      classname: 'OSCryptoCatcherTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      storage: 'BayesianPostgres'
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_OSCryptoCatcherTask_v0'
-      selective_run_function:
-        name: 'selective_run_function'
-        import: 'f8a_worker.dispatcher.selective'
     - name: 'digests'
       classname: 'DigesterTask'
       import: 'f8a_worker.workers'
@@ -58,30 +40,12 @@
       selective_run_function:
         name: 'selective_run_function'
         import: 'f8a_worker.dispatcher.selective'
-    - name: 'binary_data'
-      classname: 'BinwalkTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      storage: 'BayesianPostgres'
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_BinwalkTask_v0'
-      selective_run_function:
-        name: 'selective_run_function'
-        import: 'f8a_worker.dispatcher.selective'
     - name: 'metadata'
       classname: 'MercatorTask'
       import: 'f8a_worker.workers'
       max_retry: 0
       storage: 'BayesianPostgres'
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_MercatorTask_v0'
-      selective_run_function:
-        name: 'selective_run_function'
-        import: 'f8a_worker.dispatcher.selective'
-    - name: 'code_metrics'
-      classname: 'CodeMetricsTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      storage: 'BayesianPostgres'
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_CodeMetricsTask_v0'
       selective_run_function:
         name: 'selective_run_function'
         import: 'f8a_worker.dispatcher.selective'
@@ -177,10 +141,6 @@
       import: 'f8a_worker.workers'
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_PackageResultCollector_v0'
-    - name: 'BigQueryTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_BigQueryTask_v0'
     - name: 'CVEDBSyncTask'
       import: 'f8a_worker.workers'
       max_retry: 0
@@ -310,7 +270,6 @@
     - 'bayesianApiFlow'
     - 'bayesianPriorityFlow'
     - 'bayesianAnalysisFlow'
-    - 'bigQueryFlow'
     - 'stackApiGraphFlow'
     - 'stackApiGraphV2Flow'
     - 'livenessFlow'
@@ -358,15 +317,6 @@
         region_name: 'us-east-1'
         encryption: false
         versioned: false
-
-    - name: 'S3BigQuery'
-      import: 'f8a_worker.storages'
-      configuration:
-        <<: *configurationS3
-        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-big-query'
-        region_name: 'us-east-1'
-        encryption: false
-        versioned: true
 
     - name: 'S3Data'
       import: 'f8a_worker.storages'

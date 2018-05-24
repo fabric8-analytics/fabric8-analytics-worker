@@ -27,7 +27,7 @@ trap gc EXIT SIGINT
 
 docker run -d --env-file=tests/postgres.env --name "${POSTGRES_CONTAINER_NAME}" ${POSTGRES_IMAGE_NAME}
 NETWORK=$(docker inspect --format '{{.NetworkSettings.Networks}}' "${POSTGRES_CONTAINER_NAME}" | awk -F '[:[]' '{print $2}')
-sleep 10
+sleep 30
 
 # do crazy magic with quotes so that we can pass the command to the migrations image correctly
 cmd="alembic upgrade head && alembic"
