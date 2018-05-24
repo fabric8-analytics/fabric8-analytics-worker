@@ -24,65 +24,9 @@ from sqlalchemy import desc
 from sqlalchemy.exc import SQLAlchemyError
 
 from f8a_worker.errors import TaskError
-from f8a_worker.models import (Analysis, Ecosystem, Package, Version,
-                               PackageGHUsage, ComponentGHUsage)
+from f8a_worker.models import (Analysis, Ecosystem, Package, Version)
 
 logger = logging.getLogger(__name__)
-
-
-def get_package_dependents_count(ecosystem_backend, package, db_session=None):
-    """Get number of GitHub projects dependent on the `package`.
-
-    :param ecosystem_backend: str, Ecosystem backend from `f8a_worker.enums.EcosystemBackend`
-    :param package: str, Package name
-    :param db_session: obj, Database session to use for querying
-    :return: number of dependent projects, or -1 if the information is not available
-    """
-    if not db_session:
-        storage = StoragePool.get_connected_storage("BayesianPostgres")
-        db_session = storage.session
-
-    try:
-        count = db_session.query(PackageGHUsage.count).filter(PackageGHUsage.name == package) \
-            .filter(PackageGHUsage.ecosystem_backend == ecosystem_backend) \
-            .order_by(desc(PackageGHUsage.timestamp)) \
-            .first()
-    except SQLAlchemyError:
-        db_session.rollback()
-        raise
-
-    if count:
-        return count[0]
-    return -1
-
-
-def get_dependents_count(ecosystem_backend, package, version, db_session=None):
-    """Get number of GitHub projects dependent on given (package, version).
-
-    :param ecosystem_backend: str, Ecosystem backend from `f8a_worker.enums.EcosystemBackend`
-    :param package: str, Package name
-    :param version: str, Package version
-    :param db_session: obj, Database session to use for querying
-    :return: number of dependent projects, or -1 if the information is not available
-    """
-    if not db_session:
-        storage = StoragePool.get_connected_storage("BayesianPostgres")
-        db_session = storage.session
-
-    try:
-        count = db_session.query(ComponentGHUsage.count) \
-            .filter(ComponentGHUsage.name == package) \
-            .filter(ComponentGHUsage.version == version) \
-            .filter(ComponentGHUsage.ecosystem_backend == ecosystem_backend) \
-            .order_by(desc(ComponentGHUsage.timestamp)) \
-            .first()
-    except SQLAlchemyError:
-        db_session.rollback()
-        raise
-
-    if count:
-        return count[0]
-    return -1
 
 
 def get_latest_analysis(ecosystem, package, version, db_session=None):
@@ -101,35 +45,6 @@ def get_latest_analysis(ecosystem, package, version, db_session=None):
     except SQLAlchemyError:
         db_session.rollback()
         raise
-
-
-def get_component_percentile_rank(ecosystem_backend, package, version, db_session=None):
-    """Get component's percentile rank.
-
-    :param ecosystem_backend: str, Ecosystem backend from `f8a_worker.enums.EcosystemBackend`
-    :param package: str, Package name
-    :param version: str, Package version
-    :param db_session: obj, Database session to use for querying
-    :return: component's percentile rank, or -1 if the information is not available
-    """
-    if not db_session:
-        storage = StoragePool.get_connected_storage("BayesianPostgres")
-        db_session = storage.session
-
-    try:
-        rank = db_session.query(ComponentGHUsage.percentile_rank) \
-            .filter(ComponentGHUsage.name == package) \
-            .filter(ComponentGHUsage.version == version) \
-            .filter(ComponentGHUsage.ecosystem_backend == ecosystem_backend) \
-            .order_by(desc(ComponentGHUsage.timestamp)) \
-            .first()
-    except SQLAlchemyError:
-        db_session.rollback()
-        raise
-
-    if rank:
-        return rank[0]
-    return 0
 
 
 @contextmanager

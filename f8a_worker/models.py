@@ -407,44 +407,6 @@ class APIRequests(Base):
     request_digest = Column(String(128), nullable=True)
 
 
-class PackageGHUsage(Base):
-    """Table for storing package results from BigQuery."""
-
-    __tablename__ = 'package_gh_usage'
-
-    id = Column(Integer, primary_key=True)
-    # dependency name as extracted from package.json found somewhere on GitHub
-    name = Column(String(255), nullable=False)
-    # number of dependent projects found on GitHub
-    count = Column(Integer, nullable=False)
-    ecosystem_backend = Column(ENUM(*[b.name for b in EcosystemBackend],
-                                    name='ecosystem_backend_enum', create_type=False))
-    timestamp = Column(DateTime, nullable=False,
-                       server_default=func.localtimestamp())
-
-
-class ComponentGHUsage(Base):
-    """Table for storing component results from BigQuery."""
-
-    __tablename__ = 'component_gh_usage'
-
-    id = Column(Integer, primary_key=True)
-    # dependency name as extracted from npm-shrinkwrap.json found somewhere on
-    # GitHub
-    name = Column(String(255), nullable=False)
-    # dependency version
-    version = Column(String(255), nullable=False)
-    # number of references to the (name, version) from shrinkwrap files
-    count = Column(Integer, nullable=False)
-    # percentage of components that are used less or equally often as (name,
-    # version)
-    percentile_rank = Column(Integer, nullable=False)
-    ecosystem_backend = Column(ENUM(*[b.name for b in EcosystemBackend],
-                                    name='ecosystem_backend_enum', create_type=False))
-    timestamp = Column(DateTime, nullable=False,
-                       server_default=func.localtimestamp())
-
-
 class RecommendationFeedback(Base):
     """Table for recommendation feedback."""
 
