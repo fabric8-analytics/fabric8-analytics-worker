@@ -236,11 +236,6 @@
       selective_run_function:
         name: 'selective_run_function'
         import: 'f8a_worker.dispatcher.selective'
-    - name: 'BookkeeperTask'
-      classname: 'BookkeeperTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_BookkeeperTask_v0'
     - name: 'package_keywords_tagging'
       classname: 'PackageKeywordsTaggingTask'
       storage_task_name: 'keywords_tagging'
@@ -298,7 +293,6 @@
     - 'bayesianPriorityFlow'
     - 'bayesianAnalysisFlow'
     - 'stackApiGraphFlow'
-    - 'stackApiGraphV2Flow'
     - 'livenessFlow'
     - 'cveCheckFlow'
     - 'bayesianPackageFlow'
@@ -307,7 +301,6 @@
     - 'bayesianPackageAnalysisFlow'
     - 'bayesianPackageTaggingFlow'
     - 'githubManifestMetadataFlow'
-    - 'componentApiFlow'
     - 'keywordsSummaryFlow'
     - 'keywordsApiSummaryFlow'
     - 'keywordsPrioritySummaryFlow'
