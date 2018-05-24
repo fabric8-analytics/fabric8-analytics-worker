@@ -16,7 +16,6 @@ Workers not included here are ecosystem agnostic.
 | `license.LicenseCheckTask`                   | :white_check_mark:                 | :grey_exclamation:  (4)            | :white_check_mark:                 | :grey_exclamation:  (5)            | :white_check_mark:
 | `linguist.LinguistTask`                      | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :grey_exclamation:  (5)            | :grey_question:
 | `mercator.MercatorTask`                      | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:
-| `oscryptocatcher.OSCryptoCatcher`            | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :grey_question:                    | :grey_question:
 
 
 **(2)**: CVE checker theoretically works, but the problem is that component naming in the CVE DB is very inaccurate/random for Java. E.g. for `org.apache.taglibs:taglibs-standard-spec` component, the CVE DB contains `apache:standard_taglibs`. There's pretty much no way to match these with a decent certainty.
