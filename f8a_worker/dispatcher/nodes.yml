@@ -22,15 +22,6 @@
       selective_run_function:
         name: 'selective_run_function'
         import: 'f8a_worker.dispatcher.selective'
-    - name: 'static_analysis'
-      classname: 'CsmockTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      storage: 'BayesianPostgres'
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_CsmockTask_v0'
-      selective_run_function:
-        name: 'selective_run_function'
-        import: 'f8a_worker.dispatcher.selective'
     - name: 'crypto_algorithms'
       classname: 'OSCryptoCatcherTask'
       import: 'f8a_worker.workers'
