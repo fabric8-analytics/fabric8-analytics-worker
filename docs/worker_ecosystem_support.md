@@ -6,7 +6,6 @@ Workers not included here are ecosystem agnostic.
 
 | Worker/Ecosystem                             | npm                                | maven                              | pypi                               | nuget                              | go                                 |
 |----------------------------------------------|------------------------------------|------------------------------------|------------------------------------|------------------------------------|------------------------------------|
-| `code_metrics.CodeMetricsTask`               | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :grey_exclamation:  (5)            | :negative_squared_cross_mark:
 | `CVEchecker.CVEcheckerTask`                  | :white_check_mark:                 | :grey_exclamation:  (2)            | :white_check_mark:                 | :white_check_mark:                 | :negative_squared_cross_mark: (6)
 | `dependency_snapshot.DependencySnapshotTask` | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:
 | `digester.DigesterTask`                      | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:                 | :white_check_mark:
