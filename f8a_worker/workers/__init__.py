@@ -21,7 +21,6 @@ from f8a_worker.workers.keywords_tagging import KeywordsTaggingTask
 from f8a_worker.workers.keywords_tagging import PackageKeywordsTaggingTask
 from f8a_worker.workers.libraries_io import LibrariesIoTask
 from f8a_worker.workers.license import LicenseCheckTask
-from f8a_worker.workers.linguist import LinguistTask
 from f8a_worker.workers.manifest_keeper import ManifestKeeperTask
 from f8a_worker.workers.mercator import MercatorTask
 from f8a_worker.workers.recommender import RecommendationTask, RecommendationV2Task
