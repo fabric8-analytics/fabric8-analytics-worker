@@ -95,18 +95,6 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GraphAggregatorTask_v0'
       storage: 'BayesianPostgres'
-    - name: 'stack_aggregator'
-      classname: 'StackAggregatorTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_StackAggregatorTask_v0'
-      storage: 'BayesianPostgres'
-    - name: 'stack_aggregator_v2'
-      classname: 'StackAggregatorV2Task'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_StackAggregatorV2Task_v0'
-      storage: 'BayesianPostgres'
     - name: 'InitAnalysisFlow'
       import: 'f8a_worker.workers'
       max_retry: 0
