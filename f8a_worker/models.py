@@ -217,24 +217,11 @@ class Analysis(Base):
 
     @property
     def package_info(self):
-        """Get dependents_count and relative_usage."""
-        s = Session.object_session(self)
-        if s:
-            # to avoid cyclic import
-            from f8a_worker.utils import (get_package_dependents_count,
-                                          get_component_percentile_rank, usage_rank2str)
+        """Get dependents_count and relative_usage.
 
-            count = get_package_dependents_count(self.version.package.ecosystem._backend,
-                                                 self.version.package.name, s)
-            # TODO: This obviously doesn't belong here. It's getting crowded
-            # and unorganized at the top-level, refactoring is needed.
-            rank = get_component_percentile_rank(self.version.package.ecosystem._backend,
-                                                 self.version.package.name,
-                                                 self.version.identifier,
-                                                 s)
-            return {'dependents_count': count,
-                    'relative_usage': usage_rank2str(rank)}
-        return {}
+        This property is DEPRECATED, it will be removed in future.
+        """
+        return {'dependents_count': -1, 'relative_usage': 'not used'}
 
     @property
     def dependents_count(self):

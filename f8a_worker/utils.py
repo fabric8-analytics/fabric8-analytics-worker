@@ -418,22 +418,6 @@ class MavenCoordinates(object):
         return cls(**coordinates)
 
 
-def usage_rank2str(rank):
-    """Translate percentile rank to a string representing relative usage of a component."""
-    used = 'n/a'
-    if rank > 90:
-        used = 'very often'
-    elif rank > 80:
-        used = 'often'
-    elif rank > 10:
-        used = 'used'
-    elif rank > 0:
-        used = 'seldom'
-    elif rank == 0:
-        used = 'not used'
-    return used
-
-
 def parse_gh_repo(potential_url):
     """Cover the following variety of URL forms for Github repo referencing.
 
