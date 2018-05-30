@@ -225,18 +225,11 @@ class Analysis(Base):
 
     @property
     def dependents_count(self):
-        """Get dependents_count."""
-        count = -1  # we don't know the count
-        s = Session.object_session(self)
-        if s:
-            # to avoid cyclic import
-            from f8a_worker.utils import get_dependents_count
+        """Get dependents_count.
 
-            count = get_dependents_count(self.version.package.ecosystem._backend,
-                                         self.version.package.name,
-                                         self.version.identifier,
-                                         s)
-        return count
+        This property is DEPRECATED, it will be removed in future.
+        """
+        return -1
 
     def to_dict(self, omit_analyses=False):
         """Convert to dictionary."""
