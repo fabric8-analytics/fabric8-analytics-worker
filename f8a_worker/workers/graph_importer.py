@@ -27,6 +27,7 @@ class GraphImporterTask(BaseTask):
         :param arguments: dictionary with task arguments
         :return: {}, results
         """
+        self.log.info("Received graph import request for: %s" % arguments)
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('document_id'))

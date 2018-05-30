@@ -7,7 +7,7 @@
         - 'bayesianPackageAnalysisFlow'
         - 'bayesianPackageTaggingFlow'
       node_args_from_first: true
-      nowait: 'PackageGraphImporterTask'
+      # nowait: 'PackageGraphImporterTask'
       sampling:
         name: 'constant'
         args:
