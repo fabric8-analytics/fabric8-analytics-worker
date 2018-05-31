@@ -49,12 +49,6 @@
       selective_run_function:
         name: 'selective_run_function'
         import: 'f8a_worker.dispatcher.selective'
-    - name: 'languages'
-      classname: 'LinguistTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      storage: 'BayesianPostgres'
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_LinguistTask_v0'
       selective_run_function:
         name: 'selective_run_function'
         import: 'f8a_worker.dispatcher.selective'
@@ -101,30 +95,6 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GraphAggregatorTask_v0'
       storage: 'BayesianPostgres'
-    - name: 'stack_aggregator'
-      classname: 'StackAggregatorTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_StackAggregatorTask_v0'
-      storage: 'BayesianPostgres'
-    - name: 'stack_aggregator_v2'
-      classname: 'StackAggregatorV2Task'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_StackAggregatorV2Task_v0'
-      storage: 'BayesianPostgres'
-    - name: 'recommendation'
-      classname: 'RecommendationTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_RecommendationTask_v0'
-      storage: 'BayesianPostgres'
-    - name: 'recommendation_v2'
-      classname: 'RecommendationV2Task'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_RecommendationV2Task_v0'
-      storage: 'BayesianPostgres'
     - name: 'InitAnalysisFlow'
       import: 'f8a_worker.workers'
       max_retry: 0
@@ -146,11 +116,6 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_CVEDBSyncTask_v0'
       storage: 'BayesianPostgres'
-    - name: 'ManifestKeeperTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_ManifestKeeperTask_v0'
-      storage: 'S3Manifests'
     - name: 'GraphImporterTask'
       import: 'f8a_worker.workers'
       max_retry: 0
@@ -270,8 +235,6 @@
     - 'bayesianApiFlow'
     - 'bayesianPriorityFlow'
     - 'bayesianAnalysisFlow'
-    - 'stackApiGraphFlow'
-    - 'stackApiGraphV2Flow'
     - 'livenessFlow'
     - 'cveCheckFlow'
     - 'bayesianPackageFlow'
