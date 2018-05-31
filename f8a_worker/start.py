@@ -20,6 +20,37 @@ class SentryCelery(celery.Celery):
         register_signal(client)
 
 
+def monitor_celery(celery_app):
+
+    state = celery_app.events.State()
+
+    def on_task_started(event):
+        state.event(event)
+        task = state.tasks.get(event['uuid'])
+
+        print(
+            "---",
+            "Task started: %s" % task.name,
+            "---",
+            sep='\n',
+        )
+
+    with celery_app.connection() as conn:
+        recv = app.events.Receiver(
+            conn,
+            handlers={
+                'task-started': on_task_started,
+                '*': state.event,
+            }
+        )
+        recv.capture(limit=None, timeout=None, wakeup=True)
+
+
 app = SentryCelery('tasks')
+
+# set up celery monitoring
+monitor_celery(app)
+
 init_celery(app)
 init_selinon(app)
+
