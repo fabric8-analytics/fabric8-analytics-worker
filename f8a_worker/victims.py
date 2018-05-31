@@ -251,7 +251,7 @@ class VictimsDB(object):
                 else:
                     if checked_version <= version:
                         return True
-            return False
+        return False
 
     @classmethod
     def _build_from_git(cls):

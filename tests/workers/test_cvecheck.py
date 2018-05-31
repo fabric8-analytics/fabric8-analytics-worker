@@ -24,10 +24,14 @@ class TestCVEchecker(object):
         assert vector_ == vector
         assert severity_ == severity
 
+    @pytest.mark.parametrize(('version',), [
+        ('1.6.4',),
+        ('1.7.1',)
+    ])
     @pytest.mark.usefixtures('victims_zip_s3')
-    def test_npm_servestatic(self):
+    def test_npm_servestatic(self, version):
         """Tests CVE reports for selected package from NPM ecosystem."""
-        args = {'ecosystem': 'npm', 'name': 'serve-static', 'version': '1.6.4'}
+        args = {'ecosystem': 'npm', 'name': 'serve-static', 'version': version}
         task = CVEcheckerTask.create_test_instance(task_name='security_issues')
         results = task.execute(args)
 
@@ -35,7 +39,6 @@ class TestCVEchecker(object):
         assert set(results.keys()) == {'details', 'status', 'summary'}
         assert results['status'] == 'success'
         assert results['summary'] == ['CVE-2015-1164']
-        # http://www.cvedetails.com/version/186008/Geddyjs-Geddy-13.0.7.html
         expected_details = [{
             "attribution": "https://github.com/victims/victims-cve-db, CC BY-SA 4.0, modified",
             "cvss": {
@@ -58,6 +61,19 @@ class TestCVEchecker(object):
             "severity": "medium"
         }]
         assert_equal(results.get('details'), expected_details)
+
+    @pytest.mark.usefixtures('victims_zip_s3')
+    def test_npm_servestatic_not_affected(self):
+        """Tests CVE reports for selected package from NPM ecosystem."""
+        args = {'ecosystem': 'npm', 'name': 'serve-static', 'version': '1.7.5'}
+        task = CVEcheckerTask.create_test_instance(task_name='security_issues')
+        results = task.execute(args)
+
+        assert isinstance(results, dict)
+        assert set(results.keys()) == {'details', 'status', 'summary'}
+        assert results['status'] == 'success'
+        assert results['summary'] == []
+        assert_equal(results.get('details'), [])
 
     @pytest.mark.usefixtures('victims_zip_s3')
     def test_maven_commons_compress(self):
