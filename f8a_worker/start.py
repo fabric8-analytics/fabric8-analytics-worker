@@ -18,6 +18,9 @@ class SentryCelery(celery.Celery):
         client = raven.Client(dsn)
         register_logger_signal(client)
         register_signal(client)
+        client.ignore_exceptions = [
+            "f8a_worker.errors.NonCriticalTaskError"
+        ]
 
 
 app = SentryCelery('tasks')
