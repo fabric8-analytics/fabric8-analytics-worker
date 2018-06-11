@@ -20,11 +20,8 @@ echo "*****************************************"
 # we need no:cacheprovider, otherwise pytest will try to write to directory .cache which is in /usr under unprivileged
 # user and will cause exception
 py.test -p no:cacheprovider --cov=/f8a_worker/f8a_worker --cov-report term-missing --cov-report xml -vv "$@"
-cp coverage.xml /f8a_worker
 
-pushd /f8a_worker > /dev/null
-ls
-git status
+# this is necessary - codecov expect proper git repo
+cp -r /f8a_worker/.git ./
 
 codecov --token=04560f69-79e3-48a3-9731-92c9e767a2ff
-popd > /dev/null
