@@ -8,6 +8,7 @@ from f8a_worker.utils import get_session_retry
 
 class UserNotificationTask(BaseTask):
     """Generates report containing descriptive data for dependencies."""
+
     def execute(self, arguments=None):
         """Task code.
 
