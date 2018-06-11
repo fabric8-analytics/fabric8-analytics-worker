@@ -6,8 +6,18 @@ class TaskError(Exception):
     """There was an error during task execution."""
 
 
-class NonCriticalTaskError(TaskError):
-    """There was an error during task execution."""
+class NotABugTaskError(TaskError):
+    """Task error, but not a bug in the code.
+
+    This exception will be ignored by Sentry.
+    """
+
+
+class NotABugFatalTaskError(FatalTaskError):
+    """Task error, but not a bug in the code. Retry won't help.
+
+    This exception will be ignored by Sentry.
+    """
 
 
 class F8AConfigurationException(Exception):
