@@ -1,7 +1,7 @@
 # normally pulled in by kombu, but version 2.2.0 is broken
 amqp<=2.1.4
 # also handles Celery as a requirement
-selinon[sentry,celery]
+selinon[celery]
 sqlalchemy
 psycopg2
 lxml
@@ -24,3 +24,4 @@ boto3
 semantic_version
 radon
 watchdog
+raven
