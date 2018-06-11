@@ -19,7 +19,8 @@ class SentryCelery(celery.Celery):
         register_logger_signal(client)
         register_signal(client)
         client.ignore_exceptions = [
-            "f8a_worker.errors.NonCriticalTaskError"
+            "f8a_worker.errors.NotABugFatalTaskError",
+            "f8a_worker.errors.NotABugTaskError"
         ]
 
 
