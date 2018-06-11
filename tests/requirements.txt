@@ -5,6 +5,7 @@
 #    pip-compile --output-file requirements.txt requirements.in
 #
 astroid==1.4.8            # via pylint
+codecov==2.0.15
 coverage==4.4.2           # via pytest-cov
 datadiff==2.0.0
 flexmock==0.10.2
