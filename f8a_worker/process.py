@@ -1,7 +1,6 @@
 """Core classes for working with git, archives and downloading of artifacts."""
 import glob
 import logging
-import string
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
@@ -14,7 +13,7 @@ from re import compile as re_compile
 
 from f8a_worker.defaults import configuration
 from f8a_worker.enums import EcosystemBackend
-from f8a_worker.errors import TaskError
+from f8a_worker.errors import TaskError, NotABugTaskError
 from f8a_worker.utils import cwd, TimedCommand, compute_digest, MavenCoordinates, url2git_repo
 
 logger = logging.getLogger(__name__)
@@ -322,7 +321,7 @@ class IndianaJones(object):
         artifact_url = urljoin(maven_url, artifact_coords.to_repo_url())
         local_filepath = IndianaJones.download_file(artifact_url, target_dir)
         if local_filepath is None:
-            raise RuntimeError("Unable to download: %s" % artifact_url)
+            raise NotABugTaskError("Unable to download: %s" % artifact_url)
 
         local_filename = os.path.split(local_filepath)[1]
         artifact_path = os.path.join(target_dir, local_filename)
@@ -414,7 +413,7 @@ class IndianaJones(object):
                                                         version=version.lower())
         local_filename = IndianaJones.download_file(file_url, target_dir)
         if local_filename is None:
-            raise RuntimeError("Unable to download: %s" % file_url)
+            raise NotABugTaskError("Unable to download: %s" % file_url)
         artifact_path = os.path.join(target_dir, local_filename)
         digest = compute_digest(artifact_path)
         Archive.extract(artifact_path, target_dir)
@@ -434,7 +433,7 @@ class IndianaJones(object):
             version = res.json()['info']['version']
         release_files = res.json().get('releases', {}).get(version, [])
         if not release_files:
-            raise RuntimeError("No release files for version %s" % version)
+            raise NotABugTaskError("No release files for version %s" % version)
 
         # sort releases by order in which we'd like to download:
         #  1) sdist
@@ -448,7 +447,7 @@ class IndianaJones(object):
         file_url = release_files[0]['url']
         local_filename = IndianaJones.download_file(file_url, target_dir)
         if local_filename is None:
-            raise RuntimeError("Unable to download: %s" % file_url)
+            raise NotABugTaskError("Unable to download: %s" % file_url)
         artifact_path = os.path.join(target_dir, local_filename)
         digest = compute_digest(artifact_path)
         Archive.extract(artifact_path, target_dir)
