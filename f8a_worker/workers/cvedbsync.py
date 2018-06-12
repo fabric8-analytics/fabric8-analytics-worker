@@ -77,7 +77,7 @@ class CVEDBSyncTask(BaseTask):
         ignore_modification_time = (arguments.pop('ignore_modification_time', False)
                                     if arguments else False)
 
-        CVEcheckerTask.update_depcheck_db_on_s3()
+        CVEcheckerTask.update_victims_cve_db_on_s3()
 
         self.log.debug('Updating sync associated metadata')
         s3 = StoragePool.get_connected_storage('S3VulnDB')
