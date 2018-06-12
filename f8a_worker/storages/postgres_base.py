@@ -129,7 +129,7 @@ class PostgresBase(DataStorage):
             raise
 
     def store_error(self, node_args, flow_name, task_name, task_id, exc_info, result=None):
-        """Store error info to the Postgress database.
+        """Store error info to the Postgres database.
 
         Note: We do not store errors in init tasks.
 
@@ -139,15 +139,9 @@ class PostgresBase(DataStorage):
         remove weird-looking errors like (un-committed changes due to errors
         in init task):
           DETAIL: Key (package_analysis_id)=(1113452) is not present in table "package_analyses".
-
-        Note that raising NotImplementedError will cause Selinon to treat
-        behaviour correctly - no error is permanently stored (but reported in
-        logs).
         """
-        if task_name in ('InitPackageFlow', 'InitAnalysisFlow'):
-            raise NotImplementedError()
-
-        if issubclass(exc_info[0], TaskAlreadyExistsError):
+        if task_name in ('InitPackageFlow', 'InitAnalysisFlow')\
+                or issubclass(exc_info[0], TaskAlreadyExistsError):
             return
 
         # Sanity checks
