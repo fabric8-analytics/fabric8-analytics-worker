@@ -35,6 +35,7 @@ from f8a_worker.object_cache import ObjectCache
 from f8a_worker.process import Git
 from f8a_worker.schemas import SchemaRef
 from f8a_worker.utils import TimedCommand
+from f8a_worker.errors import NotABugFatalTaskError
 
 
 # TODO: we need to unify the output from different ecosystems
@@ -220,7 +221,7 @@ class MercatorTask(BaseTask):
             # TODO: attempt static setup.py parsing with mercator
             items = [self._merge_python_items(mercator_target, data)]
             if items == [None]:
-                raise FatalTaskError('Found no usable PKG-INFO/metadata.json/requirements.txt')
+                raise NotABugFatalTaskError('Found no usable PKG-INFO/metadata.json/requirements.txt')
         else:
             if outermost_only:
                 # process only root level manifests (or the ones closest to the root level)
