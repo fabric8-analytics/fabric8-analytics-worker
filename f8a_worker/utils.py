@@ -23,7 +23,7 @@ from selinon import StoragePool
 from sqlalchemy import desc
 from sqlalchemy.exc import SQLAlchemyError
 
-from f8a_worker.errors import TaskError
+from f8a_worker.errors import TaskError, NotABugTaskError
 from f8a_worker.models import (Analysis, Ecosystem, Package, Version)
 
 logger = logging.getLogger(__name__)
@@ -549,11 +549,11 @@ def get_response(url, headers=None, sleep_time=2, retry_count=10):
                 return response
             time.sleep(sleep_time)
         else:
-            raise TaskError("Number of retries exceeded")
+            raise NotABugTaskError("Number of retries exceeded")
     except HTTPError as err:
         message = "Failed to get results from {url} with {err}".format(url=url, err=err)
         logger.error(message)
-        raise TaskError(message) from err
+        raise NotABugTaskError(message) from err
 
 
 def add_maven_coords_to_set(coordinates_str, gav_set):
