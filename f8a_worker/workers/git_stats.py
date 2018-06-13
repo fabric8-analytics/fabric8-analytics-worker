@@ -8,6 +8,7 @@ from tempfile import TemporaryDirectory
 
 from f8a_worker.process import Git
 from f8a_worker.base import BaseTask
+from f8a_worker.errors import NotABugFatalTaskError
 
 
 class GitStats(BaseTask):
@@ -109,7 +110,7 @@ class GitStats(BaseTask):
 
     @classmethod
     def _compute_stats(cls, log, starting_date):
-        """Compute statisics on log.
+        """Compute statistics on log.
 
         :param log: log entries on which statistics should be computed
         :param starting_date: starting date of log
@@ -138,7 +139,7 @@ class GitStats(BaseTask):
 
         master_log = self._get_log(arguments['url'])
         if not master_log:
-            raise ValueError("No log for master branch to inspect")
+            raise NotABugFatalTaskError("No log for master branch to inspect")
 
         now = time()
         last_year_timestamp = now - timedelta(days=self._DAYS_PER_YEAR).total_seconds()
