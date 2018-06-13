@@ -221,7 +221,9 @@ class MercatorTask(BaseTask):
             # TODO: attempt static setup.py parsing with mercator
             items = [self._merge_python_items(mercator_target, data)]
             if items == [None]:
-                raise NotABugFatalTaskError('Found no usable PKG-INFO/metadata.json/requirements.txt')
+                raise NotABugFatalTaskError(
+                    'Found no usable PKG-INFO/metadata.json/requirements.txt'
+                )
         else:
             if outermost_only:
                 # process only root level manifests (or the ones closest to the root level)
