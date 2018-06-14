@@ -8,7 +8,7 @@ from tempfile import TemporaryDirectory
 
 from f8a_worker.process import Git
 from f8a_worker.base import BaseTask
-from f8a_worker.errors import NotABugFatalTaskError
+from f8a_worker.errors import NotABugFatalTaskError, NotABugTaskError, TaskError
 
 
 class GitStats(BaseTask):
@@ -26,10 +26,13 @@ class GitStats(BaseTask):
         :param url: url to the git repo
         """
         with TemporaryDirectory() as tmp_dir:
-            git = Git.clone(url, tmp_dir)
-            # nice notebook to check at:
-            #   http://nbviewer.jupyter.org/github/tarmstrong/code-analysis/blob/master/IPythonReviewTime.ipynb
-            log = git.log()
+            try:
+                git = Git.clone(url, tmp_dir)
+                # nice notebook to check at:
+                #   http://nbviewer.jupyter.org/github/tarmstrong/code-analysis/blob/master/IPythonReviewTime.ipynb
+                log = git.log()
+            except TaskError as e:
+                raise NotABugTaskError(e)
 
         return log
 
