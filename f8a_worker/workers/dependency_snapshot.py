@@ -6,7 +6,7 @@ from selinon import FatalTaskError
 import urllib.parse
 
 from f8a_worker.base import BaseTask
-from f8a_worker.errors import TaskError
+from f8a_worker.errors import TaskError, NotABugTaskError
 from f8a_worker.schemas import SchemaRef
 from f8a_worker.solver import get_ecosystem_solver
 from f8a_worker.utils import json_serial
@@ -66,14 +66,14 @@ class DependencySnapshotTask(BaseTask):
 
         # second, figure out what is the latest upstream version matching the spec and return it
         solver = get_ecosystem_solver(ecosystem)
-        pkgspec = solver.solve([dep])
-
-        if not pkgspec:
-            raise TaskError("invalid dependency: {}".format(dep))
+        try:
+            pkgspec = solver.solve([dep])
+        except ValueError as e:
+            raise NotABugTaskError("invalid dependency: {}".format(dep))
 
         package, version = pkgspec.popitem()
         if not version:
-            raise TaskError("could not resolve {}".format(dep))
+            raise NotABugTaskError("could not resolve {}".format(dep))
 
         ret['name'] = package
         ret['version'] = version
@@ -100,7 +100,7 @@ class DependencySnapshotTask(BaseTask):
         for dep in deps:
             try:
                 resolved = self._resolve_dependency(ecosystem, dep)
-            except TaskError as e:
+            except NotABugTaskError as e:
                 self.log.error(str(e))
                 result['summary']['errors'].append(str(e))
                 result['status'] = 'error'
