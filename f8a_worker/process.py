@@ -313,7 +313,7 @@ class IndianaJones(object):
             raise ValueError("No version provided for '%s'" % artifact_coords.to_str())
         artifact_coords.version = version
         if not artifact_coords.is_valid():
-            raise ValueError("Invalid Maven coordinates: {a}".format(
+            raise NotABugTaskError("Invalid Maven coordinates: {a}".format(
                 a=artifact_coords.to_str()))
 
         # lxml can't handle HTTPS URLs
@@ -361,13 +361,19 @@ class IndianaJones(object):
         #      └── package.tgz
         # 3 directories, 6 files
         name_ver = name
-        npm_command = ['npm', 'show', name_ver, 'versions', '--json']
-        version_list = TimedCommand.get_command_output(npm_command, graceful=False, is_json=True)
-        if version:
-            if version not in version_list:
-                raise ValueError("Provided version is not supported '%s'" % name)
-            else:
-                name_ver = "{}@{}".format(name, version)
+
+        try:
+            npm_command = ['npm', 'show', name_ver, 'versions', '--json']
+            version_list = TimedCommand.get_command_output(npm_command, graceful=False, is_json=True)
+            if version:
+                if version not in version_list:
+                    raise NotABugTaskError("Provided version is not supported '%s'" % name)
+                else:
+                    name_ver = "{}@{}".format(name, version)
+        except TaskError as e:
+            raise NotABugTaskError(
+                'No versions for package NPM package {p} ({e})'.format(p=name, e=str(e))
+            )
 
         # make sure the artifact is not in the cache yet
         TimedCommand.get_command_output(['npm', 'cache', 'clean', name], graceful=False)
@@ -427,8 +433,15 @@ class IndianaJones(object):
         # NOTE: we can't download Python packages via pip, because it runs setup.py
         #  even with `pip download`. Therefore we could always get syntax errors
         #  because of older/newer syntax.
-        res = requests.get('https://pypi.python.org/pypi/{n}/json'.format(n=name))
-        res.raise_for_status()
+        res = requests.get('https://pypi.org/pypi/{n}/json'.format(n=name))
+
+        if res.status_code != 200:
+            raise NotABugTaskError(
+                "Unable to fetch information about {n} from PyPI (status code={s})".format(
+                    n=name, s=res.status_code
+                )
+            )
+
         if not version:
             version = res.json()['info']['version']
         release_files = res.json().get('releases', {}).get(version, [])
