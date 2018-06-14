@@ -1,6 +1,5 @@
 """Tests covering code in process.py."""
 
-import subprocess
 from pathlib import Path
 
 import pytest
@@ -9,8 +8,8 @@ import requests
 import tempfile
 import shutil
 
-from f8a_worker.process import Git, IndianaJones, Archive
-from f8a_worker.errors import TaskError
+from f8a_worker.process import Archive
+from f8a_worker.errors import TaskError, NotABugTaskError
 from f8a_worker.process import Git, IndianaJones
 
 
@@ -83,7 +82,7 @@ class TestIndianaJones(object):
     ])
     def test_fetch_version_range_npm_specific(self, tmpdir, npm, name, version, expected_digest):
         """Test fetching of npm artifact with version range."""
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(NotABugTaskError) as excinfo:
             cache_path = Path(subprocess.check_output(["npm", "config", "get", "cache"],
                                                       universal_newlines=True).strip())
             package_digest, path = IndianaJones.fetch_artifact(npm,
