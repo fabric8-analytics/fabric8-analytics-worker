@@ -3,6 +3,7 @@
 import requests
 from bs4 import BeautifulSoup
 from f8a_worker.base import BaseTask
+from f8a_worker.errors import NotABugFatalTaskError
 from selinon import FatalTaskError
 
 
@@ -19,7 +20,7 @@ class RepositoryDescCollectorTask(BaseTask):
         """Web scrape URL."""
         response = requests.get(url)
         if response.status_code != 200:
-            raise FatalTaskError("Unable to access package web page at '%s'" % url)
+            raise NotABugFatalTaskError("Unable to access package web page at '%s'" % url)
         return BeautifulSoup(response.text, 'lxml')
 
     def collect_npm(self, name):
@@ -32,7 +33,7 @@ class RepositoryDescCollectorTask(BaseTask):
         content = self._scrape_page(url).body
 
         if not content:
-            raise FatalTaskError("No content was found at '%s' for NPM package '%s'", name)
+            raise NotABugFatalTaskError("No content was found at '%s' for NPM package '%s'", name)
 
         # rip out all script and style elements
         for script in content(["script", "style"]):
@@ -50,7 +51,7 @@ class RepositoryDescCollectorTask(BaseTask):
         content = self._scrape_page(url).find(class_='project-description')
 
         if not content:
-            raise FatalTaskError("No content was found at '%s' for PyPI package '%s'", name)
+            raise NotABugFatalTaskError("No content was found at '%s' for PyPI package '%s'", name)
 
         # Remove content that is automatically added by PyPI - this content is
         # on the bottom and keeps info extracted from setup.py. We already keep
