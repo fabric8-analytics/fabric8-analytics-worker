@@ -364,7 +364,9 @@ class IndianaJones(object):
 
         try:
             npm_command = ['npm', 'show', name_ver, 'versions', '--json']
-            version_list = TimedCommand.get_command_output(npm_command, graceful=False, is_json=True)
+            version_list = TimedCommand.get_command_output(
+                npm_command, graceful=False, is_json=True
+            )
             if version:
                 if version not in version_list:
                     raise NotABugTaskError("Provided version is not supported '%s'" % name)
