@@ -181,6 +181,9 @@ def get_command_output(args, graceful=True, is_json=False, **kwargs):
 
         if not graceful:
             logger.error("exception is fatal")
+            # we don't know whether this is a bug or the command was simply called
+            # with invalid/unsupported input. Caller needs to catch the exception
+            # and decide.
             raise TaskError("Error during running command %s: %r" % (args, ex.output))
         else:
             logger.debug("Ignoring because graceful flag is set")
