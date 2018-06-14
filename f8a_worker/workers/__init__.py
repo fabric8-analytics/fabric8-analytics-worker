@@ -27,3 +27,4 @@ from f8a_worker.workers.repository_description import RepositoryDescCollectorTas
 from f8a_worker.workers.result_collector import ResultCollector, PackageResultCollector
 from f8a_worker.workers.unknown_dep_fetcher import UnknownDependencyFetcherTask
 from f8a_worker.workers.victims import VictimsCheck
+from f8a_worker.workers.user_notifier import UserNotificationTask
