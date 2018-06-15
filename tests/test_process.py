@@ -105,6 +105,17 @@ class TestIndianaJones(object):
         glob_whl_path = next(tmpdir.glob("{}-{}*".format(name, version)))
         assert glob_whl_path.exists()
 
+    def test_fetch_pypi_nonexistent(self, tmpdir, pypi):
+        """Test fetching of a non-existent pypi artifact."""
+        tmpdir = Path(str(tmpdir))
+        with pytest.raises(NotABugTaskError):
+            IndianaJones.fetch_artifact(
+                pypi,
+                artifact='not-in-pypi',
+                version='1294839',
+                target_dir=str(tmpdir)
+            )
+
     @pytest.mark.parametrize('name, version, expected_digest', [
         ('permutation', '0.1.7', 'e715cccaccb8e2d1450fbdda85bbe84963a32e9bf612db278cbb3d6781267638')
     ])
