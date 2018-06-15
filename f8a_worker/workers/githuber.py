@@ -7,7 +7,7 @@ from collections import OrderedDict
 from selinon import FatalTaskError
 
 from f8a_worker.base import BaseTask
-from f8a_worker.errors import F8AConfigurationException, TaskError
+from f8a_worker.errors import F8AConfigurationException, NotABugTaskError, NotABugFatalTaskError
 from f8a_worker.schemas import SchemaRef
 from f8a_worker.utils import parse_gh_repo, get_response
 
@@ -41,7 +41,7 @@ class GithubTask(BaseTask):
         """Get weekly commit activity for last year."""
         try:
             activity = get_response(urljoin(repo_url + '/', "stats/commit_activity"), self._headers)
-        except TaskError as e:
+        except NotABugTaskError as e:
             self.log.debug(e)
             return []
         return [x['total'] for x in activity]
@@ -50,7 +50,7 @@ class GithubTask(BaseTask):
         """Collect various repository properties."""
         try:
             contributors = get_response(repo['contributors_url'], self._headers)
-        except TaskError as e:
+        except NotABugTaskError as e:
             self.log.debug(e)
             contributors = {}
         d = {'contributors_count': len(list(contributors)) if contributors is not None else 'N/A'}
@@ -94,9 +94,9 @@ class GithubTask(BaseTask):
         repo_url = urljoin(self.configuration.GITHUB_API + "repos/", self._repo_name)
         try:
             repo = get_response(repo_url, self._headers)
-        except TaskError as e:
+        except NotABugTaskError as e:
             self.log.error(e)
-            raise FatalTaskError from e
+            raise NotABugFatalTaskError from e
 
         result_data['status'] = 'success'
 
