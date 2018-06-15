@@ -302,6 +302,7 @@ class MavenReleasesFetcher(ReleasesFetcher):
     @staticmethod
     def releases_from_maven_org(group_id, artifact_id):
         """Fetch releases versions for group_id/artifact_id from maven.org."""
+        # TODO: maven URL needs to be fetched from RDS
         maven_url = "http://repo1.maven.org/maven2/"
         dir_path = "{g}/{a}/".format(g=group_id.replace('.', '/'), a=artifact_id)
         url = urljoin(maven_url, dir_path)

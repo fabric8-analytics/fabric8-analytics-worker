@@ -176,6 +176,7 @@ class VictimsDB(object):
         we_good = False
         for filename in metadata_filenames:
 
+            # TODO: maven URL needs to be fetched from RDS
             url = 'http://repo1.maven.org/maven2/{g}/{a}/{f}'.format(g=g, a=a, f=filename)
 
             try:
