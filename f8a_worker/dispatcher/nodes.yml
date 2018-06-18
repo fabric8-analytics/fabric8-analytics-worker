@@ -227,7 +227,7 @@
       classname: 'UserNotificationTask'
       import: 'f8a_worker.workers'
       max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_UserNotificationTask_v0'
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_osioUserNotificationFlow_v0'
       storage: 'BayesianPostgres'
     - name: 'VictimsCheck'
       classname: 'VictimsCheck'
