@@ -1,0 +1,31 @@
+---
+  flow-definitions:
+    - name: 'osioUserAnalysisFlow'
+      queue: '{DEPLOYMENT_PREFIX}_api_osioUserAnalysisFlow_v0'
+      propagate_node_args: true
+      node_args_from_first: true
+      edges:
+        - from:
+          to: 'GithubDependencyTreeTask'
+        - from: 'GithubDependencyTreeTask'
+          to: 'dependencyIngestFlow'
+        - from: 'dependencyIngestFlow'
+          to: 'ReportGenerationTask'
+      failures:
+        - nodes:
+            - 'dependencyIngestFlow'
+          fallback:
+            - 'ReportGenerationTask'
+
+    - name: 'dependencyIngestFlow'
+      queue: '{DEPLOYMENT_PREFIX}_api_dependencyIngestFlow_v0'
+      edges:
+        - from:
+          to: 'UnknownDependencyFetcherTask'
+        - from: 'UnknownDependencyFetcherTask'
+          to: 'bayesianApiFlow'
+          foreach:
+            import: 'f8a_worker.dispatcher.foreach'
+            function: 'iter_unknown_dependencies'
+            # result of the function is used as sub-flow arguments
+            propagate_result: true
