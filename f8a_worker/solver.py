@@ -11,11 +11,12 @@ from pip._internal.req.req_file import parse_requirements
 from pip._vendor.packaging.specifiers import _version_split
 import re
 from requests import get
-from xmlrpc.client import ServerProxy
 from semantic_version import Version as semver_version
 from subprocess import check_output
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from urllib.parse import urljoin, quote
+from urllib.request import urlopen
+import requests
 
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.models import Analysis, Ecosystem, Package, Version
@@ -118,33 +119,6 @@ class PypiReleasesFetcher(ReleasesFetcher):
     def __init__(self, ecosystem):
         """Initialize instance."""
         super(PypiReleasesFetcher, self).__init__(ecosystem)
-        self._rpc = ServerProxy(self.ecosystem.fetch_url)
-
-    def _search_package_name(self, package):
-        """Case insensitive search.
-
-        :param package: str, Name of the package
-        :return:
-        """
-        def find_pypi_pkg(package):
-            packages = self._rpc.search({'name': package})
-            if packages:
-                exact_match = [p['name']
-                               for p in packages
-                               if p['name'].lower() == package.lower()]
-                if exact_match:
-                    return exact_match.pop()
-        res = find_pypi_pkg(package)
-        if res is None and '-' in package:
-            # this is soooo annoying; you can `pip3 install argon2-cffi and it installs
-            #  argon2_cffi (underscore instead of dash), but searching through XMLRPC
-            #  API doesn't find it... so we try to search for underscore variant
-            #  if the dash variant isn't found
-            res = find_pypi_pkg(package.replace('-', '_'))
-        if res:
-            return res
-
-        raise ValueError("Package {} not found".format(package))
 
     def fetch_releases(self, package):
         """Fetch package releases versions.
@@ -155,15 +129,20 @@ class PypiReleasesFetcher(ReleasesFetcher):
         if not package:
             raise ValueError("package")
 
-        releases = self._rpc.package_releases(package, True)
-        if not releases:
-            # try again with swapped case of first character
-            releases = self._rpc.package_releases(package[0].swapcase() + package[1:], True)
-        if not releases:
-            # if nothing was found then do case-insensitive search
-            return self.fetch_releases(self._search_package_name(package))
+        package = package.lower()
 
-        return package.lower(), releases
+        pypi_package_url = urljoin(
+            self.ecosystem.fetch_url, '{pkg_name}/json'.format(pkg_name=package)
+        )
+
+        response = requests.get(pypi_package_url)
+        if response.status_code != 200:
+            logger.error('Unable to obtain a list of versions for {pkg_name}'.format(
+                pkg_name=package
+            ))
+            return []
+
+        return package, list({x for x in response.json().get('releases', {})})
 
 
 class NpmReleasesFetcher(ReleasesFetcher):
@@ -191,15 +170,10 @@ class NpmReleasesFetcher(ReleasesFetcher):
 
         # quote '/' (but not '@') in scoped package name, e.g. in '@slicemenice/item-layouter'
         r = get(self.ecosystem.fetch_url + quote(package, safe='@'))
-        if r.status_code == 404:
-            if package.lower() != package:
-                return self.fetch_releases(package.lower())
-            raise ValueError("Package {} not found".format(package))
 
-        if 'versions' not in r.json().keys():
-            raise ValueError("Package {} does not have associated versions".format(package))
-
-        return package, list(r.json()['versions'].keys())
+        if r.status_code == 200 and r.content:
+            return package, list(r.json().get('versions', {}).keys())
+        return package, []
 
 
 class RubyGemsReleasesFetcher(ReleasesFetcher):
@@ -258,9 +232,8 @@ class NugetReleasesFetcher(ReleasesFetcher):
         """Initialize instance."""
         super(NugetReleasesFetcher, self).__init__(ecosystem)
 
-    @staticmethod
-    def scrape_versions_from_nuget_org(package, sort_by_downloads=False):
-        """Scrape 'Version History' from https://www.nuget.org/packages/<package>."""
+    def scrape_versions_from_nuget_org(self, package, sort_by_downloads=False):
+        """Scrape 'Version History' from Nuget."""
         releases = []
         nuget_packages_url = 'https://www.nuget.org/packages/'
         page = get(nuget_packages_url + package)
@@ -299,19 +272,34 @@ class MavenReleasesFetcher(ReleasesFetcher):
         """Initialize instance."""
         super().__init__(ecosystem)
 
-    @staticmethod
-    def releases_from_maven_org(group_id, artifact_id):
-        """Fetch releases versions for group_id/artifact_id from maven.org."""
-        # TODO: maven URL needs to be fetched from RDS
-        maven_url = "http://repo1.maven.org/maven2/"
-        dir_path = "{g}/{a}/".format(g=group_id.replace('.', '/'), a=artifact_id)
-        url = urljoin(maven_url, dir_path)
-        releases = []
-        page = BeautifulSoup(get(url).text, 'html.parser')
-        for link in page.find_all('a'):
-            if link.text.endswith('/') and link.text != '../':
-                releases.append(link.text.rstrip('/'))
-        return releases
+    def releases_from_maven_org(self, group_id, artifact_id):
+        """Fetch releases versions for group_id/artifact_id."""
+        metadata_filenames = ['maven-metadata.xml', 'maven-metadata-local.xml']
+
+        group_id_path = group_id.replace('.', '/')
+        versions = set()
+        we_good = False
+        for filename in metadata_filenames:
+
+            url = urljoin(
+                self.ecosystem.fetch_url,
+                '{g}/{a}/{f}'.format(g=group_id_path, a=artifact_id, f=filename)
+            )
+            try:
+                metadata_xml = etree.parse(urlopen(url))
+                we_good = True  # We successfully downloaded at least one of the metadata files
+                version_elements = metadata_xml.findall('.//version')
+                versions = versions.union({x.text for x in version_elements})
+            except OSError:
+                # Not both XML files have to exist, so don't freak out yet
+                pass
+
+        if not we_good:
+            logger.error('Unable to obtain a list of versions for {g}:{a}'.format(
+                g=group_id, a=artifact_id)
+            )
+
+        return list(versions)
 
     def fetch_releases(self, package):
         """Fetch package releases versions."""
