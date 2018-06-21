@@ -6,12 +6,12 @@ DIR=$(dirname "${BASH_SOURCE[0]}")
 echo "*****************************************"
 echo "*** Cyclomatic complexity measurement ***"
 echo "*****************************************"
-radon cc -s -a -i venv /f8a_worker/f8a_worker $@
+radon cc -s -a -i venv /f8a_worker/f8a_worker
 
 echo "*****************************************"
 echo "*** Maintainability Index measurement ***"
 echo "*****************************************"
-radon mi -s -i venv /f8a_worker/f8a_worker $@
+radon mi -s -i venv /f8a_worker/f8a_worker
 
 echo "*****************************************"
 echo "*** Unit tests ***"
