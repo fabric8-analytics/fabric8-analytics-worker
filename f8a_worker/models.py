@@ -1,8 +1,7 @@
 """SQLAlchemy domain models."""
 
 from sqlalchemy import (Column, DateTime, Enum, ForeignKey, Integer, String, UniqueConstraint,
-                        create_engine, func, Boolean, Text)
-from sqlalchemy.dialects.postgresql import ENUM
+                        create_engine, Boolean, Text)
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
