@@ -6,7 +6,9 @@ from selinon import RequestError
 from f8a_worker.base import BaseTask
 from f8a_worker.schemas import SchemaRef
 from f8a_worker.solver import get_ecosystem_solver, OSSIndexDependencyParser
+from f8a_worker.models import Ecosystem
 from f8a_worker.victims import VictimsDB
+from selinon import StoragePool
 
 
 class CVEcheckerTask(BaseTask):
@@ -213,8 +215,11 @@ class CVEcheckerTask(BaseTask):
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))
 
+        rdb = StoragePool.get_connected_storage('BayesianPostgres')
+        ecosystem = Ecosystem.by_name(rdb.session, arguments.get('ecosystem'))
+
         if arguments['ecosystem'] in ('maven', 'pypi', 'npm'):
-            return self._victims_scan(arguments, arguments['ecosystem'])
+            return self._victims_scan(arguments, ecosystem)
         elif arguments['ecosystem'] == 'nuget':
             return self._nuget_scan(arguments)
         else:

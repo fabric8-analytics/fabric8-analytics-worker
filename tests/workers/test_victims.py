@@ -4,11 +4,11 @@ from f8a_worker.workers import VictimsCheck
 from f8a_worker.victims import VictimsDB
 
 
-def test_get_vulnerable_packages(victims_zip):
+def test_get_vulnerable_packages(maven, victims_zip):
     """Test VictimsCheck.get_vulnerable_packages()."""
     with VictimsDB.from_zip(victims_zip) as db:
         task = VictimsCheck.create_test_instance()
-        packages = task.get_vulnerable_packages(db, 'maven')
+        packages = task.get_vulnerable_packages(db, maven)
         assert len(packages) == 2
 
         expected_packages = [
@@ -24,7 +24,7 @@ def test_get_vulnerable_packages(victims_zip):
                 assert len(data) == 1
 
 
-def test_mark_in_graph(victims_zip, mocker):
+def test_mark_in_graph(maven, victims_zip, mocker):
     """Test VictimsCheck.mark_in_graph()."""
     graph_mock = mocker.patch("f8a_worker.workers.victims.update_properties")
     graph_mock.return_value = None
@@ -34,7 +34,7 @@ def test_mark_in_graph(victims_zip, mocker):
 
     with VictimsDB.from_zip(victims_zip) as db:
         task = VictimsCheck.create_test_instance()
-        packages = task.get_vulnerable_packages(db, 'maven')
-        task.mark_in_graph(packages, 'maven')
+        packages = task.get_vulnerable_packages(db, maven)
+        task.mark_in_graph(packages, maven)
 
     assert graph_mock.call_count == vuln_count

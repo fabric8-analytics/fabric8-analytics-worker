@@ -5,13 +5,13 @@ import tempfile
 import os
 import logging
 import requests
-from lxml import etree
 from yaml import YAMLError, safe_load
 from selinon import StoragePool
 import shutil
 from distutils.version import LooseVersion
 
 from f8a_worker.process import Git
+from f8a_worker.solver import MavenReleasesFetcher, PypiReleasesFetcher, NpmReleasesFetcher
 
 
 VICTIMS_URL = 'https://github.com/victims/victims-cve-db.git'
@@ -104,11 +104,11 @@ class VictimsDB(object):
 
     def get_vulnerabilities_for_ecosystem(self, ecosystem):
         """Get all vulnerabilities for given ecosystem."""
-        if ecosystem == 'maven':
+        if ecosystem.name == 'maven':
             return self.java_vulnerabilities
-        elif ecosystem == 'pypi':
+        elif ecosystem.name == 'pypi':
             return self.python_vulnerabilities
-        elif ecosystem == 'npm':
+        elif ecosystem.name == 'npm':
             return self.javascript_vulnerabilities
         else:
             raise ValueError('Unsupported ecosystem: {e}'.format(e=ecosystem))
@@ -142,7 +142,7 @@ class VictimsDB(object):
                 }
 
     def _get_package_name(self, ecosystem, affected):
-        if ecosystem == 'maven':
+        if ecosystem.name == 'maven':
             return '{g}:{a}'.format(g=affected.get('groupId').strip(),
                                     a=affected.get('artifactId').strip())
         return affected.get('name').strip()
@@ -150,81 +150,19 @@ class VictimsDB(object):
     def _get_package_versions(self, ecosystem, package_name):
         """Get all versions for given package name.
 
+        :param ecosystem: f8a_worker.models.Ecosystem, ecosystem
         :param package_name: str, package name
         :return: list of all package versions
         """
-        if ecosystem == 'maven':
-            return self._get_maven_versions(package_name)
-        if ecosystem == 'pypi':
-            return self._get_pypi_versions(package_name)
-        if ecosystem == 'npm':
-            return self._get_npm_versions(package_name)
+        # Intentionally not checking ecosystem backend here.
+        # We simply don't know about CVEs in 3rd party repositories.
+        if ecosystem.name == 'maven':
+            return MavenReleasesFetcher(ecosystem).fetch_releases(package_name)[1]
+        if ecosystem.name == 'pypi':
+            return PypiReleasesFetcher(ecosystem).fetch_releases(package_name)[1]
+        if ecosystem.name == 'npm':
+            return NpmReleasesFetcher(ecosystem).fetch_releases(package_name)[1]
         return []
-
-    def _get_maven_versions(self, package_name):
-        """Get all versions for given Maven package."""
-        cached = self._java_versions_cache.get(package_name)
-        if cached is not None:
-            return cached
-
-        g, a = package_name.split(':')
-        g = g.replace('.', '/')
-
-        metadata_filenames = {'maven-metadata.xml', 'maven-metadata-local.xml'}
-
-        versions = set()
-        we_good = False
-        for filename in metadata_filenames:
-
-            # TODO: maven URL needs to be fetched from RDS
-            url = 'http://repo1.maven.org/maven2/{g}/{a}/{f}'.format(g=g, a=a, f=filename)
-
-            try:
-                metadata_xml = etree.parse(url)
-                we_good = True  # We successfully downloaded at least one of the metadata files
-                version_elements = metadata_xml.findall('.//version')
-                versions = versions.union({x.text for x in version_elements})
-            except OSError:
-                # Not both XML files have to exist, so don't freak out yet
-                pass
-
-        if not we_good:
-            logger.error('Unable to obtain a list of versions for {ga}'.format(ga=ga))
-
-        versions = list(versions)
-        self._java_versions_cache[package_name] = versions
-
-        return versions
-
-    def _get_pypi_versions(self, package_name):
-        """Get all versions for given Python package."""
-        pypi_package_url = 'https://pypi.python.org/pypi/{pkg_name}/json'.format(
-            pkg_name=package_name
-        )
-
-        response = requests.get(pypi_package_url)
-        if response.status_code != 200:
-            logger.error('Unable to obtain a list of versions for {pkg_name}'.format(
-                pkg_name=package_name
-            ))
-            return []
-
-        return list({x for x in response.json().get('releases', {})})
-
-    def _get_npm_versions(self, package_name):
-        """Get all versions for given NPM package."""
-        url = 'https://registry.npmjs.org/{pkg_name}'.format(pkg_name=package_name)
-
-        response = requests.get(url)
-
-        if response.status_code != 200:
-            logger.error('Unable to fetch versions for package {pkg_name}'.format(
-                pkg_name=package_name
-            ))
-            return []
-
-        versions = {x for x in response.json().get('versions')}
-        return list(versions)
 
     @staticmethod
     def is_version_affected(affected_versions, checked_version):
