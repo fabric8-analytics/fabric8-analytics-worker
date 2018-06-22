@@ -23,10 +23,10 @@ class TestDigester(object):
     """Tests for the class DigesterTask."""
 
     @pytest.mark.usefixtures("no_s3_connection")
-    def test_execute(self, tmpdir):
+    def test_execute(self, tmpdir, pypi):
         """Check the method DigesterTask.execute()."""
         artifact_digest, artifact_path = IndianaJones.fetch_artifact(
-            Ecosystem(name='pypi', backend=EcosystemBackend.pypi), artifact=PYPI_MODULE_NAME,
+            pypi, artifact=PYPI_MODULE_NAME,
             version=PYPI_MODULE_VERSION, target_dir=str(tmpdir))
 
         args = dict.fromkeys(('ecosystem', 'name', 'version'), 'some-value')

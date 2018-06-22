@@ -41,7 +41,7 @@ def rdb():
 def maven(rdb):
     """Prepare database with Maven ecosystem."""
     maven = Ecosystem(name='maven', backend=EcosystemBackend.maven,
-                      fetch_url='')
+                      fetch_url='https://repo.maven.apache.org/maven2/')
     rdb.add(maven)
     rdb.commit()
     return maven
@@ -61,7 +61,7 @@ def npm(rdb):
 def pypi(rdb):
     """Prepare database with Pypi ecosystem."""
     pypi = Ecosystem(name='pypi', backend=EcosystemBackend.pypi,
-                     fetch_url='https://pypi.python.org/pypi')
+                     fetch_url='https://pypi.org/pypi/')
     rdb.add(pypi)
     rdb.commit()
     return pypi

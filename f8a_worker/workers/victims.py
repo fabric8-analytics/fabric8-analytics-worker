@@ -2,9 +2,10 @@
 
 
 from f8a_worker.base import BaseTask
+from f8a_worker.models import Ecosystem
 from f8a_worker.victims import VictimsDB
 from f8a_worker.graphutils import update_properties
-from selinon import run_flow
+from selinon import run_flow, StoragePool
 
 
 class VictimsCheck(BaseTask):
@@ -17,7 +18,9 @@ class VictimsCheck(BaseTask):
         :return: None
         """
         self._strict_assert(arguments.get('ecosystem'))
-        ecosystem = arguments.get('ecosystem')
+
+        rdb = StoragePool.get_connected_storage('BayesianPostgres')
+        ecosystem = Ecosystem.by_name(rdb.session, arguments.get('ecosystem'))
 
         with VictimsDB.build_from_git() as db:
 
@@ -36,7 +39,7 @@ class VictimsCheck(BaseTask):
         and values are details about vulnerabilities.
 
         :param db: VictimsDB
-        :param ecosystem: str, ecosystem
+        :param ecosystem: f8a_worker.models.Ecosystem, ecosystem object
         :return: dict, a dict of vulnerable packages with details
         """
         vulnerable_packages = {}
@@ -53,7 +56,7 @@ class VictimsCheck(BaseTask):
         Runs non-forced bayesianPriorityFlow analysis.
 
         :param vulnerable_packages: dict, a dict of vulnerable packages with details
-        :param ecosystem: str, ecosystem
+        :param ecosystem: f8a_worker.models.Ecosystem, ecosystem
         :return: None
         """
         for ga, data in vulnerable_packages.items():
@@ -61,7 +64,7 @@ class VictimsCheck(BaseTask):
                 versions = data[0].get('affected', []) + data[0].get('not_affected', [])
                 for version in versions:
                     node_args = {
-                        'ecosystem': ecosystem,
+                        'ecosystem': ecosystem.name,
                         'force': False,
                         'force_graph_sync': False,
                         'name': ga,
@@ -76,7 +79,7 @@ class VictimsCheck(BaseTask):
         """Mark vulnerable components in graph.
 
         :param vulnerable_packages: dict, a dict of vulnerable packages with details
-        :param ecosystem: str, ecosystem
+        :param ecosystem: f8a_worker.models.Ecosystem, ecosystem
         :return: None
         """
         packages = {}
@@ -105,4 +108,4 @@ class VictimsCheck(BaseTask):
                 self.log.info('Marking {ga}:{v} as vulnerable in graph: {vulns}'.format(
                     ga=ga, v=version, vulns=str(cves))
                 )
-                update_properties(ecosystem, ga, version, properties)
+                update_properties(ecosystem.name, ga, version, properties)

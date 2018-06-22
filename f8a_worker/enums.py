@@ -4,7 +4,7 @@ from enum import IntEnum
 
 
 class EcosystemBackend(IntEnum):
-    """Backends for all ecosystems."""
+    """Backends for all supported ecosystems."""
 
     # range will increase in case of adding new backend
     # none, nodejs, java, python, ruby, go, crates

@@ -20,7 +20,6 @@ from requests.adapters import HTTPAdapter
 from requests.exceptions import HTTPError
 from requests.packages.urllib3.util.retry import Retry
 from selinon import StoragePool
-from sqlalchemy import desc
 from sqlalchemy.exc import SQLAlchemyError
 
 from f8a_worker.errors import TaskError, NotABugTaskError

@@ -28,7 +28,7 @@ class TestCVEchecker(object):
         ('1.6.4',),
         ('1.7.1',)
     ])
-    @pytest.mark.usefixtures('victims_zip_s3')
+    @pytest.mark.usefixtures('victims_zip_s3', 'npm')
     def test_npm_servestatic(self, version):
         """Tests CVE reports for selected package from NPM ecosystem."""
         args = {'ecosystem': 'npm', 'name': 'serve-static', 'version': version}
@@ -62,7 +62,7 @@ class TestCVEchecker(object):
         }]
         assert_equal(results.get('details'), expected_details)
 
-    @pytest.mark.usefixtures('victims_zip_s3')
+    @pytest.mark.usefixtures('victims_zip_s3', 'npm')
     def test_npm_servestatic_not_affected(self):
         """Tests CVE reports for selected package from NPM ecosystem."""
         args = {'ecosystem': 'npm', 'name': 'serve-static', 'version': '1.7.5'}
@@ -75,7 +75,7 @@ class TestCVEchecker(object):
         assert results['summary'] == []
         assert_equal(results.get('details'), [])
 
-    @pytest.mark.usefixtures('victims_zip_s3')
+    @pytest.mark.usefixtures('victims_zip_s3', 'maven')
     def test_maven_commons_compress(self):
         """Tests CVE reports for selected packages from Maven ecosystem."""
         args = {'ecosystem': 'maven', 'name': 'org.apache.commons:commons-compress',
@@ -106,7 +106,7 @@ class TestCVEchecker(object):
         ]
         assert_equal(results.get('details'), expected_details, results.get('details'))
 
-    @pytest.mark.usefixtures('victims_zip_s3')
+    @pytest.mark.usefixtures('victims_zip_s3', 'pypi')
     def test_python_pyjwt(self):
         """Tests CVE reports for selected package from PyPi ecosystem."""
         args = {'ecosystem': 'pypi', 'name': 'pyjwt', 'version': '1.5.0'}

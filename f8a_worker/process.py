@@ -305,7 +305,7 @@ class IndianaJones(object):
                                                    graceful=False).pop()
 
     @staticmethod
-    def fetch_maven_artifact(name, version, target_dir):
+    def fetch_maven_artifact(ecosystem, name, version, target_dir):
         """Fetch maven artifact from maven.org."""
         git = Git.create_git(target_dir)
         artifact_coords = MavenCoordinates.from_str(name)
@@ -316,9 +316,7 @@ class IndianaJones(object):
             raise NotABugTaskError("Invalid Maven coordinates: {a}".format(
                 a=artifact_coords.to_str()))
 
-        # lxml can't handle HTTPS URLs
-        # TODO: maven URL needs to be fetched from RDS
-        maven_url = "https://repo.maven.apache.org/maven2/"
+        maven_url = ecosystem.fetch_url
         artifact_url = urljoin(maven_url, artifact_coords.to_repo_url())
         local_filepath = IndianaJones.download_file(artifact_url, target_dir)
         if local_filepath is None:
@@ -340,13 +338,15 @@ class IndianaJones(object):
         return digest, artifact_path
 
     @staticmethod
-    def fetch_npm_artifact(name, version, target_dir):
+    def fetch_npm_artifact(ecosystem, name, version, target_dir):
         """Fetch npm artifact using system 'npm' tool."""
         git = Git.create_git(target_dir)
 
+        npm_cmd = ['npm', '--registry', ecosystem.fetch_url]
+
         # $ npm config get cache
         # /root/.npm
-        cache_path = TimedCommand.get_command_output(['npm', 'config', 'get', 'cache'],
+        cache_path = TimedCommand.get_command_output(npm_cmd + ['config', 'get', 'cache'],
                                                      graceful=False).pop()
 
         # add package to cache:
@@ -364,25 +364,24 @@ class IndianaJones(object):
         name_ver = name
 
         try:
-            npm_command = ['npm', 'show', name_ver, 'versions', '--json']
-            version_list = TimedCommand.get_command_output(
-                npm_command, graceful=False, is_json=True
-            )
-            if version:
-                if version not in version_list:
-                    raise NotABugTaskError("Provided version is not supported '%s'" % name)
-                else:
-                    name_ver = "{}@{}".format(name, version)
-        except TaskError as e:
+            # importing here to avoid circular dependency
+            from f8a_worker.solver import NpmReleasesFetcher
+
+            version_list = NpmReleasesFetcher(ecosystem).fetch_releases(name_ver)[1]
+            if version not in version_list:
+                raise NotABugTaskError("Provided version is not supported '%s'" % name)
+            else:
+                name_ver = "{}@{}".format(name, version)
+        except ValueError as e:
             raise NotABugTaskError(
                 'No versions for package NPM package {p} ({e})'.format(p=name, e=str(e))
             )
 
         # make sure the artifact is not in the cache yet
-        TimedCommand.get_command_output(['npm', 'cache', 'clean', name], graceful=False)
+        TimedCommand.get_command_output(npm_cmd + ['cache', 'clean', name], graceful=False)
         logger.info("downloading npm module %s", name_ver)
-        npm_command = ['npm', 'cache', 'add', name_ver]
-        TimedCommand.get_command_output(npm_command, graceful=False)
+        cmd = npm_cmd + ['cache', 'add', name_ver]
+        TimedCommand.get_command_output(cmd, graceful=False)
 
         # copy tarball to workpath
         tarball_name = "package.tgz"
@@ -413,10 +412,10 @@ class IndianaJones(object):
         return digest, artifact_path
 
     @staticmethod
-    def fetch_nuget_artifact(name, version, target_dir):
+    def fetch_nuget_artifact(ecosystem, name, version, target_dir):
         """Fetch nuget artifact from nuget.org."""
         git = Git.create_git(target_dir)
-        nuget_url = 'https://api.nuget.org/packages/'
+        nuget_url = ecosystem.fetch_url
         file_url = '{url}{name}.{version}.nupkg'.format(url=nuget_url,
                                                         name=name.lower(),
                                                         version=version.lower())
@@ -430,13 +429,15 @@ class IndianaJones(object):
         return digest, artifact_path
 
     @staticmethod
-    def fetch_pypi_artifact(name, version, target_dir):
+    def fetch_pypi_artifact(ecosystem, name, version, target_dir):
         """Fetch Pypi artifact."""
         git = Git.create_git(target_dir)
+        pypi_url = ecosystem.fetch_url
+
         # NOTE: we can't download Python packages via pip, because it runs setup.py
         #  even with `pip download`. Therefore we could always get syntax errors
         #  because of older/newer syntax.
-        res = requests.get('https://pypi.org/pypi/{n}/json'.format(n=name))
+        res = requests.get(urljoin(pypi_url, '{n}/json'.format(n=name)))
 
         if res.status_code != 200:
             raise NotABugTaskError(
@@ -471,7 +472,7 @@ class IndianaJones(object):
         return digest, artifact_path
 
     @staticmethod
-    def fetch_rubygems_artifact(name, version, target_dir):
+    def fetch_rubygems_artifact(ecosystem, name, version, target_dir):
         """Fetch rubygems artifact using 'gem fetch' command."""
         git = Git.create_git(target_dir)
         logger.info("downloading rubygems package %s-%s", name, version)
@@ -529,18 +530,29 @@ class IndianaJones(object):
         artifact_path = None
 
         if ecosystem.is_backed_by(EcosystemBackend.pypi):
-            digest, artifact_path = IndianaJones.fetch_pypi_artifact(artifact, version, target_dir)
+            digest, artifact_path = IndianaJones.fetch_pypi_artifact(
+                ecosystem, artifact, version, target_dir
+            )
         elif ecosystem.is_backed_by(EcosystemBackend.npm):
-            digest, artifact_path = IndianaJones.fetch_npm_artifact(artifact, version, target_dir)
+            digest, artifact_path = IndianaJones.fetch_npm_artifact(
+                ecosystem, artifact, version, target_dir
+            )
         elif ecosystem.is_backed_by(EcosystemBackend.rubygems):
-            digest, artifact_path = IndianaJones.fetch_rubygems_artifact(artifact, version,
-                                                                         target_dir)
+            digest, artifact_path = IndianaJones.fetch_rubygems_artifact(
+                ecosystem, artifact, version, target_dir
+            )
         elif ecosystem.is_backed_by(EcosystemBackend.maven):
-            digest, artifact_path = IndianaJones.fetch_maven_artifact(artifact, version, target_dir)
+            digest, artifact_path = IndianaJones.fetch_maven_artifact(
+                ecosystem, artifact, version, target_dir
+            )
         elif ecosystem.is_backed_by(EcosystemBackend.nuget):
-            digest, artifact_path = IndianaJones.fetch_nuget_artifact(artifact, version, target_dir)
+            digest, artifact_path = IndianaJones.fetch_nuget_artifact(
+                ecosystem, artifact, version, target_dir
+            )
         elif ecosystem.is_backed_by(EcosystemBackend.scm):
-            digest, artifact_path = IndianaJones.fetch_scm_artifact(artifact, version, target_dir)
+            digest, artifact_path = IndianaJones.fetch_scm_artifact(
+                artifact, version, target_dir
+            )
         elif parsed:
             if parsed[0] == 'git' or parsed[2].endswith('.git'):
                 git = Git.clone(artifact, target_dir)
