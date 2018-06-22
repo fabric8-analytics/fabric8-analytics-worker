@@ -29,11 +29,11 @@ gc() {
   retval=$?
   # FIXME: make this configurable
   echo "Stopping test containers"
-  docker stop ${CONTAINER_NAME} ${TESTDB_CONTAINER_NAME} ${TESTS3_CONTAINER_NAME} ${TESTCVEDB_S3_DUMP_CONTAINER_NAME} || :
+  docker stop "${CONTAINER_NAME}" "${TESTDB_CONTAINER_NAME}" "${TESTS3_CONTAINER_NAME}" "${TESTCVEDB_S3_DUMP_CONTAINER_NAME}" || :
   echo "Removing test containers"
-  docker rm -v ${CONTAINER_NAME} ${TESTDB_CONTAINER_NAME} ${TESTS3_CONTAINER_NAME} ${TESTCVEDB_S3_DUMP_CONTAINER_NAME} || :
+  docker rm -v "${CONTAINER_NAME}" "${TESTDB_CONTAINER_NAME}" "${TESTS3_CONTAINER_NAME}" "${TESTCVEDB_S3_DUMP_CONTAINER_NAME}" || :
   echo "Removing network ${DOCKER_NETWORK}"
-  docker network rm ${DOCKER_NETWORK} || :
+  docker network rm "${DOCKER_NETWORK}" || :
   exit $retval
 }
 
@@ -42,7 +42,7 @@ trap gc EXIT SIGINT
 if [ "$REBUILD" == "1" ] || \
      !(docker inspect $IMAGE_NAME > /dev/null 2>&1); then
   echo "Building $IMAGE_NAME for testing"
-  docker build --tag=$IMAGE_NAME .
+  docker build --tag="$IMAGE_NAME" .
 fi
 
 if [ "$REBUILD" == "1" ] || \
@@ -52,8 +52,8 @@ if [ "$REBUILD" == "1" ] || \
 fi
 
 echo "Removing database"
-docker kill ${TESTDB_CONTAINER_NAME} ${TESTS3_CONTAINER_NAME} || :
-docker rm -vf ${TESTDB_CONTAINER_NAME} ${TESTS3_CONTAINER_NAME} || :
+docker kill "${TESTDB_CONTAINER_NAME}" "${TESTS3_CONTAINER_NAME}" || :
+docker rm -vf "${TESTDB_CONTAINER_NAME}" "${TESTS3_CONTAINER_NAME}" || :
 
 echo "Creating network ${DOCKER_NETWORK}"
 docker network create ${DOCKER_NETWORK}
@@ -64,14 +64,14 @@ echo "Starting/creating containers:"
 docker run -d \
     --env-file tests/postgres.env \
     --network ${DOCKER_NETWORK} \
-    --name ${TESTDB_CONTAINER_NAME} ${POSTGRES_IMAGE_NAME}
+    --name "${TESTDB_CONTAINER_NAME}" "${POSTGRES_IMAGE_NAME}"
 DB_CONTAINER_IP=$(docker inspect --format "{{.NetworkSettings.Networks.${DOCKER_NETWORK}.IPAddress}}" ${TESTDB_CONTAINER_NAME})
 
 # TODO: this is duplicating code with server's runtest, we should refactor
 echo "Waiting for postgres to fully initialize"
 set +x
 for i in {1..10}; do
-  retcode=`curl http://${DB_CONTAINER_IP}:5432 &>/dev/null || echo $?`
+  retcode=$(curl http://${DB_CONTAINER_IP}:5432 &>/dev/null || echo $?)
   if test "$retcode" == "52"; then
     break
   fi;
@@ -81,30 +81,30 @@ set -x
 
 docker run -d \
     --env-file tests/minio.env \
-    --name ${TESTS3_CONTAINER_NAME} \
-    --network ${DOCKER_NETWORK} \
+    --name "${TESTS3_CONTAINER_NAME}" \
+    --network "${DOCKER_NETWORK}" \
     ${S3_IMAGE_NAME} server --address :33000 /export
 S3_CONTAINER_IP=$(docker inspect --format "{{.NetworkSettings.Networks.${DOCKER_NETWORK}.IPAddress}}" ${TESTS3_CONTAINER_NAME})
 S3_ENDPOINT_URL="http://${S3_CONTAINER_IP}:33000"
 docker run \
-    -e S3_ENDPOINT_URL=${S3_ENDPOINT_URL} \
+    -e S3_ENDPOINT_URL="${S3_ENDPOINT_URL}" \
     --env-file tests/cvedb_s3_dump.env \
-    --network ${DOCKER_NETWORK} \
-    --name ${TESTCVEDB_S3_DUMP_CONTAINER_NAME} ${CVEDB_S3_DUMP_IMAGE_NAME}
+    --network "${DOCKER_NETWORK}" \
+    --name "${TESTCVEDB_S3_DUMP_CONTAINER_NAME}" "${CVEDB_S3_DUMP_IMAGE_NAME}"
 
 echo "Starting test suite"
 docker run -t \
   -v "${here}:/f8a_worker:ro,Z" \
-  --network ${DOCKER_NETWORK} \
+  --network "${DOCKER_NETWORK}" \
   -u 9007 \
-  -e PGBOUNCER_SERVICE_HOST=${TESTDB_CONTAINER_NAME} \
-  -e S3_ENDPOINT_URL=${S3_ENDPOINT_URL} \
+  -e PGBOUNCER_SERVICE_HOST="${TESTDB_CONTAINER_NAME}" \
+  -e S3_ENDPOINT_URL="${S3_ENDPOINT_URL}" \
   -e DEPLOYMENT_PREFIX='test' \
   -e WORKER_ADMINISTRATION_REGION='api' \
   -e F8A_UNCLOUDED_MODE='true' \
   -e SENTRY_DSN='' \
   --env-file tests/postgres.env \
-  --name=${CONTAINER_NAME} \
+  --name="${CONTAINER_NAME}" \
   ${TEST_IMAGE_NAME} /f8a_worker/hack/exec_tests.sh $@ /f8a_worker/tests/
 
 echo "Test suite passed \\o/"
