@@ -3,6 +3,10 @@
 import logging
 from urllib.parse import urlparse
 
+from selinon import StoragePool
+
+from f8a_worker.enums import EcosystemBackend
+from f8a_worker.models import Ecosystem
 from f8a_worker.utils import MavenCoordinates
 
 logger = logging.getLogger(__name__)
@@ -12,7 +16,10 @@ def _create_analysis_arguments(ecosystem, name, version):
     """Create arguments for analysis."""
     return {
         'ecosystem': ecosystem,
-        'name': MavenCoordinates.normalize_str(name) if ecosystem == 'maven' else name,
+        'name': MavenCoordinates.normalize_str(name) if Ecosystem.by_name(
+            StoragePool.get_connected_storage('BayesianPostgres').session,
+            ecosystem).is_backed_by(
+            EcosystemBackend.maven) else name,
         'version': version
     }
 
@@ -112,7 +119,8 @@ def iter_unknown_dependencies(storage_pool, node_args):
         for element in aggregated["result"]:
             epv = element.split(':')
             ecosystem = epv[0]
-            if ecosystem == 'maven':
+            if Ecosystem.by_name(StoragePool.get_connected_storage('BayesianPostgres').session,
+                                 ecosystem).is_backed_by(EcosystemBackend.maven):
                 name = '{}:{}'.format(epv[1], epv[2])
                 version = epv[3]
             else:

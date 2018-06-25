@@ -7,6 +7,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from selinon import StoragePool
+
+from f8a_worker.enums import EcosystemBackend
 from f8a_worker.models import PackageAnalysis, Ecosystem, Package, PackageWorkerResult
 from f8a_worker.utils import MavenCoordinates
 
@@ -71,7 +73,7 @@ class PackagePostgres(PostgresBase):
         :param package: str, Package name
         :return: analysis count
         """
-        if ecosystem == 'maven':
+        if Ecosystem.by_name(PostgresBase.session, ecosystem).is_backed_by(EcosystemBackend.maven):
             package = MavenCoordinates.normalize_str(package)
 
         try:
