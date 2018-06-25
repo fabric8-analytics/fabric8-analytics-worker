@@ -8,6 +8,9 @@ from urllib.parse import quote, urljoin
 import random
 from os import environ, path
 
+from selinon import StoragePool
+
+from f8a_worker.enums import EcosystemBackend
 from f8a_worker.errors import F8AConfigurationException
 
 logger = logging.getLogger(__name__)
@@ -150,13 +153,13 @@ class F8AConfiguration(object):
     @classmethod
     def libraries_io_project_url(cls, ecosystem, name):
         """Construct url to endpoint, which gets information about a project and it's versions."""
-        if ecosystem == 'npm':
+        if ecosystem.is_backed_by(EcosystemBackend.npm):
             # quote '/' (but not '@') in scoped package name, e.g. in '@slicemenice/item-layouter'
             name = quote(name, safe='@')
 
         url = '{api}/{platform}/{name}'. \
             format(api=cls.LIBRARIES_IO_API,
-                   platform=ecosystem,
+                   platform=ecosystem.backend.name,
                    name=name)
 
         if not cls.LIBRARIES_IO_TOKEN or cls.LIBRARIES_IO_TOKEN == 'not-set':

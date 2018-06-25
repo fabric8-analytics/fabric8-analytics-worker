@@ -1,7 +1,8 @@
 """Update vulnerability sources."""
-
 from selinon import StoragePool
 from f8a_worker.base import BaseTask
+from f8a_worker.enums import EcosystemBackend
+from f8a_worker.models import Ecosystem
 from f8a_worker.solver import get_ecosystem_solver, OSSIndexDependencyParser
 from f8a_worker.workers import CVEcheckerTask
 
@@ -21,6 +22,8 @@ class CVEDBSyncTask(BaseTask):
         """
         # TODO: reduce cyclomatic complexity
         to_scan = []
+        rdb = StoragePool.get_connected_storage('BayesianPostgres')
+
         for ecosystem in ['nuget']:
             ecosystem_solver = get_ecosystem_solver(self.storage.get_ecosystem(ecosystem),
                                                     with_parser=OSSIndexDependencyParser())
@@ -29,7 +32,7 @@ class CVEDBSyncTask(BaseTask):
                 query_ossindex_vulnerability_fromtill(ecosystem=ecosystem,
                                                       from_time=previous_sync_timestamp)
             for ossindex_updated_package in ossindex_updated_packages:
-                if ecosystem == 'maven':
+                if Ecosystem.by_name(rdb.session, ecosystem).is_backed_by(EcosystemBackend.maven):
                     package_name = "{g}:{n}".format(g=ossindex_updated_package['group'],
                                                     n=ossindex_updated_package['name'])
                 else:

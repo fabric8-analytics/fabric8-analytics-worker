@@ -12,6 +12,7 @@ from f8a_worker.workers import LibrariesIoTask
 class TestLibrariesIoTask(object):
     """Tests for LibrariesIoTask."""
 
+    @pytest.mark.usefixtures("npm")
     @pytest.mark.parametrize('args', [
          {'ecosystem': 'npm', 'name': 'grunt'},
     ])
@@ -33,6 +34,7 @@ class TestLibrariesIoTask(object):
         assert results['details']['dependents'].get('count')
         assert results['details']['dependent_repositories'].get('count')
 
+    @pytest.mark.usefixtures("maven")
     @pytest.mark.parametrize('args', [
          {'ecosystem': 'maven', 'name': 'madeup.group:nonexistent.id'},
     ])
