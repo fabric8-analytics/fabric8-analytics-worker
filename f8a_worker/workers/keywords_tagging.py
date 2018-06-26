@@ -226,6 +226,7 @@ class PackageKeywordsTaggingTask(KeywordsTaggingTaskBase):
         """
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
+        self._strict_assert(arguments.get('document_id'))
 
         keywords_file_name, stopwords_file_name = self._get_config_files(arguments['ecosystem'])
         details = self._package_level_keywords(keywords_file_name, stopwords_file_name,
