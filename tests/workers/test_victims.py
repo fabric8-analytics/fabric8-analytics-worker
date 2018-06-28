@@ -1,5 +1,7 @@
 """Test f8a_worker.workers.victims module."""
 
+import requests
+
 from f8a_worker.workers import VictimsCheck
 from f8a_worker.victims import VictimsDB
 
@@ -38,3 +40,21 @@ def test_mark_in_graph(maven, victims_zip, mocker):
         task.mark_in_graph(packages, maven)
 
     assert graph_mock.call_count == vuln_count
+
+
+def test_notify_gemini(maven, victims_zip, mocker):
+    """Test VictimsCheck.notify_gemini()."""
+    response = requests.Response()
+    response.status_code = 200
+    gemini_mock = mocker.patch("requests.post")
+    gemini_mock.return_value = response
+
+    # Total number of affected packages
+    vuln_count = 2
+
+    with VictimsDB.from_zip(victims_zip) as db:
+        task = VictimsCheck.create_test_instance()
+        packages = task.get_vulnerable_packages(db, maven)
+        task.notify_gemini(packages, maven)
+
+    assert gemini_mock.call_count == vuln_count

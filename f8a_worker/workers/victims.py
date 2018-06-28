@@ -1,6 +1,9 @@
 """Task to analyze vulnerable packages and mark them in graph as such."""
 
 
+import os
+import requests
+
 from f8a_worker.base import BaseTask
 from f8a_worker.models import Ecosystem
 from f8a_worker.victims import VictimsDB, FilteredVictimsDB
@@ -35,6 +38,8 @@ class VictimsCheck(BaseTask):
 
             self.mark_in_graph(vulnerable_packages, ecosystem)
 
+            self.notify_gemini(vulnerable_packages, ecosystem)
+
     def get_vulnerable_packages(self, db, ecosystem):
         """Get vulnerable packages.
 
@@ -52,6 +57,37 @@ class VictimsCheck(BaseTask):
             ga_data.append(pkg)
             vulnerable_packages[ga] = ga_data
         return vulnerable_packages
+
+    def notify_gemini(self, vulnerable_packages, ecosystem):
+        """Notify gemini service about vulnerabilities in packages.
+
+        :param vulnerable_packages: dict, a dict of vulnerable packages with details
+        :param ecosystem: f8a_worker.models.Ecosystem, ecosystem
+        :return: None
+        """
+        gemini_url = 'http://{host}:{port}/api/v1/user-repo/notify'.format(
+            host=os.environ.get('F8A_GEMINI_SERVER_SERVICE_HOST'),
+            port=os.environ.get('F8A_GEMINI_SERVER_SERVICE_PORT')
+        )
+
+        for package, data in vulnerable_packages.items():
+            if data:
+                versions = data[0].get('affected', []) + data[0].get('not_affected', [])
+                epv_list = []
+                for version in versions:
+                    epv = {
+                        'ecosystem': ecosystem.name,
+                        'name': package,
+                        'version': version,
+                    }
+                    epv_list.append(epv)
+
+                resp = requests.post(gemini_url, json=epv_list)
+                if resp.status_code != 200:
+                    self.log.error('Failed to notify gemini about vulnerabilities in {e}{p}'.format(
+                        e=ecosystem.name,
+                        p=package
+                    ))
 
     def create_in_graph(self, vulnerable_packages, ecosystem):
         """Make sure we have all packages with known vulnerabilities in graph.
