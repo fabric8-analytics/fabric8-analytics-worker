@@ -3,7 +3,7 @@
 
 from f8a_worker.base import BaseTask
 from f8a_worker.models import Ecosystem
-from f8a_worker.victims import VictimsDB
+from f8a_worker.victims import VictimsDB, FilteredVictimsDB
 from f8a_worker.graphutils import update_properties, create_nodes
 from selinon import StoragePool
 
@@ -19,10 +19,13 @@ class VictimsCheck(BaseTask):
         """
         self._strict_assert(arguments.get('ecosystem'))
 
+        wanted_cves = set(arguments.get('cve_filter', []))
+        victims_cls = VictimsDB if not wanted_cves else FilteredVictimsDB
+
         rdb = StoragePool.get_connected_storage('BayesianPostgres')
         ecosystem = Ecosystem.by_name(rdb.session, arguments.get('ecosystem'))
 
-        with VictimsDB.build_from_git() as db:
+        with victims_cls.build_from_git(wanted_cves=wanted_cves) as db:
 
             self.log.info('Storing the VictimsDB zip on S3')
             db.store_on_s3()
