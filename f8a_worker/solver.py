@@ -140,7 +140,7 @@ class PypiReleasesFetcher(ReleasesFetcher):
             logger.error('Unable to obtain a list of versions for {pkg_name}'.format(
                 pkg_name=package
             ))
-            return []
+            return package, []
 
         return package, list({x for x in response.json().get('releases', {})})
 
