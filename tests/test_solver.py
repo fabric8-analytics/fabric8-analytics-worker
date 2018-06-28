@@ -9,7 +9,7 @@ from f8a_worker.solver import\
     (get_ecosystem_solver, Dependency,
      PypiDependencyParser, NpmDependencyParser, OSSIndexDependencyParser, NugetDependencyParser,
      GolangDependencyParser, MavenReleasesFetcher, NpmReleasesFetcher, NugetReleasesFetcher,
-     F8aReleasesFetcher, GolangReleasesFetcher)
+     F8aReleasesFetcher, GolangReleasesFetcher, PypiReleasesFetcher)
 
 
 class TestDependencyParser(object):
@@ -266,6 +266,19 @@ class TestFetcher(object):
     def test_npm_fetcher(self, npm, package, expected):
         """Test NpmReleasesFetcher."""
         f = NpmReleasesFetcher(npm)
+        _, releases = f.fetch_releases(package)
+        assert set(releases) >= expected
+
+    @pytest.mark.parametrize('package, expected', [
+        ('anymarkup', {
+            '0.1.0', '0.1.1', '0.2.0', '0.3.0', '0.3.1', '0.4.0',
+            '0.4.1', '0.4.2', '0.4.3', '0.5.0', '0.6.0', '0.7.0'
+        }),
+        ('somereallydummynonexistentpackage', set())
+    ])
+    def test_pypi_fetcher(self, pypi, package, expected):
+        """Test NpmReleasesFetcher."""
+        f = PypiReleasesFetcher(pypi)
         _, releases = f.fetch_releases(package)
         assert set(releases) >= expected
 
