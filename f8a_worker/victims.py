@@ -4,7 +4,6 @@ import zipfile
 import tempfile
 import os
 import logging
-import requests
 from yaml import YAMLError, safe_load
 from selinon import StoragePool
 import shutil
@@ -90,17 +89,20 @@ class VictimsDB(object):
             for zip_info in zipf.filelist:
                 if not zip_info.filename.endswith(('.yaml', '.yml')):
                     continue
-                stream = zipf.read(zip_info)
-                try:
-                    vulnerability = safe_load(stream)
-                    if zip_info.filename.startswith('database/java/'):
-                        self._java_vulnerabilities.append(vulnerability)
-                    if zip_info.filename.startswith('database/python/'):
-                        self._python_vulnerabilities.append(vulnerability)
-                    if zip_info.filename.startswith('database/javascript/'):
-                        self._javascript_vulnerabilities.append(vulnerability)
-                except YAMLError:
-                    logger.exception('Failed to load YAML file: {f}'.format(f=zip_info.filename))
+                self._register_cve(zipf, zip_info)
+
+    def _register_cve(self, zipf, zip_info):
+        stream = zipf.read(zip_info)
+        try:
+            vulnerability = safe_load(stream)
+            if zip_info.filename.startswith('database/java/'):
+                self._java_vulnerabilities.append(vulnerability)
+            if zip_info.filename.startswith('database/python/'):
+                self._python_vulnerabilities.append(vulnerability)
+            if zip_info.filename.startswith('database/javascript/'):
+                self._javascript_vulnerabilities.append(vulnerability)
+        except YAMLError:
+            logger.exception('Failed to load YAML file: {f}'.format(f=zip_info.filename))
 
     def get_vulnerabilities_for_ecosystem(self, ecosystem):
         """Get all vulnerabilities for given ecosystem."""
@@ -231,7 +233,7 @@ class VictimsDB(object):
         s3.store_file(self._db_path, self.ARCHIVE_NAME)
 
     @classmethod
-    def from_s3(cls):
+    def from_s3(cls, **kwargs):
         """Retrieve the database from S3."""
         db_path = tempfile.mkstemp(prefix='victims-db-')[1]
         try:
@@ -239,21 +241,21 @@ class VictimsDB(object):
             if not s3.object_exists(cls.ARCHIVE_NAME):
                 return None
             s3.retrieve_file(cls.ARCHIVE_NAME, db_path)
-            return cls(db_path=db_path)
+            return cls(db_path=db_path, **kwargs)
         except Exception:
             os.remove(db_path)
             raise
 
     @classmethod
-    def from_zip(cls, zip_file):
+    def from_zip(cls, zip_file, **kwargs):
         """Build the database from given ZIP file."""
-        return cls(db_path=zip_file, _cleanup=False)
+        return cls(db_path=zip_file, _cleanup=False, **kwargs)
 
     @classmethod
-    def build_from_git(cls):
+    def build_from_git(cls, **kwargs):
         """Build the database from GitHub."""
         db_path = cls._build_from_git()
-        return cls(db_path=db_path)
+        return cls(db_path=db_path, **kwargs)
 
     def __enter__(self):
         """Do nothing special, just enter."""
@@ -262,3 +264,33 @@ class VictimsDB(object):
     def __exit__(self, *args):
         """Clean up on exit."""
         self.close()
+
+
+class FilteredVictimsDB(VictimsDB):
+    """Filtered Victims CVE database.
+
+    Subset of the Victims CVE database containing only "wanted" CVEs.
+    """
+
+    def __init__(self, db_path, _cleanup=True, wanted=None):
+        """Construct FilteredVictimsDB."""
+        self._wanted_cves = wanted or set()
+        super().__init__(db_path, _cleanup=_cleanup)
+
+    def _register_cve(self, zipf, zip_info):
+        stream = zipf.read(zip_info)
+        try:
+            vulnerability = safe_load(stream)
+
+            # filter out unwanted CVEs
+            if vulnerability.get('cve') not in self._wanted_cves:
+                return
+
+            if zip_info.filename.startswith('database/java/'):
+                self._java_vulnerabilities.append(vulnerability)
+            if zip_info.filename.startswith('database/python/'):
+                self._python_vulnerabilities.append(vulnerability)
+            if zip_info.filename.startswith('database/javascript/'):
+                self._javascript_vulnerabilities.append(vulnerability)
+        except YAMLError:
+            logger.exception('Failed to load YAML file: {f}'.format(f=zip_info.filename))

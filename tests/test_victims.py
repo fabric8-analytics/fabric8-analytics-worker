@@ -1,6 +1,6 @@
 """Test f8a_worker.victims module."""
 
-from f8a_worker.victims import VictimsDB
+from f8a_worker.victims import VictimsDB, FilteredVictimsDB
 
 
 def test_java_vulnerabilities(victims_zip):
@@ -8,6 +8,13 @@ def test_java_vulnerabilities(victims_zip):
     with VictimsDB.from_zip(victims_zip) as db:
         vulns = [x for x in db.java_vulnerabilities]
         assert len(vulns) == 3
+
+
+def test_filtered_java_vulnerabilities(victims_zip):
+    """Test filtered VictimsDB.java_vulnerabilities()."""
+    with FilteredVictimsDB.from_zip(victims_zip, wanted={'2016-1000031'}) as db:
+        vulns = [x for x in db.java_vulnerabilities]
+        assert len(vulns) == 1
 
 
 def test_get_vulnerable_java_packages(maven, victims_zip):
