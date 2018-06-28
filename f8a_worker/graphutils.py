@@ -338,7 +338,7 @@ def update_properties(ecosystem, package, version, properties):
     payload = {
         'properties': properties
     }
-    response = requests.put(url, data=payload)
+    response = requests.put(url, json=payload)
     if response.status_code == 404:
         # This is OK, we just don't have the component in graph yet
         msg = 'Component {e}/{p}/{v} is not yet in graph'.format(
@@ -358,3 +358,25 @@ def update_properties(ecosystem, package, version, properties):
             content=response.content
         )
         logger.error(msg)
+
+
+def create_nodes(epv_list):
+    """Create nodes in graph for all EPVs in the list.
+
+    :param epv_list: list, list of dictionaries where each dict represents single EPV
+    :return: None
+    """
+    if not epv_list:
+        return
+
+    url = DATA_IMPORTER_URL + '/api/v1/create_nodes'
+
+    response = requests.post(url, json=epv_list)
+
+    if response.status_code != 200:
+        msg = '{status} Error creating nodes in graph: {content}'.format(
+            status=response.status_code,
+            content=response.content
+        )
+        logger.error(msg)
+        raise RuntimeError(msg)
