@@ -4,15 +4,15 @@
 from f8a_worker.base import BaseTask
 from f8a_worker.models import Ecosystem
 from f8a_worker.victims import VictimsDB
-from f8a_worker.graphutils import update_properties
-from selinon import run_flow, StoragePool
+from f8a_worker.graphutils import update_properties, create_nodes
+from selinon import StoragePool
 
 
 class VictimsCheck(BaseTask):
     """Victims CVE Check task."""
 
     def execute(self, arguments):
-        """Task to analyze vulnerable packages and mark them in graph as such.
+        """Task to mark vulnerable packages in graph.
 
         :param arguments: dictionary with task arguments
         :return: None
@@ -28,7 +28,7 @@ class VictimsCheck(BaseTask):
             db.store_on_s3()
 
             vulnerable_packages = self.get_vulnerable_packages(db, ecosystem)
-            self.analyze_vulnerable_components(vulnerable_packages, ecosystem)
+            self.create_in_graph(vulnerable_packages, ecosystem)
 
             self.mark_in_graph(vulnerable_packages, ecosystem)
 
@@ -50,10 +50,10 @@ class VictimsCheck(BaseTask):
             vulnerable_packages[ga] = ga_data
         return vulnerable_packages
 
-    def analyze_vulnerable_components(self, vulnerable_packages, ecosystem):
-        """Make sure we have all packages with known vulnerabilities ingested.
+    def create_in_graph(self, vulnerable_packages, ecosystem):
+        """Make sure we have all packages with known vulnerabilities in graph.
 
-        Runs non-forced bayesianPriorityFlow analysis.
+        We don't need to ingest the packages, we just need to create nodes in graph.
 
         :param vulnerable_packages: dict, a dict of vulnerable packages with details
         :param ecosystem: f8a_worker.models.Ecosystem, ecosystem
@@ -62,18 +62,26 @@ class VictimsCheck(BaseTask):
         for ga, data in vulnerable_packages.items():
             if data:
                 versions = data[0].get('affected', []) + data[0].get('not_affected', [])
+                epv_list = []
                 for version in versions:
-                    node_args = {
+                    epv = {
                         'ecosystem': ecosystem.name,
-                        'force': False,
-                        'force_graph_sync': False,
                         'name': ga,
-                        'recursive_limit': 0,
-                        'version': version
+                        'version': version,
+                        'source_repo': ecosystem.name
                     }
-                    self.log.info("Scheduling analysis of a package "
-                                  "with known vulnerabilities: {ga}:{v}".format(ga=ga, v=version))
-                    run_flow('bayesianPriorityFlow', node_args)
+                    epv_list.append(epv)
+                    self.log.info(
+                        "Creating nodes in graph for {ga}:{v}, if they don't exist yet".format(
+                            ga=ga, v=version
+                        )
+                    )
+                try:
+                    create_nodes(epv_list)
+                except RuntimeError:
+                    # the error has been logged in the function already;
+                    # nothing that we can do here
+                    pass
 
     def mark_in_graph(self, vulnerable_packages, ecosystem):
         """Mark vulnerable components in graph.
