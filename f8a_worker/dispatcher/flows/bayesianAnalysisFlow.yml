@@ -52,15 +52,7 @@
         - from: 'metadata'
           to: 'keywords_tagging'
           condition:
-            or:
-              - name: 'argsFieldEqual'
-                args:
-                  key: 'ecosystem'
-                  value: 'pypi'
-              - name: 'argsFieldEqual'
-                args:
-                  key: 'ecosystem'
-                  value: 'maven'
+            name: 'alwaysFalse'
         - from: 'metadata'
           to: 'bayesianPriorityPackageFlow'
           condition: &priorityAnalysisCheck
