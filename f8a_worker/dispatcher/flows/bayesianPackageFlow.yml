@@ -24,19 +24,7 @@
         - from: 'bayesianPackageAnalysisFlow'
           to: 'bayesianPackageTaggingFlow'
           condition: &shouldSchedulePackageTaggingCheck
-            and:
-              - name: 'argsFieldExist'
-                args:
-                  key: 'document_id'
-              - or:
-                - name: 'argsFieldEqual'
-                  args:
-                    key: 'ecosystem'
-                    value: 'pypi'
-                - name: 'argsFieldEqual'
-                  args:
-                    key: 'ecosystem'
-                    value: 'maven'
+            name: 'alwaysFalse'
         - from: 'bayesianPackageAnalysisFlow'
           to: 'PackageFinalizeTask'
           condition:
