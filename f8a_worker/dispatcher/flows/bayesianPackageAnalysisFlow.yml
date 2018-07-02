@@ -18,7 +18,7 @@
         - from:
           to: 'GitReadmeCollectorTask'
           condition:
-            <<: *isGhRepoCheck
+            name: 'alwaysFalse'
         - from:
           to: 'RepositoryDescCollectorTask'
           condition: &repositoryDescCollectorCheck
