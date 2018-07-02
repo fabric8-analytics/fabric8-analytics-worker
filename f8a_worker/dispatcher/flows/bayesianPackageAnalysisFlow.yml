@@ -34,6 +34,6 @@
         - from:
           to: 'git_stats'
           condition:
-            <<: *isGhRepoCheck
+            name: 'alwaysFalse'
         - from:
           to: 'libraries_io'
