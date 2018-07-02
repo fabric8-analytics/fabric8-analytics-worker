@@ -22,15 +22,7 @@
         - from:
           to: 'RepositoryDescCollectorTask'
           condition: &repositoryDescCollectorCheck
-            or:
-              - name: 'argsFieldEqual'
-                args:
-                  key: 'ecosystem'
-                  value: 'pypi'
-              - name: 'argsFieldEqual'
-                args:
-                  key: 'ecosystem'
-                  value: 'npm'
+            name: 'alwaysFalse'
         - from:
           to: 'git_stats'
           condition:
