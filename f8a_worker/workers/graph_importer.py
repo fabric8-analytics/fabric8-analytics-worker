@@ -3,6 +3,8 @@
 from f8a_worker.base import BaseTask
 import requests
 from os import environ
+from selinon import StoragePool
+from f8a_worker.models import Ecosystem
 
 
 class GraphImporterTask(BaseTask):
@@ -31,11 +33,14 @@ class GraphImporterTask(BaseTask):
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('document_id'))
 
+        rdb = StoragePool.get_connected_storage('BayesianPostgres')
+        ecosystem_backend = Ecosystem.by_name(rdb.session, arguments.get('ecosystem')).backend.name
         package_list = [
             {
-                        'ecosystem': arguments['ecosystem'],
+                        'ecosystem': ecosystem_backend,
                         'name': arguments['name'],
-                        'version': arguments.get('version')
+                        'version': arguments.get('version'),
+                        'source_repo': arguments.get('ecosystem')
             }
         ]
 
