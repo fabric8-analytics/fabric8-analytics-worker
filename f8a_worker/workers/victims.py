@@ -27,7 +27,7 @@ class VictimsCheck(BaseTask):
         rdb = StoragePool.get_connected_storage('BayesianPostgres')
         ecosystem = Ecosystem.by_name(rdb.session, arguments.get('ecosystem'))
 
-        with victims_cls.build_from_git(wanted_cves=wanted_cves) as db:
+        with victims_cls.build_from_git(wanted=wanted_cves) as db:
 
             self.log.info('Storing the VictimsDB zip on S3')
             db.store_on_s3()
