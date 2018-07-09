@@ -1,6 +1,5 @@
 """Task to analyze vulnerable packages and mark them in graph as such."""
 
-
 import os
 import requests
 
@@ -40,6 +39,39 @@ class VictimsCheck(BaseTask):
 
             self.notify_gemini(vulnerable_packages, ecosystem)
 
+    def init_auth_sa_token(self):
+        """Generate service token for authentication."""
+        auth_server_url = os.getenv('F8A_AUTH_SERVICE_HOST', '')
+
+        if auth_server_url:
+            endpoint = '{url}/api/token'.format(url=auth_server_url)
+
+            client_id = os.getenv('GEMINI_SA_CLIENT_ID', 'id')
+            client_secret = os.getenv('GEMINI_SA_CLIENT_SECRET', 'secret')
+
+            payload = {"grant_type": "client_credentials",
+                       "client_id": client_id.strip(),
+                       "client_secret": client_secret.strip()}
+
+            try:
+                self.log.info('Starting token generation using {url} and {payload}'
+                              .format(url=endpoint, payload=payload))
+                response = requests.post(auth_server_url, json=payload)
+                self.log.info('Response status is {status_code}'
+                              .format(status_code=response.status_code))
+
+            except requests.exceptions.RequestException as e:
+                raise e
+
+            if response.status_code == 200:
+                data = response.json()
+                access_token = data.get('access_token')
+                if access_token:
+                    self.log.info('Access token successfully generated')
+                    return access_token
+
+        raise requests.exceptions.RequestException
+
     def get_vulnerable_packages(self, db, ecosystem):
         """Get vulnerable packages.
 
@@ -65,6 +97,13 @@ class VictimsCheck(BaseTask):
         :param ecosystem: f8a_worker.models.Ecosystem, ecosystem
         :return: None
         """
+        try:
+            access_token = self.init_auth_sa_token()
+        except requests.exceptions.RequestException as e:
+            self.log.error('Access token retrieval failed due to {}'
+                           .format(e))
+            return
+
         gemini_url = 'http://{host}:{port}/api/v1/user-repo/notify'.format(
             host=os.environ.get('F8A_GEMINI_SERVER_SERVICE_HOST'),
             port=os.environ.get('F8A_GEMINI_SERVER_SERVICE_PORT')
@@ -82,7 +121,9 @@ class VictimsCheck(BaseTask):
                     }
                     epv_list.append(epv)
 
-                resp = requests.post(gemini_url, json=epv_list)
+                resp = requests.post(gemini_url, json=epv_list,
+                                     headers={'Authorization': access_token})
+
                 if resp.status_code != 200:
                     self.log.error('Failed to notify gemini about vulnerabilities in {e}{p}'.format(
                         e=ecosystem.name,

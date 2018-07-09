@@ -46,6 +46,8 @@ def test_notify_gemini(maven, victims_zip, mocker):
     """Test VictimsCheck.notify_gemini()."""
     response = requests.Response()
     response.status_code = 200
+    sa_mock = mocker.patch("f8a_worker.workers.victims.VictimsCheck.init_auth_sa_token")
+    sa_mock.return_value = 'access_token'
     gemini_mock = mocker.patch("requests.post")
     gemini_mock.return_value = response
 
