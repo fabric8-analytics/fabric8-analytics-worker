@@ -34,7 +34,7 @@ class RepoDependencyFinderTask(BaseTask):
                                     .format(ecosystem=epv.get('ecosystem'),
                                             package=epv.get('name'),
                                             version=epv.get('version')))
-            self.logger.debug('Dependencies list: %r' % dependencies)
+            self.log.debug('Dependencies list: %r' % dependencies)
             try:
                 repo_cves = self.get_cve(dependencies)
             except TaskError as e:
