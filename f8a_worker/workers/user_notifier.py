@@ -70,7 +70,7 @@ class UserNotificationTask(BaseTask):
         self._strict_assert(arguments.get('service_token'))
 
         report = arguments.get('report')
-        service_token = arguments.get('service_token')
+        service_token = arguments.get('service_token').strip()
         scanned_at = strftime("%a, %d %B %Y %T GMT", gmtime())
 
         result_list = []

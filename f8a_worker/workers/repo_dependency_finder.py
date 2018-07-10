@@ -24,7 +24,7 @@ class RepoDependencyFinderTask(BaseTask):
         self.log.debug("Arguments passed from flow: {}".format(arguments))
         self._strict_assert(arguments.get('service_token'))
 
-        github_repo = arguments.get('github_repo')
+        github_repo = arguments.get('github_repo').strip()
         dependencies = []
         repo_cves = []
 
