@@ -24,7 +24,7 @@ class UserNotificationTask(BaseTask):
         auth = 'Bearer {token}'.format(token=token)
         resp = requests.post(endpoint, json=notification, headers={'Authorization': auth})
         if resp.status_code == 202:
-            self.log.info('Notification service called successfully. Users will be notified shortly.')
+            self.log.info('Notification service called successfully.')
             return {'status': 'success'}
         else:
             self.log.error('Unexpected response received {code}'.format(code=resp.status_code))
