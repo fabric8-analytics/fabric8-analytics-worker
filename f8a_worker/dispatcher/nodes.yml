@@ -217,6 +217,18 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_UnknownDependencyFetcherTask_v0'
       storage: 'BayesianPostgres'
+    - name: 'RepoDependencyFinderTask'
+      classname: 'RepoDependencyFinderTask'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_RepoDependencyFinderTask_v0'
+      storage: 'BayesianPostgres'
+    - name: 'UserNotificationTask'
+      classname: 'UserNotificationTask'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_UserNotificationTask_v0'
+      storage: 'BayesianPostgres'
     - name: 'ReportGenerationTask'
       classname: 'ReportGenerationTask'
       import: 'f8a_worker.workers'
@@ -249,6 +261,7 @@
     - 'keywordsPrioritySummaryFlow'
     - 'dependencyIngestFlow'
     - 'victimsFlow'
+    - 'osioUserNotificationFlow'
 
   storages:
     - name: 'BayesianPostgres'
