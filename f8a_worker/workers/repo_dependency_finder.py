@@ -21,7 +21,7 @@ class RepoDependencyFinderTask(BaseTask):
         :param arguments: dictionary with task arguments
         :return: {}, results
         """
-        self.log.info("Arguments passed from flow: {}".format(arguments))
+        self.log.debug("Arguments passed from flow: {}".format(arguments))
         self._strict_assert(arguments.get('service_token'))
 
         github_repo = arguments.get('github_repo')
@@ -29,38 +29,36 @@ class RepoDependencyFinderTask(BaseTask):
         repo_cves = []
 
         if len(arguments.get('epv_list', [])):
-            # self._strict_assert(arguments.get('epv_list'))
             for epv in arguments.get('epv_list'):
                 dependencies.append('{ecosystem}:{package}:{version}'
                                     .format(ecosystem=epv.get('ecosystem'),
                                             package=epv.get('name'),
                                             version=epv.get('version')))
-            self.logger.info('######## Dependencies list: %r' % dependencies)
+            self.logger.debug('Dependencies list: %r' % dependencies)
             try:
                 repo_cves = self.get_cve(dependencies)
             except TaskError as e:
                 raise TaskError('Failed to get CVEs')
         else:
             dependencies = list(GithubDependencyTreeTask.extract_dependencies(github_repo))
-            self.log.info('######## Deps list %r' % dependencies)
+            self.log.debug('Retrieved dependencies list %r' % dependencies)
             try:
                 # forward only the available dependencies in the system. Unknown
                 # dependencies are not going to be ingested for osioUserNotificationFlow.
                 repo_cves = self.create_repo_node_and_get_cve(github_repo, dependencies)
-                self.log.info('######## repo_cves %r' % repo_cves)
+                self.log.info('Identified CVEs %r' % repo_cves)
             except TaskError as e:
                 raise TaskError('Failed to Create Repo Node')
 
         report = self.generate_report(repo_cves=repo_cves, deps_list=dependencies)
-        return {'report': report, 'service_token': arguments['service_token'],
-                'dependencies': dependencies}
+        return {'report': report, 'service_token': arguments['service_token']}
 
     def create_repo_node_and_get_cve(self, github_repo, deps_list):
         """Create a repository node in the graphdb and create its edges to all deps.
 
         :param github_repo:
         :param dependencies:
-        :return:
+        :return: {}, gremlin_response
         """
         gremlin_str = "repo=g.V().has('repo_url', '{repo_url}').tryNext().orElseGet{{" \
                       "graph.addVertex('vertex_label', 'Repo', 'repo_url', '{repo_url}')}};" \
@@ -83,7 +81,7 @@ class RepoDependencyFinderTask(BaseTask):
         try:
             rawresp = requests.post(url=GREMLIN_SERVER_URL_REST, json=payload)
             resp = rawresp.json()
-            self.log.info('######## Gremlin Response %r' % resp)
+            self.log.debug('Gremlin Response %r' % resp)
             if rawresp.status_code != 200:
                 raise TaskError("Error creating repository node for {repo_url} - "
                                 "{resp}".format(repo_url=github_repo, resp=resp))
@@ -99,9 +97,8 @@ class RepoDependencyFinderTask(BaseTask):
         """
         Get CVE information for dependencies from the Graph database.
 
-        :param github_repo:
         :param deps_list:
-        :return:
+        :return: gremlin_response
         """
         package_set = set()
         version_set = set()
@@ -144,7 +141,7 @@ class RepoDependencyFinderTask(BaseTask):
 
         :param repo_cves:
         :param deps_list:
-        :return:
+        :return: list
         """
         repo_list = []
         for repo_cve in repo_cves.get('result').get('data', []):

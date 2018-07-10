@@ -54,7 +54,7 @@ class UserNotificationTask(BaseTask):
         for deps in vulnerable_deps:
             total_cve_count += int(deps['cve_count'])
         result["data"]["attributes"]["custom"]["cve_count"] = total_cve_count
-        self.log.info('###### notification to be sent to the users: %r' % result)
+        self.log.info('Notification to be sent to the users: %r' % result)
 
         return result
 
@@ -64,7 +64,7 @@ class UserNotificationTask(BaseTask):
         :param arguments: dictionary with task arguments
         :return: {}, results
         """
-        self.log.info("Arguments passed from flow: {}".format(arguments))
+        self.log.debug("Arguments passed from flow: {}".format(arguments))
 
         # self._strict_assert(arguments.get('report'))
         self._strict_assert(arguments.get('service_token'))
