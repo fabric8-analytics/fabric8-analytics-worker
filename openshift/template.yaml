@@ -76,6 +76,11 @@ objects:
               secretKeyRef:
                 name: aws
                 key: sqs-access-key-id
+          - name: AUTH_SERVICE_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: bayesian-config
+                key: auth-url
           - name: AWS_SQS_SECRET_ACCESS_KEY
             valueFrom:
               secretKeyRef:

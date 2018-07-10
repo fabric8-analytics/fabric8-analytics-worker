@@ -33,7 +33,7 @@ class GithubDependencyTreeTask(BaseTask):
                 "github_sha": github_sha, "email_ids": arguments.get('email_ids')}
 
     @staticmethod
-    def extract_dependencies(github_repo, github_sha):
+    def extract_dependencies(github_repo, github_sha=None):
         """Extract the dependencies information.
 
         Currently assuming repository is maven/npm/python repository.
@@ -44,7 +44,8 @@ class GithubDependencyTreeTask(BaseTask):
         """
         with TemporaryDirectory() as workdir:
             repo = Git.clone(url=github_repo, path=workdir, timeout=3600)
-            repo.reset(revision=github_sha, hard=True)
+            if github_sha is not None:
+                repo.reset(revision=github_sha, hard=True)
             with cwd(repo.repo_path):
                 # TODO: Make this task also work for files not present in root directory.
 
