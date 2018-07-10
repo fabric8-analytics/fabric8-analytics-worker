@@ -41,7 +41,7 @@
             not:
               name: 'argsFieldEqual'
               args:
-                key: 'ecosystem'
+                key: 'ecosystem_backend'
                 value: 'nuget'
         - from:
           to:
