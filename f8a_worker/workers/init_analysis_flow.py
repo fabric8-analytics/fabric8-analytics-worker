@@ -95,6 +95,10 @@ class InitAnalysisFlow(BaseTask):
         db.commit()
 
         arguments['document_id'] = a.id
+
+        # export ecosystem backend so we can use it to easily control flow later
+        arguments['ecosystem_backend'] = ecosystem.backend.name
+
         self.log.debug("Arguments returned by InitAnalysisFlow are: {}".format(arguments))
         return arguments
 
