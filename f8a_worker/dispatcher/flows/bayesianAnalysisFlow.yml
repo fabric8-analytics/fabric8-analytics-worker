@@ -29,11 +29,19 @@
           to:
             - 'security_issues'
           condition:
-            not:
-              name: 'argsFieldEqual'
-              args:
-                key: 'ecosystem'
-                value: 'go'
+            or:
+              - name: 'argsFieldEqual'
+                args:
+                  key: 'ecosystem'
+                  value: 'maven'
+              - name: 'argsFieldEqual'
+                args:
+                  key: 'ecosystem'
+                  value: 'pypi'
+              - name: 'argsFieldEqual'
+                args:
+                  key: 'ecosystem'
+                  value: 'npm'
         - from:
           to:
             - 'source_licenses'
