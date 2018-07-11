@@ -1,11 +1,12 @@
-REGISTRY?=registry.devshift.net
-REPOSITORY?=bayesian/cucos-worker
+REGISTRY?=quay.io
 DEFAULT_TAG=latest
 
 ifeq ($(TARGET), rhel)
     DOCKERFILE := Dockerfile.rhel
+	REPOSITORY ?= openshiftio/rhel-bayesian-cucos-worker
 else
     DOCKERFILE := Dockerfile
+	REPOSITORY ?= openshiftio/bayesian-cucos-worker
 endif
 
 .PHONY: all docker-build fast-docker-build test get-image-name get-image-repository

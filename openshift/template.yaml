@@ -49,7 +49,7 @@ objects:
           - name: SENTRY_DSN
             valueFrom:
               secretKeyRef:
-                name: worker 
+                name: worker
                 key: sentry_dsn
           - name: POSTGRESQL_DATABASE
             valueFrom:
@@ -208,13 +208,13 @@ parameters:
   displayName: Docker registry
   required: true
   name: DOCKER_REGISTRY
-  value: "registry.devshift.net"
+  value: "quay.io"
 
 - description: Docker image to use
   displayName: Docker image
   required: true
   name: DOCKER_IMAGE
-  value: "bayesian/cucos-worker"
+  value: "openshiftio/rhel-bayesian-cucos-worker"
 
 - description: Image tag
   displayName: Image tag
@@ -252,7 +252,7 @@ parameters:
   name: MEMORY_LIMIT
   value: "1536Mi"
 
-- description: Sentry DSN 
+- description: Sentry DSN
   displayName: Sentry DSN
   required: false
   name: SENTRY_DSN
