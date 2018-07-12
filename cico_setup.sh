@@ -47,11 +47,9 @@ tag_push() {
 
 push_image() {
     local image_name
-    local image_repository
     local short_commit
 
-    image_name=$(make get-image-name)
-    image_repository=$(make get-image-repository)
+    image_name=$(make get-image-name-base)
     short_commit=$(git rev-parse --short=$DEVSHIFT_TAG_LEN HEAD)
 
     if [ -n "${ghprbPullId}" ]; then

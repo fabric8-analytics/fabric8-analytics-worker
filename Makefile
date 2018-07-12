@@ -33,5 +33,8 @@ test: fast-docker-build-tests
 get-image-name:
 	@echo $(REGISTRY)/$(REPOSITORY):$(DEFAULT_TAG)
 
+get-image-name-base:
+	@echo $(REGISTRY)/$(REPOSITORY)
+
 get-image-repository:
 	@echo $(REPOSITORY)
