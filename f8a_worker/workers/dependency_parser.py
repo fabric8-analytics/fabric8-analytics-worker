@@ -2,6 +2,7 @@
 
 import re
 import anymarkup
+import itertools
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -33,11 +34,27 @@ class GithubDependencyTreeTask(BaseTask):
                 "github_sha": github_sha, "email_ids": arguments.get('email_ids')}
 
     @staticmethod
-    def extract_dependencies(github_repo, github_sha=None):
+    def run_timed_command(cmd, file):
+        """Run timed command and write output to file.
+
+        :param cmd: command to run
+        :param file: output file
+        :return:
+        """
+        timed_cmd = TimedCommand(cmd)
+        status, output, _ = timed_cmd.run(timeout=3600)
+        if status != 0 or not file.is_file():
+            # all errors are in stdout, not stderr
+            raise TaskError(output)
+
+    @staticmethod
+    def extract_dependencies(github_repo, github_sha=None,
+                             user_flow=False):
         """Extract the dependencies information.
 
         Currently assuming repository is maven/npm/python repository.
 
+        :param user_flow: to indicate if user flow is invoked
         :param github_repo: repository url
         :param github_sha: commit hash
         :return: set of direct (and indirect) dependencies
@@ -52,8 +69,9 @@ class GithubDependencyTreeTask(BaseTask):
                 # First change the package-lock.json to npm-shrinkwrap.json
                 GithubDependencyTreeTask.change_package_lock_to_shrinkwrap()
 
+                # Since user flow is only called for maven, we pass this flag only to maven
                 if peek(Path.cwd().glob("pom.xml")):
-                    return GithubDependencyTreeTask.get_maven_dependencies()
+                    return GithubDependencyTreeTask.get_maven_dependencies(user_flow)
                 elif peek(Path.cwd().glob("npm-shrinkwrap.json")) \
                         or peek(Path.cwd().glob("package.json")):
                     return GithubDependencyTreeTask.get_npm_dependencies(repo.repo_path)
@@ -68,23 +86,70 @@ class GithubDependencyTreeTask(BaseTask):
                                     "python or Go repository for scanning!")
 
     @staticmethod
-    def get_maven_dependencies():
+    def get_maven_dependencies(user_flow):
         """Get direct and indirect dependencies from pom.xml by using maven dependency tree plugin.
 
         :return: set of direct and indirect dependencies
         """
         output_file = Path.cwd() / "dependency-tree.txt"
+
+        if user_flow:
+            return GithubDependencyTreeTask.get_dependencies_using_dependency_resolve(output_file)
+
         cmd = ["mvn", "org.apache.maven.plugins:maven-dependency-plugin:3.0.2:tree",
                "-DoutputType=dot",
                "-DoutputFile={filename}".format(filename=output_file),
                "-DappendOutput=true"]
-        timed_cmd = TimedCommand(cmd)
-        status, output, _ = timed_cmd.run(timeout=3600)
-        if status != 0 or not output_file.is_file():
-            # all errors are in stdout, not stderr
-            raise TaskError(output)
+
+        GithubDependencyTreeTask.run_timed_command(cmd, output_file)
+
         with output_file.open() as f:
             return GithubDependencyTreeTask.parse_maven_dependency_tree(f.readlines())
+
+    @staticmethod
+    def get_dependencies_using_dependency_resolve(file):
+        """Run mvn dependency:resolve to get direct and transitive dependencies.
+
+        :param file: read output from this file
+        """
+        cmd = ["mvn", "org.apache.maven.plugins:maven-dependency-plugin:3.1.1:resolve",
+               "-DoutputFile={filename}".format(filename=file),
+               "-DincludeScope=runtime",
+               "-DexcludeTransitive=true"]
+
+        GithubDependencyTreeTask.run_timed_command(cmd, file)
+
+        set_direct_package_names = GithubDependencyTreeTask.parse_maven_dependency_resolve(file)
+
+        cmd = ["mvn", "org.apache.maven.plugins:maven-dependency-plugin:3.1.1:resolve",
+               "-DoutputFile={filename}".format(filename=file),
+               "-DincludeScope=runtime",
+               "-DexcludeTransitive=false"]
+
+        GithubDependencyTreeTask.run_timed_command(cmd, file)
+
+        set_all_package_names = GithubDependencyTreeTask.parse_maven_dependency_resolve(file)
+
+        return {
+            'direct': list(set_direct_package_names),
+            'transitive': list(set_all_package_names - set_direct_package_names)
+        }
+
+    @staticmethod
+    def parse_maven_dependency_resolve(file):
+        """Parse the output of mvn dependency:resolve command.
+
+        :param file: file containing the output of mvn dependency:resolve command
+        :return: set of direct dependencies
+        """
+        set_package_names = set()
+        for line in itertools.islice(file, 2, None):
+            package_name = line.strip()
+            if package_name:
+                # Remove scope from package name
+                package_name = package_name.rsplit(':', 1)[0]
+                add_maven_coords_to_set(package_name, set_package_names)
+        return set_package_names
 
     @staticmethod
     def parse_maven_dependency_tree(dependency_tree):
