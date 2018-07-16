@@ -40,7 +40,8 @@ class RepoDependencyFinderTask(BaseTask):
             except TaskError as e:
                 raise TaskError('Failed to get CVEs')
         else:
-            dependencies = list(GithubDependencyTreeTask.extract_dependencies(github_repo))
+            dependencies = list(GithubDependencyTreeTask.extract_dependencies(github_repo,
+                                                                              user_flow=True))
             self.log.debug('Retrieved dependencies list %r' % dependencies)
             try:
                 # forward only the available dependencies in the system. Unknown
