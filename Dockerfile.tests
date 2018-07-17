@@ -1,5 +1,4 @@
-FROM bayesian/cucos-worker
-
+FROM worker-tests
 ENV PYTHONDONTWRITEBYTECODE 1
 
 COPY . /f8a_worker
