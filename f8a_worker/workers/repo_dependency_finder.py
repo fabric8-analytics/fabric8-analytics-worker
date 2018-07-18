@@ -52,7 +52,8 @@ class RepoDependencyFinderTask(BaseTask):
                 raise TaskError('Failed to Create Repo Node')
 
         report = self.generate_report(repo_cves=repo_cves, deps_list=dependencies)
-        return {'report': report, 'service_token': arguments['service_token'], 'dependencies': dependencies}
+        return {'report': report, 'service_token': arguments['service_token'],
+                'dependencies': dependencies}
 
     def create_repo_node_and_get_cve(self, github_repo, deps_list):
         """Create a repository node in the graphdb and create its edges to all deps.
