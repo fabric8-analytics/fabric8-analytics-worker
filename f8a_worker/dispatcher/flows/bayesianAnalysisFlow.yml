@@ -84,6 +84,11 @@
               value: 'api'
         - from: 'metadata'
           to: 'dependency_snapshot'
+          condition:
+            name: 'argsFieldGreater'
+            args:
+              key: 'recursive_limit'
+              value: 0
         - from: 'dependency_snapshot'
           to: 'bayesianFlow'
           foreach:
