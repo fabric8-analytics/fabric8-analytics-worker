@@ -81,6 +81,11 @@ objects:
               configMapKeyRef:
                 name: bayesian-config
                 key: auth-url
+          - name: NOTIFICATION_SERVICE_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: bayesian-config
+                key: notification-url
           - name: AWS_SQS_SECRET_ACCESS_KEY
             valueFrom:
               secretKeyRef:

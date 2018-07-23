@@ -12,17 +12,7 @@ class UserNotificationTask(BaseTask):
 
     def send_notification(self, notification, token):
         """Send notification to the OSIO notification service."""
-        url = 'f8notification'
-        # stop gap measure to identify the correct notification service
-        # this will be replaced when we get a ConfigMap to identify the
-        # appropriate notification service.
-        auth_host = os.getenv('AUTH_SERVICE_HOST', '')
-        if auth_host.strip() == 'https://auth.openshift.io':
-            url = 'http://f8notification.dsaas-production.svc'
-        elif auth_host.strip() == 'https://auth.prod-preview.openshift.io':
-            url = 'http://f8notification.dsaas-preview.svc'
-        else:
-            url = 'http://f8notification-auth-analytics.dev.rdu2c.fabric8.io'
+        url = os.getenv('NOTIFICATION_SERVICE_HOST', '').strip()
 
         endpoint = '{url}/api/notify'.format(url=url)
         auth = 'Bearer {token}'.format(token=token)
