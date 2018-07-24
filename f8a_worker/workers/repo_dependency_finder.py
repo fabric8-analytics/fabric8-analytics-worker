@@ -21,7 +21,7 @@ class RepoDependencyFinderTask(BaseTask):
         :param arguments: dictionary with task arguments
         :return: {}, results
         """
-        self.log.debug("Arguments passed from flow: {}".format(arguments))
+        self.log.info("Arguments passed from flow: {}".format(arguments))
         self._strict_assert(arguments.get('service_token'))
 
         github_repo = arguments.get('github_repo').strip()
@@ -29,29 +29,31 @@ class RepoDependencyFinderTask(BaseTask):
         repo_cves = []
 
         if len(arguments.get('epv_list', [])):
+            # self._strict_assert(arguments.get('epv_list'))
             for epv in arguments.get('epv_list'):
                 dependencies.append('{ecosystem}:{package}:{version}'
                                     .format(ecosystem=epv.get('ecosystem'),
                                             package=epv.get('name'),
                                             version=epv.get('version')))
-            self.log.debug('Dependencies list: %r' % dependencies)
+            self.log.info('######## Dependencies list: %r' % dependencies)
             try:
                 repo_cves = self.get_cve(dependencies)
             except TaskError as e:
                 raise TaskError('Failed to get CVEs')
         else:
-            dependencies = list(GithubDependencyTreeTask.extract_dependencies(github_repo))
-            self.log.debug('Retrieved dependencies list %r' % dependencies)
+            dependencies = GithubDependencyTreeTask.extract_dependencies(github_repo)
+            self.log.info('######## Deps list %r' % dependencies)
             try:
                 # forward only the available dependencies in the system. Unknown
                 # dependencies are not going to be ingested for osioUserNotificationFlow.
                 repo_cves = self.create_repo_node_and_get_cve(github_repo, dependencies)
-                self.log.info('Identified CVEs %r' % repo_cves)
+                self.log.info('######## repo_cves %r' % repo_cves)
             except TaskError as e:
                 raise TaskError('Failed to Create Repo Node')
 
         report = self.generate_report(repo_cves=repo_cves, deps_list=dependencies)
-        return {'report': report, 'service_token': arguments['service_token']}
+        return {'report': report, 'service_token': arguments['service_token'],
+                'dependencies': dependencies}
 
     def create_repo_node_and_get_cve(self, github_repo, deps_list):
         """Create a repository node in the graphdb and create its edges to all deps.
@@ -60,31 +62,44 @@ class RepoDependencyFinderTask(BaseTask):
         :param dependencies:
         :return: {}, gremlin_response
         """
-        gremlin_str = "repo=g.V().has('repo_url', '{repo_url}').tryNext().orElseGet{{" \
-                      "graph.addVertex('vertex_label', 'Repo', 'repo_url', '{repo_url}')}};" \
-                      "g.V(repo).outE('has_dependency').drop().iterate();".format(
-                          repo_url=github_repo)
+        gremlin_str = ("repo=g.V().has('repo_url', '{repo_url}').tryNext().orElseGet{{"
+                       "graph.addVertex('vertex_label', 'Repo', 'repo_url', '{repo_url}')}};"
+                       "g.V(repo).outE('has_dependency').drop().iterate();"
+                       "g.V(repo).outE('has_transitive_dependency').drop().iterate();".format(
+                           repo_url=github_repo))
 
-        for pkg in deps_list:
+        # Create an edge between repo -> direct dependencies
+        for pkg in deps_list.get('direct'):
             ecosystem = pkg.split(':')[0]
             version = pkg.split(':')[-1]
             name = pkg.replace(ecosystem + ':', '').replace(':' + version, '')
-            gremlin_str += "ver=g.V().has('pecosystem', '{ecosystem}').has('pname', '{name}')." \
-                           "has('version', '{version}');ver.hasNext() && " \
-                           "g.V(repo).next().addEdge('has_dependency', ver.next());".format(
-                               ecosystem=ecosystem, name=name, version=version)
+            gremlin_str += ("ver=g.V().has('pecosystem', '{ecosystem}').has('pname', '{name}')."
+                            "has('version', '{version}');ver.hasNext() && "
+                            "g.V(repo).next().addEdge('has_dependency', ver.next());".format(
+                                ecosystem=ecosystem, name=name, version=version))
 
-        # Traverse the Repo to EPVs that have CVE's and report them
-        gremlin_str += "g.V(repo).as('rp').out('has_dependency').has('cve_ids').as('epv')" \
-                       ".select('rp','epv').by(valueMap());"
+        # Create an edge between repo -> transitive dependencies
+        for pkg in deps_list.get('transitive'):
+            ecosystem = pkg.split(':')[0]
+            version = pkg.split(':')[-1]
+            name = pkg.replace(ecosystem + ':', '').replace(':' + version, '')
+            gremlin_str += ("ver=g.V().has('pecosystem', '{ecosystem}').has('pname', '{name}')."
+                            "has('version', '{version}');ver.hasNext() && "
+                            "g.V(repo).next().addEdge('has_transitive_dependency', ver.next());"
+                            .format(ecosystem=ecosystem, name=name, version=version))
+
+        # Traverse the Repo to Direct/Transitive dependencies that have CVE's and report them
+        gremlin_str += ("g.V(repo).as('rp').outE('has_dependency','has_transitive_dependency')"
+                        ".as('ed').inV().as('epv').select('rp','ed','epv').by(valueMap(true));")
         payload = {"gremlin": gremlin_str}
         try:
             rawresp = requests.post(url=GREMLIN_SERVER_URL_REST, json=payload)
             resp = rawresp.json()
-            self.log.debug('Gremlin Response %r' % resp)
+            self.log.info('######## Gremlin Response %r' % resp)
             if rawresp.status_code != 200:
                 raise TaskError("Error creating repository node for {repo_url} - "
                                 "{resp}".format(repo_url=github_repo, resp=resp))
+
         except Exception:
             self.log.error(traceback.format_exc())
             raise TaskError(
@@ -111,10 +126,11 @@ class RepoDependencyFinderTask(BaseTask):
             name = epv.replace(ecosystem + ':', '').replace(':' + version, '')
             package_set.add(name)
 
-        gremlin_str = "g.V().has('pecosystem', within(eco_list)).has('pname', within(pkg_list))." \
-                      "has('version', within(ver_list)).in('has_dependency').dedup().as('rp')." \
-                      "out('has_dependency').has('cve_ids').as('epv').select('rp','epv')." \
-                      "by(valueMap());"
+        gremlin_str = ("g.V().has('pecosystem', within(eco_list)).has('pname', within(pkg_list))."
+                       "has('version', within(ver_list))."
+                       "in('has_dependency','has_transitive_dependency').dedup().as('rp')."
+                       "outE('has_dependency','has_transitive_dependency').as('ed').inV().has("
+                       "'cve_ids').as('epv').select('rp','ed','epv').by(valueMap(true));")
         payload = {
             'gremlin': gremlin_str,
             'bindings': {
@@ -154,15 +170,19 @@ class RepoDependencyFinderTask(BaseTask):
             cve_count = len(epv.get('cve_ids', []))
             vulnerable_deps = []
             first = True
-            if cve_count > 0 and str_epv in deps_list:
+            if cve_count > 0 and (str_epv in i for x, i in deps_list.items()):
                 cve_list = []
                 for cve in epv.get('cve_ids'):
                     cve_id = cve.split(':')[0]
                     cvss = cve.split(':')[-1]
                     cve_list.append({'CVE': cve_id, 'CVSS': cvss})
-                vulnerable_deps.append(
-                    {'ecosystem': epv.get('pecosystem')[0], 'name': epv.get('pname')[0],
-                        'version': epv.get('version')[0], 'cve_count': cve_count, 'cves': cve_list})
+                vulnerable_deps.append({
+                    'ecosystem': epv.get('pecosystem')[0],
+                    'name': epv.get('pname')[0],
+                    'version': epv.get('version')[0],
+                    'cve_count': cve_count, 'cves': cve_list,
+                    'is_transitive': repo_cve.get('ed').get('label') == 'has_transitive_dependency'
+                })
 
             for repo in repo_list:
                 if repo_url == repo.get('repo_url'):
