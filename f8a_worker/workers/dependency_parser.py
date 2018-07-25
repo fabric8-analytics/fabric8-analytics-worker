@@ -144,12 +144,14 @@ class GithubDependencyTreeTask(BaseTask):
         :return: set of direct dependencies
         """
         set_package_names = set()
-        for line in itertools.islice(file, 2, None):
-            package_name = line.strip()
-            if package_name:
-                # Remove scope from package name
-                package_name = package_name.rsplit(':', 1)[0]
-                add_maven_coords_to_set(package_name, set_package_names)
+        with file.open() as f:
+            lines = f.readlines()
+            for line in itertools.islice(lines, 2, None):
+                package_name = line.strip()
+                if package_name:
+                    # Remove scope from package name
+                    package_name = package_name.rsplit(':', 1)[0]
+                    add_maven_coords_to_set(package_name, set_package_names)
         return set_package_names
 
     @staticmethod
