@@ -29,7 +29,8 @@ class GithubDependencyTreeTask(BaseTask):
         self._strict_assert(arguments.get('email_ids'))
         github_repo = arguments.get('github_repo')
         github_sha = arguments.get('github_sha')
-        dependencies = list(GithubDependencyTreeTask.extract_dependencies(github_repo, github_sha))
+        dependencies = list(GithubDependencyTreeTask.extract_dependencies(
+            github_repo=github_repo, github_sha=github_sha))
         return {"dependencies": dependencies, "github_repo": github_repo,
                 "github_sha": github_sha, "email_ids": arguments.get('email_ids')}
 
