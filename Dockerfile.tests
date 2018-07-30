@@ -1,4 +1,4 @@
-FROM worker-tests
+FROM openshiftio/bayesian-cucos-worker
 ENV PYTHONDONTWRITEBYTECODE 1
 
 COPY . /f8a_worker
