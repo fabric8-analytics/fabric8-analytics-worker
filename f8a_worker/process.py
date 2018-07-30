@@ -503,10 +503,15 @@ class IndianaJones(object):
         env = dict(os.environ)
         env['GOPATH'] = target_dir
         Git.config()
-        TimedCommand.get_command_output(['go', 'get', '-d', name],
-                                        timeout=300,
-                                        env=env,
-                                        graceful=True)
+        try:
+            TimedCommand.get_command_output(
+                ['go', 'get', '-d', name],
+                timeout=300,
+                env=env,
+                graceful=False
+            )
+        except TaskError:
+            raise NotABugTaskError('Unable to go-get {n}'.format(n=name))
         package_dir = os.path.join(target_dir, 'src', name)
         with cwd(package_dir):
             git = Git(package_dir)
