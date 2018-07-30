@@ -116,10 +116,16 @@ class MercatorTask(BaseTask):
     def run_gofedlib(self, topdir, name, version, timeout):
         """Run gofedlib-cli to extract dependencies from golang sources."""
         tc = TimedCommand(
-            ['gofedlib-cli', '--dependencies-main', '--dependencies-packages',
-             '--dependencies-test', '--skip-errors',
-             topdir])
+            [
+                'gofedlib-cli', '--dependencies-main', '--dependencies-packages',
+                '--dependencies-test', '--skip-errors', topdir
+            ]
+        )
         status, data, err = tc.run(timeout=timeout)
+
+        if status:
+            raise FatalTaskError('gofedlib-cli failed: {err}'.format(err=err))
+
         result = json.loads(data[0])
         main_deps_count = len(result.get('deps-main', []))
         packages_count = len(result.get('deps-packages', []))
