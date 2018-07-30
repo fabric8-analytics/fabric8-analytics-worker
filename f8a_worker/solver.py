@@ -549,10 +549,13 @@ class NpmDependencyParser(DependencyParser):
         :param spec: str
         :return: Dependency
         """
-        specs = check_output(['/usr/bin/semver-ranger', spec], universal_newlines=True).strip()
-        if specs == 'null':
-            logger.info("invalid version specification for %s = %s", name, spec)
-            return None
+        if spec == 'latest':
+            specs = '*'
+        else:
+            specs = check_output(['/usr/bin/semver-ranger', spec], universal_newlines=True).strip()
+            if specs == 'null':
+                logger.info("invalid version specification for %s = %s", name, spec)
+                return None
 
         ret = []
         for s in specs.split('||'):

@@ -62,6 +62,8 @@ class TestDependencyParser(object):
          [Dependency("name", [[('>=', '0.6.0'), ('<', '0.7.0')]])]),
         (["name >0.6", "node < 1"],
          [Dependency("name", [('>=', '0.7.0')]), Dependency("node", [('<', '1.0.0')])]),
+        (["name latest"],
+         [Dependency("name", [('>=', '0.0.0')])]),
     ])
     def test_npm_dependency_parser_parse(self, args, expected):
         """Test NpmDependencyParser.parse()."""
