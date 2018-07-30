@@ -136,7 +136,7 @@ class Package(Base):
 
     id = Column(Integer, primary_key=True)
     ecosystem_id = Column(Integer, ForeignKey(Ecosystem.id))
-    name = Column(String(255), index=True)
+    name = Column(String(2048), index=True)
 
     ecosystem = relationship(
         Ecosystem, back_populates='packages', lazy='joined')
