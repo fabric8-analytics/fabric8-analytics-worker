@@ -144,6 +144,21 @@ objects:
           # this won't get used if running with SQS
           - name: RABBITMQ_SERVICE_SERVICE_HOST
             value: bayesian-broker
+          - name: GEMINI_SA_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: gemini-server
+                key: gemini-sa-client-id
+          - name: GEMINI_SA_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: gemini-server
+                key: gemini-sa-client-secret
+          - name: F8A_AUTH_SERVICE_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: bayesian-config
+                key: auth-url
           image: "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${IMAGE_TAG}"
           name: bayesian-worker
           readinessProbe:
