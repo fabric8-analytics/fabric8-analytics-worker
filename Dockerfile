@@ -37,5 +37,5 @@ RUN find ${HOME} -mindepth 1 -delete
 
 # A temporary hack to keep tagger up2date
 # Do not move this line before HOME clean up, we need downloaded external data baked in resulting image.
-COPY hack/install_tagger.sh /tmp/
-RUN sh /tmp/install_tagger.sh
+#COPY hack/install_tagger.sh /tmp/
+#RUN sh /tmp/install_tagger.sh
