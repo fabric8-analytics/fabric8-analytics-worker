@@ -47,7 +47,8 @@ class ReportGenerationTask(BaseTask):
         """
         self.log.debug("Package data received is: {}".format(data))
         name = data.get('name', [''])[0]
-        package_data = {"name": name}
+        ecosystem = data.get('ecosystem', [''])[0]
+        package_data = {"name": name, "ecosystem": ecosystem}
         # Removed latest_version_logic as of now. Might want to add it back in future.
         self.log.debug("Parsed package data is: {}".format(package_data))
         return package_data
