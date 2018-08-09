@@ -57,6 +57,11 @@ class UnknownDependencyFetcherTask(BaseTask):
         :return: {}, results
         """
         self.log.debug("Arguments passed from GithubDependencyTreeTask: {}".format(arguments))
+
+        if arguments.get("lock_file_absent"):
+            return {"lock_file_absent": arguments.get('lock_file_absent'),
+                    "result": [], "message": arguments.get('message')}
+
         self._strict_assert(arguments.get('dependencies'))
         result = self.get_dependency_data(arguments.get('dependencies'))
         return {"result": result}
