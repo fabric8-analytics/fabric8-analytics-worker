@@ -91,3 +91,20 @@ class TestGithubDependencyTreeTask(object):
                                  'npm:mime:1.4.1', 'npm:escape-html:1.0.3'}
 
         assert obtained_dependencies == expected_dependencies
+
+    def test_repo_with_no_lockfile(self):
+        """Test repository with no lock file present."""
+        args = {'github_repo': 'https://github.com/abs51295/code2vec',
+                'github_sha': '02ec2d941f8dd1a26c1469aaaf4849a3a803423b',
+                'email_ids': 'dummy'}
+        task = GithubDependencyTreeTask.create_test_instance(task_name='dependency_tree')
+        results = task.execute(args)
+
+        assert isinstance(results, dict)
+        assert set(results.keys()) == {'dependencies', 'github_repo', 'github_sha',
+                                       'email_ids', 'lock_file_absent', 'message'}
+
+        obtained_dependencies = set(results['dependencies'])
+        assert obtained_dependencies == set()
+        lock_file_absent = results['lock_file_absent']
+        assert lock_file_absent is True

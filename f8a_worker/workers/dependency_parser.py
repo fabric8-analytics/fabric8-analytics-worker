@@ -29,8 +29,14 @@ class GithubDependencyTreeTask(BaseTask):
         self._strict_assert(arguments.get('email_ids'))
         github_repo = arguments.get('github_repo')
         github_sha = arguments.get('github_sha')
-        dependencies = list(GithubDependencyTreeTask.extract_dependencies(
-            github_repo=github_repo, github_sha=github_sha))
+        try:
+            dependencies = list(GithubDependencyTreeTask.extract_dependencies(
+                github_repo=github_repo, github_sha=github_sha))
+        except TypeError:
+            return {"github_repo": github_repo, "dependencies": [],
+                    "github_sha": github_sha, "email_ids": arguments.get('email_ids'),
+                    "lock_file_absent": True, "message": "Lock file not found"}
+
         return {"dependencies": dependencies, "github_repo": github_repo,
                 "github_sha": github_sha, "email_ids": arguments.get('email_ids')}
 
@@ -83,8 +89,7 @@ class GithubDependencyTreeTask(BaseTask):
                 elif peek(Path.cwd().glob("Gopkg.lock")):
                     return GithubDependencyTreeTask.get_go_pkg_dependencies()
                 else:
-                    raise TaskError("Please provide maven or npm or "
-                                    "python or Go repository for scanning!")
+                    return None
 
     @staticmethod
     def get_maven_dependencies(user_flow):

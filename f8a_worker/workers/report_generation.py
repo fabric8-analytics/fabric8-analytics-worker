@@ -105,9 +105,20 @@ class ReportGenerationTask(BaseTask):
         :return: {}, results
         """
         self.log.debug("Arguments passed from flow: {}".format(arguments))
-        self._strict_assert(arguments.get('dependencies'))
+
         self._strict_assert(arguments.get('github_sha'))
         self._strict_assert(arguments.get('github_repo'))
+        arguments.update({"external_request_id": arguments.get('github_sha')})
+
+        if arguments.get('lock_file_absent'):
+            return {"dependencies": [],
+                    "scanned_at": strftime("%Y-%m-%dT%H:%M:%S", gmtime()),
+                    "git_url": arguments.get('github_repo'),
+                    "lock_file_absent": arguments.get('lock_file_absent'),
+                    "message": arguments.get('message')}
+
+        # Strict assert dependencies when we are sure that lock file is present.
+        self._strict_assert(arguments.get('dependencies'))
         resolved_dependencies = arguments.get('dependencies')
         self.log.debug("Resolved dependencies are: {}".format(resolved_dependencies))
         dependency_list = self._get_dependency_data(dependencies=resolved_dependencies)
