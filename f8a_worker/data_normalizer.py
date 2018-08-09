@@ -270,7 +270,11 @@ class DataNormalizer(object):
             lockfile['version'] = lockfile.pop('npm-shrinkwrap-version', "")
             lockfile['runtime'] = data.get('_nodeVersion', "")
             lockfile['dependencies'] = dependencies
-            lockfile.pop('node-version', None)
+
+            # Drop rest of the unknown/unwanted keys
+            for key in list(lockfile.keys()):
+                if key not in ('dependencies', 'version', 'runtime', 'name', 'hash', 'updated'):
+                    lockfile.pop(key)
 
         base['_tests_implemented'] = self._are_tests_implemented(base)
         return base
