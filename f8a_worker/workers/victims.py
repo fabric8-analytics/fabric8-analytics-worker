@@ -56,7 +56,7 @@ class VictimsCheck(BaseTask):
             try:
                 self.log.info('Starting token generation using {url} and {payload}'
                               .format(url=endpoint, payload=payload))
-                response = requests.post(auth_server_url, json=payload)
+                response = requests.post(endpoint, json=payload)
                 self.log.info('Response status is {status_code}'
                               .format(status_code=response.status_code))
 
