@@ -156,7 +156,13 @@ class GithubDependencyTreeTask(BaseTask):
                 if package_name:
                     # Remove scope from package name
                     package_name = package_name.rsplit(':', 1)[0]
-                    add_maven_coords_to_set(package_name, set_package_names)
+                    try:
+                        add_maven_coords_to_set(package_name, set_package_names)
+                    except ValueError:
+                        # We expect some value errors here because the file might contain
+                        # plain english sentences. For example:
+                        # 'The following dependencies have been resolved:' and 'none'.
+                        pass
         return set_package_names
 
     @staticmethod
