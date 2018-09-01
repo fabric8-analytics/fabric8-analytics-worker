@@ -234,7 +234,7 @@ parameters:
   displayName: Docker image
   required: true
   name: DOCKER_IMAGE
-  value: "openshiftio/rhel-bayesian-cucos-worker"
+  value: "openshiftio/bayesian-cucos-worker"
 
 - description: Image tag
   displayName: Image tag
