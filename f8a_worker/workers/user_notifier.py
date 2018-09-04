@@ -39,10 +39,19 @@ class UserNotificationTask(BaseTask):
         }
         result["data"]["attributes"]["custom"]["scanned_at"] = scanned_at
         vulnerable_deps = result["data"]["attributes"]["custom"]["vulnerable_deps"]
+        del result["data"]["attributes"]["custom"]["vulnerable_deps"]
         total_cve_count = 0
-
+        transitive_updates = list()
+        direct_updates = list()
         for deps in vulnerable_deps:
             total_cve_count += int(deps['cve_count'])
+            is_transitive = deps.get("is_transitive", None)
+            if is_transitive:
+                transitive_updates.append(deps)
+            else:
+                direct_updates.append(deps)
+        result["data"]["attributes"]["custom"]["transitive_updates"] = transitive_updates
+        result["data"]["attributes"]["custom"]["direct_updates"] = direct_updates
         result["data"]["attributes"]["custom"]["cve_count"] = total_cve_count
         self.log.info('Notification to be sent to the users: %r' % result)
 
