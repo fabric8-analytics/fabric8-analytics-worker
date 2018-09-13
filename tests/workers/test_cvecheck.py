@@ -1,11 +1,8 @@
 """Tests for the CVEcheckerTask worker task."""
 
 from datadiff.tools import assert_equal
-from flexmock import flexmock
-from pathlib import Path
 import pytest
 
-from f8a_worker.object_cache import EPVCache
 from f8a_worker.workers import CVEcheckerTask
 
 
