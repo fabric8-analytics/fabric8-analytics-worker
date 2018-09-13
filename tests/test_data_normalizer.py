@@ -27,6 +27,7 @@ class TestDataNormalizer(object):
         """Set up any state tied to the execution of the given method in a class."""
         self.data = Path(__file__).parent / 'data/dataNormalizer'
         self._dataNormalizer = DataNormalizer()
+        assert method
 
     def _load_json(self, f):
         """Load json from f."""

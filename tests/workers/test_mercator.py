@@ -27,6 +27,7 @@ class TestMercator(object):
     def setup_method(self, method):
         """Set up the MercatorTask."""
         self.m = MercatorTask.create_test_instance(task_name='metadata')
+        assert method
 
     @pytest.mark.usefixtures("no_s3_connection")
     def test_execute_npm(self, tmpdir, npm):
