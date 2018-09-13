@@ -20,3 +20,23 @@ from .s3_keywords_summary import S3KeywordsSummary
 from .s3_userintent import S3UserIntent
 from .s3_manual_tagging import S3ManualTagging
 from .s3_crowd_source_tags import S3CrowdSourceTags
+
+# avoid Vulture and Pyflakes warnings
+assert BayesianPostgres is not None
+assert PackagePostgres is not None
+assert AmazonS3 is not None
+assert S3Artifacts is not None
+assert S3TempArtifacts is not None
+assert S3Data is not None
+assert S3PackageData is not None
+assert S3Manifests is not None
+assert S3MavenIndex is not None
+assert S3VulnDB is not None
+assert S3Readme is not None
+assert S3GitHubManifestMetadata is not None
+assert S3UserProfileStore is not None
+assert S3RepositoryDescription is not None
+assert S3KeywordsSummary is not None
+assert S3UserIntent is not None
+assert S3ManualTagging is not None
+assert S3CrowdSourceTags is not None
