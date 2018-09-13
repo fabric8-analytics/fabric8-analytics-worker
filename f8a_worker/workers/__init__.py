@@ -27,3 +27,32 @@ from f8a_worker.workers.unknown_dep_fetcher import UnknownDependencyFetcherTask
 from f8a_worker.workers.victims import VictimsCheck
 from f8a_worker.workers.user_notifier import UserNotificationTask
 from f8a_worker.workers.repo_dependency_finder import RepoDependencyFinderTask
+
+# avoid Vulture and Pyflakes warnings
+assert CVEcheckerTask is not None
+assert BookkeeperTask is not None
+assert CVEDBSyncTask is not None
+assert GithubDependencyTreeTask is not None
+assert DependencySnapshotTask is not None
+assert DigesterTask is not None
+assert FinalizeTask, PackageFinalizeTask is not None
+assert GitStats is not None
+assert GithubTask, GitReadmeCollectorTask is not None
+assert GraphImporterTask is not None
+assert GraphSyncTask is not None
+assert GraphAggregatorTask is not None
+assert InitAnalysisFlow is not None
+assert InitPackageFlow is not None
+assert KeywordsSummaryTask is not None
+assert KeywordsTaggingTask is not None
+assert PackageKeywordsTaggingTask is not None
+assert LibrariesIoTask is not None
+assert LicenseCheckTask is not None
+assert MercatorTask is not None
+assert ReportGenerationTask is not None
+assert RepositoryDescCollectorTask is not None
+assert ResultCollector, PackageResultCollector is not None
+assert UnknownDependencyFetcherTask is not None
+assert VictimsCheck is not None
+assert UserNotificationTask is not None
+assert RepoDependencyFinderTask is not None
