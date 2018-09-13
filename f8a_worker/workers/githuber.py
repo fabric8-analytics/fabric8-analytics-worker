@@ -31,6 +31,7 @@ class GithubTask(BaseTask):
     @classmethod
     def create_test_instance(cls, repo_name, repo_url):
         """Create instance of task for tests."""
+        assert cls
         instance = super().create_test_instance()
         # set for testing as we are not querying DB for mercator results
         instance._repo_name = repo_name

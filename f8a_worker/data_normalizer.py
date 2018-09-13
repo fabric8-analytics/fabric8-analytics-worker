@@ -659,7 +659,7 @@ class DataNormalizer(object):
 
     def handle_data(self, data, keep_path=False):
         """Run corresponding handler based on ecosystem."""
-        def _passthrough(unused):
+        def _passthrough(_unused):
             # log.debug('ecosystem %s not handled', data['ecosystem'])
             pass
 
