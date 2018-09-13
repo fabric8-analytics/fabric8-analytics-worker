@@ -82,9 +82,10 @@ class TestIndianaJones(object):
     ])
     def test_fetch_version_range_npm_specific(self, tmpdir, npm, name, version, expected_digest):
         """Test fetching of npm artifact with version range."""
-        with pytest.raises(NotABugTaskError) as excinfo:
+        with pytest.raises(NotABugTaskError):
             cache_path = Path(subprocess.check_output(["npm", "config", "get", "cache"],
                                                       universal_newlines=True).strip())
+            assert cache_path
             package_digest, path = IndianaJones.fetch_artifact(npm,
                                                                artifact=name,
                                                                version=version,

@@ -6,10 +6,7 @@ from __future__ import unicode_literals
 import pytest
 from flexmock import flexmock
 
-import pytest
 from f8a_worker.object_cache import EPVCache
-from f8a_worker.enums import EcosystemBackend
-from f8a_worker.models import Ecosystem
 from f8a_worker.workers import DigesterTask
 from f8a_worker.process import IndianaJones
 from f8a_worker.utils import compute_digest
