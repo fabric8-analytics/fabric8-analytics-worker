@@ -68,7 +68,7 @@ class DependencySnapshotTask(BaseTask):
         solver = get_ecosystem_solver(ecosystem)
         try:
             pkgspec = solver.solve([dep])
-        except ValueError as e:
+        except ValueError:
             raise NotABugTaskError("invalid dependency: {}".format(dep))
 
         package, version = pkgspec.popitem()

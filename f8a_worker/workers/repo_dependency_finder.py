@@ -38,7 +38,7 @@ class RepoDependencyFinderTask(BaseTask):
             self.log.info('######## Dependencies list: %r' % dependencies)
             try:
                 repo_cves = self.get_cve(dependencies)
-            except TaskError as e:
+            except TaskError:
                 raise TaskError('Failed to get CVEs')
         else:
             dependencies = GithubDependencyTreeTask.extract_dependencies(github_repo=github_repo,
@@ -49,7 +49,7 @@ class RepoDependencyFinderTask(BaseTask):
                 # dependencies are not going to be ingested for osioUserNotificationFlow.
                 repo_cves = self.create_repo_node_and_get_cve(github_repo, dependencies)
                 self.log.info('######## repo_cves %r' % repo_cves)
-            except TaskError as e:
+            except TaskError:
                 raise TaskError('Failed to Create Repo Node')
 
         report = self.generate_report(repo_cves=repo_cves, deps_list=dependencies)
