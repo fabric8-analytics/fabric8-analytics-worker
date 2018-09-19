@@ -8,8 +8,6 @@ from urllib.parse import quote, urljoin
 import random
 from os import environ, path
 
-from selinon import StoragePool
-
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.errors import F8AConfigurationException
 
