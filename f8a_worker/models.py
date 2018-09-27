@@ -411,3 +411,14 @@ class OSIORegisteredRepos(Base):
     git_sha = Column(String(255), nullable=False)
     email_ids = Column(String(255), nullable=False)
     last_scanned_at = Column(DateTime)
+
+
+class AuthorizedThreeScaleAccounts(Base):
+    """Table for 3scale account authorization."""
+
+    __tablename__ = 'authorized_three_scale_accounts'
+
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    account_name = Column(String(255), nullable=False)
+    account_secret = Column(String(64), nullable=False)
+    admin_id = Column(String(255), nullable=True)
