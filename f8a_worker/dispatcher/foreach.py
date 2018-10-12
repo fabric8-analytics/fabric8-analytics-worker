@@ -95,20 +95,6 @@ def iter_dependencies_stack(storage_pool, node_args):
         return []
 
 
-def iter_cvedb_updates(storage_pool, node_args):
-    """Collect OSS Index updates."""
-    # Be safe here as fatal errors will cause errors in Dispatcher
-    try:
-        modified = storage_pool.get('CVEDBSyncTask')['modified']
-        # let's force all analyses for now
-        for epv in modified:
-            epv['force'] = True
-        return modified
-    except Exception:
-        logger.exception("Failed to collect OSS Index updates")
-        return []
-
-
 def iter_unknown_dependencies(storage_pool, node_args):
     """Collect unknown dependencies."""
     # Be safe here as fatal errors will cause errors in Dispatcher

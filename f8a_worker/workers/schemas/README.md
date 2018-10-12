@@ -1,5 +1,5 @@
 This directory contains versioned schemas for the output of subparts of the analyses
-endpoint like the license scanner or CVE checker, written in JSL format.
+endpoint like the license scanner, written in JSL format.
 
 JSON Schema: http://json-schema.org/documentation.html
 JSL: https://jsl.readthedocs.io/en/latest/tutorial.html

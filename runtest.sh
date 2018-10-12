@@ -16,22 +16,20 @@ IMAGE_NAME=${IMAGE_NAME:-openshiftio/bayesian-cucos-worker}
 TEST_IMAGE_NAME="worker-tests"
 POSTGRES_IMAGE_NAME="registry.centos.org/centos/postgresql-94-centos7:latest"
 S3_IMAGE_NAME="minio/minio"
-CVEDB_S3_DUMP_IMAGE_NAME="registry.devshift.net/bayesian/cvedb-s3-dump"
 
 CONTAINER_NAME="worker-tests-${TIMESTAMP}"
 # we don't want to wipe local "database" container, so we create a custom one just for tests
 TESTDB_CONTAINER_NAME="worker-tests-db-${TIMESTAMP}"
 TESTS3_CONTAINER_NAME="worker-tests-s3-${TIMESTAMP}"
-TESTCVEDB_S3_DUMP_CONTAINER_NAME="worker-tests-cvedb-s3-dump-${TIMESTAMP}"
 DOCKER_NETWORK="F8aWorkerTest"
 
 gc() {
   retval=$?
   # FIXME: make this configurable
   echo "Stopping test containers"
-  docker stop "${CONTAINER_NAME}" "${TESTDB_CONTAINER_NAME}" "${TESTS3_CONTAINER_NAME}" "${TESTCVEDB_S3_DUMP_CONTAINER_NAME}" || :
+  docker stop "${CONTAINER_NAME}" "${TESTDB_CONTAINER_NAME}" "${TESTS3_CONTAINER_NAME}" || :
   echo "Removing test containers"
-  docker rm -v "${CONTAINER_NAME}" "${TESTDB_CONTAINER_NAME}" "${TESTS3_CONTAINER_NAME}" "${TESTCVEDB_S3_DUMP_CONTAINER_NAME}" || :
+  docker rm -v "${CONTAINER_NAME}" "${TESTDB_CONTAINER_NAME}" "${TESTS3_CONTAINER_NAME}" || :
   echo "Removing network ${DOCKER_NETWORK}"
   docker network rm "${DOCKER_NETWORK}" || :
   exit $retval
@@ -86,11 +84,6 @@ docker run -d \
     ${S3_IMAGE_NAME} server --address :33000 /export
 S3_CONTAINER_IP=$(docker inspect --format "{{.NetworkSettings.Networks.${DOCKER_NETWORK}.IPAddress}}" ${TESTS3_CONTAINER_NAME})
 S3_ENDPOINT_URL="http://${S3_CONTAINER_IP}:33000"
-docker run \
-    -e S3_ENDPOINT_URL="${S3_ENDPOINT_URL}" \
-    --env-file tests/cvedb_s3_dump.env \
-    --network "${DOCKER_NETWORK}" \
-    --name "${TESTCVEDB_S3_DUMP_CONTAINER_NAME}" "${CVEDB_S3_DUMP_IMAGE_NAME}"
 
 echo "Starting test suite"
 docker run -t \

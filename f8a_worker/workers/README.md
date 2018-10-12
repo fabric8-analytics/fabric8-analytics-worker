@@ -90,8 +90,6 @@ The following list contains only examples,
 because some workers are not part of [any flow](../dispatcher/flows/),
 [their code is there](./) just from historical reasons.
 
-* [CVEcheckerTask](CVEchecker.py) - Queries CVE databases for security issues
-
 * [DependencySnapshotTask](dependency_snapshot.py) - Analyzes dependencies
 
 * [DigesterTask](digester.py) - Computes various digests of all files found in target cache path
