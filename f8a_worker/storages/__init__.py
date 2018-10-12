@@ -11,7 +11,6 @@ from .s3_data import S3Data
 from .s3_package_data import S3PackageData
 from .s3_manifests import S3Manifests
 from .s3_mavenindex import S3MavenIndex
-from .s3_vulndb import S3VulnDB
 from .s3_readme import S3Readme
 from .s3_gh_manifests import S3GitHubManifestMetadata
 from .s3_userprofilestore import S3UserProfileStore
@@ -31,7 +30,6 @@ assert S3Data is not None
 assert S3PackageData is not None
 assert S3Manifests is not None
 assert S3MavenIndex is not None
-assert S3VulnDB is not None
 assert S3Readme is not None
 assert S3GitHubManifestMetadata is not None
 assert S3UserProfileStore is not None

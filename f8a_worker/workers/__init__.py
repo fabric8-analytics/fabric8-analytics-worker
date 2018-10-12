@@ -1,8 +1,6 @@
 """Import all tasks."""
 
-from f8a_worker.workers.CVEchecker import CVEcheckerTask
 from f8a_worker.workers.bookkeeper import BookkeeperTask
-from f8a_worker.workers.cvedbsync import CVEDBSyncTask
 from f8a_worker.workers.dependency_parser import GithubDependencyTreeTask
 from f8a_worker.workers.dependency_snapshot import DependencySnapshotTask
 from f8a_worker.workers.digester import DigesterTask
@@ -24,14 +22,11 @@ from f8a_worker.workers.report_generation import ReportGenerationTask
 from f8a_worker.workers.repository_description import RepositoryDescCollectorTask
 from f8a_worker.workers.result_collector import ResultCollector, PackageResultCollector
 from f8a_worker.workers.unknown_dep_fetcher import UnknownDependencyFetcherTask
-from f8a_worker.workers.victims import VictimsCheck
 from f8a_worker.workers.user_notifier import UserNotificationTask
 from f8a_worker.workers.repo_dependency_finder import RepoDependencyFinderTask
 
 # avoid Vulture and Pyflakes warnings
-assert CVEcheckerTask is not None
 assert BookkeeperTask is not None
-assert CVEDBSyncTask is not None
 assert GithubDependencyTreeTask is not None
 assert DependencySnapshotTask is not None
 assert DigesterTask is not None
@@ -53,6 +48,5 @@ assert ReportGenerationTask is not None
 assert RepositoryDescCollectorTask is not None
 assert ResultCollector, PackageResultCollector is not None
 assert UnknownDependencyFetcherTask is not None
-assert VictimsCheck is not None
 assert UserNotificationTask is not None
 assert RepoDependencyFinderTask is not None

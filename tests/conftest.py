@@ -10,7 +10,6 @@ from f8a_worker.enums import EcosystemBackend
 from f8a_worker.models import Base, Ecosystem, create_db_scoped_session
 from f8a_worker.setup_celery import get_dispatcher_config_files
 from f8a_worker.storages import AmazonS3
-from f8a_worker.victims import VictimsDB
 from selinon import Config
 
 # To use fixtures from this file, either name them as an input argument or use 'usefixtures' marker
@@ -107,21 +106,3 @@ def dispatcher_setup():
 def no_s3_connection():
     """Mock the connection to S3."""
     flexmock(AmazonS3).should_receive('is_connected').and_return(True)
-
-
-@pytest.fixture()
-def victims_zip():
-    """Create a VictimsDB zip file from test data."""
-    dbzip = tempfile.mkstemp()[1]
-    victims_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/victimsdb/')
-    archive = shutil.make_archive(dbzip, 'zip', victims_dir)
-    return archive
-
-
-@pytest.fixture()
-def victims_zip_s3():
-    """Upload VictimsDB zip file to S3."""
-    dispatcher_setup()
-    archive = victims_zip()
-    with VictimsDB.from_zip(archive) as db:
-        db.store_on_s3()

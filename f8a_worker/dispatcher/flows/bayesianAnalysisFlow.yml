@@ -27,23 +27,6 @@
       edges:
         - from:
           to:
-            - 'security_issues'
-          condition:
-            or:
-              - name: 'argsFieldEqual'
-                args:
-                  key: 'ecosystem'
-                  value: 'maven'
-              - name: 'argsFieldEqual'
-                args:
-                  key: 'ecosystem'
-                  value: 'pypi'
-              - name: 'argsFieldEqual'
-                args:
-                  key: 'ecosystem'
-                  value: 'npm'
-        - from:
-          to:
             - 'source_licenses'
           condition:
             not:
