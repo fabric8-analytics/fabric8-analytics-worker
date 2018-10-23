@@ -148,7 +148,7 @@ class TestIndianaJones(object):
         assert path.exists()
 
     @pytest.mark.parametrize('name, version, expected_digest', [
-        ('NUnit', '3.7.1', 'db714c0a01d8a172e6c378144b1192290263f8c308e8e2baba9c11d9fe165db4'),
+        ('NUnit', '3.7.1', '94a8df167b8bf09065ddb772edd169311d6a6d19678f1482d68293aa146f86f9'),
     ])
     def test_fetch_nuget_specific(self, tmpdir, nuget, name, version, expected_digest):
         """Test fetching of nuget artifact."""
