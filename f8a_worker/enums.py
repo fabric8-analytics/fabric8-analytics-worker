@@ -11,7 +11,7 @@ class EcosystemBackend(IntEnum):
     # NOTE: when altering this, you'll manually need to create a migration that alters
     #    f8a_worker.models.Ecosystem by adding it to DB enum - see:
     #    http://stackoverflow.com/questions/14845203/altering-an-enum-field-using-alembic
-    (none, npm, maven, pypi, rubygems, scm, crates, nuget) = range(8)
+    (none, npm, maven, pypi, rubygems, scm, crates, nuget, go) = range(9)
 
 
 class SortOrder(IntEnum):
