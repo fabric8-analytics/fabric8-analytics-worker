@@ -996,7 +996,7 @@ def get_ecosystem_solver(ecosystem, with_parser=None, with_fetcher=None):
         return RubyGemsSolver(ecosystem, with_parser, with_fetcher)
     elif ecosystem.is_backed_by(EcosystemBackend.nuget):
         return NugetSolver(ecosystem, with_parser, with_fetcher)
-    elif ecosystem.is_backed_by(EcosystemBackend.scm):
+    elif ecosystem.is_backed_by(EcosystemBackend.go):
         return GolangSolver(ecosystem, with_parser, with_fetcher)
 
     raise ValueError('Unknown ecosystem: {}'.format(ecosystem.name))
@@ -1014,7 +1014,7 @@ def get_ecosystem_parser(ecosystem):
         return RubyGemsDependencyParser()
     elif ecosystem.is_backed_by(EcosystemBackend.nuget):
         return NugetDependencyParser()
-    elif ecosystem.is_backed_by(EcosystemBackend.scm):
+    elif ecosystem.is_backed_by(EcosystemBackend.go):
         return GolangDependencyParser()
 
     raise ValueError('Unknown ecosystem: {}'.format(ecosystem.name))

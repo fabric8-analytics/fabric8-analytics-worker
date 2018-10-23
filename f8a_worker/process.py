@@ -498,7 +498,7 @@ class IndianaJones(object):
         return digest, artifact_path
 
     @staticmethod
-    def fetch_scm_artifact(name, version, target_dir):
+    def fetch_go_artifact(name, version, target_dir):
         """Fetch go artifact using 'go get' command."""
         env = dict(os.environ)
         env['GOPATH'] = target_dir
@@ -554,8 +554,8 @@ class IndianaJones(object):
             digest, artifact_path = IndianaJones.fetch_nuget_artifact(
                 ecosystem, artifact, version, target_dir
             )
-        elif ecosystem.is_backed_by(EcosystemBackend.scm):
-            digest, artifact_path = IndianaJones.fetch_scm_artifact(
+        elif ecosystem.is_backed_by(EcosystemBackend.go):
+            digest, artifact_path = IndianaJones.fetch_go_artifact(
                 artifact, version, target_dir
             )
         elif parsed:

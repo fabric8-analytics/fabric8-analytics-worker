@@ -90,7 +90,7 @@ def nuget(rdb):
 @pytest.fixture
 def go(rdb):
     """Prepare database with Go ecosystem."""
-    e = Ecosystem(name='go', backend=EcosystemBackend.scm, fetch_url='')
+    e = Ecosystem(name='go', backend=EcosystemBackend.go, fetch_url='')
     rdb.add(e)
     rdb.commit()
     return e
