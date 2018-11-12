@@ -28,14 +28,14 @@ class InitAnalysisFlow(BaseTask):
         self._strict_assert(arguments.get('version'))
         self._strict_assert(arguments.get('ecosystem'))
 
-        # make sure we store package name based on ecosystem package naming case sensitivity
-        arguments['name'] = normalize_package_name(arguments['ecosystem'], arguments['name'])
-
         db = self.storage.session
         try:
             ecosystem = Ecosystem.by_name(db, arguments['ecosystem'])
         except NoResultFound:
             raise FatalTaskError('Unknown ecosystem: %r' % arguments['ecosystem'])
+
+        # make sure we store package name in its normalized form
+        arguments['name'] = normalize_package_name(ecosystem.backend.name, arguments['name'])
 
         p = Package.get_or_create(db, ecosystem_id=ecosystem.id, name=arguments['name'])
         v = Version.get_or_create(db, package_id=p.id, identifier=arguments['version'])
