@@ -6,6 +6,7 @@ import json
 import logging
 import signal
 import time
+import re
 from contextlib import contextmanager
 from os import path as os_path, walk, getcwd, chdir, environ as os_environ, killpg, getpgid
 from queue import Queue, Empty
@@ -512,13 +513,26 @@ def get_session_retry(retries=3, backoff_factor=0.2, status_forcelist=(404, 500,
     return session
 
 
-def normalize_package_name(ecosystem, name):
-    """Normalize package name based on ecosystem."""
+def normalize_package_name(ecosystem_backend, name):
+    """Normalize package name.
+
+    :param ecosystem_backend: str, ecosystem backend
+    :param name: str, package name
+
+    :return: str, normalized package name for supported ecosystem backend,
+    the same package name otherwise
+    """
     normalized_name = name
-    if Ecosystem.by_name(StoragePool.get_connected_storage('BayesianPostgres').session,
-                         ecosystem).is_backed_by(EcosystemBackend.pypi):
-        case_sensitivity_transform(ecosystem, name)
-    elif ecosystem == 'go':
+
+    if ecosystem_backend == 'pypi':
+        # https://www.python.org/dev/peps/pep-0503/#normalized-names
+        normalized_name = re.sub(r'[-_.]+', '-', name).lower()
+    elif ecosystem_backend == 'maven':
+        # https://maven.apache.org/pom.html#Maven_Coordinates
+        normalized_name = MavenCoordinates.normalize_str(name)
+    elif ecosystem_backend == 'npm':
+        normalized_name = name
+    elif ecosystem_backend == 'go':
         # go package name is the host+path part of a URL, thus it can be URL encoded
         normalized_name = unquote(name)
     return normalized_name

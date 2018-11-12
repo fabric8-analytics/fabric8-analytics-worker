@@ -7,14 +7,17 @@ import pytest
 from sqlalchemy.ext.declarative import declarative_base
 
 from f8a_worker.errors import TaskError
-from f8a_worker.utils import (get_all_files_from,
-                              hidden_path_filter,
-                              skip_git_files,
-                              ThreadPool,
-                              MavenCoordinates,
-                              compute_digest,
-                              parse_gh_repo,
-                              url2git_repo)
+from f8a_worker.utils import (
+    get_all_files_from,
+    hidden_path_filter,
+    skip_git_files,
+    ThreadPool,
+    MavenCoordinates,
+    compute_digest,
+    parse_gh_repo,
+    url2git_repo,
+    normalize_package_name
+)
 
 Base = declarative_base()
 
@@ -228,3 +231,25 @@ class TestUrl2GitRepo(object):
         """Test url2git_repo()."""
         with pytest.raises(ValueError):
             url2git_repo(url)
+
+
+@pytest.mark.parametrize('ecosystem,name,expected_result', [
+    ('pypi', 'PyJWT', 'pyjwt'),
+    ('pypi', 'Flask_Cache', 'flask-cache'),
+    ('pypi', 'Flask-Cache', 'flask-cache'),
+    ('maven', 'junit:junit:4.12', 'junit:junit:4.12'),
+    ('maven', 'junit:junit:jar:4.12', 'junit:junit:4.12'),
+    ('maven', 'junit:junit:jar::4.12', 'junit:junit:4.12'),
+    ('maven', 'junit:junit:jar:sources:4.12', 'junit:junit::sources:4.12'),
+    ('maven', 'junit:junit', 'junit:junit'),
+    ('maven', 'junit:junit:', 'junit:junit'),
+    ('maven', 'junit:junit::', 'junit:junit'),
+    ('maven', 'junit:junit:::4.12', 'junit:junit:4.12'),
+    ('npm', 'fs-extra', 'fs-extra'),
+    ('npm', 'JSONstream', 'JSONstream'),
+    ('go', 'github.com%2Fmitchellh%2Fgo-homedir', 'github.com/mitchellh/go-homedir'),
+    ('go', 'github.com/mitchellh/go-homedir', 'github.com/mitchellh/go-homedir'),
+])
+def test_normalize_package_name(ecosystem, name, expected_result):
+    """Test normalize_package_name()."""
+    assert normalize_package_name(ecosystem, name) == expected_result
