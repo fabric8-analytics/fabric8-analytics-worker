@@ -26,7 +26,7 @@ import os
 from selinon import FatalTaskError
 
 from f8a_worker.base import BaseTask
-from f8a_worker.data_normalizer import DataNormalizer
+from f8a_worker.data_normalizer import normalize
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.object_cache import ObjectCache
 from f8a_worker.schemas import SchemaRef
@@ -41,7 +41,6 @@ class MercatorTask(BaseTask):
     _analysis_name = 'metadata'
     _dependency_tree_lock = '_dependency_tree_lock'
     schema_ref = SchemaRef(_analysis_name, '3-3-0')
-    _data_normalizer = DataNormalizer()
 
     def execute(self, arguments):
         """Execute mercator and convert it's output to JSON object."""
@@ -56,8 +55,8 @@ class MercatorTask(BaseTask):
             cache_path = ObjectCache.get_from_dict(arguments).get_extracted_source_tarball()
         return self.run_mercator(arguments, cache_path)
 
-    def run_mercator(self, arguments, cache_path,
-                     keep_path=False, outermost_only=True, timeout=300, resolve_poms=True):
+    def run_mercator(self, arguments, cache_path, outermost_only=True,
+                     timeout=300, resolve_poms=True):
         """Run mercator tool."""
         # TODO: reduce cyclomatic complexity
         result_data = {'status': 'unknown',
@@ -85,7 +84,7 @@ class MercatorTask(BaseTask):
         else:
             if outermost_only:
                 # process only root level manifests (or the ones closest to the root level)
-                items = self._data_normalizer.get_outermost_items(data.get('items') or [])
+                items = self.get_outermost_items(data.get('items') or [])
             else:
                 items = data.get('items') or []
             self.log.debug('mercator found %i projects, outermost %i',
@@ -108,8 +107,7 @@ class MercatorTask(BaseTask):
                                               version=arguments.get('version'),
                                               timeout=timeout)
 
-        result_data['details'] = [self._data_normalizer.handle_data(d, keep_path=keep_path)
-                                  for d in items]
+        result_data['details'] = [normalize(d) for d in items]
         result_data['status'] = 'success'
         return result_data
 
@@ -247,3 +245,13 @@ class MercatorTask(BaseTask):
             ret = requirements_txt
 
         return ret
+
+    @staticmethod
+    def get_outermost_items(list_):
+        """Sort by the depth of the path so the outermost come first."""
+        sorted_list = sorted(list_, key=lambda a: len(a['path'].split(os.path.sep)))
+        if sorted_list:
+            outermost_len = len(sorted_list[0]['path'].split(os.path.sep))
+            sorted_list = [i for i in sorted_list if
+                           len(i['path'].split(os.path.sep)) == outermost_len]
+        return sorted_list
