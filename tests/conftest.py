@@ -2,9 +2,6 @@
 
 import pytest
 from flexmock import flexmock
-import tempfile
-import shutil
-import os
 
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.models import Base, Ecosystem, create_db_scoped_session

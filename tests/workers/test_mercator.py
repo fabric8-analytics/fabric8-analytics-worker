@@ -1,5 +1,6 @@
 """Tests for the MercatorTask worker task."""
 
+import os
 from pathlib import Path
 import pytest
 from flexmock import flexmock
@@ -103,3 +104,23 @@ class TestMercator(object):
         assert set(details['dependencies']) == {'github.com/Masterminds/glide/cfg ~0.13.1'}
         assert set(details['_dependency_tree_lock'].keys()) == {'dependencies', 'hash', 'updated'}
         assert set(details['_dependency_tree_lock']['dependencies'][0].keys()) > {'name', 'version'}
+
+    @staticmethod
+    def sort_by_path(dict_):
+        """Sort dict_ by length of 'path' of it's members."""
+        return sorted(dict_, key=lambda a: len(a['path'].split(os.path.sep)))
+
+    def test_get_outermost_items(self):
+        """Test get_outermost_items()."""
+        d = [{'path': '/a/b/c/d'}, {'path': '/a/b/c'}, {'path': '/a'}]
+        assert self.m.get_outermost_items(d) == [{'path': '/a'}]
+
+        d = [{'path': 'bbb'}, {'path': 'a/b/c/'}]
+        assert self.m.get_outermost_items(d) == [{'path': 'bbb'}]
+
+        d = [{'path': '/a/b'}, {'path': '/b/c'}, {'path': '/c/d/e'}]
+        expected = self.sort_by_path([{'path': '/a/b'}, {'path': '/b/c'}])
+        result = self.sort_by_path(self.m.get_outermost_items(d))
+        assert len(result) == len(expected)
+        for i in range(len(expected)):
+            assert compare_dictionaries(result[i], expected[i])
