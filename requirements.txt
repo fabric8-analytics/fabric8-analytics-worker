@@ -8,55 +8,55 @@ amqp==2.1.4
 anymarkup-core==0.7.1     # via anymarkup
 anymarkup==0.7.0
 argh==0.26.2              # via watchdog
-beautifulsoup4==4.6.0
-billiard==3.5.0.3         # via celery
-boto3==1.7.25
-boto==2.48.0
-botocore==1.10.25         # via boto3, s3transfer
-celery==4.1.1             # via selinon
-certifi==2018.4.16        # via requests
+beautifulsoup4==4.6.3
+billiard==3.5.0.4         # via celery
+boto3==1.9.44
+boto==2.49.0
+botocore==1.12.44         # via boto3, s3transfer
+celery==4.2.1             # via selinon
+certifi==2018.10.15       # via requests
 chardet==3.0.4            # via requests
-click==6.7                # via selinon
+click==7.0                # via selinon
 codegen==1.0              # via selinon
 colorama==0.3.9           # via radon, rainbow-logging-handler
 configobj==5.0.6          # via anymarkup
 docutils==0.14            # via botocore
 flake8-polyfill==1.0.2    # via radon
-flake8==3.5.0             # via flake8-polyfill
+flake8==3.6.0             # via flake8-polyfill
 git2json==0.2.3
-graphviz==0.8.3           # via selinon
-idna==2.6                 # via requests
+graphviz==0.10.1          # via selinon
+idna==2.7                 # via requests
 jmespath==0.9.3           # via boto3, botocore
 jsl==0.2.4
-json5==0.6.0              # via anymarkup
+json5==0.6.1              # via anymarkup
 jsonschema==2.6.0
-kombu==4.2.0              # via celery
+kombu==4.2.1              # via celery
 logutils==0.3.5           # via rainbow-logging-handler
-lxml==4.2.1
+lxml==4.2.5
 mando==0.6.4              # via radon
 mccabe==0.6.1             # via flake8
-numpy==1.14.3
+numpy==1.15.4
 pathtools==0.1.2          # via watchdog
-psycopg2==2.7.4
-pycodestyle==2.3.1        # via flake8
-pyflakes==1.6.0           # via flake8
-python-dateutil==2.7.3    # via botocore
-pytz==2018.4              # via celery
-pyyaml==3.12              # via anymarkup, selinon, watchdog
-radon==2.2.0
+psycopg2==2.7.6.1
+pycodestyle==2.4.0        # via flake8
+pyflakes==2.0.0           # via flake8
+python-dateutil==2.7.5    # via botocore
+pytz==2018.7              # via celery
+pyyaml==3.13              # via anymarkup, selinon, watchdog
+radon==2.4.0
 rainbow-logging-handler==2.2.2  # via selinon
-raven==6.8.0
-requests==2.18.4
+raven==6.9.0
+requests==2.20.1
 s3transfer==0.1.13        # via boto3
-scikit-learn==0.19.1
+scikit-learn==0.20.0
 scipy==1.1.0
-selinon[celery]==1.0.0rc4
+selinon[celery]==1.0.0
 semantic-version==2.6.0
 six==1.11.0               # via anymarkup-core, configobj, mando, python-dateutil
-sqlalchemy==1.2.7
+sqlalchemy==1.2.14
 toml==0.9.4               # via anymarkup
 unidiff==0.5.5
-urllib3==1.22             # via requests
+urllib3==1.24.1           # via botocore, requests
 vine==1.1.4               # via amqp
-watchdog==0.8.3
+watchdog==0.9.0
 xmltodict==0.11.0         # via anymarkup
