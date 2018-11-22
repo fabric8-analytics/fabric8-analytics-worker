@@ -198,8 +198,6 @@
     - 'bayesianPriorityPackageFlow'
     - 'bayesianPackageAnalysisFlow'
     - 'componentApiFlow'
-    - 'keywordsApiSummaryFlow'
-    - 'keywordsPrioritySummaryFlow'
     - 'dependencyIngestFlow'
     - 'osioUserNotificationFlow'
 
