@@ -15,7 +15,9 @@ import sys
 
 from f8a_worker.data_normalizer.abstract import AbstractDataNormalizer
 from f8a_worker.data_normalizer.csharp import NugetDataNormalizer
-from f8a_worker.data_normalizer.go import GoGlideDataNormalizer, GoFedlibDataNormalizer
+from f8a_worker.data_normalizer.go import (
+    GoGlideDataNormalizer, GoFedlibDataNormalizer, GodepsDataNormalizer
+)
 from f8a_worker.data_normalizer.java import MavenDataNormalizer, GradleDataNormalizer
 from f8a_worker.data_normalizer.javascript import NpmDataNormalizer
 from f8a_worker.data_normalizer.python import (
@@ -37,6 +39,7 @@ def normalize(mercator_output):
         'dotnetsolution': NugetDataNormalizer,
         'gofedlib': GoFedlibDataNormalizer,
         'go-glide': GoGlideDataNormalizer,
+        'go-godeps': GodepsDataNormalizer,
         'gradlebuild': GradleDataNormalizer
     }
 
