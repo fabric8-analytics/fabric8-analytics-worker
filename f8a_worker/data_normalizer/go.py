@@ -73,6 +73,36 @@ class GoGlideDataNormalizer(AbstractDataNormalizer):
         return dependencies
 
 
+class GodepsDataNormalizer(AbstractDataNormalizer):
+    """Godeps data normalizer.
+
+    This normalizer handles data extracted from Godeps.json files by mercator-go.
+    """
+
+    def __init__(self, mercator_json):
+        """Constructor."""
+        super().__init__(mercator_json)
+
+    def normalize(self):
+        """Normalize output from Mercator for Godeps.json (Go)."""
+        dependencies = []
+
+        for entry in self._raw_data.get('Deps', []):
+            package = entry.get('ImportPath')
+            version = entry.get('Rev', '')
+
+            if not package:
+                # we need at least package name...
+                continue
+
+            dependency = '{p} {v}'.format(p=package, v=version)
+            dependencies.append(dependency)
+
+        self._data['dependencies'] = dependencies
+
+        return self._data
+
+
 class GoFedlibDataNormalizer(AbstractDataNormalizer):
     """GoFedlib data normalizer.
 

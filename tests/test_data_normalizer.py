@@ -88,6 +88,13 @@ def test_transforming_go_glide():
     assert compare_dictionaries(normalize(data['items'][0]), expected)
 
 
+def test_transforming_godeps():
+    """Test normalizing of Godeps data."""
+    data = _load_json('go-godeps-from-mercator')
+    expected = _load_json('go-godeps-expected')
+    assert compare_dictionaries(normalize(data['items'][0]), expected)
+
+
 @pytest.mark.parametrize('data, expected', [
     ({'ecosystem': 'gofedlib', 'result': {
         'deps-main': [],
