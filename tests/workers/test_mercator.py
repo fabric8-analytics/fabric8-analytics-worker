@@ -105,6 +105,23 @@ class TestMercator(object):
         assert set(details['_dependency_tree_lock'].keys()) == {'dependencies', 'hash', 'updated'}
         assert set(details['_dependency_tree_lock']['dependencies'][0].keys()) > {'name', 'version'}
 
+    @pytest.mark.usefixtures("no_s3_connection")
+    def test_execute_go_godeps(self, go):
+        """Test the MercatorTask for the Go ecosystem (project includes Godeps.json files)."""
+        path = str(Path(__file__).parent.parent / 'data/go/godeps')
+        args = {'ecosystem': go.name, 'name': 'github.com/test/test', 'version': 'ffff'}
+        flexmock(EPVCache).should_receive('get_extracted_source_tarball').and_return(path)
+        results = self.m.execute(arguments=args)
+
+        assert isinstance(results, dict) and results
+        details = results['details'][0]
+        assert details['ecosystem'] == 'go-godeps'
+        assert details['name'] == 'github.com/test/test'
+        assert details['version'] == 'ffff'
+        assert set(details['dependencies']) == {
+            'vbom.ml/util/sortorder db5cfe13f5cc80a4990d98e2e1b0707a4d1a5394'
+        }
+
     @staticmethod
     def sort_by_path(dict_):
         """Sort dict_ by length of 'path' of it's members."""
