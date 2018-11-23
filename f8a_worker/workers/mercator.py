@@ -59,6 +59,8 @@ class MercatorTask(BaseTask):
                      timeout=300, resolve_poms=True):
         """Run mercator tool."""
         # TODO: reduce cyclomatic complexity
+        name = arguments.get('name')
+        version = arguments.get('version')
         result_data = {'status': 'unknown',
                        'summary': [],
                        'details': []}
@@ -87,8 +89,9 @@ class MercatorTask(BaseTask):
                 items = self.get_outermost_items(data.get('items') or [])
             else:
                 items = data.get('items') or []
-            self.log.debug('mercator found %i projects, outermost %i',
-                           len(data), len(items))
+            self.log.debug(
+                'mercator found %i projects, outermost %i', len(data), len(items)
+            )
 
             if ecosystem_object.is_backed_by(EcosystemBackend.maven):
                 # for maven we download both Jar and POM, we consider POM to be *the*
@@ -99,19 +102,23 @@ class MercatorTask(BaseTask):
                 # ignore other metadata files, e.g. requirements.txt
                 items = [d for d in items if d['ecosystem'].lower() == 'npm']
             elif arguments['ecosystem'] == 'go':
-                items = [d for d in items if d['ecosystem'].lower() == 'go-glide']
                 if not items:
                     # Mercator found no Go Glide files, run gofedlib
-                    items = self.run_gofedlib(topdir=mercator_target,
-                                              name=arguments.get('name'),
-                                              version=arguments.get('version'),
-                                              timeout=timeout)
+                    items = self.run_gofedlib(
+                        topdir=mercator_target,
+                        timeout=timeout
+                    )
+                else:
+                    items = [
+                        self._add_extra_go_fields(d, name, version) for d in items
+                        if d['ecosystem'].lower() in ('go-glide', 'go-godeps')
+                    ]
 
         result_data['details'] = [normalize(d) for d in items]
         result_data['status'] = 'success'
         return result_data
 
-    def run_gofedlib(self, topdir, name, version, timeout):
+    def run_gofedlib(self, topdir, timeout):
         """Run gofedlib-cli to extract dependencies from golang sources."""
         tc = TimedCommand(
             [
@@ -130,13 +137,20 @@ class MercatorTask(BaseTask):
         self.log.debug('gofedlib found %i dependencies',
                        main_deps_count + packages_count)
 
-        result['code_repository'] = {
+        return [{'ecosystem': 'gofedlib', 'result': result}]
+
+    def _add_extra_go_fields(self, result, name, version):
+        """Add extra fields into a resulting dict for Golang ecosystem."""
+        # let's assume the type to be always Git;
+        # note Golang support SCMs other than Git,
+        # but we only support Git at the moment
+        result['result']['code_repository'] = {
             'type': 'git',
             'url': 'https://{name}'.format(name=name)
         }
-        result['name'] = name
-        result['version'] = version
-        return [{'ecosystem': 'gofedlib', 'result': result}]
+        result['result']['name'] = name
+        result['result']['version'] = version
+        return result
 
     def _parse_requires_txt(self, path):
         requires = []
