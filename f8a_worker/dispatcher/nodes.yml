@@ -127,15 +127,6 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_InitPackageFlow_v0'
       storage: 'PackagePostgres'
-    - name: 'git_stats'
-      classname: 'GitStats'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_git_stats_v0'
-      storage: 'PackagePostgres'
-      selective_run_function:
-        name: 'selective_run_function'
-        import: 'f8a_worker.dispatcher.selective'
     - name: 'libraries_io'
       classname: 'LibrariesIoTask'
       import: 'f8a_worker.workers'
