@@ -25,6 +25,7 @@ flake8-polyfill==1.0.2    # via radon
 flake8==3.6.0             # via flake8-polyfill
 git2json==0.2.3
 graphviz==0.10.1          # via selinon
+gitpython==2.1.11
 idna==2.7                 # via requests
 jmespath==0.9.3           # via boto3, botocore
 jsl==0.2.4
@@ -47,6 +48,7 @@ radon==2.4.0
 rainbow-logging-handler==2.2.2  # via selinon
 raven==6.9.0
 requests==2.20.1
+requests-futures==0.9.7
 s3transfer==0.1.13        # via boto3
 scikit-learn==0.20.0
 scipy==1.1.0
@@ -59,4 +61,5 @@ unidiff==0.5.5
 urllib3==1.24.1           # via botocore, requests
 vine==1.1.4               # via amqp
 watchdog==0.9.0
+werkzeug==0.14.1          # via flask
 xmltodict==0.11.0         # via anymarkup

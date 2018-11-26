@@ -12,9 +12,6 @@ from f8a_worker.workers.graph_sync import GraphSyncTask
 from f8a_worker.workers.graphaggregator import GraphAggregatorTask
 from f8a_worker.workers.init_analysis_flow import InitAnalysisFlow
 from f8a_worker.workers.init_package_flow import InitPackageFlow
-from f8a_worker.workers.keywords_summary import KeywordsSummaryTask
-from f8a_worker.workers.keywords_tagging import KeywordsTaggingTask
-from f8a_worker.workers.keywords_tagging import PackageKeywordsTaggingTask
 from f8a_worker.workers.libraries_io import LibrariesIoTask
 from f8a_worker.workers.license import LicenseCheckTask
 from f8a_worker.workers.mercator import MercatorTask
@@ -24,6 +21,7 @@ from f8a_worker.workers.result_collector import ResultCollector, PackageResultCo
 from f8a_worker.workers.unknown_dep_fetcher import UnknownDependencyFetcherTask
 from f8a_worker.workers.user_notifier import UserNotificationTask
 from f8a_worker.workers.repo_dependency_finder import RepoDependencyFinderTask
+from f8a_worker.workers.git_operations import GitOperationTask
 
 # avoid Vulture and Pyflakes warnings
 assert BookkeeperTask is not None
@@ -38,9 +36,6 @@ assert GraphSyncTask is not None
 assert GraphAggregatorTask is not None
 assert InitAnalysisFlow is not None
 assert InitPackageFlow is not None
-assert KeywordsSummaryTask is not None
-assert KeywordsTaggingTask is not None
-assert PackageKeywordsTaggingTask is not None
 assert LibrariesIoTask is not None
 assert LicenseCheckTask is not None
 assert MercatorTask is not None
@@ -50,3 +45,4 @@ assert ResultCollector, PackageResultCollector is not None
 assert UnknownDependencyFetcherTask is not None
 assert UserNotificationTask is not None
 assert RepoDependencyFinderTask is not None
+assert GitOperationTask is not None
