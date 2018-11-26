@@ -1,0 +1,10 @@
+---
+  # This flow is for the git operations to generate the manifest files for the stack analysis.
+  flow-definitions:
+    - name: 'gitOperationsFlow'
+      queue: '{DEPLOYMENT_PREFIX}_api_gitOperationsFlow_v0'
+      propagate_node_args: true
+      node_args_from_first: true
+      edges:
+        - from:
+          to: 'GitOperationTask'

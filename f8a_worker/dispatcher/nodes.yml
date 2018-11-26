@@ -150,32 +150,17 @@
       import: 'f8a_worker.workers'
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_BookkeeperTask_v0'
-    - name: 'package_keywords_tagging'
-      classname: 'PackageKeywordsTaggingTask'
-      storage_task_name: 'keywords_tagging'
+    - name: 'GitOperationTask'
+      classname: 'GitOperationTask'
       import: 'f8a_worker.workers'
       max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_package_keywords_tagging_v0'
-      storage: 'PackagePostgres'
-      selective_run_function:
-        name: 'selective_run_function'
-        import: 'f8a_worker.dispatcher.selective'
-    - name: 'keywords_tagging'
-      classname: 'KeywordsTaggingTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_keywords_tagging_v0'
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GitOperationTask_v0'
       storage: 'BayesianPostgres'
     - name: 'RepositoryDescCollectorTask'
       import: 'f8a_worker.workers'
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_RepositoryDescCollectorTask_v0'
       storage: 'S3RepositoryDescription'
-    - name: 'KeywordsSummaryTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_KeywordsSummaryTask_tagging_v0'
-      storage: 'S3KeywordsSummary'
     - name: 'GithubDependencyTreeTask'
       classname: 'GithubDependencyTreeTask'
       import: 'f8a_worker.workers'
@@ -218,13 +203,10 @@
     - 'bayesianApiPackageFlow'
     - 'bayesianPriorityPackageFlow'
     - 'bayesianPackageAnalysisFlow'
-    - 'bayesianPackageTaggingFlow'
     - 'componentApiFlow'
-    - 'keywordsSummaryFlow'
-    - 'keywordsApiSummaryFlow'
-    - 'keywordsPrioritySummaryFlow'
     - 'dependencyIngestFlow'
     - 'osioUserNotificationFlow'
+    - 'gitOperationsFlow'
 
   storages:
     - name: 'BayesianPostgres'
@@ -325,15 +307,6 @@
       configuration:
         <<: *configurationS3
         bucket_name: '{DEPLOYMENT_PREFIX}-repository-description'
-        region_name: 'us-east-1'
-        encryption: false
-        versioned: true
-
-    - name: 'S3KeywordsSummary'
-      import: 'f8a_worker.storages'
-      configuration:
-        <<: *configurationS3
-        bucket_name: '{DEPLOYMENT_PREFIX}-keywords-summary'
         region_name: 'us-east-1'
         encryption: false
         versioned: true
