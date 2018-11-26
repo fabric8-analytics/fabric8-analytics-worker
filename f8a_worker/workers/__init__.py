@@ -5,7 +5,6 @@ from f8a_worker.workers.dependency_parser import GithubDependencyTreeTask
 from f8a_worker.workers.dependency_snapshot import DependencySnapshotTask
 from f8a_worker.workers.digester import DigesterTask
 from f8a_worker.workers.finalize import FinalizeTask, PackageFinalizeTask
-from f8a_worker.workers.git_stats import GitStats
 from f8a_worker.workers.githuber import GithubTask, GitReadmeCollectorTask
 from f8a_worker.workers.graph_importer import GraphImporterTask
 from f8a_worker.workers.graph_sync import GraphSyncTask
@@ -31,7 +30,6 @@ assert GithubDependencyTreeTask is not None
 assert DependencySnapshotTask is not None
 assert DigesterTask is not None
 assert FinalizeTask, PackageFinalizeTask is not None
-assert GitStats is not None
 assert GithubTask, GitReadmeCollectorTask is not None
 assert GraphImporterTask is not None
 assert GraphSyncTask is not None

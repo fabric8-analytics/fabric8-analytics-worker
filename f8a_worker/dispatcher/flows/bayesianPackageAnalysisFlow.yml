@@ -24,8 +24,4 @@
           condition: &repositoryDescCollectorCheck
             name: 'alwaysFalse'
         - from:
-          to: 'git_stats'
-          condition:
-            name: 'alwaysFalse'
-        - from:
           to: 'libraries_io'
