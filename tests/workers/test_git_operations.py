@@ -61,7 +61,6 @@ npmlist = {
 
 def test_get_npm_dependencies():
     """Test get_npm_dependencies function."""
-
     giturl = "/tmp/clonedRepos/someRepo"
     ecosystem = "npm"
     manifests = [
