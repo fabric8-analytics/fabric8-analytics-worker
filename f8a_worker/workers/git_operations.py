@@ -1,13 +1,11 @@
 """Git Operations Task."""
 
 import json
-from selinon import StoragePool
 from f8a_worker.base import BaseTask
 from git import Repo
 from werkzeug.datastructures import FileStorage
 import os
 from requests_futures.sessions import FuturesSession
-import time
 
 _dir_path = "/tmp/clonedRepos"
 worker_count = int(os.getenv('FUTURES_SESSION_WORKER_COUNT', '100'))
@@ -23,7 +21,7 @@ class GitOperationTask(BaseTask):
     @staticmethod
     def generate_files_for_maven(path, manifests):
         """Generate files for maven ecosystem."""
-        os.system("cd " + path + "; ls -l ;mvn install; "
+        os.system("cd " + path + "; mvn install; "
                   "mvn org.apache.maven.plugins:maven-dependency-plugin:3.1.1:collect"
                   " -DoutputFile=direct-dependencies.txt "
                   "-DincludeScope=runtime "
@@ -147,6 +145,9 @@ class GitOperationTask(BaseTask):
             }
             data_object.append(temp)
 
+        repo_name = giturl.split("/")[-1]
+        path = _dir_path + "/" + repo_name
+
         # Call to the Gemini Server
         if is_scan_enabled == "true":
             self.log.info("Scan is enabled.Gemini scan call in progress")
@@ -159,7 +160,7 @@ class GitOperationTask(BaseTask):
                 self.log.exception("Failed to call the gemini scan.")
 
         # Call to the Backbone
-        deps = DependencyFinder.scan_and_find_dependencies(giturl, ecosystem, data_object)
+        deps = DependencyFinder.scan_and_find_dependencies(path, ecosystem, data_object)
         self.log.debug(deps)
         if len(deps) == 0:
             self.log.error("Dependencies not generated properly.Backbone wont be called.")
@@ -174,9 +175,6 @@ class GitOperationTask(BaseTask):
 
         except Exception:
             self.log.exception("Failed to call the backbone.")
-
-        repo_name = giturl.split("/")[-1]
-        path = _dir_path + "/" + repo_name
         os.system("rm -rf " + path)
 
 
@@ -188,17 +186,17 @@ class DependencyFinder:
         return None
 
     @staticmethod
-    def scan_and_find_dependencies(giturl, ecosystem, manifests):
+    def scan_and_find_dependencies(path, ecosystem, manifests):
         """Scan the dependencies files to fetch transitive deps."""
         deps = dict()
         if ecosystem == "npm":
-            deps = DependencyFinder.get_npm_dependencies(giturl,
+            deps = DependencyFinder.get_npm_dependencies(path,
                                                          ecosystem,
                                                          manifests)
         return deps
 
     @staticmethod
-    def get_npm_dependencies(giturl, ecosystem, manifests):
+    def get_npm_dependencies(path, ecosystem, manifests):
         """Scan the npm dependencies files to fetch transitive deps."""
         deps = {}
         result = []
@@ -206,7 +204,7 @@ class DependencyFinder:
         for manifest in manifests:
             dep = {
                 "ecosystem": ecosystem,
-                "manifest_file_path": giturl,
+                "manifest_file_path": path,
                 "manifest_file": manifest['filename']
             }
 
