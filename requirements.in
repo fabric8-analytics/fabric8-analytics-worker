@@ -14,7 +14,6 @@ jsonschema
 unidiff
 requests
 git2json
-numpy
 scikit-learn
 scipy
 # Amazon AWS SQS
