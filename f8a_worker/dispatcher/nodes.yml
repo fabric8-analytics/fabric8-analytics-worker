@@ -150,6 +150,12 @@
       import: 'f8a_worker.workers'
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_BookkeeperTask_v0'
+    - name: 'GitOperationTask'
+      classname: 'GitOperationTask'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GitOperationTask_v0'
+      storage: 'BayesianPostgres'
     - name: 'RepositoryDescCollectorTask'
       import: 'f8a_worker.workers'
       max_retry: 0
@@ -200,6 +206,7 @@
     - 'componentApiFlow'
     - 'dependencyIngestFlow'
     - 'osioUserNotificationFlow'
+    - 'gitOperationsFlow'
 
   storages:
     - name: 'BayesianPostgres'

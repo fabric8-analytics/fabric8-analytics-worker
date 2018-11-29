@@ -13,7 +13,9 @@ jsl
 jsonschema
 unidiff
 requests
+requests-futures
 git2json
+gitpython
 numpy
 scikit-learn
 scipy
