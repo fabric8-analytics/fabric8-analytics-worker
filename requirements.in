@@ -14,8 +14,6 @@ jsonschema
 unidiff
 requests
 git2json
-scikit-learn
-scipy
 # Amazon AWS SQS
 # Celery transparently uses boto
 boto
