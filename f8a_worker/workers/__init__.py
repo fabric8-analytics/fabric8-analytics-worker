@@ -7,7 +7,6 @@ from f8a_worker.workers.digester import DigesterTask
 from f8a_worker.workers.finalize import FinalizeTask, PackageFinalizeTask
 from f8a_worker.workers.githuber import GithubTask, GitReadmeCollectorTask
 from f8a_worker.workers.graph_importer import GraphImporterTask
-from f8a_worker.workers.graph_sync import GraphSyncTask
 from f8a_worker.workers.graphaggregator import GraphAggregatorTask
 from f8a_worker.workers.init_analysis_flow import InitAnalysisFlow
 from f8a_worker.workers.init_package_flow import InitPackageFlow
@@ -29,7 +28,6 @@ assert DigesterTask is not None
 assert FinalizeTask, PackageFinalizeTask is not None
 assert GithubTask, GitReadmeCollectorTask is not None
 assert GraphImporterTask is not None
-assert GraphSyncTask is not None
 assert GraphAggregatorTask is not None
 assert InitAnalysisFlow is not None
 assert InitPackageFlow is not None
