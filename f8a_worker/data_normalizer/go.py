@@ -79,6 +79,12 @@ class GodepsDataNormalizer(AbstractDataNormalizer):
     This normalizer handles data extracted from Godeps.json files by mercator-go.
     """
 
+    _key_map = (
+        ('version',),
+        ('name',),
+        ('code_repository',)
+    )
+
     def __init__(self, mercator_json):
         """Constructor."""
         super().__init__(mercator_json)
