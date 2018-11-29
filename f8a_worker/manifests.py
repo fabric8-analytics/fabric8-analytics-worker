@@ -113,3 +113,7 @@ register_manifest_descriptor(ManifestDescriptor('glide.yaml', 'go',
 register_manifest_descriptor(ManifestDescriptor('glide.lock', 'go',
                                                 has_resolved_deps=True, has_recursive_deps=True,
                                                 validator=yaml_validator))
+
+register_manifest_descriptor(ManifestDescriptor('Godeps.json', 'go',
+                                                has_resolved_deps=True, has_recursive_deps=True,
+                                                validator=json_validator))
