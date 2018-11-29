@@ -7,3 +7,4 @@ pytest-rerunfailures
 pytest-cov
 pytest-mock
 codecov
+requests

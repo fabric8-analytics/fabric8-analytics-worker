@@ -19,5 +19,6 @@ pytest-mock==1.7.1
 pytest-rerunfailures==2.1.0
 pytest-timeout==1.0.0
 pytest==3.0.3
+requests==2.11.1
 six==1.10.0               # via astroid, pylint
 wrapt==1.10.8             # via astroid
