@@ -110,7 +110,7 @@ class GitOperationTask(BaseTask):
             _session.post('{}/api/v1/recommender'.format(api_url), json=deps,
                           params={'check_license': str(check_license).lower()})
         except Exception:
-            self.log.exception("Failed to call the gemini scan.")
+            self.log.exception("Failed to call backbone.")
 
     def execute(self, arguments):
         """Perform the git operations."""
