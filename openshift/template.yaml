@@ -136,6 +136,14 @@ objects:
             value: "6162"
           - name: F8A_SERVER_SERVICE_HOST
             value: bayesian-api
+          - name: GIT_COMMITTER_NAME
+            value: "rhdt-dep-analytics"
+          - name: GIT_COMMITTER_EMAIL
+            value: "rhdt-dep-analytics@example.com"
+          - name: F8_API_BACKBONE_HOST
+            value: "http://f8a-server-backbone:5000"
+          - name: F8A_GEMINI_SERVER_SERVICE_HOST
+            value: "http://f8a-gemini-server:5000"
           - name: AWS_S3_BUCKET_NAME
             valueFrom:
               configMapKeyRef:
