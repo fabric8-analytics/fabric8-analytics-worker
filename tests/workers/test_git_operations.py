@@ -1,6 +1,5 @@
 """Test git_operations."""
 
-from unittest import TestCase, mock
 from f8a_worker.workers import git_operations as go
 import json
 
