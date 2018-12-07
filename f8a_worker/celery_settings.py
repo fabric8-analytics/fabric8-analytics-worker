@@ -120,11 +120,6 @@ def configure_logging(**kwargs):
             'level': 'DEBUG',
             'propagate': False
         },
-        'selinon': {
-            'handlers': ['verbose'],
-            'level': 'DEBUG',
-            'propagate': False
-        },
         'f8a_worker.dispatcher.trace': {
             'handlers': ['selinon_trace'],
             'level': 'DEBUG',
