@@ -48,7 +48,7 @@ class GitOperationTask(BaseTask):
         """Create a repo and generate dep files."""
         repo_name = giturl.split("/")[-1]
         path = _dir_path + "/" + repo_name
-        token = gh_token.get('access_token')
+        token = gh_token.get('access_token') or ""
         os.system("rm -rf " + path)
         manifests = []
         try:
