@@ -13,6 +13,7 @@ _session = FuturesSession(max_workers=worker_count)
 
 F8_API_BACKBONE_HOST = os.getenv('F8_API_BACKBONE_HOST', 'http://f8a-server-backbone:5000')
 GEMINI_SERVER_URL = os.getenv('F8A_GEMINI_SERVER_SERVICE_HOST', 'http://f8a-gemini-server:5000')
+AUTH_KEY = os.getenv('OS_AUTH_KEY', '')
 
 
 class GitOperationTask(BaseTask):
@@ -22,20 +23,13 @@ class GitOperationTask(BaseTask):
     def generate_files_for_maven(path, manifests):
         """Generate files for maven ecosystem."""
         os.system("cd " + path + "; mvn install; "
-                  "mvn org.apache.maven.plugins:maven-dependency-plugin:3.1.1:collect"
-                  " -DoutputFile=direct-dependencies.txt "
-                  "-DincludeScope=runtime "
-                  "-DexcludeTransitive=true; "
-                  "mvn org.apache.maven.plugins:maven-dependency-plugin:3.1.1:collect"
-                  " -DoutputFile=transitive-dependencies.txt "
-                  "-DincludeScope=runtime "
-                  "-DexcludeTransitive=false")
+                  "mvn org.apache.maven.plugins:maven-dependency-plugin:3.0.2:tree"
+                  " -DoutputFile=" + path + "/tmp/dependencies.txt "
+                  "-DoutputType=dot "
+                  "-DappendOutput=true; ")
         manifests.append(FileStorage
-                         (open(path + "/direct-dependencies.txt", 'rb'),
-                          filename='direct-dependencies.txt'))
-        manifests.append(FileStorage
-                         (open(path + "/transitive-dependencies.txt", 'rb'),
-                          filename='transitive-dependencies.txt'))
+                         (open(path + "/tmp/dependencies.txt", 'rb'),
+                          filename='dependencies.txt'))
         return manifests
 
     @staticmethod
@@ -54,7 +48,7 @@ class GitOperationTask(BaseTask):
         """Create a repo and generate dep files."""
         repo_name = giturl.split("/")[-1]
         path = _dir_path + "/" + repo_name
-        token = gh_token.get('access_token')
+        token = gh_token.get('access_token') or ""
         os.system("rm -rf " + path)
         manifests = []
         try:
@@ -89,7 +83,7 @@ class GitOperationTask(BaseTask):
                         'text/plain'
                     )
                 ))
-            _session.headers['Authorization'] = auth_key
+            _session.headers['Authorization'] = AUTH_KEY or auth_key
             resp = _session.post('{}/api/v1/user-repo/scan'.format(api_url),
                                  data=data, files=deps)
             self.log.info(resp.result().content)
