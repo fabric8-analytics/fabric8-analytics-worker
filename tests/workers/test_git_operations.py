@@ -96,6 +96,5 @@ def test_create_repo_and_generate_files():
     manifests = instance.create_repo_and_generate_files(giturl,
                                                         "maven",
                                                         access)
-    assert len(manifests) == 2
-    assert "direct-dependencies.txt" in manifests[0].filename
-    assert "transitive-dependencies.txt" in manifests[1].filename
+    assert len(manifests) == 1
+    assert "dependencies.txt" in manifests[0].filename
