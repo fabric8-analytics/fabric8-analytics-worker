@@ -20,6 +20,7 @@ COPY requirements.txt /tmp/f8a_worker/
 RUN cd /tmp/f8a_worker/ && \
     pip3 install -r requirements.txt
 
+RUN pip3 install git+https://github.com/fabric8-analytics/fabric8-analytics-utils.git
 COPY alembic.ini hack/run-db-migrations.sh ${ALEMBIC_DIR}/
 COPY alembic/ ${ALEMBIC_DIR}/alembic
 

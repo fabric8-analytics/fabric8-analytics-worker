@@ -58,27 +58,6 @@ npmlist = {
 }
 
 
-def test_get_npm_dependencies():
-    """Test get_npm_dependencies function."""
-    giturl = "/tmp/clonedRepos/someRepo"
-    ecosystem = "npm"
-    manifests = [
-        {
-            'filename': "npmlist.json",
-            'content': json.dumps(npmlist).encode('utf-8')
-        }
-    ]
-    out = go.DependencyFinder.scan_and_find_dependencies(giturl, ecosystem, manifests)
-    result = out['result'][0]['details']
-    assert "/tmp/clonedRepos/someRepo" == result[0]['manifest_file_path']
-    assert "npmlist.json" == result[0]['manifest_file']
-    test_obj = dict()
-    for res in result[0]['_resolved']:
-        if res['package'] == "normalize-registry-metadata":
-            test_obj = res
-    assert test_obj['deps'][0]['package'] == "semver"
-
-
 def test_create_repo_and_generate_files():
     """Test create_repo_and_generate_files function."""
     giturl = "https://github.com/heroku/node-js-sample"
