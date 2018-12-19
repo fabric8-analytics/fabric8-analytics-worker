@@ -18,6 +18,7 @@ from .s3_description_repository import S3RepositoryDescription
 from .s3_userintent import S3UserIntent
 from .s3_manual_tagging import S3ManualTagging
 from .s3_crowd_source_tags import S3CrowdSourceTags
+from .s3_gocveartifact import S3GoCveArtifact
 
 # avoid Vulture and Pyflakes warnings
 assert BayesianPostgres is not None
@@ -36,3 +37,4 @@ assert S3RepositoryDescription is not None
 assert S3UserIntent is not None
 assert S3ManualTagging is not None
 assert S3CrowdSourceTags is not None
+assert S3GoCveArtifact is not None
