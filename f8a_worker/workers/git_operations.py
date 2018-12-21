@@ -4,6 +4,7 @@ import json
 from f8a_worker.base import BaseTask
 from git import Repo
 from werkzeug.datastructures import FileStorage
+from f8a_utils.dependency_finder import DependencyFinder
 import os
 from requests_futures.sessions import FuturesSession
 
@@ -68,24 +69,15 @@ class GitOperationTask(BaseTask):
 
         return manifests
 
-    def gemini_call_for_cve_scan(self, scan_repo_url, ecosystem, manifests, auth_key):
+    def gemini_call_for_cve_scan(self, scan_repo_url, deps, auth_key):
         """Do the delegate call to gemini."""
         try:
             api_url = GEMINI_SERVER_URL
-            data = {'git-url': scan_repo_url,
-                    'ecosystem': ecosystem}
-            deps = []
-            for file in manifests:
-                deps.append((
-                    'dependencyFile[]', (
-                        file['filename'],
-                        file['content'],
-                        'text/plain'
-                    )
-                ))
             _session.headers['Authorization'] = AUTH_KEY or auth_key
+            _session.headers['git-url'] = scan_repo_url
+            _session.headers['Content-Type'] = "application/json"
             resp = _session.post('{}/api/v1/user-repo/scan'.format(api_url),
-                                 data=data, files=deps)
+                                 data=json.dumps(deps))
             self.log.info(resp.result().content)
         except Exception:
             self.log.exception("Failed to call the gemini scan.")
@@ -130,31 +122,29 @@ class GitOperationTask(BaseTask):
         if len(manifests) == 0:
             self.log.error("No dependency files found or generated.")
             return None
-
+        repo_name = giturl.split("/")[-1]
+        path = _dir_path + "/" + repo_name
         data_object = []
         for manifest in manifests:
             temp = {
                 'filename': manifest.filename,
-                'content': manifest.read()
+                'content': manifest.read(),
+                'filepath': path
             }
             data_object.append(temp)
 
-        repo_name = giturl.split("/")[-1]
-        path = _dir_path + "/" + repo_name
-
+        deps = DependencyFinder.scan_and_find_dependencies(ecosystem, data_object)
         # Call to the Gemini Server
         if is_scan_enabled == "true":
             self.log.info("Scan is enabled.Gemini scan call in progress")
             try:
                 self.gemini_call_for_cve_scan(giturl,
-                                              ecosystem,
-                                              data_object,
+                                              deps,
                                               auth_key)
             except Exception:
                 self.log.exception("Failed to call the gemini scan.")
 
         # Call to the Backbone
-        deps = DependencyFinder.scan_and_find_dependencies(path, ecosystem, data_object)
         self.log.debug(deps)
         if len(deps) == 0:
             self.log.error("Dependencies not generated properly.Backbone wont be called.")
@@ -170,75 +160,3 @@ class GitOperationTask(BaseTask):
         except Exception:
             self.log.exception("Failed to call the backbone.")
         os.system("rm -rf " + path)
-
-
-class DependencyFinder:
-    """Implementation of methods to find dependencies from manifest file."""
-
-    def __init__(self):
-        """Init function."""
-        return None
-
-    @staticmethod
-    def scan_and_find_dependencies(path, ecosystem, manifests):
-        """Scan the dependencies files to fetch transitive deps."""
-        deps = dict()
-        if ecosystem == "npm":
-            deps = DependencyFinder.get_npm_dependencies(path,
-                                                         ecosystem,
-                                                         manifests)
-        return deps
-
-    @staticmethod
-    def get_npm_dependencies(path, ecosystem, manifests):
-        """Scan the npm dependencies files to fetch transitive deps."""
-        deps = {}
-        result = []
-        details = []
-        for manifest in manifests:
-            dep = {
-                "ecosystem": ecosystem,
-                "manifest_file_path": path,
-                "manifest_file": manifest['filename']
-            }
-
-            dependencies = json.loads(manifest['content'].decode('utf-8')).get('dependencies')
-            resolved = []
-            if dependencies:
-                for key, val in dependencies.items():
-                    version = val.get('version') or val.get('required').get('version')
-                    if version:
-                        transitive = []
-                        tr_deps = val.get('dependencies') or \
-                            val.get('required', {}).get('dependencies')
-                        if tr_deps:
-                            transitive = DependencyFinder.get_npm_transitives(transitive, tr_deps)
-                        tmp_json = {
-                            "package": key,
-                            "version": version,
-                            "deps": transitive
-                        }
-                        resolved.append(tmp_json)
-            dep['_resolved'] = resolved
-            details.append(dep)
-            details_json = {"details": details}
-            result.append(details_json)
-        deps['result'] = result
-        return deps
-
-    @staticmethod
-    def get_npm_transitives(transitive, content):
-        """Scan the npm dependencies recursively to fetch transitive deps."""
-        if content:
-            for key, val in content.items():
-                version = val.get('version') or val.get('required').get('version')
-                if version:
-                    tmp_json = {
-                        "package": key,
-                        "version": version
-                    }
-                    transitive.append(tmp_json)
-                    tr_deps = val.get('dependencies') or val.get('required', {}).get('dependencies')
-                    if tr_deps:
-                        transitive = DependencyFinder.get_npm_transitives(transitive, tr_deps)
-        return transitive
