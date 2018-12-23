@@ -49,6 +49,15 @@
       selective_run_function:
         name: 'selective_run_function'
         import: 'f8a_worker.dispatcher.selective'
+    - name: 'GoCVEpredictorTask'
+      classname: 'GoCVEpredictorTask'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      storage: 'S3GoCveArtifact'
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GoCVEpredictorTask_v0'
+      selective_run_function:
+        name: 'selective_run_function'
+        import: 'f8a_worker.dispatcher.selective'
     - name: 'source_licenses'
       classname: 'LicenseCheckTask'
       import: 'f8a_worker.workers'
@@ -301,6 +310,7 @@
     - 'keywordsSummaryFlow'
     - 'keywordsApiSummaryFlow'
     - 'keywordsPrioritySummaryFlow'
+    - 'golangCVEPredictionsFlow'
 
   storages:
     - name: 'BayesianPostgres'
@@ -478,6 +488,15 @@
         encryption: false
         versioned: false
         days_to_expire: 31
+
+    - name: 'S3GoCveArtifact'
+      import: 'f8a_worker.storages'
+      configuration:
+        <<: *configurationS3
+        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-gocve-artifacts'
+        region_name: 'us-east-1'
+        encryption: false
+        versioned: false
 
   global:
     trace:
