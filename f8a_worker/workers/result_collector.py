@@ -1,3 +1,5 @@
+"""Class to collect results, upload them to S3 and store reference to results in WorkerResult."""
+
 from selinon import StoragePool
 from sqlalchemy.exc import SQLAlchemyError
 from f8a_worker.base import BaseTask
@@ -11,6 +13,7 @@ class _ResultCollectorBase(BaseTask):
     """
 
     def do_run(self, arguments, s3, postgres, results):
+        """Run task."""
         for worker_result in results.raw_analyses:
             # We don't want to store tasks that do book-keeping for Selinon's
             # Dispatcher (starting uppercase)
@@ -40,7 +43,10 @@ class _ResultCollectorBase(BaseTask):
 
 
 class ResultCollector(_ResultCollectorBase):
+    """Result collector for package-version analysis."""
+
     def run(self, arguments):
+        """Run task."""
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))
@@ -56,7 +62,10 @@ class ResultCollector(_ResultCollectorBase):
 
 
 class PackageResultCollector(_ResultCollectorBase):
+    """Result collector for package level analysis."""
+
     def run(self, arguments):
+        """Run task."""
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('document_id'))

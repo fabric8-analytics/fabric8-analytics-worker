@@ -1,31 +1,25 @@
 """Tests covering code in utils.py."""
 
-import os
 import errno
 import itertools
-
-import flexmock
+from pathlib import Path
 import pytest
-import requests
-
-from uuid import uuid4
-
-from sqlalchemy import (create_engine, Column, String)
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-Base = declarative_base()
 
-from f8a_worker.defaults import configuration
 from f8a_worker.errors import TaskError
-from f8a_worker import utils  # so that we can mock functions from here
-from f8a_worker.utils import (get_all_files_from,
-                              hidden_path_filter,
-                              skip_git_files,
-                              ThreadPool,
-                              MavenCoordinates,
-                              compute_digest,
-                              parse_gh_repo,
-                              url2git_repo)
+from f8a_worker.utils import (
+    get_all_files_from,
+    hidden_path_filter,
+    skip_git_files,
+    ThreadPool,
+    MavenCoordinates,
+    compute_digest,
+    parse_gh_repo,
+    url2git_repo,
+    normalize_package_name
+)
+
+Base = declarative_base()
 
 
 class TestUtilFunctions(object):
@@ -33,45 +27,43 @@ class TestUtilFunctions(object):
 
     def setup_method(self, method):
         """Set up any state tied to the execution of the given method in a class."""
-        pass
+        assert method
 
     def teardown_method(self, method):
         """Teardown any state that was previously setup with a setup_method call."""
-        pass
+        assert method
 
     def test_get_all_files_from(self, tmpdir):
         """Test get_all_files_from()."""
-        test_dir = os.path.abspath(str(tmpdir))
+        test_dir = Path(str(tmpdir)).resolve()
 
         def touch_file(path):
-            abspath = os.path.join(test_dir, path)
-            abs_dir_path = os.path.dirname(abspath)
             try:
-                os.makedirs(abs_dir_path)
+                path.parent.mkdir(parents=True)
             except OSError as e:
                 if e.errno != errno.EEXIST:
                     # was created in previous iteration
                     pass
-            with open(abspath, "w") as fd:
-                fd.write("banana")
+            path.touch()
 
         py_files = {
-            os.path.join(test_dir, 'test_path/file.py'),
-            os.path.join(test_dir, 'test_path/some.py'),
+            str(test_dir / 'test_path/file.py'),
+            str(test_dir / 'test_path/some.py')
         }
         test_files = {
-            os.path.join(test_dir, 'test_path/test'),
+            str(test_dir / 'test_path/test')
         }
         hidden_files = {
-            os.path.join(test_dir, 'test_path/.hidden'),
+            str(test_dir / 'test_path/.hidden')
         }
         git_files = {
-            os.path.join(test_dir, 'test_path/.git/object'),
+            str(test_dir / 'test_path/.git/object')
         }
         all_files = set(itertools.chain(py_files, test_files, hidden_files, git_files))
         for f in all_files:
-            touch_file(f)
+            touch_file(Path(f))
 
+        test_dir = str(test_dir)
         assert set(get_all_files_from(test_dir)) == all_files
         assert set(get_all_files_from(test_dir, path_filter=skip_git_files)) == \
             set(itertools.chain(py_files, test_files, hidden_files))
@@ -239,3 +231,25 @@ class TestUrl2GitRepo(object):
         """Test url2git_repo()."""
         with pytest.raises(ValueError):
             url2git_repo(url)
+
+
+@pytest.mark.parametrize('ecosystem,name,expected_result', [
+    ('pypi', 'PyJWT', 'pyjwt'),
+    ('pypi', 'Flask_Cache', 'flask-cache'),
+    ('pypi', 'Flask-Cache', 'flask-cache'),
+    ('maven', 'junit:junit:4.12', 'junit:junit:4.12'),
+    ('maven', 'junit:junit:jar:4.12', 'junit:junit:4.12'),
+    ('maven', 'junit:junit:jar::4.12', 'junit:junit:4.12'),
+    ('maven', 'junit:junit:jar:sources:4.12', 'junit:junit::sources:4.12'),
+    ('maven', 'junit:junit', 'junit:junit'),
+    ('maven', 'junit:junit:', 'junit:junit'),
+    ('maven', 'junit:junit::', 'junit:junit'),
+    ('maven', 'junit:junit:::4.12', 'junit:junit:4.12'),
+    ('npm', 'fs-extra', 'fs-extra'),
+    ('npm', 'JSONstream', 'JSONstream'),
+    ('go', 'github.com%2Fmitchellh%2Fgo-homedir', 'github.com/mitchellh/go-homedir'),
+    ('go', 'github.com/mitchellh/go-homedir', 'github.com/mitchellh/go-homedir'),
+])
+def test_normalize_package_name(ecosystem, name, expected_result):
+    """Test normalize_package_name()."""
+    assert normalize_package_name(ecosystem, name) == expected_result

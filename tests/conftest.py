@@ -1,3 +1,5 @@
+"""Configuration for unit tests."""
+
 import pytest
 from flexmock import flexmock
 
@@ -13,6 +15,7 @@ from selinon import Config
 
 @pytest.fixture
 def rdb():
+    """Provide connection to a database."""
     session = create_db_scoped_session()
     # TODO: we may need to run actual migrations here
     # make sure all session objects from scoped_session get closed here
@@ -32,8 +35,9 @@ def rdb():
 
 @pytest.fixture
 def maven(rdb):
+    """Prepare database with Maven ecosystem."""
     maven = Ecosystem(name='maven', backend=EcosystemBackend.maven,
-                      fetch_url='')
+                      fetch_url='https://repo.maven.apache.org/maven2/')
     rdb.add(maven)
     rdb.commit()
     return maven
@@ -41,6 +45,7 @@ def maven(rdb):
 
 @pytest.fixture
 def npm(rdb):
+    """Prepare database with NPM ecosystem."""
     npm = Ecosystem(name='npm', backend=EcosystemBackend.npm,
                     fetch_url='https://registry.npmjs.org/')
     rdb.add(npm)
@@ -50,8 +55,9 @@ def npm(rdb):
 
 @pytest.fixture
 def pypi(rdb):
+    """Prepare database with Pypi ecosystem."""
     pypi = Ecosystem(name='pypi', backend=EcosystemBackend.pypi,
-                     fetch_url='https://pypi.python.org/pypi')
+                     fetch_url='https://pypi.org/pypi/')
     rdb.add(pypi)
     rdb.commit()
     return pypi
@@ -59,6 +65,7 @@ def pypi(rdb):
 
 @pytest.fixture
 def rubygems(rdb):
+    """Prepare database with Ruby gems ecosystem."""
     rubygems = Ecosystem(name='rubygems', backend=EcosystemBackend.rubygems,
                          fetch_url='https://rubygems.org/api/v1')
     rdb.add(rubygems)
@@ -68,6 +75,7 @@ def rubygems(rdb):
 
 @pytest.fixture
 def nuget(rdb):
+    """Prepare database with Nuget ecosystem."""
     nuget = Ecosystem(name='nuget', backend=EcosystemBackend.nuget,
                       fetch_url='https://api.nuget.org/packages/')
     rdb.add(nuget)
@@ -77,7 +85,8 @@ def nuget(rdb):
 
 @pytest.fixture
 def go(rdb):
-    e = Ecosystem(name='go', backend=EcosystemBackend.scm, fetch_url='')
+    """Prepare database with Go ecosystem."""
+    e = Ecosystem(name='go', backend=EcosystemBackend.go, fetch_url='')
     rdb.add(e)
     rdb.commit()
     return e
@@ -92,4 +101,5 @@ def dispatcher_setup():
 
 @pytest.fixture()
 def no_s3_connection():
+    """Mock the connection to S3."""
     flexmock(AmazonS3).should_receive('is_connected').and_return(True)

@@ -11,6 +11,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from selinon import StoragePool
+
+from f8a_worker.enums import EcosystemBackend
 from f8a_worker.models import Analysis, Ecosystem, Package, Version, WorkerResult, APIRequests
 from f8a_worker.utils import MavenCoordinates
 
@@ -40,6 +42,8 @@ class BayesianPostgres(PostgresBase):
         return WorkerResult(
             worker=task_name,
             worker_id=task_id,
+            started_at=result.get('_audit', {}).get('started_at') if result else None,
+            ended_at=result.get('_audit', {}).get('ended_at') if result else None,
             analysis_id=node_args.get('document_id') if isinstance(node_args, dict) else None,
             task_result=result,
             error=error,
@@ -54,8 +58,6 @@ class BayesianPostgres(PostgresBase):
         :param package: name of the package
         :param version: package version
         :param task_name: name of task for which the latest result should be obtained
-        :param error: if False, avoid returning entries that track errors
-        :param real: if False, do not check results that are stored on S3 but
         rather return Postgres entry
         """
         # TODO: we should store date timestamps directly in WorkerResult
@@ -88,10 +90,9 @@ class BayesianPostgres(PostgresBase):
 
         :param ecosystem: name of the ecosystem
         :param package: name of the package
+        :param version: package version
         :param task_name: name of task for which the latest result should be obtained
         :param error: if False, avoid returning entries that track errors
-        :param real: if False, do not check results that are stored on S3 but
-        rather return Postgres entry
         """
         # TODO: we should store date timestamps directly in PackageWorkerResult
         if not self.is_connected():
@@ -113,7 +114,8 @@ class BayesianPostgres(PostgresBase):
 
         return entry
 
-    def get_analysis_count(self, ecosystem, package, version):
+    @staticmethod
+    def get_analysis_count(ecosystem, package, version):
         """Get count of previously scheduled analysis for given EPV triplet.
 
         :param ecosystem: str, Ecosystem name
@@ -121,7 +123,7 @@ class BayesianPostgres(PostgresBase):
         :param version: str, Package version
         :return: analysis count
         """
-        if ecosystem == 'maven':
+        if Ecosystem.by_name(PostgresBase.session, ecosystem).is_backed_by(EcosystemBackend.maven):
             package = MavenCoordinates.normalize_str(package)
 
         try:
@@ -156,7 +158,8 @@ class BayesianPostgres(PostgresBase):
 
         return list(chain(*task_names))
 
-    def get_worker_id_count(self, worker_id):
+    @staticmethod
+    def get_worker_id_count(worker_id):
         """Get number of results that has the given worker_id assigned (should be always 0 or 1).
 
         :param worker_id: unique worker id

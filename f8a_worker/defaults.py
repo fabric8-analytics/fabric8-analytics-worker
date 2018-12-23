@@ -6,8 +6,9 @@ import logging
 from urllib.parse import quote, urljoin
 
 import random
-from os import environ
+from os import environ, path
 
+from f8a_worker.enums import EcosystemBackend
 from f8a_worker.errors import F8AConfigurationException
 
 logger = logging.getLogger(__name__)
@@ -67,7 +68,7 @@ class F8AConfiguration(object):
     SCANCODE_PROCESSES = environ.get('SCANCODE_PROCESSES', '1')  # scancode's default is 1
     SCANCODE_PATH = environ.get('SCANCODE_PATH', '/opt/scancode-toolkit/')
     SCANCODE_IGNORE = ['*.pyc', '*.so', '*.dll', '*.rar', '*.jar',
-                       '*.zip', '*.tar', '*.tar.gz', '*.tar.xz']  # don't scan binaries
+                       '*.zip', '*.tar', '*.tar.gz', '*.tar.xz', '*.png']  # don't scan binaries
 
     # AWS S3
     AWS_S3_REGION = environ.get('AWS_S3_REGION')
@@ -150,23 +151,34 @@ class F8AConfiguration(object):
     @classmethod
     def libraries_io_project_url(cls, ecosystem, name):
         """Construct url to endpoint, which gets information about a project and it's versions."""
+        if ecosystem.is_backed_by(EcosystemBackend.npm):
+            # quote '/' (but not '@') in scoped package name, e.g. in '@slicemenice/item-layouter'
+            name = quote(name, safe='@')
+
         url = '{api}/{platform}/{name}'. \
             format(api=cls.LIBRARIES_IO_API,
-                   platform=ecosystem,
+                   platform=ecosystem.backend.name,
                    name=name)
 
         if not cls.LIBRARIES_IO_TOKEN or cls.LIBRARIES_IO_TOKEN == 'not-set':
             raise F8AConfigurationException("LIBRARIES_IO_TOKEN has not been set.")
 
-        # 'no-token' value forces the API call to not use ANY token.
-        # It works, but if abused, they can ban your IP, so use with caution.
         if cls.LIBRARIES_IO_TOKEN != 'no-token':
-            logger.warning("Libraries.io API calls will be without an API key."
-                           "It'll work, but if you're going to analyse more packages,"
-                           "please set the LIBRARIES_IO_TOKEN to your private token.")
             url += '?api_key=' + cls.LIBRARIES_IO_TOKEN
+        else:
+            # 'no-token' value forces the API call to not use ANY token.
+            # It works, but if abused, they can ban your IP, so use with caution.
+            logger.warning("Libraries.io API calls will be without an API key. "
+                           "It'll work, but if you're going to analyse more packages, "
+                           "please set the LIBRARIES_IO_TOKEN to your private token.")
 
         return url
+
+    @property
+    def dependency_check_script_path(self):
+        """Get path to OWASP dependency-check script."""
+        assert self.OWASP_DEP_CHECK_PATH, "OWASP_DEP_CHECK_PATH not set"
+        return path.join(self.OWASP_DEP_CHECK_PATH, 'bin', 'dependency-check.sh')
 
 
 configuration = F8AConfiguration()

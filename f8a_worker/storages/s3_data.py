@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 
+"""Use S3 for package-version level tasks` results."""
+
 from .s3_data_base import S3DataBase
 
 
 class S3Data(S3DataBase):
+    """Use S3 for package-version level tasks` results."""
+
     @staticmethod
     def _construct_base_file_name(arguments):
         """Construct location of EPV in the bucket.

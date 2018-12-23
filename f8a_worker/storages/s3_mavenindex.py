@@ -1,12 +1,18 @@
-import os
+"""S3 storage for maven index."""
+
 import botocore
+import os
+from tempfile import TemporaryDirectory
+
 from f8a_worker.errors import TaskError
 from f8a_worker.process import Archive
-from f8a_worker.utils import tempdir
+
 from . import AmazonS3
 
 
 class S3MavenIndex(AmazonS3):
+    """S3 storage for maven index."""
+
     _INDEX_DIRNAME = 'central-index'
     _INDEX_ARCHIVE = _INDEX_DIRNAME + '.zip'
 
@@ -15,7 +21,7 @@ class S3MavenIndex(AmazonS3):
 
     def store_index(self, target_dir):
         """Zip files in target_dir/central-index dir and store to S3."""
-        with tempdir() as temp_dir:
+        with TemporaryDirectory() as temp_dir:
             central_index_dir = os.path.join(target_dir, self._INDEX_DIRNAME)
             archive_path = os.path.join(temp_dir, self._INDEX_ARCHIVE)
             try:
@@ -28,7 +34,7 @@ class S3MavenIndex(AmazonS3):
     def retrieve_index_if_exists(self, target_dir):
         """Retrieve central-index.zip from S3 and extract into target_dir/central-index."""
         if self.object_exists(self._INDEX_ARCHIVE):
-            with tempdir() as temp_dir:
+            with TemporaryDirectory() as temp_dir:
                 archive_path = os.path.join(temp_dir, self._INDEX_ARCHIVE)
                 central_index_dir = os.path.join(target_dir, self._INDEX_DIRNAME)
                 self.retrieve_file(self._INDEX_ARCHIVE, archive_path)

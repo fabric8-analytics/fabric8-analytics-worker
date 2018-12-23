@@ -1,19 +1,31 @@
+"""Functions for dispatcher."""
+
 import logging
 from urllib.parse import urlparse
+
+from selinon import StoragePool
+
+from f8a_worker.enums import EcosystemBackend
+from f8a_worker.models import Ecosystem
 from f8a_worker.utils import MavenCoordinates
 
 logger = logging.getLogger(__name__)
 
 
 def _create_analysis_arguments(ecosystem, name, version):
+    """Create arguments for analysis."""
     return {
         'ecosystem': ecosystem,
-        'name': MavenCoordinates.normalize_str(name) if ecosystem == 'maven' else name,
+        'name': MavenCoordinates.normalize_str(name) if Ecosystem.by_name(
+            StoragePool.get_connected_storage('BayesianPostgres').session,
+            ecosystem).is_backed_by(
+            EcosystemBackend.maven) else name,
         'version': version
     }
 
 
 def _is_url_dependency(dep):
+    """Check whether dep is url."""
     parsed = urlparse(dep['name'])
     # previously we checked just parsed.scheme, but it marked Maven's groupId:artifactId as URL
     if parsed.scheme and parsed.netloc:
@@ -25,6 +37,7 @@ def _is_url_dependency(dep):
 
 
 def iter_dependencies_analysis(storage_pool, node_args):
+    """Collect analysis dependencies."""
     # Be safe here as fatal errors will cause errors in Dispatcher
     try:
         postgres = storage_pool.get_connected_storage('BayesianPostgres')
@@ -53,6 +66,7 @@ def iter_dependencies_analysis(storage_pool, node_args):
 
 
 def iter_dependencies_stack(storage_pool, node_args):
+    """Collect stack-analysis dependencies."""
     # Be safe here as fatal errors will cause errors in Dispatcher
     try:
         aggregated = storage_pool.get('AggregatingMercatorTask')
@@ -81,14 +95,32 @@ def iter_dependencies_stack(storage_pool, node_args):
         return []
 
 
-def iter_cvedb_updates(storage_pool, node_args):
+def iter_unknown_dependencies(storage_pool, node_args):
+    """Collect unknown dependencies."""
     # Be safe here as fatal errors will cause errors in Dispatcher
     try:
-        modified = storage_pool.get('CVEDBSyncTask')['modified']
-        # let's force all analyses for now
-        for epv in modified:
-            epv['force'] = True
-        return modified
-    except Exception:
-        logger.exception("Failed to collect OSS Index updates")
+        aggregated = storage_pool.get('UnknownDependencyFetcherTask')
+
+        arguments = []
+        for element in aggregated["result"]:
+            epv = element.split(':')
+            ecosystem = epv[0]
+            if Ecosystem.by_name(StoragePool.get_connected_storage('BayesianPostgres').session,
+                                 ecosystem).is_backed_by(EcosystemBackend.maven):
+                name = '{}:{}'.format(epv[1], epv[2])
+                version = epv[3]
+            else:
+                name = epv[1]
+                version = epv[2]
+            analysis_arguments = _create_analysis_arguments(ecosystem, name, version)
+            # TODO: Remove force=True once data-importer is smart enough
+            # to ingest missing packages from s3.
+            analysis_arguments.update({"recursive_limit": 0, "force": True})
+            arguments.append(analysis_arguments)
+
+        print('Arguments appended: %s' % ', '.join(str(item) for item in arguments))
+        logger.info("Arguments for next flows: %s" % str(arguments))
+        return arguments
+    except Exception as e:
+        logger.exception("Failed to collect unknown dependencies due to {}".format(e))
         return []

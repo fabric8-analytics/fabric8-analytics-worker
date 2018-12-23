@@ -1,0 +1,105 @@
+{
+   "versions": {
+      "GradleBuild": "87098cf55e68b07ea1c91139c56ae93018869764",
+      "Java-JAR": "899ed7f8dff79625fbb39699ff4bcdb488d1fb86"
+   },
+   "items": [
+      {
+         "time": "2018-04-23T09:52:34.450280255+02:00",
+         "path": "/home/pkajaba/git/gradle/ExpandableCardView/app/build.gradle",
+         "ecosystem": "GradleBuild",
+         "result": {
+            "android": {
+               "buildTypes": {
+                  "release": {
+                     "minifyEnabled": true,
+                     "proguardFiles": "getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'"
+                  }
+               },
+               "compileSdkVersion": "26",
+               "defaultConfig": {
+                  "applicationId": "com.alessandrosperotti.expandablecardviewexample",
+                  "minSdkVersion": "22",
+                  "targetSdkVersion": "26",
+                  "testInstrumentationRunner": "android.support.test.runner.AndroidJUnitRunner",
+                  "versionCode": "1",
+                  "versionName": "1.0"
+               }
+            },
+            "apply": [
+               "plugin: 'com.android.application'",
+               "plugin: 'kotlin-android'",
+               "plugin: 'kotlin-android-extensions'"
+            ],
+            "dependencies": [
+               {
+                  "excludes": [],
+                  "group": "",
+                  "name": "fileTree(dir: 'libs', include: ['*.jar'])",
+                  "type": "implementation",
+                  "version": ""
+               },
+               {
+                  "excludes": [],
+                  "group": "",
+                  "name": "\"org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version\"",
+                  "type": "implementation",
+                  "version": ""
+               },
+               {
+                  "excludes": [],
+                  "group": "com.android.support",
+                  "name": "appcompat-v7",
+                  "type": "implementation",
+                  "version": "26.1.0"
+               },
+               {
+                  "excludes": [],
+                  "group": "com.android.support.constraint",
+                  "name": "constraint-layout",
+                  "type": "implementation",
+                  "version": "1.0.2"
+               },
+               {
+                  "excludes": [],
+                  "group": "com.android.support",
+                  "name": "design",
+                  "type": "implementation",
+                  "version": "26.1.0"
+               },
+               {
+                  "excludes": [],
+                  "group": "junit",
+                  "name": "junit",
+                  "type": "testImplementation",
+                  "version": "4.12"
+               },
+               {
+                  "excludes": [],
+                  "group": "com.android.support.test",
+                  "name": "runner",
+                  "type": "androidTestImplementation",
+                  "version": "1.0.1"
+               },
+               {
+                  "excludes": [],
+                  "group": "com.android.support.test.espresso",
+                  "name": "espresso-core",
+                  "type": "androidTestImplementation",
+                  "version": "3.0.1"
+               },
+               {
+                  "excludes": [],
+                  "group": "",
+                  "name": "project(':expandablecardview')",
+                  "type": "compile",
+                  "version": ""
+               }
+            ]
+         },
+         "digests": {
+            "manifest": "9f44076f853d68a2b8bd0999f5d75b32965e228b"
+         }
+      }
+   ]
+}

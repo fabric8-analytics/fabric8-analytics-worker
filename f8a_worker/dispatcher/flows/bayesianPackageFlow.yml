@@ -5,7 +5,6 @@
       queue: '{DEPLOYMENT_PREFIX}_ingestion_bayesianPackageFlow_v0'
       propagate_node_args:
         - 'bayesianPackageAnalysisFlow'
-        - 'bayesianPackageTaggingFlow'
       node_args_from_first: true
       nowait: 'PackageGraphImporterTask'
       sampling:
@@ -22,30 +21,17 @@
             args:
               key: 'document_id'
         - from: 'bayesianPackageAnalysisFlow'
-          to: 'bayesianPackageTaggingFlow'
-          condition: &shouldSchedulePackageTaggingCheck
-            or:
-              - name: 'argsFieldEqual'
-                args:
-                  key: 'ecosystem'
-                  value: 'pypi'
-              - name: 'argsFieldEqual'
-                args:
-                  key: 'ecosystem'
-                  value: 'maven'
-        - from: 'bayesianPackageAnalysisFlow'
-          to: 'PackageFinalizeTask'
-          condition:
-            not:
-              <<: *shouldSchedulePackageTaggingCheck
-        - from: 'bayesianPackageTaggingFlow'
           to: 'PackageFinalizeTask'
         - from: 'PackageFinalizeTask'
           to: 'PackageResultCollector'
         - from: 'PackageResultCollector'
           to: 'PackageGraphImporterTask'
         - from: 'PackageFinalizeTaskError'
-          to: 'PackageGraphImporterTask'
+          to: 'PackageResultCollector'
+          condition:
+            name: 'argsFieldExist'
+            args:
+              key: 'document_id'
         - from: 'InitPackageFlow'
           to: 'PackageGraphImporterTask'
           condition:
@@ -58,15 +44,12 @@
                   value: true
       failures:
         - nodes: 'bayesianPackageAnalysisFlow'
-          fallback: 'bayesianPackageTaggingFlow'
-          condition:
-            <<: *shouldSchedulePackageTaggingCheck
-        - nodes: 'bayesianPackageTaggingFlow'
           fallback: 'PackageFinalizeTaskError'
 
     - <<: *bayesianPackageFlow
       name: 'bayesianApiPackageFlow'
       queue: '{DEPLOYMENT_PREFIX}_api_bayesianPackageFlow_v0'
+      nowait: []
 
     - <<: *bayesianPackageFlow
       name: 'bayesianPriorityPackageFlow'

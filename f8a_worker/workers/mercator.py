@@ -3,9 +3,7 @@
 Scans the cache path for manifest files (package.json, setup.py, *.gemspec,
 *.jar, Makefile etc.) to extract meta data and transform it a common scheme.
 
-Output: information such as: homepage, bug tracking, dependencies
-
-See [../../mercator/README.md](mercator/README.md)
+Output: information such as: homepage, bug tracking, dependencies, etc.
 
 sample output:
 {'author': 'Aaron Patterson <aaronp@rubyforge.org>, Mike Dalessio '
@@ -22,17 +20,18 @@ sample output:
  'version': '1.6.7.2'}
 """
 
-import os
 import json
+import os
+
 from selinon import FatalTaskError
 
 from f8a_worker.base import BaseTask
-from f8a_worker.data_normalizer import DataNormalizer
+from f8a_worker.data_normalizer import normalize
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.object_cache import ObjectCache
-from f8a_worker.process import Git
 from f8a_worker.schemas import SchemaRef
-from f8a_worker.utils import TimedCommand, tempdir
+from f8a_worker.utils import TimedCommand
+from f8a_worker.errors import NotABugFatalTaskError
 
 
 # TODO: we need to unify the output from different ecosystems
@@ -41,8 +40,117 @@ class MercatorTask(BaseTask):
 
     _analysis_name = 'metadata'
     _dependency_tree_lock = '_dependency_tree_lock'
-    schema_ref = SchemaRef(_analysis_name, '3-2-0')
-    _data_normalizer = DataNormalizer()
+    schema_ref = SchemaRef(_analysis_name, '3-3-0')
+
+    def execute(self, arguments):
+        """Execute mercator and convert it's output to JSON object."""
+        self._strict_assert(arguments.get('ecosystem'))
+        self._strict_assert(arguments.get('name'))
+        self._strict_assert(arguments.get('version'))
+
+        if self.storage.get_ecosystem(arguments['ecosystem']).is_backed_by(EcosystemBackend.maven):
+            # cache_path now points directly to the pom
+            cache_path = ObjectCache.get_from_dict(arguments).get_pom_xml()
+        else:
+            cache_path = ObjectCache.get_from_dict(arguments).get_extracted_source_tarball()
+        return self.run_mercator(arguments, cache_path)
+
+    def run_mercator(self, arguments, cache_path, outermost_only=True,
+                     timeout=300, resolve_poms=True):
+        """Run mercator tool."""
+        # TODO: reduce cyclomatic complexity
+        name = arguments.get('name')
+        version = arguments.get('version')
+        result_data = {'status': 'unknown',
+                       'summary': [],
+                       'details': []}
+        mercator_target = arguments.get('cache_sources_path', cache_path)
+
+        tc = TimedCommand(['mercator', mercator_target])
+        update_env = {'MERCATOR_JAVA_RESOLVE_POMS': 'true'} if resolve_poms else {}
+        status, data, err = tc.run(timeout=timeout,
+                                   is_json=True,
+                                   update_env=update_env)
+        if status != 0:
+            self.log.error(err)
+            raise FatalTaskError(err)
+
+        ecosystem_object = self.storage.get_ecosystem(arguments['ecosystem'])
+        if ecosystem_object.is_backed_by(EcosystemBackend.pypi):
+            # TODO: attempt static setup.py parsing with mercator
+            items = [self._merge_python_items(mercator_target, data)]
+            if items == [None]:
+                raise NotABugFatalTaskError(
+                    'Found no usable PKG-INFO/metadata.json/requirements.txt'
+                )
+        else:
+            if outermost_only:
+                # process only root level manifests (or the ones closest to the root level)
+                items = self.get_outermost_items(data.get('items') or [])
+            else:
+                items = data.get('items') or []
+            self.log.debug(
+                'mercator found %i projects, outermost %i', len(data), len(items)
+            )
+
+            if ecosystem_object.is_backed_by(EcosystemBackend.maven):
+                # for maven we download both Jar and POM, we consider POM to be *the*
+                #  source of information and don't want to duplicate info by including
+                #  data from pom included in artifact (assuming it's included)
+                items = [d for d in items if d['ecosystem'].lower() == 'java-pom']
+            elif ecosystem_object.is_backed_by(EcosystemBackend.npm):
+                # ignore other metadata files, e.g. requirements.txt
+                items = [d for d in items if d['ecosystem'].lower() == 'npm']
+            elif arguments['ecosystem'] == 'go':
+                if not items:
+                    # Mercator found no Go Glide files, run gofedlib
+                    items = self.run_gofedlib(
+                        topdir=mercator_target,
+                        timeout=timeout
+                    )
+                else:
+                    items = [
+                        self._add_extra_go_fields(d, name, version) for d in items
+                        if d['ecosystem'].lower() in ('go-glide', 'go-godeps')
+                    ]
+
+        result_data['details'] = [normalize(d) for d in items]
+        result_data['status'] = 'success'
+        return result_data
+
+    def run_gofedlib(self, topdir, timeout):
+        """Run gofedlib-cli to extract dependencies from golang sources."""
+        tc = TimedCommand(
+            [
+                'gofedlib-cli', '--dependencies-main', '--dependencies-packages',
+                '--dependencies-test', '--skip-errors', topdir
+            ]
+        )
+        status, data, err = tc.run(timeout=timeout)
+
+        if status:
+            raise FatalTaskError('gofedlib-cli failed: {err}'.format(err=err))
+
+        result = json.loads(data[0])
+        main_deps_count = len(result.get('deps-main', []))
+        packages_count = len(result.get('deps-packages', []))
+        self.log.debug('gofedlib found %i dependencies',
+                       main_deps_count + packages_count)
+
+        return [{'ecosystem': 'gofedlib', 'result': result}]
+
+    def _add_extra_go_fields(self, result, name, version):
+        """Add extra fields into a resulting dict for Golang ecosystem."""
+        # let's assume the type to be always Git;
+        # note Golang support SCMs other than Git,
+        # but we only support Git at the moment
+        result['result']['code_repository'] = {
+            'type': 'git',
+            'url': 'https://{name}'.format(name=name)
+        }
+        result['result']['name'] = name
+        result['result']['version'] = version
+        return result
 
     def _parse_requires_txt(self, path):
         requires = []
@@ -61,6 +169,7 @@ class MercatorTask(BaseTask):
         return requires
 
     def _merge_python_items(self, topdir, data):
+        # TODO: reduce cyclomatic complexity
         metadata_json = None
         pkg_info = None
         requirements_txt = None
@@ -73,6 +182,9 @@ class MercatorTask(BaseTask):
             if item1 is None:
                 return True
             return get_depth(item1['path']) > get_depth(item2['path'])
+
+        if not data.get('items'):
+            return None
 
         # find outermost PKG_INFO/metadata.json/requirements.txt - there can be
         #  testing ones etc.
@@ -98,8 +210,9 @@ class MercatorTask(BaseTask):
                     elif not (item_in_egg or pkg_info_in_egg) and is_deeper(pkg_info, item):
                         # if none of them are in .egg-info, but current pkg_info is deeper
                         pkg_info = item
-            elif item['ecosystem'] == 'Python-RequirementsTXT' and is_deeper(pkg_info, item):
-                requirements_txt = item
+            elif item['ecosystem'] == 'Python-RequirementsTXT':
+                if not requirements_txt or is_deeper(requirements_txt, item):
+                    requirements_txt = item
 
         if pkg_info:
             self.log.info('Found PKG-INFO at {p}'.format(p=pkg_info['path']))
@@ -117,9 +230,10 @@ class MercatorTask(BaseTask):
         # figure out if this was packaged as sdist => PKG_INFO would
         #  have depth of topdir + 3 (e.g. requests-2.18.1/requests.egg-info/PKG-INFO)
         #             or topdir + 4 (e.g. pydocstyle-2.0.0/src/pydocstyle.egg-info/PKG-INFO)
+        #             or topdir + 5 (dxl-cluster-0.0.2/src/python/dxl_cluster.egg-info/PKG-INFO)
         #  (and perhaps there are requires.txt or requirements.txt that we could use)
         # NOTE: for now, we always treat requirements.txt as requires_dist
-        elif pkg_info and get_depth(pkg_info['path']) <= get_depth(topdir) + 4:
+        elif pkg_info and get_depth(pkg_info['path']) <= get_depth(topdir) + 5:
             self.log.info('Seems like this is sdist or egg, using PKG-INFO ...')
             requires_dist = []
             # in well-made sdists, there are requires.txt next to PKG_INFO
@@ -141,112 +255,17 @@ class MercatorTask(BaseTask):
         elif requirements_txt:
             self.log.info('Only requirements.txt found, going to use it ...')
             requirements_txt['result']['requires_dist'] = \
-                requirements_txt['result'].pop('dependencies')
+                requirements_txt['result'].get('dependencies')
             ret = requirements_txt
 
         return ret
 
-    def execute(self, arguments):
-        """Execute mercator and convert it's output to JSON object."""
-        self._strict_assert(arguments.get('ecosystem'))
-
-        if 'url' in arguments:
-            # run mercator on a git repo
-            return self.run_mercator_on_git_repo(arguments)
-
-        self._strict_assert(arguments.get('name'))
-        self._strict_assert(arguments.get('version'))
-
-        # TODO: make this even uglier; looks like we didn't get the abstraction quite right
-        #       when we were adding support for Java/Maven.
-        if self.storage.get_ecosystem(arguments['ecosystem']).is_backed_by(EcosystemBackend.maven):
-            # cache_path now points directly to the pom
-            cache_path = ObjectCache.get_from_dict(arguments).get_pom_xml()
-        else:
-            cache_path = ObjectCache.get_from_dict(arguments).get_extracted_source_tarball()
-        return self.run_mercator(arguments, cache_path)
-
-    def run_mercator_on_git_repo(self, arguments):
-        self._strict_assert(arguments.get('url'))
-
-        with tempdir() as workdir:
-            repo_url = arguments.get('url')
-            repo = Git.clone(repo_url, path=workdir, depth=str(1))
-            metadata = self.run_mercator(arguments, workdir,
-                                         keep_path=True, outermost_only=False, timeout=900)
-            if metadata.get('status', None) != 'success':
-                self.log.error('Mercator failed on %s', repo_url)
-                return None
-
-            # add some auxiliary information so we can later find the manifest file
-            head = repo.rev_parse(['HEAD'])[0]
-            for detail in metadata['details']:
-                path = detail['path'][len(workdir):]
-                # path should look like this:
-                # <git-sha1>/path/to/manifest.file
-                detail['path'] = head + path
-
-            return metadata
-
-    def run_mercator(self, arguments, cache_path,
-                     keep_path=False, outermost_only=True, timeout=300, resolve_poms=True):
-        result_data = {'status': 'unknown',
-                       'summary': [],
-                       'details': []}
-        mercator_target = arguments.get('cache_sources_path', cache_path)
-
-        if arguments['ecosystem'] == 'go':
-            # no Go support in Mercator-go yet, we handle it separately here
-            tc = TimedCommand(['gofedlib-cli', '--dependencies-main', '--dependencies-packages',
-                               '--dependencies-test', '--skip-errors',
-                               mercator_target])
-            status, data, err = tc.run(timeout=timeout)
-        else:
-            tc = TimedCommand(['mercator', mercator_target])
-            update_env = {'MERCATOR_JAVA_RESOLVE_POMS': 'true'} if resolve_poms else {}
-            status, data, err = tc.run(timeout=timeout,
-                                       is_json=True,
-                                       update_env=update_env)
-        if status != 0:
-            self.log.error(err)
-            raise FatalTaskError(err)
-
-        ecosystem_object = self.storage.get_ecosystem(arguments['ecosystem'])
-        if ecosystem_object.is_backed_by(EcosystemBackend.pypi):
-            # TODO: attempt static setup.py parsing with mercator
-            items = [self._merge_python_items(mercator_target, data)]
-        elif arguments['ecosystem'] == 'go':
-            result = {'result': json.loads(data[0])}
-            # data normalized expects this
-            result['ecosystem'] = 'gofedlib'
-            # we only support git now
-            result['result']['code_repository'] = {
-                'type': 'git',
-                'url': 'https://{name}'.format(name=arguments.get('name'))
-            }
-
-            result['result']['name'] = arguments.get('name')
-            result['result']['version'] = arguments.get('version')
-            items = [result]
-            main_deps_count = len(result['result'].get('deps-main', []))
-            packages_count = len(result['result'].get('deps-packages', []))
-            self.log.debug('gofedlib found %i dependencies', main_deps_count + packages_count)
-        else:
-            if outermost_only:
-                # process only root level manifests (or the ones closest to the root level)
-                items = self._data_normalizer.get_outermost_items(data.get('items') or [])
-            else:
-                items = data.get('items') or []
-            self.log.debug('mercator found %i projects, outermost %i',
-                           len(data), len(items))
-
-            if ecosystem_object.is_backed_by(EcosystemBackend.maven):
-                # for maven we download both Jar and POM, we consider POM to be *the*
-                #  source of information and don't want to duplicate info by including
-                #  data from pom included in artifact (assuming it's included)
-                items = [d for d in items if d['ecosystem'].lower() == 'java-pom']
-
-        result_data['details'] = [self._data_normalizer.handle_data(d, keep_path=keep_path)
-                                  for d in items]
-        result_data['status'] = 'success'
-        return result_data
+    @staticmethod
+    def get_outermost_items(list_):
+        """Sort by the depth of the path so the outermost come first."""
+        sorted_list = sorted(list_, key=lambda a: len(a['path'].split(os.path.sep)))
+        if sorted_list:
+            outermost_len = len(sorted_list[0]['path'].split(os.path.sep))
+            sorted_list = [i for i in sorted_list if
+                           len(i['path'].split(os.path.sep)) == outermost_len]
+        return sorted_list

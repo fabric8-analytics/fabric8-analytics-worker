@@ -1,4 +1,5 @@
-import os
+"""Bookkeeper Task."""
+
 import json
 from selinon import StoragePool
 from f8a_worker.base import BaseTask
@@ -13,6 +14,7 @@ class BookkeeperTask(BaseTask):
     add_audit_info = False
 
     def store_user_node(self, arguments, aggregated):
+        """Store GraphAggregatorTask's result to graph."""
         for result in aggregated['result']:
             resolved = result['details'][0]['_resolved']
             ecosystem = result['details'][0]['ecosystem']
@@ -60,6 +62,11 @@ class BookkeeperTask(BaseTask):
                 continue
 
     def execute(self, arguments):
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('external_request_id'))
         self._strict_assert(arguments.get('data'))
 

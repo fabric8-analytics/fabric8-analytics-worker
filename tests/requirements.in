@@ -1,7 +1,10 @@
 datadiff
 flexmock
 pylint
-pytest >= 3 # Needed for compatibility with celery 4.x fixtures
+pytest==3.*
 pytest-timeout
 pytest-rerunfailures
 pytest-cov
+pytest-mock
+codecov
+requests

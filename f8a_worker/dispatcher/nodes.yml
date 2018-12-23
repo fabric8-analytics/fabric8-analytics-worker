@@ -1,15 +1,6 @@
 
 ---
   tasks:
-    - name: 'security_issues'
-      classname: 'CVEcheckerTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      storage: 'BayesianPostgres'
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_CVEcheckerTask_v0'
-      selective_run_function:
-        name: 'selective_run_function'
-        import: 'f8a_worker.dispatcher.selective'
     - name: 'github_details'
       classname: 'GithubTask'
       import: 'f8a_worker.workers'
@@ -19,24 +10,6 @@
       ## only 1 task per 5 seconds
       #throttle:
       #   seconds: 5
-      selective_run_function:
-        name: 'selective_run_function'
-        import: 'f8a_worker.dispatcher.selective'
-    - name: 'static_analysis'
-      classname: 'CsmockTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      storage: 'BayesianPostgres'
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_CsmockTask_v0'
-      selective_run_function:
-        name: 'selective_run_function'
-        import: 'f8a_worker.dispatcher.selective'
-    - name: 'crypto_algorithms'
-      classname: 'OSCryptoCatcherTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      storage: 'BayesianPostgres'
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_OSCryptoCatcherTask_v0'
       selective_run_function:
         name: 'selective_run_function'
         import: 'f8a_worker.dispatcher.selective'
@@ -67,15 +40,6 @@
       selective_run_function:
         name: 'selective_run_function'
         import: 'f8a_worker.dispatcher.selective'
-    - name: 'binary_data'
-      classname: 'BinwalkTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      storage: 'BayesianPostgres'
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_BinwalkTask_v0'
-      selective_run_function:
-        name: 'selective_run_function'
-        import: 'f8a_worker.dispatcher.selective'
     - name: 'metadata'
       classname: 'MercatorTask'
       import: 'f8a_worker.workers'
@@ -85,21 +49,6 @@
       selective_run_function:
         name: 'selective_run_function'
         import: 'f8a_worker.dispatcher.selective'
-    - name: 'code_metrics'
-      classname: 'CodeMetricsTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      storage: 'BayesianPostgres'
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_CodeMetricsTask_v0'
-      selective_run_function:
-        name: 'selective_run_function'
-        import: 'f8a_worker.dispatcher.selective'
-    - name: 'languages'
-      classname: 'LinguistTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      storage: 'BayesianPostgres'
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_LinguistTask_v0'
       selective_run_function:
         name: 'selective_run_function'
         import: 'f8a_worker.dispatcher.selective'
@@ -146,30 +95,6 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GraphAggregatorTask_v0'
       storage: 'BayesianPostgres'
-    - name: 'stack_aggregator'
-      classname: 'StackAggregatorTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_StackAggregatorTask_v0'
-      storage: 'BayesianPostgres'
-    - name: 'stack_aggregator_v2'
-      classname: 'StackAggregatorV2Task'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_StackAggregatorV2Task_v0'
-      storage: 'BayesianPostgres'
-    - name: 'recommendation'
-      classname: 'RecommendationTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_RecommendationTask_v0'
-      storage: 'BayesianPostgres'
-    - name: 'recommendation_v2'
-      classname: 'RecommendationV2Task'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_RecommendationV2Task_v0'
-      storage: 'BayesianPostgres'
     - name: 'InitAnalysisFlow'
       import: 'f8a_worker.workers'
       max_retry: 0
@@ -186,20 +111,6 @@
       import: 'f8a_worker.workers'
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_PackageResultCollector_v0'
-    - name: 'BigQueryTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_BigQueryTask_v0'
-    - name: 'CVEDBSyncTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_CVEDBSyncTask_v0'
-      storage: 'BayesianPostgres'
-    - name: 'ManifestKeeperTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_ManifestKeeperTask_v0'
-      storage: 'S3Manifests'
     - name: 'GraphImporterTask'
       import: 'f8a_worker.workers'
       max_retry: 0
@@ -211,10 +122,6 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GraphImporterTask_v0'
       storage: 'PackagePostgres'
-    - name: 'GraphSyncTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GraphSyncTask_v0'
     - name: 'GitReadmeCollectorTask'
       import: 'f8a_worker.workers'
       max_retry: 0
@@ -225,30 +132,6 @@
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_InitPackageFlow_v0'
       storage: 'PackagePostgres'
-    - name: 'GitHubManifestMetadataResultCollector'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GitHubManifestMetadataResultCollector_v0'
-    - name: 'InitGitHubManifestMetadata'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_InitGitHubManifestMetadata_v0'
-      storage: 'BayesianPostgres'
-    - name: 'gh_most_starred_github_details'
-      classname: 'GithubTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      storage: 'BayesianPostgres'
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GitHubManifestMetadataGithubTask_v0'
-    - name: 'git_stats'
-      classname: 'GitStats'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_git_stats_v0'
-      storage: 'PackagePostgres'
-      selective_run_function:
-        name: 'selective_run_function'
-        import: 'f8a_worker.dispatcher.selective'
     - name: 'libraries_io'
       classname: 'LibrariesIoTask'
       import: 'f8a_worker.workers'
@@ -263,53 +146,63 @@
       import: 'f8a_worker.workers'
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_BookkeeperTask_v0'
-    - name: 'package_keywords_tagging'
-      classname: 'PackageKeywordsTaggingTask'
-      storage_task_name: 'keywords_tagging'
+    - name: 'GitOperationTask'
+      classname: 'GitOperationTask'
       import: 'f8a_worker.workers'
       max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_package_keywords_tagging_v0'
-      storage: 'PackagePostgres'
-      selective_run_function:
-        name: 'selective_run_function'
-        import: 'f8a_worker.dispatcher.selective'
-    - name: 'keywords_tagging'
-      classname: 'KeywordsTaggingTask'
-      import: 'f8a_worker.workers'
-      max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_keywords_tagging_v0'
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GitOperationTask_v0'
       storage: 'BayesianPostgres'
     - name: 'RepositoryDescCollectorTask'
       import: 'f8a_worker.workers'
       max_retry: 0
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_RepositoryDescCollectorTask_v0'
       storage: 'S3RepositoryDescription'
-    - name: 'KeywordsSummaryTask'
+    - name: 'GithubDependencyTreeTask'
+      classname: 'GithubDependencyTreeTask'
       import: 'f8a_worker.workers'
       max_retry: 0
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_KeywordsSummaryTask_tagging_v0'
-      storage: 'S3KeywordsSummary'
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GithubDependencyTreeTask_v0'
+      storage: 'BayesianPostgres'
+    - name: 'UnknownDependencyFetcherTask'
+      classname: 'UnknownDependencyFetcherTask'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_UnknownDependencyFetcherTask_v0'
+      storage: 'BayesianPostgres'
+    - name: 'RepoDependencyFinderTask'
+      classname: 'RepoDependencyFinderTask'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_RepoDependencyFinderTask_v0'
+      storage: 'BayesianPostgres'
+    - name: 'UserNotificationTask'
+      classname: 'UserNotificationTask'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_UserNotificationTask_v0'
+      storage: 'BayesianPostgres'
+    - name: 'ReportGenerationTask'
+      classname: 'ReportGenerationTask'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_ReportGenerationTask_v0'
+      storage: 'BayesianPostgres'
 
   flows:
+    - 'osioAnalysisFlow'
     - 'bayesianFlow'
     - 'bayesianApiFlow'
     - 'bayesianPriorityFlow'
     - 'bayesianAnalysisFlow'
-    - 'bigQueryFlow'
-    - 'stackApiGraphFlow'
-    - 'stackApiGraphV2Flow'
     - 'livenessFlow'
-    - 'cveCheckFlow'
     - 'bayesianPackageFlow'
     - 'bayesianApiPackageFlow'
     - 'bayesianPriorityPackageFlow'
     - 'bayesianPackageAnalysisFlow'
-    - 'bayesianPackageTaggingFlow'
-    - 'githubManifestMetadataFlow'
     - 'componentApiFlow'
-    - 'keywordsSummaryFlow'
-    - 'keywordsApiSummaryFlow'
-    - 'keywordsPrioritySummaryFlow'
+    - 'dependencyIngestFlow'
+    - 'osioUserNotificationFlow'
+    - 'gitOperationsFlow'
     - 'golangCVEPredictionsFlow'
 
   storages:
@@ -342,15 +235,6 @@
         region_name: 'us-east-1'
         encryption: false
         versioned: false
-
-    - name: 'S3BigQuery'
-      import: 'f8a_worker.storages'
-      configuration:
-        <<: *configurationS3
-        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-big-query'
-        region_name: 'us-east-1'
-        encryption: false
-        versioned: true
 
     - name: 'S3Data'
       import: 'f8a_worker.storages'
@@ -388,15 +272,6 @@
         encryption: false
         versioned: false
 
-    - name: 'S3VulnDB'
-      import: 'f8a_worker.storages'
-      configuration:
-        <<: *configurationS3
-        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-vuln-db'
-        region_name: 'us-east-1'
-        encryption: false
-        versioned: false
-
     - name: 'S3Readme'
       import: 'f8a_worker.storages'
       configuration:
@@ -415,15 +290,6 @@
         encryption: 'aws:kms'
         versioned: true
 
-    - name: 'S3GitHubManifestMetadata'
-      import: 'f8a_worker.storages'
-      configuration:
-        <<: *configurationS3
-        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-github-manifest-metadata'
-        region_name: 'us-east-1'
-        encryption: false
-        versioned: true
-
     - name: 'S3CrowdSourceTags'
       import: 'f8a_worker.storages'
       configuration:
@@ -438,15 +304,6 @@
       configuration:
         <<: *configurationS3
         bucket_name: '{DEPLOYMENT_PREFIX}-repository-description'
-        region_name: 'us-east-1'
-        encryption: false
-        versioned: true
-
-    - name: 'S3KeywordsSummary'
-      import: 'f8a_worker.storages'
-      configuration:
-        <<: *configurationS3
-        bucket_name: '{DEPLOYMENT_PREFIX}-keywords-summary'
         region_name: 'us-east-1'
         encryption: false
         versioned: true

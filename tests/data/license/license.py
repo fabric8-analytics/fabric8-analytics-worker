@@ -21,7 +21,7 @@ Copyright (C) 2016 Franta Vomacka (vomi)
 """
 
 
-def funkce(url):
+def funkce(_url):
     """
     some stuff
     """

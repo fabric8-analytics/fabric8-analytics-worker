@@ -7,7 +7,7 @@ from collections import OrderedDict
 from selinon import FatalTaskError
 
 from f8a_worker.base import BaseTask
-from f8a_worker.errors import F8AConfigurationException, TaskError
+from f8a_worker.errors import F8AConfigurationException, NotABugTaskError, NotABugFatalTaskError
 from f8a_worker.schemas import SchemaRef
 from f8a_worker.utils import parse_gh_repo, get_response
 
@@ -30,6 +30,8 @@ class GithubTask(BaseTask):
 
     @classmethod
     def create_test_instance(cls, repo_name, repo_url):
+        """Create instance of task for tests."""
+        assert cls
         instance = super().create_test_instance()
         # set for testing as we are not querying DB for mercator results
         instance._repo_name = repo_name
@@ -37,17 +39,19 @@ class GithubTask(BaseTask):
         return instance
 
     def _get_last_years_commits(self, repo_url):
+        """Get weekly commit activity for last year."""
         try:
             activity = get_response(urljoin(repo_url + '/', "stats/commit_activity"), self._headers)
-        except TaskError as e:
+        except NotABugTaskError as e:
             self.log.debug(e)
             return []
         return [x['total'] for x in activity]
 
     def _get_repo_stats(self, repo):
+        """Collect various repository properties."""
         try:
             contributors = get_response(repo['contributors_url'], self._headers)
-        except TaskError as e:
+        except NotABugTaskError as e:
             self.log.debug(e)
             contributors = {}
         d = {'contributors_count': len(list(contributors)) if contributors is not None else 'N/A'}
@@ -65,6 +69,11 @@ class GithubTask(BaseTask):
         return parsed
 
     def execute(self, arguments):
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         result_data = {'status': 'unknown',
                        'summary': [],
                        'details': {}}
@@ -86,9 +95,9 @@ class GithubTask(BaseTask):
         repo_url = urljoin(self.configuration.GITHUB_API + "repos/", self._repo_name)
         try:
             repo = get_response(repo_url, self._headers)
-        except TaskError as e:
+        except NotABugTaskError as e:
             self.log.error(e)
-            raise FatalTaskError from e
+            raise NotABugFatalTaskError from e
 
         result_data['status'] = 'success'
 
@@ -111,7 +120,7 @@ class GithubTask(BaseTask):
 
 
 class GitReadmeCollectorTask(BaseTask):
-    """Store README files stored on Github."""
+    """Collect README files stored on Github."""
 
     _GITHUB_README_PATH = \
         'https://raw.githubusercontent.com/{project}/{repo}/master/README{extension}'
@@ -133,6 +142,7 @@ class GitReadmeCollectorTask(BaseTask):
     ))
 
     def _get_github_readme(self, url):
+        """Get README from url."""
         repo_tuple = parse_gh_repo(url)
         if repo_tuple:
             project, repo = repo_tuple.split('/')
@@ -155,6 +165,7 @@ class GitReadmeCollectorTask(BaseTask):
                 return {'type': readme_type, 'content': response.text}
 
     def run(self, arguments):
+        """Task's entrypoint."""
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('url'))

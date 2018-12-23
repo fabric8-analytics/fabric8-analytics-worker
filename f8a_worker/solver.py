@@ -7,18 +7,20 @@ from functools import cmp_to_key
 import logging
 from lxml import etree
 from operator import itemgetter
-from pip.req.req_file import parse_requirements
+from pip._internal.req.req_file import parse_requirements
+from pip._vendor.packaging.specifiers import _version_split
 import re
 from requests import get
-from xmlrpc.client import ServerProxy
 from semantic_version import Version as semver_version
 from subprocess import check_output
-from tempfile import NamedTemporaryFile
-from urllib.parse import urljoin
+from tempfile import NamedTemporaryFile, TemporaryDirectory
+from urllib.parse import urljoin, quote
+from urllib.request import urlopen
+import requests
 
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.models import Analysis, Ecosystem, Package, Version
-from f8a_worker.utils import cwd, tempdir, TimedCommand
+from f8a_worker.utils import cwd, TimedCommand
 from f8a_worker.process import Git
 
 
@@ -117,33 +119,6 @@ class PypiReleasesFetcher(ReleasesFetcher):
     def __init__(self, ecosystem):
         """Initialize instance."""
         super(PypiReleasesFetcher, self).__init__(ecosystem)
-        self._rpc = ServerProxy(self.ecosystem.fetch_url)
-
-    def _search_package_name(self, package):
-        """Case insensitive search.
-
-        :param package: str, Name of the package
-        :return:
-        """
-        def find_pypi_pkg(package):
-            packages = self._rpc.search({'name': package})
-            if packages:
-                exact_match = [p['name']
-                               for p in packages
-                               if p['name'].lower() == package.lower()]
-                if exact_match:
-                    return exact_match.pop()
-        res = find_pypi_pkg(package)
-        if res is None and '-' in package:
-            # this is soooo annoying; you can `pip3 install argon2-cffi and it installs
-            #  argon2_cffi (underscore instead of dash), but searching through XMLRPC
-            #  API doesn't find it... so we try to search for underscore variant
-            #  if the dash variant isn't found
-            res = find_pypi_pkg(package.replace('-', '_'))
-        if res:
-            return res
-
-        raise ValueError("Package {} not found".format(package))
 
     def fetch_releases(self, package):
         """Fetch package releases versions.
@@ -154,15 +129,20 @@ class PypiReleasesFetcher(ReleasesFetcher):
         if not package:
             raise ValueError("package")
 
-        releases = self._rpc.package_releases(package, True)
-        if not releases:
-            # try again with swapped case of first character
-            releases = self._rpc.package_releases(package[0].swapcase() + package[1:], True)
-        if not releases:
-            # if nothing was found then do case-insensitive search
-            return self.fetch_releases(self._search_package_name(package))
+        package = package.lower()
 
-        return package.lower(), releases
+        pypi_package_url = urljoin(
+            self.ecosystem.fetch_url, '{pkg_name}/json'.format(pkg_name=package)
+        )
+
+        response = requests.get(pypi_package_url)
+        if response.status_code != 200:
+            logger.error('Unable to obtain a list of versions for {pkg_name}'.format(
+                pkg_name=package
+            ))
+            return package, []
+
+        return package, list({x for x in response.json().get('releases', {})})
 
 
 class NpmReleasesFetcher(ReleasesFetcher):
@@ -188,16 +168,12 @@ class NpmReleasesFetcher(ReleasesFetcher):
         if not package:
             raise ValueError("package")
 
-        r = get(self.ecosystem.fetch_url + package)
-        if r.status_code == 404:
-            if package.lower() != package:
-                return self.fetch_releases(package.lower())
-            raise ValueError("Package {} not found".format(package))
+        # quote '/' (but not '@') in scoped package name, e.g. in '@slicemenice/item-layouter'
+        r = get(self.ecosystem.fetch_url + quote(package, safe='@'))
 
-        if 'versions' not in r.json().keys():
-            raise ValueError("Package {} does not have associated versions".format(package))
-
-        return package, list(r.json()['versions'].keys())
+        if r.status_code == 200 and r.content:
+            return package, list(r.json().get('versions', {}).keys())
+        return package, []
 
 
 class RubyGemsReleasesFetcher(ReleasesFetcher):
@@ -256,16 +232,15 @@ class NugetReleasesFetcher(ReleasesFetcher):
         """Initialize instance."""
         super(NugetReleasesFetcher, self).__init__(ecosystem)
 
-    @staticmethod
-    def scrape_versions_from_nuget_org(package, sort_by_downloads=False):
-        """Scrape 'Version History' from https://www.nuget.org/packages/<package>."""
+    def scrape_versions_from_nuget_org(self, package, sort_by_downloads=False):
+        """Scrape 'Version History' from Nuget."""
         releases = []
         nuget_packages_url = 'https://www.nuget.org/packages/'
         page = get(nuget_packages_url + package)
         page = BeautifulSoup(page.text, 'html.parser')
         version_history = page.find(class_="version-history")
         for version in version_history.find_all(href=re.compile('/packages/')):
-            version_text = version.text.replace('(current version)', '').strip()
+            version_text = version.text.replace('(current)', '').strip()
             try:
                 semver_version.coerce(version_text)
                 downloads = int(version.find_next('td').text.strip().replace(',', ''))
@@ -297,18 +272,34 @@ class MavenReleasesFetcher(ReleasesFetcher):
         """Initialize instance."""
         super().__init__(ecosystem)
 
-    @staticmethod
-    def releases_from_maven_org(group_id, artifact_id):
-        """Fetch releases versions for group_id/artifact_id from maven.org."""
-        maven_url = "http://repo1.maven.org/maven2/"
-        dir_path = "{g}/{a}/".format(g=group_id.replace('.', '/'), a=artifact_id)
-        url = urljoin(maven_url, dir_path)
-        releases = []
-        page = BeautifulSoup(get(url).text, 'html.parser')
-        for link in page.find_all('a'):
-            if link.text.endswith('/') and link.text != '../':
-                releases.append(link.text.rstrip('/'))
-        return releases
+    def releases_from_maven_org(self, group_id, artifact_id):
+        """Fetch releases versions for group_id/artifact_id."""
+        metadata_filenames = ['maven-metadata.xml', 'maven-metadata-local.xml']
+
+        group_id_path = group_id.replace('.', '/')
+        versions = set()
+        we_good = False
+        for filename in metadata_filenames:
+
+            url = urljoin(
+                self.ecosystem.fetch_url,
+                '{g}/{a}/{f}'.format(g=group_id_path, a=artifact_id, f=filename)
+            )
+            try:
+                metadata_xml = etree.parse(urlopen(url))
+                we_good = True  # We successfully downloaded at least one of the metadata files
+                version_elements = metadata_xml.findall('.//version')
+                versions = versions.union({x.text for x in version_elements})
+            except OSError:
+                # Not both XML files have to exist, so don't freak out yet
+                pass
+
+        if not we_good:
+            logger.error('Unable to obtain a list of versions for {g}:{a}'.format(
+                g=group_id, a=artifact_id)
+            )
+
+        return list(versions)
 
     def fetch_releases(self, package):
         """Fetch package releases versions."""
@@ -432,17 +423,10 @@ class Dependency(object):
             else:
                 raise ValueError('Invalid comparison token')
 
-        results, intermediaries = False, False
-        for spec in self.spec:
-            if isinstance(spec, list):
-                intermediary = True
-                for sub in spec:
-                    intermediary &= _compare_spec(sub)
-                intermediaries |= intermediary
-            elif isinstance(spec, tuple):
-                results |= _compare_spec(spec)
+        def _all(spec_):
+            return all(_all(s) if isinstance(s, list) else _compare_spec(s) for s in spec_)
 
-        return results or intermediaries
+        return any(_all(s) if isinstance(s, list) else _compare_spec(s) for s in self.spec)
 
 
 class DependencyParser(object):
@@ -482,10 +466,12 @@ class PypiDependencyParser(DependencyParser):
         def _extract_op_version(spec):
             # https://www.python.org/dev/peps/pep-0440/#compatible-release
             if spec.operator == '~=':
-                version = spec.version.split('.')
-                if len(version) in {2, 3, 4}:
-                    if len(version) in {3, 4}:
-                        del version[-1]  # will increase the last but one in next line
+                version = _version_split(spec.version)
+                if len(version) > 1:
+                    # ignore pre-release, post-release or developmental release
+                    while not version[-1].isdigit():
+                        del version[-1]
+                    del version[-1]  # will increase the last but one in next line
                     version[-1] = str(int(version[-1]) + 1)
                 else:
                     raise ValueError('%r must not be used with %r' % (spec.operator, spec.version))
@@ -563,10 +549,13 @@ class NpmDependencyParser(DependencyParser):
         :param spec: str
         :return: Dependency
         """
-        specs = check_output(['/usr/bin/semver-ranger', spec], universal_newlines=True).strip()
-        if specs == 'null':
-            logger.info("invalid version specification for %s = %s", name, spec)
-            return None
+        if spec == 'latest':
+            specs = '*'
+        else:
+            specs = check_output(['/usr/bin/semver-ranger', spec], universal_newlines=True).strip()
+            if specs == 'null':
+                logger.info("invalid version specification for %s = %s", name, spec)
+                return None
 
         ret = []
         for s in specs.split('||'):
@@ -665,12 +654,13 @@ class NugetDependencyParser(object):
         :param specs:  list of dependencies (strings)
         :return: list of Dependency
         """
+        # TODO: reduce cyclomatic complexity
         deps = []
         for spec in specs:
             name, version_range = spec.split(' ', 1)
 
             # 1.0 -> 1.0≤x
-            if re.search('[,()\[\]]', version_range) is None:
+            if re.search(r'[,()\[\]]', version_range) is None:
                 dep = Dependency(name, [('>=', version_range)])
             # [1.0,2.0] -> 1.0≤x≤2.0
             elif re.fullmatch(r'\[(.+),(.+)\]', version_range):
@@ -947,7 +937,7 @@ class MavenSolver(object):
             dependencies = [dependencies]
         for dependency in dependencies:
             name = "{}:{}".format(dependency['groupId'], dependency['artifactId'])
-            solved[name] = dependency['version']
+            solved[name] = str(dependency['version'])
         return solved
 
     @staticmethod
@@ -959,7 +949,7 @@ class MavenSolver(object):
         """
         if not to_solve:
             return {}
-        with tempdir() as tmpdir:
+        with TemporaryDirectory() as tmpdir:
             with cwd(tmpdir):
                 MavenSolver._generate_pom_xml(to_solve)
                 return MavenSolver._dependencies_from_pom_xml()
@@ -968,7 +958,7 @@ class MavenSolver(object):
     def is_version_range(ver_spec):
         """Check whether ver_spec contains version range."""
         # http://maven.apache.org/enforcer/enforcer-rules/versionRanges.html
-        return re.search('[,()\[\]]', ver_spec) is not None
+        return re.search(r'[,()\[\]]', ver_spec) is not None
 
     def solve(self, dependencies):
         """Solve version ranges in dependencies."""
@@ -1006,7 +996,7 @@ def get_ecosystem_solver(ecosystem, with_parser=None, with_fetcher=None):
         return RubyGemsSolver(ecosystem, with_parser, with_fetcher)
     elif ecosystem.is_backed_by(EcosystemBackend.nuget):
         return NugetSolver(ecosystem, with_parser, with_fetcher)
-    elif ecosystem.is_backed_by(EcosystemBackend.scm):
+    elif ecosystem.is_backed_by(EcosystemBackend.go):
         return GolangSolver(ecosystem, with_parser, with_fetcher)
 
     raise ValueError('Unknown ecosystem: {}'.format(ecosystem.name))
@@ -1024,7 +1014,7 @@ def get_ecosystem_parser(ecosystem):
         return RubyGemsDependencyParser()
     elif ecosystem.is_backed_by(EcosystemBackend.nuget):
         return NugetDependencyParser()
-    elif ecosystem.is_backed_by(EcosystemBackend.scm):
+    elif ecosystem.is_backed_by(EcosystemBackend.go):
         return GolangDependencyParser()
 
     raise ValueError('Unknown ecosystem: {}'.format(ecosystem.name))

@@ -1,91 +1,33 @@
 """Module containing helper functions that are used by other parts of worker."""
 
+import datetime
 import getpass
 import json
 import logging
-import datetime
-import tempfile
-import shutil
 import signal
 import time
-from os import path as os_path, walk, getcwd, chdir, environ as os_environ, killpg, getpgid
-from threading import Thread
-from subprocess import Popen, PIPE, check_output, CalledProcessError, TimeoutExpired
-from traceback import format_exc
-from shlex import split
-from queue import Queue, Empty
+import re
 from contextlib import contextmanager
-from urllib.parse import unquote
+from os import path as os_path, walk, getcwd, chdir, environ as os_environ, killpg, getpgid
+from queue import Queue, Empty
+from shlex import split
+from subprocess import Popen, PIPE, check_output, CalledProcessError, TimeoutExpired
+from threading import Thread
+from traceback import format_exc
+from urllib.parse import unquote, urlparse
+
 import requests
-from urllib.parse import urlparse
 from requests.adapters import HTTPAdapter
+from requests.exceptions import HTTPError
 from requests.packages.urllib3.util.retry import Retry
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import desc
-
-from f8a_worker.defaults import configuration
-from f8a_worker.errors import TaskError
-from f8a_worker.models import (Analysis, Ecosystem, Package, Version,
-                               PackageGHUsage, ComponentGHUsage)
-
 from selinon import StoragePool
+from sqlalchemy.exc import SQLAlchemyError
+
+from f8a_worker.enums import EcosystemBackend
+from f8a_worker.errors import TaskError, NotABugTaskError
+from f8a_worker.models import (Analysis, Ecosystem, Package, Version)
 
 logger = logging.getLogger(__name__)
-
-
-def get_package_dependents_count(ecosystem_backend, package, db_session=None):
-    """Get number of GitHub projects dependent on the `package`.
-
-    :param ecosystem_backend: str, Ecosystem backend from `f8a_worker.enums.EcosystemBackend`
-    :param package: str, Package name
-    :param db_session: obj, Database session to use for querying
-    :return: number of dependent projects, or -1 if the information is not available
-    """
-    if not db_session:
-        storage = StoragePool.get_connected_storage("BayesianPostgres")
-        db_session = storage.session
-
-    try:
-        count = db_session.query(PackageGHUsage.count).filter(PackageGHUsage.name == package) \
-                          .filter(PackageGHUsage.ecosystem_backend == ecosystem_backend) \
-                          .order_by(desc(PackageGHUsage.timestamp)) \
-                          .first()
-    except SQLAlchemyError:
-        db_session.rollback()
-        raise
-
-    if count:
-        return count[0]
-    return -1
-
-
-def get_dependents_count(ecosystem_backend, package, version, db_session=None):
-    """Get number of GitHub projects dependent on given (package, version).
-
-    :param ecosystem_backend: str, Ecosystem backend from `f8a_worker.enums.EcosystemBackend`
-    :param package: str, Package name
-    :param version: str, Package version
-    :param db_session: obj, Database session to use for querying
-    :return: number of dependent projects, or -1 if the information is not available
-    """
-    if not db_session:
-        storage = StoragePool.get_connected_storage("BayesianPostgres")
-        db_session = storage.session
-
-    try:
-        count = db_session.query(ComponentGHUsage.count) \
-                          .filter(ComponentGHUsage.name == package) \
-                          .filter(ComponentGHUsage.version == version) \
-                          .filter(ComponentGHUsage.ecosystem_backend == ecosystem_backend) \
-                          .order_by(desc(ComponentGHUsage.timestamp)) \
-                          .first()
-    except SQLAlchemyError:
-        db_session.rollback()
-        raise
-
-    if count:
-        return count[0]
-    return -1
 
 
 def get_latest_analysis(ecosystem, package, version, db_session=None):
@@ -95,44 +37,15 @@ def get_latest_analysis(ecosystem, package, version, db_session=None):
         db_session = storage.session
 
     try:
-        return db_session.query(Analysis).\
-            filter(Ecosystem.name == ecosystem).\
-            filter(Package.name == package).\
-            filter(Version.identifier == version).\
-            order_by(Analysis.started_at.desc()).\
+        return db_session.query(Analysis). \
+            filter(Ecosystem.name == ecosystem). \
+            filter(Package.name == package). \
+            filter(Version.identifier == version). \
+            order_by(Analysis.started_at.desc()). \
             first()
     except SQLAlchemyError:
         db_session.rollback()
         raise
-
-
-def get_component_percentile_rank(ecosystem_backend, package, version, db_session=None):
-    """Get component's percentile rank.
-
-    :param ecosystem_backend: str, Ecosystem backend from `f8a_worker.enums.EcosystemBackend`
-    :param package: str, Package name
-    :param version: str, Package version
-    :param db_session: obj, Database session to use for querying
-    :return: component's percentile rank, or -1 if the information is not available
-    """
-    if not db_session:
-        storage = StoragePool.get_connected_storage("BayesianPostgres")
-        db_session = storage.session
-
-    try:
-        rank = db_session.query(ComponentGHUsage.percentile_rank) \
-            .filter(ComponentGHUsage.name == package) \
-            .filter(ComponentGHUsage.version == version) \
-            .filter(ComponentGHUsage.ecosystem_backend == ecosystem_backend) \
-            .order_by(desc(ComponentGHUsage.timestamp)) \
-            .first()
-    except SQLAlchemyError:
-        db_session.rollback()
-        raise
-
-    if rank:
-        return rank[0]
-    return 0
 
 
 @contextmanager
@@ -144,22 +57,6 @@ def cwd(target):
         yield
     finally:
         chdir(curdir)
-
-
-@contextmanager
-def tempdir():
-    """Context manager for temporary directory.
-
-    Usage:
-    with tempdir() as temp_dir:
-        use temp_dir
-    """
-    dirpath = tempfile.mkdtemp()
-    try:
-        yield dirpath
-    finally:
-        if os_path.isdir(dirpath):
-            shutil.rmtree(dirpath)
 
 
 @contextmanager
@@ -257,7 +154,7 @@ class TimedCommand(object):
 
     @staticmethod
     def get_command_output(args, graceful=True, is_json=False, timeout=300, **kwargs):
-        """Wrap get_command_output() with implicit timeout of 5 minutes."""
+        """Wrap the function to get command output with implicit timeout of 5 minutes."""
         kwargs['timeout'] = timeout
         return get_command_output(args, graceful, is_json, **kwargs)
 
@@ -285,6 +182,9 @@ def get_command_output(args, graceful=True, is_json=False, **kwargs):
 
         if not graceful:
             logger.error("exception is fatal")
+            # we don't know whether this is a bug or the command was simply called
+            # with invalid/unsupported input. Caller needs to catch the exception
+            # and decide.
             raise TaskError("Error during running command %s: %r" % (args, ex.output))
         else:
             logger.debug("Ignoring because graceful flag is set")
@@ -342,6 +242,8 @@ def skip_git_files(path):
 
 
 class ThreadPool(object):
+    """Implementation of thread pool."""
+
     def __init__(self, target, num_workers=10, timeout=3):
         """Initialize `ThreadPool`.
 
@@ -367,6 +269,7 @@ class ThreadPool(object):
         [t.start() for t in self._threads]
 
     def join(self):
+        """Join all threads."""
         [t.join() for t in self._threads]
         self.queue.join()
 
@@ -519,22 +422,6 @@ class MavenCoordinates(object):
         return cls(**coordinates)
 
 
-def usage_rank2str(rank):
-    """Translate percentile rank to a string representing relative usage of a component."""
-    used = 'n/a'
-    if rank > 90:
-        used = 'very often'
-    elif rank > 80:
-        used = 'often'
-    elif rank > 10:
-        used = 'used'
-    elif rank > 0:
-        used = 'seldom'
-    elif rank == 0:
-        used = 'not used'
-    return used
-
-
 def parse_gh_repo(potential_url):
     """Cover the following variety of URL forms for Github repo referencing.
 
@@ -552,6 +439,7 @@ def parse_gh_repo(potential_url):
     Notably, the Github repo *must* have exactly username and reponame, nothing else and nothing
     more. E.g. `github.com/<username>/<reponame>/<something>` is *not* recognized.
     """
+    # TODO: reduce cyclomatic complexity
     if not potential_url:
         return None
 
@@ -594,6 +482,9 @@ def url2git_repo(url):
             raise ValueError("Unable to parse git repo URL '%s'" % str(url))
         return 'https://{}/{}'.format(url[0], url[1])
 
+    if not url.startswith(('http://', 'https://', 'git://')):
+        return 'http://' + url
+
     return url
 
 
@@ -604,7 +495,8 @@ def case_sensitivity_transform(ecosystem, name):
     :param name: name of ecosystem
     :return: transformed package name base on ecosystem package case sensitivity
     """
-    if ecosystem == 'pypi':
+    if Ecosystem.by_name(StoragePool.get_connected_storage('BayesianPostgres').session,
+                         ecosystem).is_backed_by(EcosystemBackend.pypi):
         return name.lower()
 
     return name
@@ -621,12 +513,26 @@ def get_session_retry(retries=3, backoff_factor=0.2, status_forcelist=(404, 500,
     return session
 
 
-def normalize_package_name(ecosystem, name):
-    """Normalize package name based on ecosystem."""
+def normalize_package_name(ecosystem_backend, name):
+    """Normalize package name.
+
+    :param ecosystem_backend: str, ecosystem backend
+    :param name: str, package name
+
+    :return: str, normalized package name for supported ecosystem backend,
+    the same package name otherwise
+    """
     normalized_name = name
-    if ecosystem == 'pypi':
-        case_sensitivity_transform(ecosystem, name)
-    elif ecosystem == 'go':
+
+    if ecosystem_backend == 'pypi':
+        # https://www.python.org/dev/peps/pep-0503/#normalized-names
+        normalized_name = re.sub(r'[-_.]+', '-', name).lower()
+    elif ecosystem_backend == 'maven':
+        # https://maven.apache.org/pom.html#Maven_Coordinates
+        normalized_name = MavenCoordinates.normalize_str(name)
+    elif ecosystem_backend == 'npm':
+        normalized_name = name
+    elif ecosystem_backend == 'go':
         # go package name is the host+path part of a URL, thus it can be URL encoded
         normalized_name = unquote(name)
     return normalized_name
@@ -654,13 +560,36 @@ def get_response(url, headers=None, sleep_time=2, retry_count=10):
         for _ in range(retry_count):
             response = requests.get(url, headers=headers)
             response.raise_for_status()
+            if response.status_code == 204:
+                # json() below would otherwise fail with JSONDecodeError
+                raise HTTPError('No content')
             response = response.json()
             if response:
                 return response
             time.sleep(sleep_time)
         else:
-            raise TaskError("Number of retries exceeded")
-    except requests.exceptions.HTTPError as err:
+            raise NotABugTaskError("Number of retries exceeded")
+    except HTTPError as err:
         message = "Failed to get results from {url} with {err}".format(url=url, err=err)
         logger.error(message)
-        raise TaskError(message) from err
+        raise NotABugTaskError(message) from err
+
+
+def add_maven_coords_to_set(coordinates_str, gav_set):
+    """Add Maven coordinates to the gav_set set."""
+    artifact_coords = MavenCoordinates.from_str(coordinates_str)
+    gav_set.add("{ecosystem}:{group_id}:{artifact_id}:{version}".format(
+        ecosystem="maven",
+        group_id=artifact_coords.groupId,
+        artifact_id=artifact_coords.artifactId,
+        version=artifact_coords.version
+    ))
+
+
+def peek(iterable):
+    """Peeks the iterable to check if it's empty."""
+    try:
+        first = next(iterable)
+    except StopIteration:
+        return None
+    return first

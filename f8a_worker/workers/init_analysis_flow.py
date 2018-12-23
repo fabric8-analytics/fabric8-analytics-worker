@@ -1,7 +1,12 @@
+"""Initialize package-version level analysis."""
+
 import os
 import datetime
 import shutil
+from selinon import FatalTaskError
+from sqlalchemy.orm.exc import NoResultFound
 from tempfile import mkdtemp
+
 from f8a_worker.object_cache import ObjectCache
 from f8a_worker.base import BaseTask
 from f8a_worker.process import IndianaJones, MavenCoordinates
@@ -10,16 +15,28 @@ from f8a_worker.utils import normalize_package_name
 
 
 class InitAnalysisFlow(BaseTask):
+    """Download source and start whole analysis."""
+
     def execute(self, arguments):
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
+        self.log.debug("Input Arguments: {}".format(arguments))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))
         self._strict_assert(arguments.get('ecosystem'))
 
-        # make sure we store package name based on ecosystem package naming case sensitivity
-        arguments['name'] = normalize_package_name(arguments['ecosystem'], arguments['name'])
-
         db = self.storage.session
-        ecosystem = Ecosystem.by_name(db, arguments['ecosystem'])
+        try:
+            ecosystem = Ecosystem.by_name(db, arguments['ecosystem'])
+        except NoResultFound:
+            raise FatalTaskError('Unknown ecosystem: %r' % arguments['ecosystem'])
+
+        # make sure we store package name in its normalized form
+        arguments['name'] = normalize_package_name(ecosystem.backend.name, arguments['name'])
+
         p = Package.get_or_create(db, ecosystem_id=ecosystem.id, name=arguments['name'])
         v = Version.get_or_create(db, package_id=p.id, identifier=arguments['version'])
 
@@ -34,13 +51,16 @@ class InitAnalysisFlow(BaseTask):
                 arguments.pop('name')
                 arguments.pop('version')
                 arguments.pop('ecosystem')
+                self.log.debug("Arguments returned by initAnalysisFlow without force: {}"
+                               .format(arguments))
                 return arguments
 
         cache_path = mkdtemp(dir=self.configuration.WORKER_DATA_DIR)
         epv_cache = ObjectCache.get_from_dict(arguments)
 
         try:
-            if not epv_cache.has_source_tarball():
+            if not epv_cache.\
+                    has_source_tarball():
                 _, source_tarball_path = IndianaJones.fetch_artifact(
                     ecosystem=ecosystem,
                     artifact=arguments['name'],
@@ -75,10 +95,16 @@ class InitAnalysisFlow(BaseTask):
         db.commit()
 
         arguments['document_id'] = a.id
+
+        # export ecosystem backend so we can use it to easily control flow later
+        arguments['ecosystem_backend'] = ecosystem.backend.name
+
+        self.log.debug("Arguments returned by InitAnalysisFlow are: {}".format(arguments))
         return arguments
 
     @staticmethod
     def _download_source_jar(target, ecosystem, arguments):
+        """Download sources jar."""
         artifact_coords = MavenCoordinates.from_str(arguments['name'])
         artifact_coords.packaging = 'jar'  # source is always jar even for war/aar etc.
         sources_classifiers = ['sources', 'src']
@@ -102,6 +128,7 @@ class InitAnalysisFlow(BaseTask):
 
     @staticmethod
     def _download_pom_xml(target, ecosystem, arguments):
+        """Download pom.xml."""
         artifact_coords = MavenCoordinates.from_str(arguments['name'])
         artifact_coords.packaging = 'pom'
         artifact_coords.classifier = ''  # pom.xml files have no classifiers

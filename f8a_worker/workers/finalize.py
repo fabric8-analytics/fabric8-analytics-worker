@@ -1,3 +1,5 @@
+"""Finalize tasks."""
+
 import datetime
 from sqlalchemy.exc import SQLAlchemyError
 from f8a_worker.utils import json_serial
@@ -9,6 +11,7 @@ class FinalizeTask(BaseTask):
     """Finish EPV analysis flow and store audit."""
 
     def run(self, arguments):
+        """Run task."""
         self._strict_assert(arguments.get('document_id'))
 
         try:
@@ -32,6 +35,7 @@ class PackageFinalizeTask(BaseTask):
     """Finish Package-level flow and store audit."""
 
     def run(self, arguments):
+        """Run task."""
         self._strict_assert(arguments.get('document_id'))
 
         try:

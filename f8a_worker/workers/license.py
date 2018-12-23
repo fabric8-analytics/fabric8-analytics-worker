@@ -1,12 +1,15 @@
 """Uses ScanCode toolkit to detect licences in source code."""
 
 from os import path
+
+from f8a_worker.enums import EcosystemBackend
+from f8a_worker.models import Ecosystem
 from f8a_worker.utils import TimedCommand, username
 from f8a_worker.base import BaseTask
 from f8a_worker.schemas import SchemaRef
 from f8a_worker.object_cache import ObjectCache
 from f8a_worker.defaults import configuration
-from selinon import FatalTaskError
+from selinon import FatalTaskError, StoragePool
 
 
 class LicenseCheckTask(BaseTask):
@@ -17,6 +20,7 @@ class LicenseCheckTask(BaseTask):
 
     @staticmethod
     def process_output(data):
+        """Process output from scancode tool."""
         # not interested in these
         keys_to_remove = ['start_line', 'end_line', 'matched_rule', 'score', 'key']
         # 'files' is a list of file paths along with info about detected licenses.
@@ -45,6 +49,7 @@ class LicenseCheckTask(BaseTask):
 
     @staticmethod
     def run_scancode(scan_path):
+        """Run scancode tool."""
         result_data = {'status': 'unknown',
                        'summary': {},
                        'details': {}}
@@ -82,6 +87,11 @@ class LicenseCheckTask(BaseTask):
         return result_data
 
     def execute(self, arguments):
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))
@@ -92,7 +102,8 @@ class LicenseCheckTask(BaseTask):
         try:
             cache_path = ObjectCache.get_from_dict(arguments).get_sources()
         except Exception:
-            if arguments['ecosystem'] != 'maven':
+            if not Ecosystem.by_name(StoragePool.get_connected_storage('BayesianPostgres').session,
+                                     eco).is_backed_by(EcosystemBackend.maven):
                 self.log.error('Could not get sources for package {e}/{p}/{v}'.
                                format(e=eco, p=pkg, v=ver))
                 raise

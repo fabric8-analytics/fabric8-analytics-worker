@@ -1,9 +1,15 @@
+"""Import to graph task."""
+
 from f8a_worker.base import BaseTask
 import requests
 from os import environ
+from selinon import StoragePool
+from f8a_worker.models import Ecosystem
 
 
 class GraphImporterTask(BaseTask):
+    """Import to graph task."""
+
     _SERVICE_HOST = environ.get("BAYESIAN_DATA_IMPORTER_SERVICE_HOST", "bayesian-data-importer")
     _SERVICE_PORT = environ.get("BAYESIAN_DATA_IMPORTER_SERVICE_PORT", "9192")
     _INGEST_SERVICE_ENDPOINT = "api/v1/ingest_to_graph"
@@ -18,15 +24,23 @@ class GraphImporterTask(BaseTask):
         endpoint=_SELECTIVE_SERVICE_ENDPOINT)
 
     def execute(self, arguments):
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('document_id'))
 
+        rdb = StoragePool.get_connected_storage('BayesianPostgres')
+        ecosystem_backend = Ecosystem.by_name(rdb.session, arguments.get('ecosystem')).backend.name
         package_list = [
             {
-                        'ecosystem': arguments['ecosystem'],
+                        'ecosystem': ecosystem_backend,
                         'name': arguments['name'],
-                        'version': arguments.get('version')
+                        'version': arguments.get('version'),
+                        'source_repo': arguments.get('ecosystem')
             }
         ]
 

@@ -1,0 +1,10 @@
+{
+    "dependencies": [
+      "github.com/Rican7/retry 272ad122d6e5ce1be757544007cf8bcd1c9c9ab0",
+      "github.com/blang/semver b38d23b8782a487059e8fc8773e9a5b228a77cb6"
+    ],
+    "name": null,
+    "version": null,
+    "ecosystem": "go-godeps",
+    "code_repository": null
+}

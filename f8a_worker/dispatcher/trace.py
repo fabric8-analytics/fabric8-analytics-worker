@@ -1,3 +1,5 @@
+"""Function to log report for selected event types."""
+
 import json
 import logging
 from selinon.trace import Trace
@@ -22,6 +24,7 @@ _IGNORED_EVENTS = (
 
 
 def trace_func(event, report):
+    """Log the report for selected event types."""
     if event in _IGNORED_EVENTS:
         return
 

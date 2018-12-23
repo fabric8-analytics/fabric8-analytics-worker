@@ -52,7 +52,8 @@
             }
          },
          "name":"tar",
-         "version":"2.2.1"
+         "version":"2.2.1",
+         "lockfileVersion": 1
       },
       "_from":"tar@latest",
       "_id":"tar@2.2.1",

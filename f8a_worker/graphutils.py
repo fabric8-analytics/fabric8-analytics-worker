@@ -1,16 +1,24 @@
+"""Miscellaneous functions."""
+
 import os
 import logging
 import json
 import datetime
 import semantic_version as sv
+import requests
 from f8a_worker.utils import get_session_retry
 from f8a_worker.defaults import configuration
 
 logger = logging.getLogger(__name__)
 
 GREMLIN_SERVER_URL_REST = "http://{host}:{port}".format(
-    host=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_HOST", "localhost"),
-    port=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_PORT", "8182"))
+    host=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_HOST"),
+    port=os.environ.get("BAYESIAN_GREMLIN_HTTP_SERVICE_PORT"))
+
+DATA_IMPORTER_URL = 'http://{host}:{port}'.format(
+    host=os.environ.get('BAYESIAN_DATA_IMPORTER_SERVICE_HOST'),
+    port=os.environ.get('BAYESIAN_DATA_IMPORTER_SERVICE_PORT')
+)
 
 LICENSE_SCORING_URL_REST = "http://{host}:{port}".format(
     host=os.environ.get("LICENSE_SERVICE_HOST"),
@@ -18,6 +26,7 @@ LICENSE_SCORING_URL_REST = "http://{host}:{port}".format(
 
 
 def get_stack_usage_data_graph(components):
+    """Get average usage for components."""
     components_with_usage_data = 0
     total_dependents_count = 0
     rh_distributed_comp_count = 0
@@ -47,6 +56,7 @@ def get_stack_usage_data_graph(components):
 
 
 def get_stack_popularity_data_graph(components):
+    """Get average stars/forks for components` github details."""
     components_with_stargazers = 0
     components_with_forks = 0
     total_stargazers = 0
@@ -85,7 +95,7 @@ def get_stack_popularity_data_graph(components):
 
 
 def extract_component_details(component):
-    component_summary = []
+    """Extract component details."""
     github_details = {
         "issues": {
             "month": {
@@ -159,6 +169,7 @@ def extract_component_details(component):
 
 
 def aggregate_stack_data(stack, manifest_file, ecosystem, manifest_file_path):
+    """Aggregate stack data."""
     components = []
     licenses = []
     for component in stack.get('result', []):
@@ -184,6 +195,7 @@ def aggregate_stack_data(stack, manifest_file, ecosystem, manifest_file_path):
 
 
 def get_osio_user_count(ecosystem, name, version):
+    """Get OSIO user count."""
     str_gremlin = "g.V().has('pecosystem','{}').has('pname','{}').has('version','{}').".format(
         ecosystem, name, version)
     str_gremlin += "in('uses').count();"
@@ -290,6 +302,7 @@ def create_package_dict(graph_results, alt_dict=None):
 
 
 def select_latest_version(libio, anitya):
+    """Select latest version from libraries.io or anitya."""
     # anitya does not provide latest version anymore, but it's kept for
     # compatibility
     libio_latest_version = libio if libio else '0.0.0'
@@ -303,6 +316,67 @@ def select_latest_version(libio, anitya):
         if sv.SpecItem('<' + anitya_latest_version).match(sv.Version(libio_latest_version)):
             latest_version = anitya
     except ValueError:
-        pass
+        latest_version = ''
 
     return latest_version
+
+
+def update_properties(ecosystem, package, version, properties):
+    """Update properties of given EPV in graph.
+
+    :param ecosystem: str, ecosystem
+    :param package: str, package
+    :param version: str, version
+    :param properties: list, a list of properties to update
+    """
+    url = DATA_IMPORTER_URL + '/api/v1/vertex/{e}/{p}/{v}/properties'.format(
+        e=ecosystem,
+        p=package,
+        v=version
+    )
+
+    payload = {
+        'properties': properties
+    }
+    response = requests.put(url, json=payload)
+    if response.status_code == 404:
+        # This is OK, we just don't have the component in graph yet
+        msg = 'Component {e}/{p}/{v} is not yet in graph'.format(
+            e=ecosystem,
+            p=package,
+            v=version
+        )
+        logger.warning(msg)
+
+    if response.status_code != 200:
+        # This is not OK
+        msg = 'Error updating properties for {e}/{p}/{v}: {status} {content}'.format(
+            e=ecosystem,
+            p=package,
+            v=version,
+            status=response.status_code,
+            content=response.content
+        )
+        logger.error(msg)
+
+
+def create_nodes(epv_list):
+    """Create nodes in graph for all EPVs in the list.
+
+    :param epv_list: list, list of dictionaries where each dict represents single EPV
+    :return: None
+    """
+    if not epv_list:
+        return
+
+    url = DATA_IMPORTER_URL + '/api/v1/create_nodes'
+
+    response = requests.post(url, json=epv_list)
+
+    if response.status_code != 200:
+        msg = '{status} Error creating nodes in graph: {content}'.format(
+            status=response.status_code,
+            content=response.content
+        )
+        logger.error(msg)
+        raise RuntimeError(msg)
