@@ -45,7 +45,6 @@ class TestGocvecollector(object):
 
     def test_execute_noarg(self):
         """Tests for the Golang CVE ingestion worker with no argument."""
-
         results = gocve.execute(self, arguments={})
         assert results is not None
         assert isinstance(results, dict)
@@ -54,7 +53,6 @@ class TestGocvecollector(object):
 
     def test_execute(self):
         """Tests for the Golang CVE ingestion worker with argument."""
-
         results = gocve.execute(self, arguments={'event': 'issue', 'number': '4',
                                                  'package': 'kubeup/archon',
                                                  'repository': 'kubeup/archon'})
@@ -65,7 +63,6 @@ class TestGocvecollector(object):
 
     def test_exception(self):
         """Tests for the Golang CVE ingestion worker with argument and no Proper Git Token."""
-        
         self.configuration.select_random_github_token.return_value = ''
         with pytest.raises(FatalTaskError):
             gocve.execute(self, arguments={'event': 'issue', 'number': '4',
