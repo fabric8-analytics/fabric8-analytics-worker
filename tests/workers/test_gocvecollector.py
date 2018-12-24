@@ -34,37 +34,37 @@ class TestGocvecollector(object):
     _processJSonIssuePR = mock.Mock()
     _processJSonIssuePR.return_value = {
         "githublink": "https://github.com/kubeup/archon",
-        "issue": "how to generate types.generated.go\ncould u support a script for generate *.generated.go in this project?",
+        "issue": "how to generate types.generated.go\ncould u support a script for generate *.generated.go in this "
+                 "project?",
         "number": 4,
         "package": "kubeup/archon"
     }
 
     log = mock.Mock()
+
     def test_execute_noarg(self):
-        """Tests for the Golang CVE ingestion worker with no argument
+        """Tests for the Golang CVE ingestion worker with no argument.
         """
-        results = gocve.execute(self,arguments={})
+        results = gocve.execute(self, arguments={})
         assert results is not None
         assert isinstance(results, dict)
-        assert set(results.keys()) == {'package','details', 'status', 'summary'}
+        assert set(results.keys()) == {'package', 'details', 'status', 'summary'}
         assert results['status'] == 'unknown'
 
     def test_execute(self):
-        """Tests for the Golang CVE ingestion worker with argument
+        """Tests for the Golang CVE ingestion worker with argument.
         """
-        results = gocve.execute(self,arguments={'event': 'issue', 'number': '4', 'package': 'kubeup/archon', 'repository': 'kubeup/archon'})
+        results = gocve.execute(self, arguments={'event': 'issue', 'number': '4', 'package': 'kubeup/archon',
+                                                 'repository': 'kubeup/archon'})
         assert results is not None
         assert isinstance(results, dict)
-        assert set(results.keys()) == {'package','details', 'status', 'summary'}
+        assert set(results.keys()) == {'package', 'details', 'status', 'summary'}
         assert results['status'] == 'success'
 
     def test_exception(self):
-        """Tests for the Golang CVE ingestion worker with argument ( no Proper Git Token )
+        """Tests for the Golang CVE ingestion worker with argument and no Proper Git Token.
         """
         self.configuration.select_random_github_token.return_value = ''
         with pytest.raises(FatalTaskError):
             gocve.execute(self, arguments={'event': 'issue', 'number': '4', 'package': 'kubeup/archon',
                                            'repository': 'kubeup/archon'})
-
-
-
