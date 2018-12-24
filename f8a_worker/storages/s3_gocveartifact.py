@@ -25,14 +25,14 @@ class S3GoCveArtifact(AmazonS3):
 
     def retrieve(self, flow_name, task_name, task_id):
         """Retrieve the results.
+
         Not implemented for this adapter.
+
         """
         return None
 
     def store_error(self, node_args, flow_name, task_name, task_id, exc_info, result=None):
-        """postgres storage not required.
-
-        """
+        """Postgres storage not required."""
         logger.error('{task_name} failed: id={task_id} args={args}'.format(
             task_name=task_name, task_id=task_id, args=node_args)
         )
