@@ -20,6 +20,7 @@ from f8a_worker.workers.unknown_dep_fetcher import UnknownDependencyFetcherTask
 from f8a_worker.workers.user_notifier import UserNotificationTask
 from f8a_worker.workers.repo_dependency_finder import RepoDependencyFinderTask
 from f8a_worker.workers.git_operations import GitOperationTask
+from f8a_worker.workers.golangcvepredictor import GitIssuesPRsTask
 
 # avoid Vulture and Pyflakes warnings
 assert BookkeeperTask is not None
@@ -42,3 +43,4 @@ assert UnknownDependencyFetcherTask is not None
 assert UserNotificationTask is not None
 assert RepoDependencyFinderTask is not None
 assert GitOperationTask is not None
+assert GitIssuesPRsTask is not None
