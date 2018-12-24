@@ -1,11 +1,11 @@
-"""Computes various Issues and PRS for Golang Packages/repositories
+"""Computes various Issues and PRS for Golang Packages repositories.
+
 output: cve format containing PR,Issues for the a golang package/repositories
 sample output:
 [['package', 'githublink', 'Issue/PR Number', 'pull'], ['fabric8-analytics/fabric8-analytics-worker', 'https://github.com/fabric8-analytics/fabric8-analytics-worker', '738', 'initial commit for git operations addition in worker\n\n@yzainee Your image is available in the registry: `docker pull quay.io/openshiftio/rhel-bayesian-cucos-worker:SNAPSHOT-PR-738`]]
 
 """
 
-import os
 from f8a_worker.base import BaseTask
 from f8a_worker.errors import F8AConfigurationException, NotABugTaskError, NotABugFatalTaskError
 from selinon import FatalTaskError
@@ -14,15 +14,16 @@ from requests import HTTPError
 import urllib
 import time
 
+
 class GoCVEpredictorTask(BaseTask):
-    """Computes various Issues and PRS for Golang Packages/repositories"""
+    """Computes various Issues and PRS for Golang Packages/repositories."""
 
     _analysis_name = 'GoCVEpredictorTask'
     GITHUB_API_URL = 'https://api.github.com/repos/'
     GITHUB_URL = 'https://github.com/'
     GITHUB_TOKEN = ''
 
-    def get_response_issues(self,url,headers=None, sleep_time=2, retry_count=10):
+    def get_response_issues(self, url, headers=None, sleep_time=2, retry_count=10):
         """Wrap requests which tries to get response.
 
         :param url: URL where to do the request
@@ -33,7 +34,7 @@ class GoCVEpredictorTask(BaseTask):
         """
         try:
             for _ in range(retry_count):
-                response = requests.get(url,headers=headers, params={'access_token': self.GITHUB_TOKEN})
+                response = requests.get(url, headers=headers, params={'access_token': self.GITHUB_TOKEN})
                 response.raise_for_status()
                 if response.status_code == 204:
                     # json() below would otherwise fail with JSONDecodeError
@@ -46,9 +47,7 @@ class GoCVEpredictorTask(BaseTask):
                 raise NotABugTaskError("Number of retries exceeded")
         except HTTPError as err:
             message = "Failed to get results from {url} with {err}".format(url=url, err=err)
-            print(message)
             raise NotABugTaskError(message) from err
-
 
     def _processJSonIssuePR(self, result, repository, event, package):
 
@@ -67,12 +66,13 @@ class GoCVEpredictorTask(BaseTask):
         finalData[event] = description
         return finalData
 
-
     def execute(self, arguments):
+
         """Task code.
-                       :param arguments: dictionary with task arguments
-                       :return: {}, results
-                       """
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
+
         result_data = {'status': 'unknown',
                        'package': '',
                        'summary': [],
@@ -123,5 +123,3 @@ class GoCVEpredictorTask(BaseTask):
                                              package)
         result_data['details'] = finalData
         return result_data
-
-
