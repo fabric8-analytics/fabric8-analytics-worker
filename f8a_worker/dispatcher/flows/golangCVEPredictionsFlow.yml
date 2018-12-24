@@ -7,4 +7,4 @@
       node_args_from_first: true
       edges:
         - from:
-          to: 'GoCVEpredictorTask'
+          to: 'GitIssuesPRsTask'

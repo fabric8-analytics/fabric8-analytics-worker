@@ -22,12 +22,12 @@
       selective_run_function:
         name: 'selective_run_function'
         import: 'f8a_worker.dispatcher.selective'
-    - name: 'GoCVEpredictorTask'
-      classname: 'GoCVEpredictorTask'
+    - name: 'GitIssuesPRsTask'
+      classname: 'GitIssuesPRsTask'
       import: 'f8a_worker.workers'
       max_retry: 0
-      storage: 'S3GoCveArtifact'
-      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GoCVEpredictorTask_v0'
+      storage: 'S3IssuesPRs'
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_GitIssuesPRsTask_v0'
       selective_run_function:
         name: 'selective_run_function'
         import: 'f8a_worker.dispatcher.selective'
@@ -346,11 +346,11 @@
         versioned: false
         days_to_expire: 31
 
-    - name: 'S3GoCveArtifact'
+    - name: 'S3IssuesPRs'
       import: 'f8a_worker.storages'
       configuration:
         <<: *configurationS3
-        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-gocve-artifacts'
+        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-git-issues-prs'
         region_name: 'us-east-1'
         encryption: false
         versioned: false

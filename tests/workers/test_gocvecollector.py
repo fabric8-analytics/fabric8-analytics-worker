@@ -4,7 +4,7 @@
 
 import pytest
 
-from f8a_worker.workers import GoCVEpredictorTask as gocve
+from f8a_worker.workers import GitIssuesPRsTask as gocve
 from unittest import mock
 from selinon import FatalTaskError
 

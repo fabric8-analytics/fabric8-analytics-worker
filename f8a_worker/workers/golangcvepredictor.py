@@ -14,10 +14,10 @@ import urllib
 import time
 
 
-class GoCVEpredictorTask(BaseTask):
+class GitIssuesPRsTask(BaseTask):
     """Computes various Issues and PRS for Golang Packages/repositories."""
 
-    _analysis_name = 'GoCVEpredictorTask'
+    _analysis_name = 'GitIssuesPRsTask'
     GITHUB_API_URL = 'https://api.github.com/repos/'
     GITHUB_URL = 'https://github.com/'
     GITHUB_TOKEN = ''
@@ -52,19 +52,19 @@ class GoCVEpredictorTask(BaseTask):
     def _processJSonIssuePR(self, result, repository, event, package):
 
         comments = ""
-        finalData = {}
-        finalData['package'] = package
-        finalData['githublink'] = self.GITHUB_URL + repository
-        finalData['number'] = result['number']
+        finaldata = {}
+        finaldata['package'] = package
+        finaldata['githublink'] = self.GITHUB_URL + repository
+        finaldata['number'] = result['number']
 
         # Fetching Comments section
-        comments_Json = self.get_response_issues(result['comments_url'])
-        for entry in comments_Json:
+        comments_json = self.get_response_issues(result['comments_url'])
+        for entry in comments_json:
             comments = comments + '\n' + entry['body']
 
         description = result['title'] + '\n' + result['body'] + comments
-        finalData[event] = description
-        return finalData
+        finaldata[event] = description
+        return finaldata
 
     def execute(self, arguments):
         """Task code.
@@ -107,7 +107,6 @@ class GoCVEpredictorTask(BaseTask):
         # Generating Request URL to fetch Data
         url_path = repository + '/' + event + 's/' + isprnumber
         url_template = urllib.parse.urljoin(self.GITHUB_API_URL, url_path)
-        print(url_template.format())
 
         # Call the GitHub APIs to get the data
         try:
@@ -119,7 +118,7 @@ class GoCVEpredictorTask(BaseTask):
         # Process the received data
         result_data['status'] = 'success'
         result_data['package'] = package
-        finalData = self._processJSonIssuePR(result, repository, event,
+        finaldata = self._processJSonIssuePR(result, repository, event,
                                              package)
-        result_data['details'] = finalData
+        result_data['details'] = finaldata
         return result_data

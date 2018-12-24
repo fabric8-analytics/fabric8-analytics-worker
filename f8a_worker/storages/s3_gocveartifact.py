@@ -6,7 +6,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class S3GoCveArtifact(AmazonS3):
+class S3IssuesPRs(AmazonS3):
     """S3 storage for repository description."""
 
     @staticmethod
