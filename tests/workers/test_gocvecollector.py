@@ -34,7 +34,8 @@ class TestGocvecollector(object):
     _processJSonIssuePR = mock.Mock()
     _processJSonIssuePR.return_value = {
         "githublink": "https://github.com/kubeup/archon",
-        "issue": "how to generate types.generated.go\ncould u support a script for generate *.generated.go in this "
+        "issue": "how to generate types.generated.go\ncould u "
+                 "support a script for generate *.generated.go in this "
                  "project?",
         "number": 4,
         "package": "kubeup/archon"
@@ -54,7 +55,8 @@ class TestGocvecollector(object):
     def test_execute(self):
         """Tests for the Golang CVE ingestion worker with argument.
         """
-        results = gocve.execute(self, arguments={'event': 'issue', 'number': '4', 'package': 'kubeup/archon',
+        results = gocve.execute(self, arguments={'event': 'issue', 'number': '4',
+                                                 'package': 'kubeup/archon',
                                                  'repository': 'kubeup/archon'})
         assert results is not None
         assert isinstance(results, dict)
@@ -66,5 +68,6 @@ class TestGocvecollector(object):
         """
         self.configuration.select_random_github_token.return_value = ''
         with pytest.raises(FatalTaskError):
-            gocve.execute(self, arguments={'event': 'issue', 'number': '4', 'package': 'kubeup/archon',
+            gocve.execute(self, arguments={'event': 'issue', 'number': '4',
+                                           'package': 'kubeup/archon',
                                            'repository': 'kubeup/archon'})

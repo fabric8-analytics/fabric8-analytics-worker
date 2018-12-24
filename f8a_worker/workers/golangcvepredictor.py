@@ -33,7 +33,8 @@ class GoCVEpredictorTask(BaseTask):
         """
         try:
             for _ in range(retry_count):
-                response = requests.get(url, headers=headers, params={'access_token': self.GITHUB_TOKEN})
+                response = requests.get(url, headers=headers,
+                                        params={'access_token': self.GITHUB_TOKEN})
                 response.raise_for_status()
                 if response.status_code == 204:
                     # json() below would otherwise fail with JSONDecodeError

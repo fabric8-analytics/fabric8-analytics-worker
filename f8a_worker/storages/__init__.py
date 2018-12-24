@@ -38,4 +38,3 @@ assert S3UserIntent is not None
 assert S3ManualTagging is not None
 assert S3CrowdSourceTags is not None
 assert S3GoCveArtifact is not None
-

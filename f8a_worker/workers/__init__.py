@@ -44,4 +44,3 @@ assert UserNotificationTask is not None
 assert RepoDependencyFinderTask is not None
 assert GitOperationTask is not None
 assert GoCVEpredictorTask is not None
-
