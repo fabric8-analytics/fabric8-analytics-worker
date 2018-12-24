@@ -2,8 +2,7 @@
 
 output: cve format containing PR,Issues for the a golang package/repositories
 sample output:
-[['package', 'githublink', 'Issue/PR Number', 'pull'], ['fabric8-analytics/fabric8-analytics-worker', 'https://github.com/fabric8-analytics/fabric8-analytics-worker', '738', 'initial commit for git operations addition in worker\n\n@yzainee Your image is available in the registry: `docker pull quay.io/openshiftio/rhel-bayesian-cucos-worker:SNAPSHOT-PR-738`]]
-
+{'status': 'success','package': '','summary': [],'details': {}}
 """
 
 from f8a_worker.base import BaseTask
@@ -67,12 +66,12 @@ class GoCVEpredictorTask(BaseTask):
         return finalData
 
     def execute(self, arguments):
-
         """Task code.
+
         :param arguments: dictionary with task arguments
         :return: {}, results
-        """
 
+        """
         result_data = {'status': 'unknown',
                        'package': '',
                        'summary': [],
