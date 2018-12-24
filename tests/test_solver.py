@@ -9,7 +9,7 @@ from f8a_worker.solver import\
     (get_ecosystem_solver, Dependency,
      PypiDependencyParser, NpmDependencyParser, OSSIndexDependencyParser, NugetDependencyParser,
      GolangDependencyParser, MavenReleasesFetcher, NpmReleasesFetcher, NugetReleasesFetcher,
-     F8aReleasesFetcher, GolangReleasesFetcher)
+     F8aReleasesFetcher, GolangReleasesFetcher, PypiReleasesFetcher)
 
 
 class TestDependencyParser(object):
@@ -62,6 +62,8 @@ class TestDependencyParser(object):
          [Dependency("name", [[('>=', '0.6.0'), ('<', '0.7.0')]])]),
         (["name >0.6", "node < 1"],
          [Dependency("name", [('>=', '0.7.0')]), Dependency("node", [('<', '1.0.0')])]),
+        (["name latest"],
+         [Dependency("name", [('>=', '0.0.0')])]),
     ])
     def test_npm_dependency_parser_parse(self, args, expected):
         """Test NpmDependencyParser.parse()."""
@@ -193,12 +195,16 @@ class TestSolver(object):
         deps = ['django == 1.9.10',
                 'pymongo >=3.0, <3.2.2',
                 'six~=1.7.1',
+                'coverage~=3.5.1b1.dev',
+                'pyasn1>=0.2.2,~=0.2.2',
                 'requests===2.16.2',
                 'click==0.*']
         out = solver.solve(deps)
         assert out == {'django': '1.9.10',
                        'pymongo': '3.2.1',
                        'six': '1.7.3',
+                       'coverage': '3.5.3',
+                       'pyasn1': '0.2.3',
                        'requests': '2.16.2',
                        'click': '0.7'}
 
@@ -251,6 +257,30 @@ class TestFetcher(object):
     def test_maven_fetcher(self, maven, package, expected):
         """Test MavenReleasesFetcher."""
         f = MavenReleasesFetcher(maven)
+        _, releases = f.fetch_releases(package)
+        assert set(releases) >= expected
+
+    @pytest.mark.parametrize('package, expected', [
+        ('serve-static', {'1.7.1', '1.7.2', '1.13.2'}),
+        ('@slicemenice/event-utils', {'1.0.0', '1.0.1', '1.1.0', '1.1.1'}),
+        ('somereallydummynonexistentpackage', set())
+    ])
+    def test_npm_fetcher(self, npm, package, expected):
+        """Test NpmReleasesFetcher."""
+        f = NpmReleasesFetcher(npm)
+        _, releases = f.fetch_releases(package)
+        assert set(releases) >= expected
+
+    @pytest.mark.parametrize('package, expected', [
+        ('anymarkup', {
+            '0.1.0', '0.1.1', '0.2.0', '0.3.0', '0.3.1', '0.4.0',
+            '0.4.1', '0.4.2', '0.4.3', '0.5.0', '0.6.0', '0.7.0'
+        }),
+        ('somereallydummynonexistentpackage', set())
+    ])
+    def test_pypi_fetcher(self, pypi, package, expected):
+        """Test NpmReleasesFetcher."""
+        f = PypiReleasesFetcher(pypi)
         _, releases = f.fetch_releases(package)
         assert set(releases) >= expected
 

@@ -37,6 +37,7 @@ class TestBayesianPostgres:
         self.s.commit()
 
         self.bp = BayesianPostgres(connection_string=configuration.POSTGRES_CONNECTION)
+        assert method
 
     def test_retrieve_normal(self):
         """Test the ability to retrieve data from Postgress."""

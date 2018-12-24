@@ -1,0 +1,19 @@
+hash: 175052bb85fe2b7745e76fb1837f3677a1bc8376c8b1b706211ea33ed443f960
+updated: 2017-11-30T15:30:22.040398503+01:00
+imports:
+- name: github.com/Masterminds/glide
+  version: 67790b3dbede72cfdc54aa53be4706322c9499e0
+  subpackages:
+  - cfg
+  - godep/strip
+  - mirrors
+  - msg
+  - path
+  - util
+- name: github.com/Masterminds/vcs
+  version: 6f1c6d150500e452704e9863f68c2559f58616bf
+- name: github.com/mitchellh/go-homedir
+  version: b8bc1bf767474819792c23f32d8286a45736f1c6
+- name: gopkg.in/yaml.v2
+  version: 287cf08546ab5e7e37d55a84f7ed3fd1db036de5
+testImports: []

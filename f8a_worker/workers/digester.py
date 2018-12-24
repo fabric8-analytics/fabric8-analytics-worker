@@ -18,12 +18,10 @@ sample output:
 """
 
 import os
-from f8a_worker.utils import (
-    get_all_files_from, TimedCommand, skip_git_files, compute_digest
-)
-from f8a_worker.schemas import SchemaRef
 from f8a_worker.base import BaseTask
 from f8a_worker.object_cache import ObjectCache
+from f8a_worker.utils import TimedCommand, compute_digest
+from f8a_worker.schemas import SchemaRef
 
 
 class DigesterTask(BaseTask):
@@ -44,6 +42,7 @@ class DigesterTask(BaseTask):
             raise RuntimeError("can't compute digest of %r" % target) from exc
 
     def compute_digests(self, cache_path, f, artifact=False):
+        """Compute digests of tarball f."""
         f_digests = {
             'sha256': compute_digest(f, 'sha256'),
             'sha1': compute_digest(f, 'sha1'),
@@ -60,6 +59,11 @@ class DigesterTask(BaseTask):
         return f_digests
 
     def execute(self, arguments):
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('version'))

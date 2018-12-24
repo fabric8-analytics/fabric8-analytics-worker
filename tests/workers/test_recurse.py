@@ -1,7 +1,10 @@
+"""Tests for the function f8a_worker.dispatcher.foreach._is_url_dependency."""
+
 from f8a_worker.dispatcher.foreach import _is_url_dependency
 
 
 def test__is_url_dependency():
+    """Test for the function f8a_worker.dispatcher.foreach._is_url_dependency."""
     data = [
         ({"name": "test2", "version": "1.0.0"}, False),
         ({"name": "test3", "version": "http://some.tar/ball.tgz"}, True),
@@ -11,3 +14,4 @@ def test__is_url_dependency():
 
     for d, is_url_dep in data:
         assert _is_url_dependency(d) == is_url_dep
+    # TODO: check how improper input is handled

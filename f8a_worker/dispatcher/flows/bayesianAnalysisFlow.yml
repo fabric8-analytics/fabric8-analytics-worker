@@ -27,21 +27,12 @@
       edges:
         - from:
           to:
-            - 'security_issues'
-          condition:
-            not:
-              name: 'argsFieldEqual'
-              args:
-                key: 'ecosystem'
-                value: 'go'
-        - from:
-          to:
             - 'source_licenses'
           condition:
             not:
               name: 'argsFieldEqual'
               args:
-                key: 'ecosystem'
+                key: 'ecosystem_backend'
                 value: 'nuget'
         - from:
           to:
@@ -49,18 +40,6 @@
         - from:
           to:
             - 'digests'
-        - from: 'metadata'
-          to: 'keywords_tagging'
-          condition:
-            or:
-              - name: 'argsFieldEqual'
-                args:
-                  key: 'ecosystem'
-                  value: 'pypi'
-              - name: 'argsFieldEqual'
-                args:
-                  key: 'ecosystem'
-                  value: 'maven'
         - from: 'metadata'
           to: 'bayesianPriorityPackageFlow'
           condition: &priorityAnalysisCheck
@@ -84,6 +63,11 @@
               value: 'api'
         - from: 'metadata'
           to: 'dependency_snapshot'
+          condition:
+            name: 'argsFieldGreater'
+            args:
+              key: 'recursive_limit'
+              value: 0
         - from: 'dependency_snapshot'
           to: 'bayesianFlow'
           foreach:

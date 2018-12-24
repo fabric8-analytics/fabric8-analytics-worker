@@ -1,0 +1,6 @@
+package: github.com/fabric8-analytics/mercator-go/handlers/golang_handler
+import:
+- package: github.com/Masterminds/glide
+  version: ~0.13.1
+  subpackages:
+  - cfg

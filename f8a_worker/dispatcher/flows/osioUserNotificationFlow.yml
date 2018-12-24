@@ -1,0 +1,11 @@
+---
+  flow-definitions:
+    - name: 'osioUserNotificationFlow'
+      queue: '{DEPLOYMENT_PREFIX}_api_osioUserNotificationFlow_v0'
+      propagate_node_args: true
+      node_args_from_first: true
+      edges:
+        - from:
+          to: 'RepoDependencyFinderTask'
+        - from: 'RepoDependencyFinderTask'
+          to: 'UserNotificationTask'

@@ -1,41 +1,43 @@
 #!/usr/bin/env python
-import os
-import logging
+
+"""Functions to setup Selinon/Celery."""
+
 from celery import Celery
 from celery import __version__ as celery_version
+import logging
+from pathlib import Path
 from selinon import Config, selinon_version
-from selinonlib import selinonlib_version
 from f8a_worker.celery_settings import CelerySettings
 
-YAML_FILES_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'dispatcher')
-
+YAML_FILES_DIR = Path(__file__).resolve().parent / 'dispatcher'
 
 _logger = logging.getLogger(__name__)
 
 
 def get_dispatcher_config_files():
-    nodes_yml = os.path.join(YAML_FILES_DIR, 'nodes.yml')
+    """Get config files (nodes and flows) for dispatcher/selinon."""
+    nodes_yml = YAML_FILES_DIR / 'nodes.yml'
 
-    if not os.path.isfile(nodes_yml):
-        nodes_yml = os.path.join(YAML_FILES_DIR, 'nodes.yaml')
-        if not os.path.isfile(nodes_yml):
+    if not nodes_yml.is_file():
+        nodes_yml = YAML_FILES_DIR / 'nodes.yaml'
+        if not nodes_yml.is_file():
             raise ValueError("nodes.yml not found in config")
 
-    flows_dir = os.path.join(YAML_FILES_DIR, 'flows')
+    flows_dir = YAML_FILES_DIR / 'flows'
 
-    if not os.path.isdir(flows_dir):
+    if not flows_dir.is_dir():
         raise ValueError("Missing directory flows in config")
 
     flows = []
-    for flow in os.listdir(flows_dir):
-        if flow.startswith("."):
+    for flow in flows_dir.iterdir():
+        if flow.name.startswith("."):
             _logger.debug("Ignoring hidden file '%s' in flows directory", flow)
             continue
-        if not flow.endswith(".yml") and not flow.endswith(".yaml"):
+        if not flow.name.endswith((".yml", ".yaml")):
             raise ValueError("Unknown file found in config: '%s'" % flow)
-        flows.append(os.path.join(flows_dir, flow))
+        flows.append(str(flow))
 
-    return nodes_yml, flows
+    return str(nodes_yml), flows
 
 
 def init_selinon(app=None):
@@ -58,7 +60,6 @@ def init_celery(app=None, result_backend=True):
     """
     # Keep this for debugging purposes for now
     _logger.debug(">>> Selinon version is %s" % selinon_version)
-    _logger.debug(">>> Selinonlib version is %s" % selinonlib_version)
     _logger.debug(">>> Celery version is %s" % celery_version)
 
     if not result_backend:

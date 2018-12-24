@@ -1,13 +1,21 @@
+"""Initialize package level analysis."""
+
 import datetime
+from selinon import FatalTaskError
 from sqlalchemy import desc
+from sqlalchemy.orm.exc import NoResultFound
+
 from f8a_worker.base import BaseTask
 from f8a_worker.models import Ecosystem, Package, Upstream, PackageAnalysis
 
 
 class InitPackageFlow(BaseTask):
+    """Initialize package-level analysis."""
+
     _UPDATE_INTERVAL = datetime.timedelta(days=5)
 
     def get_upstream_url(self, arguments):
+        """Get upstream URL from metadata."""
         if 'url' not in arguments:
             if 'metadata' not in self.parent.keys():
                 self.log.info('No upstream URL provided, will reuse URL from previous runs')
@@ -90,14 +98,23 @@ class InitPackageFlow(BaseTask):
         return entry
 
     def execute(self, arguments):
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('name'))
         self._strict_assert(arguments.get('ecosystem'))
 
         # get rid of version if scheduled from the core analyses
         arguments.pop('version', None)
+        arguments.pop('document_id', None)
 
         db = self.storage.session
-        ecosystem = Ecosystem.by_name(db, arguments['ecosystem'])
+        try:
+            ecosystem = Ecosystem.by_name(db, arguments['ecosystem'])
+        except NoResultFound:
+            raise FatalTaskError('Unknown ecosystem: %r' % arguments['ecosystem'])
         package = Package.get_or_create(db, ecosystem_id=ecosystem.id, name=arguments['name'])
         url = self.get_upstream_url(arguments)
         upstream = self.get_upstream_entry(package, url)
@@ -109,7 +126,7 @@ class InitPackageFlow(BaseTask):
             # can potentially schedule two flows of a same type at the same
             # time as there is no lock, but let's say it's OK
             if upstream.updated_at is not None \
-                    and upstream.updated_at - datetime.datetime.utcnow() < self._UPDATE_INTERVAL:
+                    and datetime.datetime.utcnow() - upstream.updated_at < self._UPDATE_INTERVAL:
                 self.log.info('Skipping upstream package check as data are considered as recent - '
                               'last update %s.',
                               upstream.updated_at)

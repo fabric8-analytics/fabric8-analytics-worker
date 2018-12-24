@@ -6,12 +6,12 @@ from selinon import FatalTaskError
 import urllib.parse
 
 from f8a_worker.base import BaseTask
-from f8a_worker.errors import TaskError
+from f8a_worker.errors import TaskError, NotABugTaskError
 from f8a_worker.schemas import SchemaRef
 from f8a_worker.solver import get_ecosystem_solver
 from f8a_worker.utils import json_serial
 
-gh_dep = regexp('@?[\w-]+/[\w-]+')
+gh_dep = regexp(r'@?[\w-]+/[\w-]+')
 
 
 class DependencySnapshotTask(BaseTask):
@@ -66,21 +66,25 @@ class DependencySnapshotTask(BaseTask):
 
         # second, figure out what is the latest upstream version matching the spec and return it
         solver = get_ecosystem_solver(ecosystem)
-        pkgspec = solver.solve([dep])
-
-        if not pkgspec:
-            raise TaskError("invalid dependency: {}".format(dep))
+        try:
+            pkgspec = solver.solve([dep])
+        except ValueError:
+            raise NotABugTaskError("invalid dependency: {}".format(dep))
 
         package, version = pkgspec.popitem()
         if not version:
-            raise TaskError("could not resolve {}".format(dep))
+            raise NotABugTaskError("could not resolve {}".format(dep))
 
         ret['name'] = package
         ret['version'] = version
         return ret
 
     def execute(self, arguments):
-        """Start the task that analyzes dependencies."""
+        """Start the task that analyzes dependencies.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('ecosystem'))
 
         result = {'summary': {'errors': [], 'dependency_counts': {}},
@@ -96,13 +100,13 @@ class DependencySnapshotTask(BaseTask):
         for dep in deps:
             try:
                 resolved = self._resolve_dependency(ecosystem, dep)
-            except TaskError as e:
+            except NotABugTaskError as e:
                 self.log.error(str(e))
                 result['summary']['errors'].append(str(e))
                 result['status'] = 'error'
                 # Is this fatal, i.e. should we 'raise FatalTaskError from e' ?
                 break
-            self.log.info('resolved dependency %s as %s', resolved, dep)
+            self.log.info('resolved dependency %r as %s', dep, resolved)
             resolved_deps.append(resolved)
         # in future, we may want to provide also build/test dependencies, not just runtime
         result['details']['runtime'] = resolved_deps

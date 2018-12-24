@@ -46,6 +46,11 @@ objects:
             value: "${WORKER_INCLUDE_QUEUES}"
           - name: WORKER_RUN_DB_MIGRATIONS
             value: "${WORKER_RUN_DB_MIGRATIONS}"
+          - name: SENTRY_DSN
+            valueFrom:
+              secretKeyRef:
+                name: worker
+                key: sentry_dsn
           - name: POSTGRESQL_DATABASE
             valueFrom:
               secretKeyRef:
@@ -71,6 +76,16 @@ objects:
               secretKeyRef:
                 name: aws
                 key: sqs-access-key-id
+          - name: AUTH_SERVICE_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: bayesian-config
+                key: auth-url
+          - name: NOTIFICATION_SERVICE_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: bayesian-config
+                key: notification-url
           - name: AWS_SQS_SECRET_ACCESS_KEY
             valueFrom:
               secretKeyRef:
@@ -121,6 +136,14 @@ objects:
             value: "6162"
           - name: F8A_SERVER_SERVICE_HOST
             value: bayesian-api
+          - name: GIT_COMMITTER_NAME
+            value: "rhdt-dep-analytics"
+          - name: GIT_COMMITTER_EMAIL
+            value: "rhdt-dep-analytics@example.com"
+          - name: F8_API_BACKBONE_HOST
+            value: "http://f8a-server-backbone:5000"
+          - name: F8A_GEMINI_SERVER_SERVICE_HOST
+            value: "http://f8a-gemini-server:5000"
           - name: AWS_S3_BUCKET_NAME
             valueFrom:
               configMapKeyRef:
@@ -129,6 +152,21 @@ objects:
           # this won't get used if running with SQS
           - name: RABBITMQ_SERVICE_SERVICE_HOST
             value: bayesian-broker
+          - name: GEMINI_SA_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: gemini-server
+                key: gemini-sa-client-id
+          - name: GEMINI_SA_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: gemini-server
+                key: gemini-sa-client-secret
+          - name: F8A_AUTH_SERVICE_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: bayesian-config
+                key: auth-url
           image: "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${IMAGE_TAG}"
           name: bayesian-worker
           readinessProbe:
@@ -198,13 +236,13 @@ parameters:
   displayName: Docker registry
   required: true
   name: DOCKER_REGISTRY
-  value: "registry.devshift.net"
+  value: "quay.io"
 
 - description: Docker image to use
   displayName: Docker image
   required: true
   name: DOCKER_IMAGE
-  value: "bayesian/cucos-worker"
+  value: "openshiftio/bayesian-cucos-worker"
 
 - description: Image tag
   displayName: Image tag
@@ -242,3 +280,8 @@ parameters:
   name: MEMORY_LIMIT
   value: "1536Mi"
 
+- description: Sentry DSN
+  displayName: Sentry DSN
+  required: false
+  name: SENTRY_DSN
+  value: ""

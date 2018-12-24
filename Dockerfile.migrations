@@ -1,4 +1,4 @@
-FROM  registry.devshift.net/bayesian/cucos-worker
+FROM  quay.io/openshiftio/bayesian-cucos-worker
 
 RUN pip3 install alembic
 

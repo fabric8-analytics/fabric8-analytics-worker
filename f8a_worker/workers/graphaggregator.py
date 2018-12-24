@@ -1,17 +1,21 @@
+"""Class to run mercator on stack analysis manifests."""
+
 import os
 import json
 from selinon import FatalTaskError
 from sqlalchemy.exc import SQLAlchemyError
+from tempfile import TemporaryDirectory
 
 from f8a_worker.base import BaseTask
 from f8a_worker.manifests import get_manifest_descriptor_by_filename
 from f8a_worker.models import StackAnalysisRequest
 from f8a_worker.solver import get_ecosystem_solver
-from f8a_worker.utils import tempdir
 from f8a_worker.workers.mercator import MercatorTask
 
 
 class GraphAggregatorTask(BaseTask):
+    """Run mercator on stack analysis manifests."""
+
     _analysis_name = 'graph_aggregator'
     schema_ref = None
 
@@ -28,6 +32,12 @@ class GraphAggregatorTask(BaseTask):
         return [{"package": k, "version": v} for k, v in versions.items()]
 
     def execute(self, arguments):
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
+        # TODO: reduce cyclomatic complexity
         self._strict_assert(arguments.get('data'))
         self._strict_assert(arguments.get('external_request_id'))
 
@@ -49,7 +59,7 @@ class GraphAggregatorTask(BaseTask):
         # If we receive a manifest file we need to save it first
         result = []
         for manifest in manifests:
-            with tempdir() as temp_path:
+            with TemporaryDirectory() as temp_path:
                 with open(os.path.join(temp_path, manifest['filename']), 'a+') as fd:
                     fd.write(manifest['content'])
 

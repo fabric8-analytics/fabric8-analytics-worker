@@ -3,7 +3,10 @@
 from operator import itemgetter
 from urllib.parse import quote
 
+from selinon import StoragePool
+
 from f8a_worker.base import BaseTask
+from f8a_worker.models import Ecosystem
 from f8a_worker.utils import get_response
 from f8a_worker.schemas import SchemaRef
 
@@ -20,16 +23,23 @@ class LibrariesIoTask(BaseTask):
         return sorted(versions, key=itemgetter('published_at'))[-count:]
 
     def execute(self, arguments):
-        """Task entrypoint."""
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
+
+        rdb_session = StoragePool.get_connected_storage('BayesianPostgres').session
 
         name = arguments['name']
         ecosystem = arguments['ecosystem']
         if ecosystem == 'go':
             name = quote(name, safe='')
 
-        project_url = self.configuration.libraries_io_project_url(ecosystem, name)
+        project_url = self.configuration.libraries_io_project_url(
+            Ecosystem.by_name(rdb_session, ecosystem), name)
         project = get_response(project_url)
         versions = project['versions']
         details = {'dependent_repositories': {'count': project['dependent_repos_count']},

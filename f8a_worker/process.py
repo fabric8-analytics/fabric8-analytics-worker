@@ -1,20 +1,19 @@
 """Core classes for working with git, archives and downloading of artifacts."""
+import glob
+import logging
+from pathlib import Path
+from urllib.parse import urljoin, urlparse
 
 import os
-import glob
-import shutil
-import logging
 import requests
-
-from git2json.parser import parse_commits
+import shutil
 from git2json import run_git_log
-
+from git2json.parser import parse_commits
 from re import compile as re_compile
-from urllib.parse import urljoin, urlparse
 
 from f8a_worker.defaults import configuration
 from f8a_worker.enums import EcosystemBackend
-from f8a_worker.errors import TaskError
+from f8a_worker.errors import TaskError, NotABugTaskError
 from f8a_worker.utils import cwd, TimedCommand, compute_digest, MavenCoordinates, url2git_repo
 
 logger = logging.getLogger(__name__)
@@ -42,20 +41,28 @@ class Git(object):
                                          "/usr/bin/true"])
 
     @classmethod
-    def clone(cls, url, path, depth=None, branch=None, single_branch=False):
+    def clone(cls, url, path, timeout=300, depth=None, branch=None, single_branch=False):
         """Clone repository provided as url to specific path.
 
         :param url: str
         :param path: str
+        :param timeout: int
         :param depth: str
         :param branch: str
+        :param single_branch: bool, only checkout single branch
         :return: instance of Git()
         """
         orig_url = url
-        cls.config()
         # git clone doesn't understand urls starting with: git+ssh, git+http, git+https
         url = url2git_repo(url)
-        cmd = ["git", "clone", url, path]
+
+        orig_path = path
+        path = Path(path)
+        mode = 0
+        if path.is_dir():
+            mode = path.stat().st_mode
+
+        cmd = ["git", "clone", url, orig_path]
         if depth is not None:
             cmd.extend(["--depth", depth])
         if branch is not None:
@@ -63,10 +70,18 @@ class Git(object):
         if single_branch:
             cmd.extend(["--single-branch"])
         try:
-            TimedCommand.get_command_output(cmd, graceful=False)
+            cls.config()
+            TimedCommand.get_command_output(cmd, graceful=False, timeout=timeout)
         except TaskError as exc:
+            if not path.is_dir() and mode:
+                # 'git clone repo dir/' deletes (no way to turn this off) dir/ if cloning fails.
+                # This might confuse caller of this method, so we recreate the dir on error here.
+                try:
+                    path.mkdir(mode)
+                except OSError:
+                    logger.error("Unable to re-create dir: %s", str(path))
             raise TaskError("Unable to clone: %s" % orig_url) from exc
-        return cls(path=path)
+        return cls(path=orig_path)
 
     @classmethod
     def create_git(cls, path):
@@ -129,24 +144,25 @@ class Git(object):
         #  directions that would break adding (e.g. Flask 0.10 contains .git with gitpath
         #  pointing to Mitsuhiko's home dir)
         TimedCommand.get_command_output(['find', self.repo_path, '-mindepth', '2', '-name', '.git',
-                                        '-exec', 'rm', '-rf', '{}', ';'])
+                                         '-exec', 'rm', '-rf', '{}', ';'])
         # add everything
         self.add(self.repo_path)
         self.commit(message=message)
 
-    def archive(self, basename, sub_path=None):
+    def archive(self, basename, basedir=None, sub_path=None, format="tar.gz"):
         """Create an archive; simply calls `git archive`.
 
         :param basename: str, name of the resulting archive, without file extension (suffix)
+        :param basedir: str, path to a directory where to store the resulting archive
         :param sub_path: str, only add files found under this path to the archive;
                           default: add all files from the repository (.git/ is always excluded)
+        :param format: str, format of the resulting archive, default: 'tar.gz'
         :return: str, filename
         """
-        suffix = "tar.gz"
-        filename = basename + "." + suffix
+        filename = os.path.join(basedir or "", basename + "." + format)
         with cwd(self.repo_path):
             cmd = ["git", "archive",
-                   "--format={}".format(suffix),
+                   "--format={}".format(format),
                    "--output={}".format(filename),
                    "HEAD"]
             if sub_path:
@@ -187,7 +203,7 @@ class Git(object):
 class Archive(object):
     """Extract different kind of archives."""
 
-    TarMatcher = re_compile('\.tar\..{1,3}$')
+    TarMatcher = re_compile(r'\.tar\..{1,3}$')
 
     @staticmethod
     def extract(target, dest):
@@ -228,7 +244,13 @@ class Archive(object):
     @staticmethod
     def extract_tar(target, dest):
         """Extract target tarball into dest using system 'tar' command."""
-        TimedCommand.get_command_output(['tar', 'xf', target, '-C', dest])
+        TimedCommand.get_command_output(['tar', "--delay-directory-restore", '-xf', target, '-C',
+                                         dest])
+
+    @staticmethod
+    def fix_permissions(target):
+        """Fix extracted folder permissions, so it will be readable for user."""
+        TimedCommand.get_command_output(['chmod', "-R", "u+rwx", target])
 
     @staticmethod
     def extract_gem(target, dest):
@@ -283,7 +305,7 @@ class IndianaJones(object):
                                                    graceful=False).pop()
 
     @staticmethod
-    def fetch_maven_artifact(name, version, target_dir):
+    def fetch_maven_artifact(ecosystem, name, version, target_dir):
         """Fetch maven artifact from maven.org."""
         git = Git.create_git(target_dir)
         artifact_coords = MavenCoordinates.from_str(name)
@@ -291,15 +313,14 @@ class IndianaJones(object):
             raise ValueError("No version provided for '%s'" % artifact_coords.to_str())
         artifact_coords.version = version
         if not artifact_coords.is_valid():
-            raise ValueError("Invalid Maven coordinates: {a}".format(
+            raise NotABugTaskError("Invalid Maven coordinates: {a}".format(
                 a=artifact_coords.to_str()))
 
-        # lxml can't handle HTTPS URLs
-        maven_url = "http://repo1.maven.org/maven2/"
+        maven_url = ecosystem.fetch_url
         artifact_url = urljoin(maven_url, artifact_coords.to_repo_url())
         local_filepath = IndianaJones.download_file(artifact_url, target_dir)
         if local_filepath is None:
-            raise RuntimeError("Unable to download: %s" % artifact_url)
+            raise NotABugTaskError("Unable to download: %s" % artifact_url)
 
         local_filename = os.path.split(local_filepath)[1]
         artifact_path = os.path.join(target_dir, local_filename)
@@ -317,13 +338,15 @@ class IndianaJones(object):
         return digest, artifact_path
 
     @staticmethod
-    def fetch_npm_artifact(name, version, target_dir):
+    def fetch_npm_artifact(ecosystem, name, version, target_dir):
         """Fetch npm artifact using system 'npm' tool."""
         git = Git.create_git(target_dir)
 
+        npm_cmd = ['npm', '--registry', ecosystem.fetch_url]
+
         # $ npm config get cache
         # /root/.npm
-        cache_path = TimedCommand.get_command_output(['npm', 'config', 'get', 'cache'],
+        cache_path = TimedCommand.get_command_output(npm_cmd + ['config', 'get', 'cache'],
                                                      graceful=False).pop()
 
         # add package to cache:
@@ -339,13 +362,26 @@ class IndianaJones(object):
         #      └── package.tgz
         # 3 directories, 6 files
         name_ver = name
-        if version:
-            name_ver = "{}@{}".format(name, version)
+
+        try:
+            # importing here to avoid circular dependency
+            from f8a_worker.solver import NpmReleasesFetcher
+
+            version_list = NpmReleasesFetcher(ecosystem).fetch_releases(name_ver)[1]
+            if version not in version_list:
+                raise NotABugTaskError("Provided version is not supported '%s'" % name)
+            else:
+                name_ver = "{}@{}".format(name, version)
+        except ValueError as e:
+            raise NotABugTaskError(
+                'No versions for package NPM package {p} ({e})'.format(p=name, e=str(e))
+            )
+
         # make sure the artifact is not in the cache yet
-        TimedCommand.get_command_output(['npm', 'cache', 'clean', name], graceful=False)
+        TimedCommand.get_command_output(npm_cmd + ['cache', 'clean', name], graceful=False)
         logger.info("downloading npm module %s", name_ver)
-        npm_command = ['npm', 'cache', 'add', name_ver]
-        TimedCommand.get_command_output(npm_command, graceful=False)
+        cmd = npm_cmd + ['cache', 'add', name_ver]
+        TimedCommand.get_command_output(cmd, graceful=False)
 
         # copy tarball to workpath
         tarball_name = "package.tgz"
@@ -362,6 +398,7 @@ class IndianaJones(object):
         # digest was different then of a tarball downloaded directly from registry.npmjs.org.
         digest = compute_digest(artifact_path)
         Archive.extract(artifact_path, target_dir)
+        Archive.fix_permissions(os.path.join(cache_abs_path, 'package'))
 
         # copy package/package.json over the extracted one,
         # because it contains (since npm >= 2.x.x) more information.
@@ -375,16 +412,16 @@ class IndianaJones(object):
         return digest, artifact_path
 
     @staticmethod
-    def fetch_nuget_artifact(name, version, target_dir):
+    def fetch_nuget_artifact(ecosystem, name, version, target_dir):
         """Fetch nuget artifact from nuget.org."""
         git = Git.create_git(target_dir)
-        nuget_url = 'https://api.nuget.org/packages/'
+        nuget_url = ecosystem.fetch_url
         file_url = '{url}{name}.{version}.nupkg'.format(url=nuget_url,
                                                         name=name.lower(),
                                                         version=version.lower())
         local_filename = IndianaJones.download_file(file_url, target_dir)
         if local_filename is None:
-            raise RuntimeError("Unable to download: %s" % file_url)
+            raise NotABugTaskError("Unable to download: %s" % file_url)
         artifact_path = os.path.join(target_dir, local_filename)
         digest = compute_digest(artifact_path)
         Archive.extract(artifact_path, target_dir)
@@ -392,19 +429,28 @@ class IndianaJones(object):
         return digest, artifact_path
 
     @staticmethod
-    def fetch_pypi_artifact(name, version, target_dir):
+    def fetch_pypi_artifact(ecosystem, name, version, target_dir):
         """Fetch Pypi artifact."""
         git = Git.create_git(target_dir)
+        pypi_url = ecosystem.fetch_url
+
         # NOTE: we can't download Python packages via pip, because it runs setup.py
         #  even with `pip download`. Therefore we could always get syntax errors
         #  because of older/newer syntax.
-        res = requests.get('https://pypi.python.org/pypi/{n}/json'.format(n=name))
-        res.raise_for_status()
+        res = requests.get(urljoin(pypi_url, '{n}/json'.format(n=name)))
+
+        if res.status_code != 200:
+            raise NotABugTaskError(
+                "Unable to fetch information about {n} from PyPI (status code={s})".format(
+                    n=name, s=res.status_code
+                )
+            )
+
         if not version:
             version = res.json()['info']['version']
         release_files = res.json().get('releases', {}).get(version, [])
         if not release_files:
-            raise RuntimeError("No release files for version %s" % version)
+            raise NotABugTaskError("No release files for version %s" % version)
 
         # sort releases by order in which we'd like to download:
         #  1) sdist
@@ -418,7 +464,7 @@ class IndianaJones(object):
         file_url = release_files[0]['url']
         local_filename = IndianaJones.download_file(file_url, target_dir)
         if local_filename is None:
-            raise RuntimeError("Unable to download: %s" % file_url)
+            raise NotABugTaskError("Unable to download: %s" % file_url)
         artifact_path = os.path.join(target_dir, local_filename)
         digest = compute_digest(artifact_path)
         Archive.extract(artifact_path, target_dir)
@@ -426,7 +472,7 @@ class IndianaJones(object):
         return digest, artifact_path
 
     @staticmethod
-    def fetch_rubygems_artifact(name, version, target_dir):
+    def fetch_rubygems_artifact(ecosystem, name, version, target_dir):
         """Fetch rubygems artifact using 'gem fetch' command."""
         git = Git.create_git(target_dir)
         logger.info("downloading rubygems package %s-%s", name, version)
@@ -452,14 +498,20 @@ class IndianaJones(object):
         return digest, artifact_path
 
     @staticmethod
-    def fetch_scm_artifact(name, version, target_dir):
+    def fetch_go_artifact(name, version, target_dir):
         """Fetch go artifact using 'go get' command."""
         env = dict(os.environ)
         env['GOPATH'] = target_dir
-        TimedCommand.get_command_output(['go', 'get', '-d', name],
-                                        timeout=300,
-                                        env=env,
-                                        graceful=True)
+        Git.config()
+        try:
+            TimedCommand.get_command_output(
+                ['go', 'get', '-d', name],
+                timeout=300,
+                env=env,
+                graceful=False
+            )
+        except TaskError:
+            raise NotABugTaskError('Unable to go-get {n}'.format(n=name))
         package_dir = os.path.join(target_dir, 'src', name)
         with cwd(package_dir):
             git = Git(package_dir)
@@ -483,18 +535,29 @@ class IndianaJones(object):
         artifact_path = None
 
         if ecosystem.is_backed_by(EcosystemBackend.pypi):
-            digest, artifact_path = IndianaJones.fetch_pypi_artifact(artifact, version, target_dir)
+            digest, artifact_path = IndianaJones.fetch_pypi_artifact(
+                ecosystem, artifact, version, target_dir
+            )
         elif ecosystem.is_backed_by(EcosystemBackend.npm):
-            digest, artifact_path = IndianaJones.fetch_npm_artifact(artifact, version, target_dir)
+            digest, artifact_path = IndianaJones.fetch_npm_artifact(
+                ecosystem, artifact, version, target_dir
+            )
         elif ecosystem.is_backed_by(EcosystemBackend.rubygems):
-            digest, artifact_path = IndianaJones.fetch_rubygems_artifact(artifact, version,
-                                                                         target_dir)
+            digest, artifact_path = IndianaJones.fetch_rubygems_artifact(
+                ecosystem, artifact, version, target_dir
+            )
         elif ecosystem.is_backed_by(EcosystemBackend.maven):
-            digest, artifact_path = IndianaJones.fetch_maven_artifact(artifact, version, target_dir)
+            digest, artifact_path = IndianaJones.fetch_maven_artifact(
+                ecosystem, artifact, version, target_dir
+            )
         elif ecosystem.is_backed_by(EcosystemBackend.nuget):
-            digest, artifact_path = IndianaJones.fetch_nuget_artifact(artifact, version, target_dir)
-        elif ecosystem.is_backed_by(EcosystemBackend.scm):
-            digest, artifact_path = IndianaJones.fetch_scm_artifact(artifact, version, target_dir)
+            digest, artifact_path = IndianaJones.fetch_nuget_artifact(
+                ecosystem, artifact, version, target_dir
+            )
+        elif ecosystem.is_backed_by(EcosystemBackend.go):
+            digest, artifact_path = IndianaJones.fetch_go_artifact(
+                artifact, version, target_dir
+            )
         elif parsed:
             if parsed[0] == 'git' or parsed[2].endswith('.git'):
                 git = Git.clone(artifact, target_dir)

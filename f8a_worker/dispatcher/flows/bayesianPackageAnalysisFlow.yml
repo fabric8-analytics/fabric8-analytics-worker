@@ -3,6 +3,7 @@
     - &bayesianPackageAnalysisFlow
       name: 'bayesianPackageAnalysisFlow'
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_bayesianPackageAnalysisFlow_v0'
+      propagate_node_args: true
       sampling:
         name: 'constant'
         args:
@@ -17,22 +18,10 @@
         - from:
           to: 'GitReadmeCollectorTask'
           condition:
-            <<: *isGhRepoCheck
+            name: 'alwaysFalse'
         - from:
           to: 'RepositoryDescCollectorTask'
           condition: &repositoryDescCollectorCheck
-            or:
-              - name: 'argsFieldEqual'
-                args:
-                  key: 'ecosystem'
-                  value: 'pypi'
-              - name: 'argsFieldEqual'
-                args:
-                  key: 'ecosystem'
-                  value: 'npm'
-        - from:
-          to: 'git_stats'
-          condition:
-            <<: *isGhRepoCheck
+            name: 'alwaysFalse'
         - from:
           to: 'libraries_io'

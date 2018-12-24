@@ -1,3 +1,5 @@
+"""Setup Celery."""
+
 import os
 import logging
 from urllib.parse import quote
@@ -34,6 +36,8 @@ def _use_sqs():
 
 
 class CelerySettings(object):
+    """Setup Celery."""
+
     _DEFAULT_SQS_REGION = 'us-east-1'
     _DEFAULT_RESULT_BACKEND = 'db+' + configuration.POSTGRES_CONNECTION
 
@@ -72,6 +76,7 @@ class CelerySettings(object):
         accept_content = ['json']
 
     def __init__(self):
+        """Not implemented."""
         raise NotImplementedError("Unable to instantiate")
 
     @classmethod
@@ -111,11 +116,6 @@ def configure_logging(**kwargs):
             'level': 'INFO',
         },
         'selinon': {
-            'handlers': ['verbose'],
-            'level': 'DEBUG',
-            'propagate': False
-        },
-        'selinonlib': {
             'handlers': ['verbose'],
             'level': 'DEBUG',
             'propagate': False

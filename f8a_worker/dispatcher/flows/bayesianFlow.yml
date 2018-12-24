@@ -62,6 +62,7 @@
     - <<: *bayesianFlow
       name: 'bayesianApiFlow'
       queue: '{DEPLOYMENT_PREFIX}_api_bayesianFlow_v0'
+      nowait: []
 
     - <<: *bayesianFlow
       name: 'bayesianPriorityFlow'

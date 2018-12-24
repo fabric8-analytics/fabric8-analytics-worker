@@ -5,11 +5,11 @@ set -xe
 THISDIR=$(dirname "$0")
 
 TIMESTAMP="$(date +%F-%H-%M-%S)"
-IMAGE_NAME="registry.devshift.net/bayesian/cucos-worker"
+IMAGE_NAME="quay.io/openshiftio/bayesian-cucos-worker"
 MIGRATIONS_IMAGE_NAME="coreapi-worker-migrations"
 POSTGRES_CONTAINER_NAME="coreapi-migrations-postgres-${TIMESTAMP}"
 MIGRATIONS_CONTAINER_NAME="coreapi-worker-migrations-${TIMESTAMP}"
-POSTGRES_IMAGE_NAME="registry.centos.org/sclo/postgresql-94-centos7:latest"
+POSTGRES_IMAGE_NAME="registry.centos.org/centos/postgresql-94-centos7:latest"
 
 docker build --pull --tag=$IMAGE_NAME -f "${THISDIR}/../Dockerfile" "${THISDIR}/.."
 docker build -f "${THISDIR}/../Dockerfile.migrations" --tag=$MIGRATIONS_IMAGE_NAME "${THISDIR}/.."
@@ -27,7 +27,7 @@ trap gc EXIT SIGINT
 
 docker run -d --env-file=tests/postgres.env --name "${POSTGRES_CONTAINER_NAME}" ${POSTGRES_IMAGE_NAME}
 NETWORK=$(docker inspect --format '{{.NetworkSettings.Networks}}' "${POSTGRES_CONTAINER_NAME}" | awk -F '[:[]' '{print $2}')
-sleep 10
+sleep 30
 
 # do crazy magic with quotes so that we can pass the command to the migrations image correctly
 cmd="alembic upgrade head && alembic"

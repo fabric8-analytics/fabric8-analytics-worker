@@ -1,4 +1,5 @@
 """JSL schema for OSCrypto catcher worker."""
+
 import jsl
 
 from f8a_worker.schemas import JSLSchemaBaseWithRelease
@@ -11,7 +12,11 @@ ROLE_TITLE = jsl.roles.Var({
 
 
 class CryptoAlgoDetail(jsl.Document):
+    """JSL schema for cryptoalgo_detail."""
+
     class Options(object):
+        """JSL schema for cryptoalgo_detail."""
+
         definition_id = "cryptoalgo_detail"
 
     crypto = jsl.StringField(required=True)
@@ -24,7 +29,11 @@ class CryptoAlgoDetail(jsl.Document):
 
 
 class CryptoAlgorithmRecord(jsl.Document):
+    """JSL schema for cryptoalgo_record."""
+
     class Options(object):
+        """JSL schema for cryptoalgo_record."""
+
         definition_id = "cryptoalgo_record"
 
     count = jsl.NumberField(required=True)
@@ -32,7 +41,11 @@ class CryptoAlgorithmRecord(jsl.Document):
 
 
 class CryptoCheckSummary(jsl.Document):
+    """JSL schema for OSCrypto catcher worker results summary."""
+
     class Options(object):
+        """JSL schema for OSCrypto catcher worker results summary."""
+
         definition_id = "cryptocheck_summary"
 
     content = jsl.ArrayField(
@@ -46,7 +59,11 @@ class CryptoCheckSummary(jsl.Document):
 
 
 class CryptoCheckResult(JSLSchemaBaseWithRelease):
+    """JSL schema for OSCrypto catcher worker results."""
+
     class Options(object):
+        """JSL schema for OSCrypto catcher worker results."""
+
         definition_id = "crypto_algorithms_result"
         description = "Result of OSCryptoChecker worker"
 

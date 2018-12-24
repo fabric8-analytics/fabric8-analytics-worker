@@ -1,0 +1,53 @@
+{  
+   "dependencies":[  
+      {  
+         "artifactId":" 'libs', include",
+         "groupId":"fileTree(dir",
+         "version":" ['*.jar'])"
+      },
+      {  
+         "artifactId":"kotlin-stdlib-jre7",
+         "groupId":"org.jetbrains.kotlin",
+         "version":"$kotlin_version\""
+      },
+      {  
+         "artifactId":"appcompat-v7",
+         "groupId":"com.android.support",
+         "version":"26.1.0"
+      },
+      {  
+         "artifactId":"constraint-layout",
+         "groupId":"com.android.support.constraint",
+         "version":"1.0.2"
+      },
+      {  
+         "artifactId":"design",
+         "groupId":"com.android.support",
+         "version":"26.1.0"
+      },
+      {  
+         "artifactId":"junit",
+         "groupId":"junit",
+         "version":"4.12"
+      },
+      {  
+         "artifactId":"runner",
+         "groupId":"com.android.support.test",
+         "version":"1.0.1"
+      },
+      {  
+         "artifactId":"espresso-core",
+         "groupId":"com.android.support.test.espresso",
+         "version":"3.0.1"
+      },
+      {  
+         "artifactId":"project(':expandablecardview')",
+         "groupId":"",
+         "version":""
+      }
+   ],
+   "devel_dependencies":[  
+
+   ],
+   "ecosystem":"gradlebuild"
+}
