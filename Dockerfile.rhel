@@ -5,7 +5,7 @@ ENV LANG=en_US.UTF-8 \
     WORKER_DATA_DIR='/var/lib/f8a_worker/worker_data' \
     # home directory
     HOME='/workdir' \
-    F8A_UTILS_VERSION=72cb7f4 \
+    F8A_UTILS_VERSION=33df0cc \
     # place for alembic migrations
     ALEMBIC_DIR='/alembic'
 
