@@ -23,7 +23,7 @@ class GitOperationTask(BaseTask):
     @staticmethod
     def generate_files_for_maven(path, manifests):
         """Generate files for maven ecosystem."""
-        os.system("cd " + path + "; mvn install; "
+        os.system("cd " + path + "; "
                   "mvn org.apache.maven.plugins:maven-dependency-plugin:3.0.2:tree"
                   " -DoutputFile=" + path + "/tmp/dependencies.txt "
                   "-DoutputType=dot "
