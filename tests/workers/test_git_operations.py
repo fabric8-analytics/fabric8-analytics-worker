@@ -1,7 +1,6 @@
 """Test git_operations."""
 
 from f8a_worker.workers import git_operations as go
-import json
 
 npmlist = {
     "name": "nice-package",
