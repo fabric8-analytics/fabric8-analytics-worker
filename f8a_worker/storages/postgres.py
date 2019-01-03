@@ -7,7 +7,7 @@ import hashlib
 import json
 from itertools import chain
 
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from selinon import StoragePool
@@ -253,6 +253,10 @@ class BayesianPostgres(PostgresBase):
         except SQLAlchemyError:
             PostgresBase.session.rollback()
             raise
+        except IntegrityError:
+            # This is OK, the same request has been processed twice
+            PostgresBase.session.rollback()
+            pass
 
         return True
 
