@@ -3,7 +3,7 @@
 Fabric8-Analytics Core library and services
 -------------------------------------------
 
-This library provides basic infrastructure for development of services and concrete implemementation of services. 
+This library provides basic infrastructure for development of services and concrete implementation of services. 
 
 The following libraries are provided:
 
@@ -154,7 +154,7 @@ Please note that only semantical problems are reported.
 
 #### Check for scripts written in BASH
 
-The script named `check-bashscripts.sh` can be used to check all BASH scripts (in fact: all files with the `.sh` extension) for various possible issues, incompatibilies, and caveats. This script can be run w/o any arguments:
+The script named `check-bashscripts.sh` can be used to check all BASH scripts (in fact: all files with the `.sh` extension) for various possible issues, incompatibilities, and caveats. This script can be run w/o any arguments:
 
 ```
 ./check-bashscripts.sh
