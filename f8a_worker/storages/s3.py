@@ -34,8 +34,8 @@ class AmazonS3(DataStorage):
         self._s3 = None
 
         self.region_name = configuration.AWS_S3_REGION or region_name or self._DEFAULT_REGION_NAME
-        self.bucket_name = bucket_name or self._DEFAULT_BUCKET_NAME
-        self.bucket_name = self.bucket_name.format(**os.environ)
+        bucket_name = bucket_name or self._DEFAULT_BUCKET_NAME
+        self.bucket_name = bucket_name.format(**os.environ)
         self._aws_access_key_id = configuration.AWS_S3_ACCESS_KEY_ID or aws_access_key_id
         self._aws_secret_access_key = \
             configuration.AWS_S3_SECRET_ACCESS_KEY or aws_secret_access_key
