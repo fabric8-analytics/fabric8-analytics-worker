@@ -49,13 +49,14 @@ class GitIssuesPRsTask(BaseTask):
             message = "Failed to get results from {url} with {err}".format(url=url, err=err)
             raise NotABugTaskError(message) from err
 
-    def _processJSonIssuePR(self, result, repository, event, package):
+    def _processJSonIssuePR(self, result, repository, event, package, URL):
 
         comments = ""
         finaldata = {}
+        finaldata['source'] = 'github'
         finaldata['package'] = package
-        finaldata['githublink'] = self.GITHUB_URL + repository
-        finaldata['number'] = result['number']
+        finaldata['link'] = URL
+        finaldata['type'] = event
 
         # Fetching Comments section
         comments_json = self.get_response_issues(result['comments_url'])
@@ -63,7 +64,7 @@ class GitIssuesPRsTask(BaseTask):
             comments = comments + '\n' + entry['body']
 
         description = result['title'] + '\n' + result['body'] + comments
-        finaldata[event] = description
+        finaldata['content'] = description
         return finaldata
 
     def execute(self, arguments):
@@ -119,6 +120,6 @@ class GitIssuesPRsTask(BaseTask):
         result_data['status'] = 'success'
         result_data['package'] = package
         finaldata = self._processJSonIssuePR(result, repository, event,
-                                             package)
+                                             package,url_template.format())
         result_data['details'] = finaldata
         return result_data
