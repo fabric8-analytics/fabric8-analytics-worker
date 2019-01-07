@@ -120,6 +120,6 @@ class GitIssuesPRsTask(BaseTask):
         result_data['status'] = 'success'
         result_data['package'] = package
         finaldata = self._processJSonIssuePR(result, repository, event,
-                                             package,url_template.format())
+                                             package, url_template.format())
         result_data['details'] = finaldata
         return result_data
