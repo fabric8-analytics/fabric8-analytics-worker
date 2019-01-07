@@ -124,6 +124,10 @@ class PostgresBase(DataStorage):
         try:
             PostgresBase.session.add(res)
             PostgresBase.session.commit()
+        except IntegrityError:
+            # the result has been already stored before the error occurred
+            # hence there is no reason to re-raise
+            PostgresBase.session.rollback()
         except SQLAlchemyError:
             PostgresBase.session.rollback()
             raise
