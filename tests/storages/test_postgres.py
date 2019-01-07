@@ -82,13 +82,20 @@ class TestBayesianPostgres:
         assert self.bp.retrieve('doesntmatter', tn, tid) == res
 
     def test_store_already_exists(self):
-        """Test if database integrity is checked."""
+        """Test if database integrity is checked.
+
+        The second attempt to store results should be ignored.
+        """
         tn = 'asd'
         tid = 'sdf'
         res = {'some': 'thing'}
         self.bp.store(node_args={}, flow_name='blah', task_name=tn, task_id=tid, result=res)
-        with pytest.raises(IntegrityError):
-            self.bp.store(node_args={}, flow_name='blah', task_name=tn, task_id=tid, result=res)
+        self.bp.store(
+            node_args={}, flow_name='blah', task_name=tn, task_id=tid,
+            result={'some': 'other-thing'}
+        )
+        result = self.bp.retrieve(flow_name='blah', task_name=tn, task_id=tid)
+        assert result.get('some') == 'thing'
 
     def test_get_latest_task_result(self):
         """Test the function to get the latest task result from database."""
