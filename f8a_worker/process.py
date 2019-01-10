@@ -208,6 +208,12 @@ class Archive(object):
     @staticmethod
     def extract(target, dest):
         """Detect archive type and extracts it."""
+        # Make sure that the destination directory exists
+        try:
+            Path(dest).mkdir(mode=0o777, parents=True)
+        except FileExistsError:
+            pass
+
         tar = Archive.TarMatcher.search(target)
         if target.endswith(('.zip', '.whl', '.egg', '.jar', '.war', '.aar', '.nupkg')):
             return Archive.extract_zip(target, dest)

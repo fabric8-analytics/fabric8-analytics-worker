@@ -193,3 +193,19 @@ class TestArchive(object):
             with pytest.raises(PermissionError):
                 shutil.rmtree(extracted)
             Archive.fix_permissions(extracted + "/package")
+
+    @pytest.mark.parametrize('archive_name', [
+        'hey-listen-1.0.5-sources.jar',
+        'empty.tgz',
+    ])
+    def test_empty_archive(self, archive_name):
+        """Test extracting an empty archive.
+
+        Nothing should fail and the destination directory should exist afterwards.
+        """
+        archive_path = Path(__file__).resolve().parent / Path('data/archives/' + archive_name)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            dest_dir = Path(temp_dir) / Path('extracted_jar')
+            assert not dest_dir.exists()
+            Archive.extract(str(archive_path), str(dest_dir))
+            assert dest_dir.exists()
