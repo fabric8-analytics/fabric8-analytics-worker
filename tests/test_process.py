@@ -7,6 +7,7 @@ import subprocess
 import requests
 import tempfile
 import shutil
+import stat
 
 from f8a_worker.process import Archive
 from f8a_worker.errors import TaskError, NotABugTaskError
@@ -209,3 +210,24 @@ class TestArchive(object):
             assert not dest_dir.exists()
             Archive.extract(str(archive_path), str(dest_dir))
             assert dest_dir.exists()
+
+    @pytest.mark.parametrize('archive_name', [
+        'cant_touch_me.tgz',
+    ])
+    def test_bad_permissions(self, archive_name):
+        """Test working with an archive which contains files with bad permissions.
+
+        Bad permissions = 000.
+
+        All extracted files need to be readable so they can be processed by various tools later.
+        """
+        archive_path = Path(__file__).resolve().parent / Path('data/archives/' + archive_name)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            dest_dir = Path(temp_dir) / Path('dest_dir')
+            Archive.extract(str(archive_path), str(dest_dir))
+            assert dest_dir.exists()
+            file_path = dest_dir / Path('cant_touch_me')
+            # is the file readable?
+            assert file_path.stat().st_mode & stat.S_IRUSR
+            shutil.rmtree(str(dest_dir), ignore_errors=True)
+            assert not dest_dir.exists()
