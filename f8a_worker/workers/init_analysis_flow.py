@@ -24,9 +24,9 @@ class InitAnalysisFlow(BaseTask):
         :return: {}, results
         """
         self.log.debug("Input Arguments: {}".format(arguments))
-        self._strict_assert(arguments.get('name'))
-        self._strict_assert(arguments.get('version'))
-        self._strict_assert(arguments.get('ecosystem'))
+        self._strict_assert(isinstance(arguments.get('ecosystem'), str))
+        self._strict_assert(isinstance(arguments.get('name'), str))
+        self._strict_assert(isinstance(arguments.get('version'), str))
 
         db = self.storage.session
         try:
