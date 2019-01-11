@@ -119,20 +119,6 @@ class TestIndianaJones(object):
             )
 
     @pytest.mark.parametrize('name, version, expected_digest', [
-        ('permutation', '0.1.7', 'e715cccaccb8e2d1450fbdda85bbe84963a32e9bf612db278cbb3d6781267638')
-    ])
-    def test_fetch_rubygems_specific(self, tmpdir, rubygems, name, version, expected_digest):
-        """Test fetching of rubygems artifact."""
-        digest, path = IndianaJones.fetch_artifact(rubygems,
-                                                   artifact=name,
-                                                   version=version,
-                                                   target_dir=str(tmpdir))
-        assert digest == expected_digest
-        path = Path(path)
-        assert path.name == "{}-{}.gem".format(name, version)
-        assert path.exists()
-
-    @pytest.mark.parametrize('name, version, expected_digest', [
         ('com.rabbitmq:amqp-client', '3.6.1',
          'cb6cdb7de8d37cb1b15b23867435c7dbbeaa1ca4b766f434138a8b9ef131994f'),
     ])

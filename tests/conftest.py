@@ -64,16 +64,6 @@ def pypi(rdb):
 
 
 @pytest.fixture
-def rubygems(rdb):
-    """Prepare database with Ruby gems ecosystem."""
-    rubygems = Ecosystem(name='rubygems', backend=EcosystemBackend.rubygems,
-                         fetch_url='https://rubygems.org/api/v1')
-    rdb.add(rubygems)
-    rdb.commit()
-    return rubygems
-
-
-@pytest.fixture
 def nuget(rdb):
     """Prepare database with Nuget ecosystem."""
     nuget = Ecosystem(name='nuget', backend=EcosystemBackend.nuget,

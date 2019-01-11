@@ -176,55 +176,6 @@ class NpmReleasesFetcher(ReleasesFetcher):
         return package, []
 
 
-class RubyGemsReleasesFetcher(ReleasesFetcher):
-    """Releases fetcher for Rubygems."""
-
-    def __init__(self, ecosystem):
-        """Initialize instance."""
-        super(RubyGemsReleasesFetcher, self).__init__(ecosystem)
-
-    def _search_package_name(self, package):
-        """Search package on rubygems.org."""
-        url = '{url}/search.json?query={pkg}'.format(url=self.ecosystem.fetch_url,
-                                                     pkg=package)
-        r = get(url)
-        if r.status_code == 200:
-            exact_match = [p['name']
-                           for p in r.json()
-                           if p['name'].lower() == package.lower()]
-            if exact_match:
-                return exact_match.pop()
-
-        raise ValueError("Package {} not found".format(package))
-
-    def fetch_releases(self, package):
-        """Fetch package releases versions.
-
-        Example output from the RubyGems endpoint
-        [
-           {
-             "number": "1.0.0",
-             ...
-           },
-           {
-             "number": "2.0.0",
-             ...
-           }
-           ...
-        ]
-        """
-        if not package:
-            raise ValueError("package")
-
-        url = '{url}/versions/{pkg}.json'.format(url=self.ecosystem.fetch_url,
-                                                 pkg=package)
-        r = get(url)
-        if r.status_code == 404:
-            return self.fetch_releases(self._search_package_name(package))
-
-        return package, [ver['number'] for ver in r.json()]
-
-
 class NugetReleasesFetcher(ReleasesFetcher):
     """Releases fetcher for Nuget."""
 
@@ -629,9 +580,6 @@ class NpmDependencyParser(DependencyParser):
         return result
 
 
-RubyGemsDependencyParser = NpmDependencyParser
-
-
 class OSSIndexDependencyParser(NpmDependencyParser):
     """Parse OSS Index version specification."""
 
@@ -831,16 +779,6 @@ class NpmSolver(Solver):
                                         fetcher or NpmReleasesFetcher(ecosystem))
 
 
-class RubyGemsSolver(Solver):
-    """Rubygems dependencies solver."""
-
-    def __init__(self, ecosystem, parser=None, fetcher=None):
-        """Initialize instance."""
-        super(RubyGemsSolver, self).__init__(ecosystem,
-                                             parser or RubyGemsDependencyParser(),
-                                             fetcher or RubyGemsReleasesFetcher(ecosystem))
-
-
 class NugetSolver(Solver):
     """Nuget dependencies solver.
 
@@ -992,8 +930,6 @@ def get_ecosystem_solver(ecosystem, with_parser=None, with_fetcher=None):
         return NpmSolver(ecosystem, with_parser, with_fetcher)
     elif ecosystem.is_backed_by(EcosystemBackend.pypi):
         return PypiSolver(ecosystem, with_parser, with_fetcher)
-    elif ecosystem.is_backed_by(EcosystemBackend.rubygems):
-        return RubyGemsSolver(ecosystem, with_parser, with_fetcher)
     elif ecosystem.is_backed_by(EcosystemBackend.nuget):
         return NugetSolver(ecosystem, with_parser, with_fetcher)
     elif ecosystem.is_backed_by(EcosystemBackend.go):
@@ -1010,8 +946,6 @@ def get_ecosystem_parser(ecosystem):
         return NpmDependencyParser()
     elif ecosystem.is_backed_by(EcosystemBackend.pypi):
         return PypiDependencyParser()
-    elif ecosystem.is_backed_by(EcosystemBackend.rubygems):
-        return RubyGemsDependencyParser()
     elif ecosystem.is_backed_by(EcosystemBackend.nuget):
         return NugetDependencyParser()
     elif ecosystem.is_backed_by(EcosystemBackend.go):
