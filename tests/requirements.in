@@ -3,8 +3,8 @@ flexmock
 pylint
 pytest==3.*
 pytest-timeout
-pytest-rerunfailures
 pytest-cov
 pytest-mock
 codecov
 requests
+flaky

@@ -1,17 +1,32 @@
 """Tests for LibrariesIoTask."""
 
+import time
 from flexmock import flexmock
 import pytest
+from flaky import flaky
+from requests.exceptions import HTTPError
 
 from f8a_worker.defaults import F8AConfiguration
 from f8a_worker.errors import TaskError
 from f8a_worker.workers import LibrariesIoTask
 
 
+def rerun_http_error(err, *args):
+    """Retry on HTTP errors, with a delay."""
+    assert args
+    if not issubclass(err[0], HTTPError):
+        # Not an HTTP error, do not retry
+        return False
+
+    time.sleep(10)
+    return True
+
+
 @pytest.mark.usefixtures("dispatcher_setup")
 class TestLibrariesIoTask(object):
     """Tests for LibrariesIoTask."""
 
+    @flaky(max_runs=6, min_passes=1, rerun_filter=rerun_http_error)
     @pytest.mark.usefixtures("npm")
     @pytest.mark.parametrize('args', [
          {'ecosystem': 'npm', 'name': 'grunt'},
@@ -34,6 +49,7 @@ class TestLibrariesIoTask(object):
         assert results['details']['dependents'].get('count')
         assert results['details']['dependent_repositories'].get('count')
 
+    @flaky(max_runs=6, min_passes=1, rerun_filter=rerun_http_error)
     @pytest.mark.usefixtures("maven")
     @pytest.mark.parametrize('args', [
          {'ecosystem': 'maven', 'name': 'madeup.group:nonexistent.id'},
