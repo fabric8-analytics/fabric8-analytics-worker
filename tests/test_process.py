@@ -183,17 +183,17 @@ class TestIndianaJones(object):
 class TestArchive(object):
     """Test Archive class."""
 
-    @pytest.mark.fail(raises=PermissionError)
     def test_for_archive_create_by_root(self):
         """Test extracting archives created by root."""
         response = requests.get("https://registry.npmjs.org/ajax-worker/-/ajax-worker-1.2.3.tgz")
         with tempfile.NamedTemporaryFile(suffix=".tgz") as package, tempfile.TemporaryDirectory() \
                 as extracted:
+            dest_dir = Path(extracted) / Path('dest_dir')
             package.write(response.content)
-            Archive.extract(package.name, extracted)
-            with pytest.raises(PermissionError):
-                shutil.rmtree(extracted)
-            Archive.fix_permissions(extracted + "/package")
+            Archive.extract(package.name, str(dest_dir))
+            assert Path(str(dest_dir)).exists()
+            shutil.rmtree(str(dest_dir))
+            assert not Path(str(dest_dir)).exists()
 
     @pytest.mark.parametrize('archive_name', [
         'hey-listen-1.0.5-sources.jar',

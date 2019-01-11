@@ -255,11 +255,6 @@ class Archive(object):
                                          dest])
 
     @staticmethod
-    def fix_permissions(target):
-        """Fix extracted folder permissions, so it will be readable for user."""
-        TimedCommand.get_command_output(['chmod', "-R", "u+rwx", target])
-
-    @staticmethod
     def extract_gem(target, dest):
         """Extract target gem and gemspec.
 
@@ -405,7 +400,6 @@ class IndianaJones(object):
         # digest was different then of a tarball downloaded directly from registry.npmjs.org.
         digest = compute_digest(artifact_path)
         Archive.extract(artifact_path, target_dir)
-        Archive.fix_permissions(os.path.join(cache_abs_path, 'package'))
 
         # copy package/package.json over the extracted one,
         # because it contains (since npm >= 2.x.x) more information.
