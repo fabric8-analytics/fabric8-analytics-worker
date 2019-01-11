@@ -216,13 +216,16 @@ class Archive(object):
 
         tar = Archive.TarMatcher.search(target)
         if target.endswith(('.zip', '.whl', '.egg', '.jar', '.war', '.aar', '.nupkg')):
-            return Archive.extract_zip(target, dest)
+            Archive.extract_zip(target, dest)
         elif target.endswith('.gem'):
-            return Archive.extract_gem(target, dest)
+            Archive.extract_gem(target, dest)
         elif tar or target.endswith(('.tgz', '.bz2')):
-            return Archive.extract_tar(target, dest)
+            Archive.extract_tar(target, dest)
         else:
             raise ValueError('Unknown archive for {0}'.format(target))
+
+        # Fix possibly wrong permissions in zip files that would prevent us from deleting files.
+        TimedCommand.get_command_output(['chmod', '-R', 'u+rwX,g+rwX', dest])
 
     @staticmethod
     def zip_file(file, archive, junk_paths=False):
@@ -244,8 +247,6 @@ class Archive(object):
                 pass
         # -o: overwrite existing files without prompting
         TimedCommand.get_command_output(['unzip', '-q', '-o', '-d', dest, target])
-        # Fix possibly wrong permissions in zip files that would prevent us from deleting files.
-        TimedCommand.get_command_output(['chmod', '-R', 'u+rwX,g+rwX', dest])
 
     @staticmethod
     def extract_tar(target, dest):
