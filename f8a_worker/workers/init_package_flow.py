@@ -103,8 +103,8 @@ class InitPackageFlow(BaseTask):
         :param arguments: dictionary with task arguments
         :return: {}, results
         """
-        self._strict_assert(arguments.get('name'))
-        self._strict_assert(arguments.get('ecosystem'))
+        self._strict_assert(isinstance(arguments.get('ecosystem'), str))
+        self._strict_assert(isinstance(arguments.get('name'), str))
 
         # get rid of version if scheduled from the core analyses
         arguments.pop('version', None)
