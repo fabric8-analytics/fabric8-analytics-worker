@@ -99,11 +99,9 @@ class GitIssuesPRsTask(BaseTask):
         except F8AConfigurationException as e:
             self.log.error(e)
             raise FatalTaskError from e
-            return result_data
         except Exception as e:
             self.log.error(e)
             raise FatalTaskError from e
-            return result_data
 
         # Generating Request URL to fetch Data
         url_path = repository + '/' + event + 's/' + isprnumber

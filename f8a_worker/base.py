@@ -156,6 +156,6 @@ class BaseTask(SelinonTask):
         # Record the validated schema details
         set_schema_ref(result, schema_ref)
 
-    def execute(self, arguments):
+    def execute(self, _arguments):
         """Return dictionary with results - must be implemented by any subclass."""
         raise NotImplementedError("Task not implemented")

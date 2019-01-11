@@ -289,7 +289,7 @@ class ThreadPool(object):
         self.start()
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, *_args, **_kwargs):
         """Exit context manager."""
         self.join()
 

@@ -86,7 +86,7 @@ class CelerySettings(object):
 
 
 @setup_logging.connect
-def configure_logging(**kwargs):
+def configure_logging(*_args, **_kwargs):
     """Set up logging for worker."""
     level = 'DEBUG' if configuration.is_local_deployment() else 'INFO'
 
