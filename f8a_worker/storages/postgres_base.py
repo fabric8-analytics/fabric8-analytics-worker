@@ -111,7 +111,7 @@ class PostgresBase(DataStorage):
 
         return task_result
 
-    def _create_result_entry(self, node_args, flow_name, task_name, task_id, result, error=False):
+    def _create_result_entry(self, node_args, flow_name, task_name, task_id, result):
         raise NotImplementedError()
 
     def store(self, node_args, flow_name, task_name, task_id, result):

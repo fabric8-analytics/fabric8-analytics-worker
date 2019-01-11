@@ -24,6 +24,8 @@ from f8a_worker.data_normalizer.python import (
     PythonDistDataNormalizer, PythonDataNormalizer, PythonRequirementsTxtDataNormalizer
 )
 
+assert AbstractDataNormalizer  # Make linters happy
+
 
 def normalize(mercator_output):
     """Normalize mercator output.
