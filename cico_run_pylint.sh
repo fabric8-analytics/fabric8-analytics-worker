@@ -9,4 +9,7 @@ prep() {
 }
 
 prep
+./detect-common-errors.sh
+./detect-dead-code.sh
+./measure-maintainability-index.sh --fail-on-error
 ./run-linter.sh
