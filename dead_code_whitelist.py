@@ -1,3 +1,5 @@
+"""List of unused variables."""
+
 task_names  # unused variable (f8a_worker/dispatcher/selective.py:8)
 flow_name  # unused variable (f8a_worker/storages/s3_manifests.py:17)
 task_id  # unused variable (f8a_worker/storages/s3_manifests.py:17)
