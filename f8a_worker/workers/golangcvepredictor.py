@@ -87,7 +87,7 @@ class GitIssuesPRsTask(BaseTask):
         repository = arguments.get('repository')
         if arguments.get('event'):
             event = arguments.get('event').split('-')[0]
-        isprnumber = arguments.get('number')
+        isprnumber = arguments.get('id')
 
         # For testing purposes
         if package is None:
