@@ -53,7 +53,7 @@ class TestGocvecollector(object):
 
     def test_execute(self):
         """Tests for the Golang CVE ingestion worker with argument."""
-        results = gocve.execute(self, arguments={'event': 'issue', 'number': '4',
+        results = gocve.execute(self, arguments={'event': 'issue', 'id': '4',
                                                  'package': 'kubeup/archon',
                                                  'repository': 'kubeup/archon'})
         assert results is not None
@@ -65,6 +65,6 @@ class TestGocvecollector(object):
         """Tests for the Golang CVE ingestion worker with argument and no Proper Git Token."""
         self.configuration.select_random_github_token.return_value = ''
         with pytest.raises(FatalTaskError):
-            gocve.execute(self, arguments={'event': 'issue', 'number': '4',
+            gocve.execute(self, arguments={'event': 'issue', 'id': '4',
                                            'package': 'kubeup/archon',
                                            'repository': 'kubeup/archon'})
