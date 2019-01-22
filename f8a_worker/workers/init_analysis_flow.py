@@ -41,16 +41,8 @@ class InitAnalysisFlow(BaseTask):
         v = Version.get_or_create(db, package_id=p.id, identifier=arguments['version'])
 
         if not arguments.get('force'):
-            # TODO: this is OK for now, but if we will scale and there will be
-            # 2+ workers running this task they can potentially schedule two
-            # flows of a same type at the same time
             if db.query(Analysis).filter(Analysis.version_id == v.id).count() > 0:
-                # we need to propagate flags that were passed to flow, but not
-                # E/P/V - this way we are sure that for example graph import is
-                # scheduled (arguments['force_graph_sync'] == True)
-                arguments.pop('name')
-                arguments.pop('version')
-                arguments.pop('ecosystem')
+                arguments['analysis_already_exists'] = True
                 self.log.debug("Arguments returned by initAnalysisFlow without force: {}"
                                .format(arguments))
                 return arguments
