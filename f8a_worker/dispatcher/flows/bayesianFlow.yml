@@ -20,11 +20,11 @@
         - from: 'InitAnalysisFlow'
           to: 'bayesianAnalysisFlow'
           condition: &shouldScheduleAnalysisCheck
-            # InitAnalysisFlow returns flow arguments or None if analysis was already done
-            # exclude metadata we store with each task result
-            name: 'fieldExist'
-            args:
-              key: 'ecosystem'
+            not:
+              name: 'argsFieldEqual'
+              args:
+                key: 'analysis_already_exists'
+                value: true
         - from: 'InitAnalysisFlow'
           to: 'GraphImporterTask'
           condition:
