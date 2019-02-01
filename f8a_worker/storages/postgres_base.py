@@ -111,7 +111,7 @@ class PostgresBase(DataStorage):
 
         return task_result
 
-    def _create_result_entry(self, node_args, flow_name, task_name, task_id, result, error=False):
+    def _create_result_entry(self, node_args, flow_name, task_name, task_id, result):
         raise NotImplementedError()
 
     def store(self, node_args, flow_name, task_name, task_id, result):
@@ -124,6 +124,10 @@ class PostgresBase(DataStorage):
         try:
             PostgresBase.session.add(res)
             PostgresBase.session.commit()
+        except IntegrityError:
+            # the result has been already stored before the error occurred
+            # hence there is no reason to re-raise
+            PostgresBase.session.rollback()
         except SQLAlchemyError:
             PostgresBase.session.rollback()
             raise

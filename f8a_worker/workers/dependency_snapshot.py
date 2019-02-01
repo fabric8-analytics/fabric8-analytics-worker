@@ -50,14 +50,14 @@ class DependencySnapshotTask(BaseTask):
             if gh_dep.match(spec):
                 ret['name'] = name
                 ret['version'] = 'https://github.com/' + spec
-            elif urllib.parse.urlparse(spec).scheme is not '':
+            elif urllib.parse.urlparse(spec).scheme != '':
                 ret['name'] = name
                 ret['version'] = spec
         else:
             if gh_dep.match(dep):
                 ret['name'] = 'https://github.com/' + dep
                 ret['version'] = None
-            elif urllib.parse.urlparse(dep).scheme is not '':
+            elif urllib.parse.urlparse(dep).scheme != '':
                 ret['name'] = dep
                 ret['version'] = None
 

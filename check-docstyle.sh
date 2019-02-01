@@ -1,7 +1,7 @@
 #!/bin/bash
 
 directories="alembic f8a_worker tests hack"
-separate_files="setup.py"
+separate_files="setup.py dead_code_whitelist.py"
 exclude_files="tests/data/license/license.py"
 pass=0
 fail=0

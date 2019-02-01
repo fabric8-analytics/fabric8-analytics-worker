@@ -9,6 +9,20 @@ logger = logging.getLogger(__name__)
 class S3IssuesPRs(AmazonS3):
     """S3 storage for repository description."""
 
+    @property
+    def bucket_name(self):
+        """Get bucket name."""
+        return self._bucket_name
+
+    @bucket_name.setter
+    def bucket_name(self, bucket_name):
+        """Set bucket name, but make it all lower case."""
+        # Since March 1, 2018, Amazon S3 no longer supports creating bucket names
+        # that contain uppercase letters or underscores.
+        # Docs: https://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html
+        # TODO: remove once deployment prefix in staging (STAGE-) is fixed and data is migrated
+        self._bucket_name = bucket_name.lower()
+
     @staticmethod
     def _construct_object_key(**arguments):
         """Construct object key."""

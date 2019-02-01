@@ -104,8 +104,8 @@ class RepoDependencyFinderTask(BaseTask):
         except Exception:
             self.log.error(traceback.format_exc())
             raise TaskError(
-                "Error creating repository node for {repo_url}".format(repo_url=github_repo))
-            return None
+                "Error creating repository node for {repo_url}".format(repo_url=github_repo)
+            )
 
         return resp
 
@@ -148,7 +148,6 @@ class RepoDependencyFinderTask(BaseTask):
         except Exception:
             self.log.error(traceback.format_exc())
             raise RuntimeError("Error creating repository node")
-            return None
 
         return resp
 

@@ -208,15 +208,22 @@ class Archive(object):
     @staticmethod
     def extract(target, dest):
         """Detect archive type and extracts it."""
+        # Make sure that the destination directory exists
+        try:
+            Path(dest).mkdir(mode=0o777, parents=True)
+        except FileExistsError:
+            pass
+
         tar = Archive.TarMatcher.search(target)
         if target.endswith(('.zip', '.whl', '.egg', '.jar', '.war', '.aar', '.nupkg')):
-            return Archive.extract_zip(target, dest)
-        elif target.endswith('.gem'):
-            return Archive.extract_gem(target, dest)
+            Archive.extract_zip(target, dest)
         elif tar or target.endswith(('.tgz', '.bz2')):
-            return Archive.extract_tar(target, dest)
+            Archive.extract_tar(target, dest)
         else:
             raise ValueError('Unknown archive for {0}'.format(target))
+
+        # Fix possibly wrong permissions in zip files that would prevent us from deleting files.
+        TimedCommand.get_command_output(['chmod', '-R', 'u+rwX,g+rwX', dest])
 
     @staticmethod
     def zip_file(file, archive, junk_paths=False):
@@ -238,36 +245,12 @@ class Archive(object):
                 pass
         # -o: overwrite existing files without prompting
         TimedCommand.get_command_output(['unzip', '-q', '-o', '-d', dest, target])
-        # Fix possibly wrong permissions in zip files that would prevent us from deleting files.
-        TimedCommand.get_command_output(['chmod', '-R', 'u+rwX,g+rwX', dest])
 
     @staticmethod
     def extract_tar(target, dest):
         """Extract target tarball into dest using system 'tar' command."""
         TimedCommand.get_command_output(['tar', "--delay-directory-restore", '-xf', target, '-C',
                                          dest])
-
-    @staticmethod
-    def fix_permissions(target):
-        """Fix extracted folder permissions, so it will be readable for user."""
-        TimedCommand.get_command_output(['chmod', "-R", "u+rwx", target])
-
-    @staticmethod
-    def extract_gem(target, dest):
-        """Extract target gem and gemspec.
-
-        Gem into $dest/sources
-        Gemspec (renamed to rubygems-metadata.yaml) into $dest/metadata/
-        """
-        sources = os.path.join(dest, 'sources')
-        metadata = os.path.join(dest, 'metadata')
-        TimedCommand.get_command_output(['mkdir', '-p', sources, metadata])
-        TimedCommand.get_command_output(['gem', 'unpack', target, '--target', sources])
-        with cwd(metadata):
-            # --spec ignores --target, so we need to cwd
-            TimedCommand.get_command_output(['gem', 'unpack', target, '--spec'])
-            metadatayaml = glob.glob('*.gemspec').pop()
-            os.rename(metadatayaml, 'rubygems-metadata.yaml')
 
 
 class IndianaJones(object):
@@ -398,7 +381,6 @@ class IndianaJones(object):
         # digest was different then of a tarball downloaded directly from registry.npmjs.org.
         digest = compute_digest(artifact_path)
         Archive.extract(artifact_path, target_dir)
-        Archive.fix_permissions(os.path.join(cache_abs_path, 'package'))
 
         # copy package/package.json over the extracted one,
         # because it contains (since npm >= 2.x.x) more information.
@@ -472,32 +454,6 @@ class IndianaJones(object):
         return digest, artifact_path
 
     @staticmethod
-    def fetch_rubygems_artifact(ecosystem, name, version, target_dir):
-        """Fetch rubygems artifact using 'gem fetch' command."""
-        git = Git.create_git(target_dir)
-        logger.info("downloading rubygems package %s-%s", name, version)
-        version_arg = []
-        if version:
-            version_arg = ['--version', version]
-        gem_command = ['gem', 'fetch', name]
-        gem_command.extend(version_arg)
-        with cwd(target_dir):
-            TimedCommand.get_command_output(gem_command, graceful=False)
-
-        if not version:
-            # if version is None we need to glob for the version that was downloaded
-            artifact_path = os.path.abspath(glob.glob(os.path.join(
-                target_dir, name + '*')).pop())
-        else:
-            artifact_path = os.path.join(target_dir, '{n}-{v}.gem'.format(
-                n=name, v=version))
-
-        digest = compute_digest(artifact_path)
-        Archive.extract(artifact_path, target_dir)
-        git.add_and_commit_everything()
-        return digest, artifact_path
-
-    @staticmethod
     def fetch_go_artifact(name, version, target_dir):
         """Fetch go artifact using 'go get' command."""
         env = dict(os.environ)
@@ -540,10 +496,6 @@ class IndianaJones(object):
             )
         elif ecosystem.is_backed_by(EcosystemBackend.npm):
             digest, artifact_path = IndianaJones.fetch_npm_artifact(
-                ecosystem, artifact, version, target_dir
-            )
-        elif ecosystem.is_backed_by(EcosystemBackend.rubygems):
-            digest, artifact_path = IndianaJones.fetch_rubygems_artifact(
                 ecosystem, artifact, version, target_dir
             )
         elif ecosystem.is_backed_by(EcosystemBackend.maven):

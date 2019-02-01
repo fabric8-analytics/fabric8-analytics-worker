@@ -250,13 +250,13 @@ class BayesianPostgres(PostgresBase):
         try:
             PostgresBase.session.add(req)
             PostgresBase.session.commit()
-        except SQLAlchemyError:
-            PostgresBase.session.rollback()
-            raise
         except IntegrityError:
             # This is OK, the same request has been processed twice
             PostgresBase.session.rollback()
             pass
+        except SQLAlchemyError:
+            PostgresBase.session.rollback()
+            raise
 
         return True
 

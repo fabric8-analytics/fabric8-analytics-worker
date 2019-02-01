@@ -7,6 +7,7 @@ import subprocess
 import requests
 import tempfile
 import shutil
+import stat
 
 from f8a_worker.process import Archive
 from f8a_worker.errors import TaskError, NotABugTaskError
@@ -118,20 +119,6 @@ class TestIndianaJones(object):
             )
 
     @pytest.mark.parametrize('name, version, expected_digest', [
-        ('permutation', '0.1.7', 'e715cccaccb8e2d1450fbdda85bbe84963a32e9bf612db278cbb3d6781267638')
-    ])
-    def test_fetch_rubygems_specific(self, tmpdir, rubygems, name, version, expected_digest):
-        """Test fetching of rubygems artifact."""
-        digest, path = IndianaJones.fetch_artifact(rubygems,
-                                                   artifact=name,
-                                                   version=version,
-                                                   target_dir=str(tmpdir))
-        assert digest == expected_digest
-        path = Path(path)
-        assert path.name == "{}-{}.gem".format(name, version)
-        assert path.exists()
-
-    @pytest.mark.parametrize('name, version, expected_digest', [
         ('com.rabbitmq:amqp-client', '3.6.1',
          'cb6cdb7de8d37cb1b15b23867435c7dbbeaa1ca4b766f434138a8b9ef131994f'),
     ])
@@ -182,14 +169,51 @@ class TestIndianaJones(object):
 class TestArchive(object):
     """Test Archive class."""
 
-    @pytest.mark.fail(raises=PermissionError)
     def test_for_archive_create_by_root(self):
         """Test extracting archives created by root."""
         response = requests.get("https://registry.npmjs.org/ajax-worker/-/ajax-worker-1.2.3.tgz")
         with tempfile.NamedTemporaryFile(suffix=".tgz") as package, tempfile.TemporaryDirectory() \
                 as extracted:
+            dest_dir = Path(extracted) / Path('dest_dir')
             package.write(response.content)
-            Archive.extract(package.name, extracted)
-            with pytest.raises(PermissionError):
-                shutil.rmtree(extracted)
-            Archive.fix_permissions(extracted + "/package")
+            Archive.extract(package.name, str(dest_dir))
+            assert Path(str(dest_dir)).exists()
+            shutil.rmtree(str(dest_dir))
+            assert not Path(str(dest_dir)).exists()
+
+    @pytest.mark.parametrize('archive_name', [
+        'hey-listen-1.0.5-sources.jar',
+        'empty.tgz',
+    ])
+    def test_empty_archive(self, archive_name):
+        """Test extracting an empty archive.
+
+        Nothing should fail and the destination directory should exist afterwards.
+        """
+        archive_path = Path(__file__).resolve().parent / Path('data/archives/' + archive_name)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            dest_dir = Path(temp_dir) / Path('extracted_jar')
+            assert not dest_dir.exists()
+            Archive.extract(str(archive_path), str(dest_dir))
+            assert dest_dir.exists()
+
+    @pytest.mark.parametrize('archive_name', [
+        'cant_touch_me.tgz',
+    ])
+    def test_bad_permissions(self, archive_name):
+        """Test working with an archive which contains files with bad permissions.
+
+        Bad permissions = 000.
+
+        All extracted files need to be readable so they can be processed by various tools later.
+        """
+        archive_path = Path(__file__).resolve().parent / Path('data/archives/' + archive_name)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            dest_dir = Path(temp_dir) / Path('dest_dir')
+            Archive.extract(str(archive_path), str(dest_dir))
+            assert dest_dir.exists()
+            file_path = dest_dir / Path('cant_touch_me')
+            # is the file readable?
+            assert file_path.stat().st_mode & stat.S_IRUSR
+            shutil.rmtree(str(dest_dir), ignore_errors=True)
+            assert not dest_dir.exists()

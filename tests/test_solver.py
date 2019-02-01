@@ -208,15 +208,6 @@ class TestSolver(object):
                        'requests': '2.16.2',
                        'click': '0.7'}
 
-    def test_rubygems_solver(self, rubygems):
-        """Test RubyGemsSolver."""
-        solver = get_ecosystem_solver(rubygems)
-        deps = ['hoe <3.4.0',
-                'rake-compiler ~>0.9.2']
-        out = solver.solve(deps)
-        assert out == {'hoe': '3.3.1',
-                       'rake-compiler': '0.9.9'}
-
     def test_nuget_solver(self, nuget):
         """Test NugetSolver."""
         solver = get_ecosystem_solver(nuget)
