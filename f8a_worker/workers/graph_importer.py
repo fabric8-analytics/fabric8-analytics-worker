@@ -31,7 +31,8 @@ class GraphImporterTask(BaseTask):
         """
         self._strict_assert(arguments.get('ecosystem'))
         self._strict_assert(arguments.get('name'))
-        self._strict_assert(arguments.get('document_id'))
+        if not arguments.get('force_graph_sync'):
+            self._strict_assert(arguments.get('document_id'))
 
         rdb = StoragePool.get_connected_storage('BayesianPostgres')
         ecosystem_backend = Ecosystem.by_name(rdb.session, arguments.get('ecosystem')).backend.name
