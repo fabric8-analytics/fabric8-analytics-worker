@@ -251,8 +251,8 @@ class WorkerResult(Base):
     id = Column(Integer, primary_key=True)
     worker = Column(String(255), index=True)
     worker_id = Column(String(64), unique=True)
-    started_at = Column(DateTime)
-    ended_at = Column(DateTime)
+    started_at = Column(DateTime, index=True)
+    ended_at = Column(DateTime, index=True)
     # `external_request_id` provides mapping of particular `worker_result`
     # to externally defined identifier, when `external_request_id` is provided
     # the value of `analysis_id` should be `NULL`
