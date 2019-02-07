@@ -21,6 +21,6 @@ gitpython
 boto
 boto3
 semantic_version
-radon==2.4.0
+radon==3.0.1
 watchdog
 raven
