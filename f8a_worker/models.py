@@ -411,3 +411,35 @@ class OSIORegisteredRepos(Base):
     git_sha = Column(String(255), nullable=False)
     email_ids = Column(String(255), nullable=False)
     last_scanned_at = Column(DateTime)
+
+
+class ProbableCVEs(Base):
+    """Table for storing daily Probable CVEs"""
+
+    __tablename__ = "probable_cves"
+
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    ecosystem = Column(String(50), nullable=False)
+    repository = Column(String(100), nullable=False)
+    repo_url = Column(String(500), nullable=False)
+    package = Column(String(500), nullable=False)
+    cause_type = Column(String(50), nullable=False)
+    issue_date = Column(DateTime, nullable=True)
+    issue_url = Column(JSONB, nullable=True)
+    fixed_date = Column(DateTime, nullable=True)
+    fixed_url = Column(JSONB, nullable=True)
+    commit_date = Column(DateTime, nullable=True)
+    commit_url = Column(JSONB, nullable=True)
+    identified_date = Column(DateTime, nullable=True)
+    identified_url = Column(JSONB, nullable=True)
+    files_changed = Column(JSONB, nullable=True)
+    review_status = Column(Integer,nullable=False, default=0)
+    reviewed_at = Column(DateTime, nullable=True)
+    reviewed_by = Column(String(25),nullable=True)
+    review_comments = Column(JSONB, nullable=True)
+    flagged_score = Column(String(25),nullable=False)
+    flagged_at = Column(DateTime, nullable=False)
+    flagged_comments = Column(JSONB,nullable=True)
+    cve_id = Column(String(64), nullable=True)
+    cve_date = Column(DateTime, nullable=True)
+    additional_info = Column(JSONB, nullable=True)
