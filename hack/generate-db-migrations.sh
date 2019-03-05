@@ -37,8 +37,14 @@ done
 
 . tests/postgres.env
 
-#for MAC docker run -t -v `pwd`:/bayesian \
-docker run -t -v "$(readlink -f "${THISDIR}/.."):/f8a_worker:z" \
+if [ "$(uname)" == "Darwin" ]; then
+    #for MAC docker
+    vol_mount="`pwd`:/f8a_worker:z"
+else
+    vol_mount="$(readlink -f "${THISDIR}/.."):/f8a_worker:z"
+fi
+
+docker run -t -v "$vol_mount" \
   --link "${POSTGRES_CONTAINER_NAME}" \
   --net="${NETWORK}" \
   --name="${MIGRATIONS_CONTAINER_NAME}" \
