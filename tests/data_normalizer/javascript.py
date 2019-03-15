@@ -19,6 +19,10 @@ from f8a_worker.data_normalizer import NpmDataNormalizer
      {'bug_reporting': 'https://github.com/owner/project/issues <project@name.com>'}),
     ({'license': 'BSD-3-Clause'},
      {'declared_licenses': ['BSD-3-Clause']}),
+    ({'license': ''},
+     {'declared_licenses': None}),
+    ({'license': None},
+     {'declared_licenses': None}),
     ({'license': '(ISC OR GPL-3.0)'},
      {'declared_licenses': ['ISC', 'GPL-3.0']}),
     # deprecated, but used in older packages
