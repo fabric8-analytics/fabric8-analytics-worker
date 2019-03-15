@@ -140,6 +140,7 @@ class NpmDataNormalizer(AbstractDataNormalizer):
         value = self._data[k]
 
         if not value:
+            self._data[k] = None
             return
 
         if isinstance(value, str):
