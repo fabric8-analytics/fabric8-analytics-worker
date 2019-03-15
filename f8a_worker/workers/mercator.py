@@ -40,7 +40,7 @@ class MercatorTask(BaseTask):
 
     _analysis_name = 'metadata'
     _dependency_tree_lock = '_dependency_tree_lock'
-    schema_ref = SchemaRef(_analysis_name, '3-3-0')
+    schema_ref = SchemaRef(_analysis_name, '4-0-0')
 
     def execute(self, arguments):
         """Execute mercator and convert it's output to JSON object."""
