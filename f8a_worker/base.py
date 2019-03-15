@@ -152,7 +152,10 @@ class BaseTask(SelinonTask):
         if schema is None:
             schema = self._schema = load_worker_schema(schema_ref)
         # Validate result against schema
-        jsonschema.validate(result, schema)
+        try:
+            jsonschema.validate(result, schema)
+        except jsonschema.exceptions.ValidationError as e:
+            raise FatalTaskError('Schema validation failed: {e}'.format(e=str(e)))
         # Record the validated schema details
         set_schema_ref(result, schema_ref)
 
