@@ -56,7 +56,7 @@ class MercatorTask(BaseTask):
         return self.run_mercator(arguments, cache_path)
 
     def run_mercator(self, arguments, cache_path, outermost_only=True,
-                     timeout=300, resolve_poms=True):
+                     timeout=600, resolve_poms=True):
         """Run mercator tool."""
         # TODO: reduce cyclomatic complexity
         name = arguments.get('name')
