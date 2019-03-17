@@ -44,6 +44,7 @@ class NpmDataNormalizer(AbstractDataNormalizer):
         self._transform_maintainers()
         self._transform_code_repository()
         self._transform_declared_licenses()
+        self._transform_description()
         self._transform_dependencies()
         self._transform_engines()
         self._transform_keywords()
@@ -175,6 +176,16 @@ class NpmDataNormalizer(AbstractDataNormalizer):
                 elif isinstance(l.get("name"), str):
                     licenses.append(l["name"])
         self._data[k] = licenses
+
+    def _transform_description(self):
+        key = 'description'
+        value = self._data[key]
+        if isinstance(value, str):
+            return
+        elif isinstance(value, (list, tuple)):
+            self._data[key] = ' '.join(value)
+        else:
+            self._data[key] = str(value)
 
     def _transform_dependencies(self):
         # transform dict dependencies into flat list of strings
