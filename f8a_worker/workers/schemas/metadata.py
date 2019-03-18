@@ -52,7 +52,7 @@ class LockedDependency(jsl.Document):
     name = jsl.StringField()
     version = jsl.StringField()
     specification = jsl.OneOfField([jsl.StringField(), jsl.NullField()])
-    resolved = jsl.OneOfField([jsl.StringField(), jsl.NullField()])
+    resolved = jsl.OneOfField([jsl.StringField(), jsl.NullField(), jsl.BooleanField()])
     dependencies = jsl.ArrayField(jsl.DocumentField(jsl.RECURSIVE_REFERENCE_CONSTANT, as_ref=True))
     # go glide
     subpackages = jsl.ArrayField(jsl.StringField())
