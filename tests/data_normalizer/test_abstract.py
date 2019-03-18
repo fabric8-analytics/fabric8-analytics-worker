@@ -1,7 +1,7 @@
 """Tests for abstract data normalizer."""
 
 import pytest
-from f8a_worker.data_normalizer import AbstractDataNormalizer
+from f8a_worker.data_normalizer import PythonDataNormalizer, AbstractDataNormalizer
 
 
 @pytest.mark.parametrize('args, expected', [
@@ -29,37 +29,39 @@ def test__split_keywords(args, expected):
     assert AbstractDataNormalizer._split_keywords(**args) == expected
 
 
-@pytest.mark.parametrize('args, expected', [
+@pytest.mark.parametrize('data,keymap,expected', [
     # pick one key which IS there
-    ({'data': {'author': 'me', 'version': '0.1.2'}, 'keymap': (('author',),)},
-     {'author': 'me'}),
+    ({'author': 'me', 'version': '0.1.2'}, (('author',),), {'author': 'me'}),
     # pick one key which IS NOT there
-    ({'data': {'author-name': 'me', 'version': '0.1.2'}, 'keymap': (('author',),)},
+    ({'author-name': 'me', 'version': '0.1.2'}, (('author',),),
      {'author': None}),
     # pick & and rename one key which IS there
-    ({'data': {'author-name': 'me'}, 'keymap': (('author-name', 'author',),)},
+    ({'author-name': 'me'}, (('author-name', 'author',),),
      {'author': 'me'}),
     # pick & and rename one key which IS NOT there
-    ({'data': {'authors': 'they'}, 'keymap': (('author-name', 'author',),)},
+    ({'authors': 'they'}, (('author-name', 'author',),),
      {'author': None}),
     # pick one of keys
-    ({'data': {'license': 'MIT'}, 'keymap': ((('license', 'licenses',), ),)},
+    ({'license': 'MIT'}, ((('license', 'licenses',), ),),
      {'license': 'MIT'}),
     # pick one of keys
-    ({'data': {'licenses': ['MIT', 'BSD']}, 'keymap': ((('license', 'licenses',),),)},
+    ({'licenses': ['MIT', 'BSD']}, ((('license', 'licenses',),),),
      {'licenses': ['MIT', 'BSD']}),
     # pick one of keys and rename it
-    ({'data': {'license': 'MIT'}, 'keymap': ((('license', 'licenses',), 'declared_licenses'),)},
+    ({'license': 'MIT'}, ((('license', 'licenses',), 'declared_licenses'),),
      {'declared_licenses': 'MIT'}),
 ])
-def test__transform_keys(args, expected):
+def test__transform_keys(data, keymap, expected):
     """Test AbstractDataNormalizer.transform_keys()."""
-    assert AbstractDataNormalizer._transform_keys(**args) == expected
+    # Testing with PythonDataNormalizer as its constructor just calls AbstractDataNormalizer
+    dn = PythonDataNormalizer(data)
+    assert dn._transform_keys(keymap) == expected
 
 
 @pytest.mark.parametrize('args, expected', [
     ({'name_email_dict': {'name': 'A', 'email': 'B@C.com'}},
      "A <B@C.com>"),
+    ({'name_email_dict': {}}, None),
     ({'name_email_dict': {'name': 'A'}},
      "A"),
     ({'name_email_dict': {'email': 'B@C.com'}},

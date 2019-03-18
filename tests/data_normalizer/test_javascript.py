@@ -7,6 +7,10 @@ from f8a_worker.data_normalizer import NpmDataNormalizer
 @pytest.mark.parametrize('data, expected', [
     ({'author': {'name': 'Santa Claus', 'email': 'santa@SantaClaus.com', 'url': 'north'}},
      {'author': 'Santa Claus <santa@SantaClaus.com>'}),
+    ({'author': {}},
+     {'author': None}),
+    ({'author': ()},
+     {'author': None}),
     ({'contributors': [{'email': 'mscdex@mscdex.net', 'name': 'mscdex', 'url': 'there'},
                        {'email': 'fishrock123@rocketmail.com', 'name': 'fishrock123'}]},
      {'contributors': ['mscdex <mscdex@mscdex.net>',
@@ -17,6 +21,8 @@ from f8a_worker.data_normalizer import NpmDataNormalizer
                       'fishrock123 <fishrock123@rocketmail.com>']}),
     ({'bugs': {'url': 'https://github.com/owner/project/issues', 'email': 'project@name.com'}},
      {'bug_reporting': 'https://github.com/owner/project/issues <project@name.com>'}),
+    ({'bugs': [{'url': 'https://github.com/owner/project/issues', 'email': 'project@name.com'}]},
+     {'bug_reporting': None}),
     ({'license': 'BSD-3-Clause'},
      {'declared_licenses': ['BSD-3-Clause']}),
     ({'license': ''},
@@ -52,7 +58,7 @@ from f8a_worker.data_normalizer import NpmDataNormalizer
     ({'description': ('More', 'NPM')},
      {'description': 'More NPM'}),
     ({'description': None},
-     {'description': ''}),
+     {'description': None}),
     ({'description': {}},
      {'description': '{}'}),
     ({'devDependencies': {'mocha': '~2.0.0'}},
@@ -68,22 +74,18 @@ def test_transforming_javascript_data(data, expected):
         assert transformed_data[key] == value
 
 
-@pytest.mark.parametrize('args, expected', [
-    ({'data': {}},
-     False),
+@pytest.mark.parametrize('data,expected', [
+    ({}, False),
     # package.json (nodejs), no 'scripts'
-    ({'data': {"scripts": None}},
-     False),
+    ({"scripts": None}, False),
     # package.json (nodejs), missing "test"
-    ({'data': {"scripts": {"docs": "jsdoc2md -t ..."}}},
-     False),
+    ({"scripts": {"docs": "jsdoc2md -t ..."}}, False),
     # package.json, default 'npm init' test script
-    ({'data': {"scripts": {"test": "echo \"Error: no test specified\" && exit 1"}}},
-     False),
+    ({"scripts": {"test": "echo \"Error: no test specified\" && exit 1"}}, False),
     # package.json, ok
-    ({'data': {"scripts": {"test": "tape test/*.js", "docs": "jsdoc2md -t"}}},
-     True)
+    ({"scripts": {"test": "tape test/*.js", "docs": "jsdoc2md -t"}}, True)
 ])
-def test__are_tests_implemented(args, expected):
+def test__are_tests_implemented(data, expected):
     """Test NpmDataNormalizer._are_tests_implemented()."""
-    assert NpmDataNormalizer._are_tests_implemented(**args) == expected
+    dn = NpmDataNormalizer(data)
+    assert dn._are_tests_implemented() == expected

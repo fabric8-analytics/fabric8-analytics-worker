@@ -75,17 +75,20 @@ class NpmDataNormalizer(AbstractDataNormalizer):
     def _transform_bug_reporting(self):
         if isinstance(self._data.get('bug_reporting'), dict):
             self._data['bug_reporting'] = self._join_name_email(self._data['bug_reporting'], 'url')
+        else:
+            self._data['bug_reporting'] = None
 
     def _transform_author(self):
-        if self._data.get('author'):
-            if isinstance(self._data.get('author'), dict):
-                self._data['author'] = self._join_name_email(self._data['author'])
-            elif isinstance(self._data.get('author'), list):
-                # Process it even it violates https://docs.npmjs.com/files/package.json
-                if isinstance(self._data['author'][0], dict):
-                    self._data['author'] = self._join_name_email(self._data['author'][0])
-                elif isinstance(self._data['author'][0], str):
-                    self._data['author'] = self._data['author'][0]
+        if isinstance(self._data.get('author'), dict):
+            self._data['author'] = self._join_name_email(self._data['author'])
+        elif isinstance(self._data.get('author'), list):
+            # Process it even it violates https://docs.npmjs.com/files/package.json
+            if isinstance(self._data['author'][0], dict):
+                self._data['author'] = self._join_name_email(self._data['author'][0])
+            elif isinstance(self._data['author'][0], str):
+                self._data['author'] = self._data['author'][0]
+        else:
+            self._data['author'] = None
 
     def _transform_contributors(self):
         if self._data['contributors'] is not None:
@@ -184,19 +187,26 @@ class NpmDataNormalizer(AbstractDataNormalizer):
             return
         elif isinstance(value, (list, tuple)):
             self._data[key] = ' '.join(value)
-        else:
+        elif value is not None:
             self._data[key] = str(value)
+        else:
+            self._data[key] = None
 
     def _transform_dependencies(self):
         # transform dict dependencies into flat list of strings
         # name and version spec are separated by ' ' space
         for dep_section in ('dependencies', 'devel_dependencies'):
+            if isinstance(self._data.get(dep_section), list):
+                return
             # we also want to translate empty dict to empty list
-            if isinstance(self._data.get(dep_section), dict):
+            elif isinstance(self._data.get(dep_section), dict):
                 flat_deps = []
                 for name, spec in self._data[dep_section].items():
                     flat_deps.append('{} {}'.format(name, spec))
                 self._data[dep_section] = flat_deps
+            else:
+                # some trash, like for example a boolean value; ignore...
+                self._data[dep_section] = []
 
     def _transform_engines(self):
         engines = self._data['engines']
