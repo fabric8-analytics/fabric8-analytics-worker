@@ -301,6 +301,9 @@
                         },
                         {
                             "type": "null"
+                        },
+                        {
+                            "type": "boolean"
                         }
                     ]
                 },
