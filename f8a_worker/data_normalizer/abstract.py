@@ -67,7 +67,10 @@ class AbstractDataNormalizer(abc.ABC):
         # {'name':'A', 'email':'B@C.com'} -> 'A <B@C.com>'
         """
         if not isinstance(name_email_dict, dict):
-            return name_email_dict
+            return None
+
+        if not name_email_dict:
+            return None
 
         name_email_str = name_email_dict.get(name_key) or ''
         if isinstance(name_email_dict.get(email_key), str):
