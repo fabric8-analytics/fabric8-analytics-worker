@@ -27,7 +27,7 @@ from f8a_worker.data_normalizer import PythonDataNormalizer
      {'declared_licenses': 'MIT'}),
 ])
 def test_constructor(data, keymap, expected):
-    """Test AbstractDataNormalizer constructor."""
+    """Test PythonDataNormalizer constructor."""
     dn = PythonDataNormalizer(data)
     assert dn is not None
     assert keymap
@@ -35,13 +35,13 @@ def test_constructor(data, keymap, expected):
 
 
 def test_constructor_error_input():
-    """Test AbstractDataNormalizer constructor for error input."""
+    """Test PythonDataNormalizer constructor for error input."""
     dn = PythonDataNormalizer("error")
     assert dn is not None
 
 
 def test_normalize_error_input():
-    """Test AbstractDataNormalizer constructor for error input."""
+    """Test PythonDataNormalizer constructor for error input."""
     dn = PythonDataNormalizer("error")
     assert dn is not None
     n = dn.normalize()
