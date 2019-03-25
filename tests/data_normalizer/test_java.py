@@ -42,13 +42,13 @@ def test_transforming_java_data(data, expected):
 
 def test_constructor_error_input():
     """Test MavenDataNormalizer constructor for error input."""
-    dn = MavenDataNormalizer()
+    dn = MavenDataNormalizer({})
     assert dn is not None
 
 
 def test_normalize_error_input():
     """Test MavenDataNormalizer constructor for error input."""
-    dn = MavenDataNormalizer()
+    dn = MavenDataNormalizer({})
     assert dn is not None
     n = dn.normalize()
     assert n == {}
