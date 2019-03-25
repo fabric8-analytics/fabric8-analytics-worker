@@ -30,6 +30,8 @@ def test_constructor(data, keymap, expected):
     """Test AbstractDataNormalizer constructor."""
     dn = PythonDataNormalizer(data)
     assert dn is not None
+    assert keymap
+    assert expected
 
 
 def test_constructor_error_input():
