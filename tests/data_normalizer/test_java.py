@@ -38,3 +38,17 @@ def test_transforming_java_data(data, expected):
         transformed_value = sorted(transformed_data[key]) \
             if isinstance(transformed_data[key], list) else transformed_data[key]
         assert transformed_value == value, transformed_data
+
+
+def test_constructor_error_input():
+    """Test MavenDataNormalizer constructor for error input."""
+    dn = MavenDataNormalizer()
+    assert dn is not None
+
+
+def test_normalize_error_input():
+    """Test MavenDataNormalizer constructor for error input."""
+    dn = MavenDataNormalizer()
+    assert dn is not None
+    n = dn.normalize()
+    assert n == {}
