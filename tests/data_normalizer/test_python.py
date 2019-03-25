@@ -38,3 +38,11 @@ def test_constructor_error_input():
     """Test AbstractDataNormalizer constructor for error input."""
     dn = PythonDataNormalizer("error")
     assert dn is not None
+
+
+def test_normalize_error_input():
+    """Test AbstractDataNormalizer constructor for error input."""
+    dn = PythonDataNormalizer("error")
+    assert dn is not None
+    n = dn.normalize()
+    assert n == {}
