@@ -80,3 +80,4 @@ target/
 html/
 latex/
 
+.DS_Store
