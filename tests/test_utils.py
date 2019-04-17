@@ -187,6 +187,7 @@ class TestParseGHRepo:
         'github.com/foo/bar.git',
         'www.github.com/foo/bar',
         'http://github.com/foo/bar',
+        'https://github.com/foo/bar/something'
         'http://github.com/foo/bar.git',
         'git+https://www.github.com/foo/bar',
         'git@github.com:foo/bar',
@@ -204,7 +205,6 @@ class TestParseGHRepo:
         'https://bitbucket.org/foo/bar',
         'something',
         'something@else',
-        'http://github.com/user/repo/something',
     ])
     def test_parse_gh_repo_nok(self, url):
         """Test parse_gh_repo()."""
