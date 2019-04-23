@@ -1,6 +1,6 @@
 #!/bin/bash
 
-directories="alembic f8a_worker tests hack"
+directories="alembic f8a_worker tests hack tools"
 separate_files="setup.py"
 
 pass=0

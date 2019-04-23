@@ -30,6 +30,8 @@ docker_login() {
 prep() {
     yum -y update
     yum -y install docker git
+    yum -y install epel-release
+    yum -y install python36-pip python36 python36-virtualenv
     systemctl start docker
 }
 
