@@ -464,6 +464,9 @@ def parse_gh_repo(potential_url):
 
     if repo_name:
         repo_name = repo_name.strip('/')
+        if len(repo_name.split('/')) > 2:
+            temp_list = repo_name.split('/')
+            repo_name = temp_list[0] + '/' + temp_list[1]
         if repo_name.count('/') != 1:
             return None
 
