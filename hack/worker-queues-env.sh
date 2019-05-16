@@ -10,7 +10,7 @@
 
 set -ex
 
-DISPATCHER_YAML_FILES_DIR="/usr/lib/python3.6/site-packages/f8a_worker/dispatcher"
+DISPATCHER_YAML_FILES_DIR="/usr/local/lib/python3.6/site-packages/f8a_worker/dispatcher"
 WORKER_NAME="${WORKER_NAME:-bayesian}"
 
 DIR=$(dirname "${BASH_SOURCE[0]}")
