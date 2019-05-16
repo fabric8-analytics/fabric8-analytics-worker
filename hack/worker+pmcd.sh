@@ -41,4 +41,4 @@ exec /usr/libexec/pcp/bin/pmcd -l /dev/force-logging-to-stderr -f -A -H "${PCP_H
 ) &
 sleep 5 # give time for pmcd's startup messages, so it doesn't intermix with CMD's
 
-exec /usr/bin/workers.sh ${1+"$@"}
+exec /usr/local/bin/workers.sh ${1+"$@"}
