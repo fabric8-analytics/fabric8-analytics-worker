@@ -18,7 +18,7 @@ class GithubTask(BaseTask):
     """Collects statistics using Github API."""
 
     _analysis_name = "github_details"
-    schema_ref = SchemaRef(_analysis_name, '2-0-1')
+    schema_ref = SchemaRef(_analysis_name, '2-0-2')
     # used for testing
     _repo_name = None
     _repo_url = None
@@ -114,6 +114,8 @@ class GithubTask(BaseTask):
         last_year_commits = self._get_last_years_commits(repo['url'])
         commits = {'last_year_commits': {'sum': sum(last_year_commits),
                                          'weekly': last_year_commits}}
+        refreshed_on = {'updated_on': arguments['updated_at']}
+        issues.update(refreshed_on)
         issues.update(commits)
         result_data['details'] = issues
         return result_data

@@ -144,7 +144,9 @@ class InitPackageFlow(BaseTask):
         db.add(package_analysis)
 
         # keep track of updates
-        upstream.updated_at = datetime.datetime.utcnow()
+        t_stamp = datetime.datetime.utcnow()
+        upstream.updated_at = t_stamp
+        arguments['updated_at'] = t_stamp.strftime("%Y-%m-%d %H:%M:%S")
 
         db.commit()
         arguments['document_id'] = package_analysis.id
