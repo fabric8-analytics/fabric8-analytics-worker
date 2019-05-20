@@ -22,6 +22,7 @@ class TestGithuber(object):
         assert isinstance(results, dict)
         assert set(results.keys()) == {'details', 'status', 'summary'}
         assert set(results['details'].keys()) == {'forks_count',
+                                                  'updated_on',
                                                   'last_year_commits',
                                                   'open_issues_count',
                                                   'stargazers_count',
