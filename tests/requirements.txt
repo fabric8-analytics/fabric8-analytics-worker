@@ -7,7 +7,7 @@
 astroid==2.1.0            # via pylint
 atomicwrites==1.2.1       # via pytest
 attrs==18.2.0             # via pytest
-certifi==2018.11.29       # via requests
+certifi==2018.10.15       # via requests
 chardet==3.0.4            # via requests
 codecov==2.0.15
 coverage==4.5.2           # via codecov, pytest-cov
