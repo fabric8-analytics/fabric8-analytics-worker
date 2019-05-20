@@ -3,6 +3,7 @@
 from urllib.parse import urljoin
 
 import requests
+import datetime
 from collections import OrderedDict
 from selinon import FatalTaskError
 
@@ -114,7 +115,8 @@ class GithubTask(BaseTask):
         last_year_commits = self._get_last_years_commits(repo['url'])
         commits = {'last_year_commits': {'sum': sum(last_year_commits),
                                          'weekly': last_year_commits}}
-        refreshed_on = {'updated_on': arguments['updated_at']}
+        t_stamp = datetime.datetime.utcnow()
+        refreshed_on = {'updated_on': t_stamp.strftime("%Y-%m-%d %H:%M:%S")}
         issues.update(refreshed_on)
         issues.update(commits)
         result_data['details'] = issues
