@@ -116,7 +116,7 @@ class GithubTask(BaseTask):
         commits = {'last_year_commits': {'sum': sum(last_year_commits),
                                          'weekly': last_year_commits}}
         t_stamp = datetime.datetime.utcnow()
-        refreshed_on = {'updated_on': t_stamp.strftime("%Y-%m-%d %H:%M:%S")}
+        refreshed_on = {'updated_on': t_stamp.strftime("%d %B %Y")}
         issues.update(refreshed_on)
         issues.update(commits)
         result_data['details'] = issues
