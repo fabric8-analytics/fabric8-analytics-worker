@@ -6,7 +6,7 @@ IFS=$'\n'
 directories=$(cat directories.txt)
 
 # list of separate files to check
-separate_files=$(cat files.txt)
+separate_files=$(cat files_without_dead_code.txt)
 
 pass=0
 fail=0
