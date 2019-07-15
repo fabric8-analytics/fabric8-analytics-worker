@@ -16,9 +16,9 @@ def added_in(role):
     """Provide helper for schema fields added in a particular version.
 
     Example:
-
        with added_in(ROLE_v2_0_0) as since_v2_0:
            since_v2_0.new_field_name = ...
+
     """
     return jsl.Scope(lambda v: v >= role)
 
@@ -27,9 +27,9 @@ def removed_in(role):
     """Provide helper for schema fields removed in a particular version.
 
     Example:
-
        with removed_in(ROLE_v2_0_0) as before_v2_0:
            before_v2_0.old_field_name = ...
+
     """
     return jsl.Scope(lambda v: v < role)
 
