@@ -1,16 +1,23 @@
 #!/bin/bash
 
-directories="alembic f8a_worker tests hack tools"
-separate_files="setup.py dead_code_whitelist.py"
+IFS=$'\n'
+
+# list of directories with sources to check
+directories=$(cat directories.txt)
+
+# list of separate files to check
+separate_files=$(cat files.txt)
+
 exclude_files="tests/data/license/license.py"
+
 pass=0
 fail=0
 
 function prepare_venv() {
-    VIRTUALENV=$(which virtualenv)
+    VIRTUALENV="$(which virtualenv)"
     if [ $? -eq 1 ]; then
         # python36 which is in CentOS does not have virtualenv binary
-        VIRTUALENV=$(which virtualenv-3)
+        VIRTUALENV="$(which virtualenv-3)"
     fi
 
     ${VIRTUALENV} -p python3 venv && source venv/bin/activate && python3 "$(which pip3)" install pydocstyle
@@ -58,7 +65,7 @@ done
 echo
 echo "----------------------------------------------------"
 echo "Checking documentation strings in the following files"
-echo $separate_files
+echo "$separate_files"
 echo "----------------------------------------------------"
 
 check_files "$separate_files"
