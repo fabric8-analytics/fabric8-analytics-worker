@@ -27,11 +27,11 @@ class TestUtilFunctions(object):
 
     def setup_method(self, method):
         """Set up any state tied to the execution of the given method in a class."""
-        assert method
+        assert method is not None
 
     def teardown_method(self, method):
         """Teardown any state that was previously setup with a setup_method call."""
-        assert method
+        assert method is not None
 
     def test_get_all_files_from(self, tmpdir):
         """Test get_all_files_from()."""
@@ -78,6 +78,14 @@ class TestUtilFunctions(object):
         with pytest.raises(TaskError):
             assert compute_digest("/", raise_on_error=True)
         assert compute_digest("/") is None
+
+    def test_compute_digest_for_empty_input(self):
+        """Test compute_digest() for empty input."""
+        # please see https://www.di-mgt.com.au/sha_testvectors.html
+        # for explanation
+        assert compute_digest("/dev/null") is not None
+        SHA256_FOR_EMPTY_INPUT = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        assert compute_digest("/dev/null") == SHA256_FOR_EMPTY_INPUT
 
 
 class TestThreadPool(object):
