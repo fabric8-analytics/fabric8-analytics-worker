@@ -10,7 +10,7 @@ IFS=$'\n'
 directories=$(cat ${SCRIPT_DIR}/directories.txt)
 
 # list of separate files to check
-separate_files=$(cat ${SCRIPT_DIR}/files.txt)
+separate_files=$(cat ${SCRIPT_DIR}/files_without_dead_code.txt)
 
 pass=0
 fail=0
