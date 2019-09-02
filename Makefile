@@ -29,7 +29,7 @@ fast-docker-build-tests: fast-docker-build
 	docker build -t $(TESTS_IMAGE) -f Dockerfile.tests .
 
 test: fast-docker-build-tests
-	./runtest.sh
+	./qa/runtest.sh
 
 get-image-name:
 	@echo $(REGISTRY)/$(REPOSITORY):$(DEFAULT_TAG)
