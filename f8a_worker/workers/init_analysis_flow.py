@@ -43,8 +43,10 @@ class InitAnalysisFlow(BaseTask):
         if get_versions_for_ep(ecosystem, arguments['name']):
             self.log.info("Ingestion flow for {} {}".format(ecosystem, arguments['name']))
         else:
-            self.log.info("Private package ingestion ignored {} {}".format(ecosystem, arguments['name']))
-            raise NotABugFatalTaskError("Private package alert {} {}".format(ecosystem, arguments['name']))
+            self.log.info("Private package ingestion ignored {} {}".format(
+                ecosystem, arguments['name']))
+            raise NotABugFatalTaskError("Private package alert {} {}".format(
+                ecosystem, arguments['name']))
 
         p = Package.get_or_create(db, ecosystem_id=ecosystem.id, name=arguments['name'])
         v = Version.get_or_create(db, package_id=p.id, identifier=arguments['version'])
