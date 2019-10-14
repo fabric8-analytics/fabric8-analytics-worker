@@ -5,7 +5,7 @@ ENV LANG=en_US.UTF-8 \
     WORKER_DATA_DIR='/var/lib/f8a_worker/worker_data' \
     # home directory
     HOME='/workdir' \
-    F8A_UTILS_VERSION=33df0cc \
+    F8A_UTILS_VERSION=bb5ba45 \
     # place for alembic migrations
     ALEMBIC_DIR='/alembic'
 
@@ -22,6 +22,7 @@ RUN cd /tmp/f8a_worker/ && \
     pip3 install -r requirements.txt
 
 RUN pip3 install git+https://github.com/fabric8-analytics/fabric8-analytics-utils.git@${F8A_UTILS_VERSION}
+RUN pip3 install git+https://git@github.com/fabric8-analytics/fabric8-analytics-version-comparator.git#egg=f8a_version_comparator
 COPY alembic.ini hack/run-db-migrations.sh ${ALEMBIC_DIR}/
 COPY alembic/ ${ALEMBIC_DIR}/alembic
 

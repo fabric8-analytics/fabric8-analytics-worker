@@ -12,6 +12,8 @@ from f8a_worker.base import BaseTask
 from f8a_worker.process import IndianaJones, MavenCoordinates
 from f8a_worker.models import Analysis, EcosystemBackend, Ecosystem, Version, Package
 from f8a_worker.utils import normalize_package_name
+from f8a_utils.versions import get_versions_for_ep
+from f8a_worker.errors import NotABugFatalTaskError
 
 
 class InitAnalysisFlow(BaseTask):
@@ -36,6 +38,15 @@ class InitAnalysisFlow(BaseTask):
 
         # make sure we store package name in its normalized form
         arguments['name'] = normalize_package_name(ecosystem.backend.name, arguments['name'])
+
+        # Dont try ingestion for private packages
+        if get_versions_for_ep(ecosystem, arguments['name']):
+            self.log.info("Ingestion flow for {} {}".format(ecosystem, arguments['name']))
+        else:
+            self.log.info("Private package ingestion ignored {} {}".format(
+                ecosystem, arguments['name']))
+            raise NotABugFatalTaskError("Private package alert {} {}".format(
+                ecosystem, arguments['name']))
 
         p = Package.get_or_create(db, ecosystem_id=ecosystem.id, name=arguments['name'])
         v = Version.get_or_create(db, package_id=p.id, identifier=arguments['version'])
