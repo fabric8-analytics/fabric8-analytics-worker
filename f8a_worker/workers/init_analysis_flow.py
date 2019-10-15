@@ -41,7 +41,8 @@ class InitAnalysisFlow(BaseTask):
 
         # Dont try ingestion for private packages
         if get_versions_for_ep(arguments['ecosystem'], arguments['name']):
-            self.log.info("Ingestion flow for {} {}".format(arguments['ecosystem'], arguments['name']))
+            self.log.info("Ingestion flow for {} {}".format(
+                arguments['ecosystem'], arguments['name']))
         else:
             self.log.info("Private package ingestion ignored {} {}".format(
                 arguments['ecosystem'], arguments['name']))
