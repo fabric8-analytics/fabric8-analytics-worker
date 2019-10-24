@@ -51,7 +51,10 @@ class GithubTask(BaseTask):
     def _get_repo_stats(self, repo):
         """Collect various repository properties."""
         try:
-            contributors = get_response(repo['contributors_url'], self._headers)
+            if repo.get('contributors_url', ''):
+                contributors = get_response(repo.get('contributors_url', ''), self._headers)
+            else:
+                contributors = {}
         except NotABugTaskError as e:
             self.log.debug(e)
             contributors = {}
