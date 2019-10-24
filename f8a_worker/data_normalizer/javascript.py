@@ -64,13 +64,15 @@ class NpmDataNormalizer(AbstractDataNormalizer):
         if 'scripts' in self._data:  # added by _handle_javascript()
             if self._data['scripts'] is None:
                 return False
-            else:
+            elif type(self._data['scripts']) is dict:
                 test_script = self._data['scripts'].get('test', '')
                 # Existing test_script doesn't say much about whether it really runs some tests.
                 # For example: 'npm init' uses 'echo "Error: no test specified" && exit 1'
                 # as a default value of 'scripts'.'test'
                 return isinstance(test_script, str) and test_script != '' \
                     and 'Error: no test specified' not in test_script
+            else:
+                return False
 
     def _transform_bug_reporting(self):
         if isinstance(self._data.get('bug_reporting'), dict):
