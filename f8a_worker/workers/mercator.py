@@ -250,6 +250,8 @@ class MercatorTask(BaseTask):
                 requires_dist = requirements_txt['result']['dependencies']
             else:
                 self.log.info('Found no usable source of requirements for PKG-INFO :(')
+            if not pkg_info.get('result', None):
+                pkg_info['result'] = {}
             pkg_info['result']['requires_dist'] = requires_dist
             ret = pkg_info
         elif requirements_txt:
