@@ -13,7 +13,7 @@ from f8a_worker.base import BaseTask
 from f8a_worker.process import IndianaJones, MavenCoordinates
 from f8a_worker.models import Analysis, EcosystemBackend, Ecosystem, Version, Package
 from f8a_worker.utils import normalize_package_name
-from f8a_utils.versions import get_versions_for_ep
+from f8a_utils.versions import is_pkg_public
 from f8a_worker.errors import NotABugFatalTaskError
 
 
@@ -51,7 +51,7 @@ class InitAnalysisFlow(BaseTask):
                 arguments['name'], arguments['version']))
 
         # Dont try ingestion for private packages
-        if get_versions_for_ep(arguments['ecosystem'], arguments['name']):
+        if is_pkg_public(arguments['ecosystem'], arguments['name']):
             self.log.info("Ingestion flow for {} {}".format(
                 arguments['ecosystem'], arguments['name']))
         else:
