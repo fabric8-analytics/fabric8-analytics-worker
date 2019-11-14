@@ -4,6 +4,8 @@ import datetime
 from selinon import FatalTaskError
 from sqlalchemy import desc
 from sqlalchemy.orm.exc import NoResultFound
+from f8a_utils.versions import is_pkg_public
+from f8a_worker.errors import NotABugFatalTaskError
 
 from f8a_worker.base import BaseTask
 from f8a_worker.models import Ecosystem, Package, Upstream, PackageAnalysis
@@ -115,6 +117,19 @@ class InitPackageFlow(BaseTask):
             ecosystem = Ecosystem.by_name(db, arguments['ecosystem'])
         except NoResultFound:
             raise FatalTaskError('Unknown ecosystem: %r' % arguments['ecosystem'])
+
+        # Dont try ingestion for private packages
+        if is_pkg_public(arguments['ecosystem'], arguments['name']):
+            self.log.info("Package analysis flow for {} {}".format(
+                arguments['ecosystem'], arguments['name']))
+        else:
+            self.log.info("Private package ignored "
+                          "{} {} in init_package_flow".format(
+                            arguments['ecosystem'], arguments['name']))
+            raise NotABugFatalTaskError("Private package alert "
+                                        "{} {} in init_package_flow".format(
+                                            arguments['ecosystem'], arguments['name']))
+
         package = Package.get_or_create(db, ecosystem_id=ecosystem.id, name=arguments['name'])
         url = self.get_upstream_url(arguments)
         upstream = self.get_upstream_entry(package, url)
