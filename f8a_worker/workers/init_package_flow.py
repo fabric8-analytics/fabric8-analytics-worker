@@ -24,7 +24,8 @@ class InitPackageFlow(BaseTask):
                 return None
 
             metadata_result = self.parent_task_result('metadata')
-            code_repository = metadata_result.get('details', [{}])[0].get('code_repository', {})
+            code_repository = metadata_result.get('details')[0].get('code_repository', {}) \
+                if metadata_result.get('details') else {}
             url = code_repository.get('url') if code_repository else None
             if url is None:
                 self.log.info('No upstream URL from metadata task provided')
