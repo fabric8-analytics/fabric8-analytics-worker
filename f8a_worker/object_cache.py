@@ -101,10 +101,11 @@ class EPVCache(object):
 
         :param tarball_name: tarball name to be stored
         """
-        tarball_name = {
+        tarball_json = {
             'tarball_name': tarball_name
         }
-        self._s3.store_dict(tarball_name, self._meta_json_object_key)
+        self._meta = tarball_json
+        self._s3.store_dict(tarball_json, self._meta_json_object_key)
 
     def _construct_source_tarball_names(self):
         """Construct source tarball object key and source tarball path based on meta-information."""
