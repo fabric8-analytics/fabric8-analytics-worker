@@ -9,7 +9,7 @@ from f8a_worker.base import BaseTask
 from f8a_worker.schemas import SchemaRef
 from f8a_worker.object_cache import ObjectCache
 from f8a_worker.defaults import configuration
-from selinon import FatalTaskError, StoragePool
+from selinon import StoragePool
 
 
 class LicenseCheckTask(BaseTask):
@@ -76,8 +76,7 @@ class LicenseCheckTask(BaseTask):
             tc = TimedCommand(command)
             status, output, error = tc.run(is_json=True, timeout=1200)
             if status != 0:
-                raise FatalTaskError("Error (%s) during running command %s: %r" %
-                                     (str(status), command, error))
+                return {"status": status, "output": output, "error": error}
 
         details = LicenseCheckTask.process_output(output)
         result_data['details'] = details
@@ -112,4 +111,9 @@ class LicenseCheckTask(BaseTask):
             cache_path = ObjectCache.get_from_dict(arguments).get_extracted_source_tarball()
 
         result_data = self.run_scancode(cache_path)
-        return result_data
+        if 'error' in result_data:
+            self.log.info ("Error (%s) during running command %s: %r" %
+                           (str(result_data["status"]), result_data["command"],
+                            result_data["error"]))
+        else:
+            return result_data
