@@ -33,7 +33,7 @@ class NpmDataNormalizer(AbstractDataNormalizer):
     )
 
     def __init__(self, mercator_json):
-        """Constructor."""
+        """Initialize function."""
         super().__init__(mercator_json)
 
     def normalize(self):

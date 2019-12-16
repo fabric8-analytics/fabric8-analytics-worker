@@ -52,7 +52,8 @@ class LicenseCheckTask(BaseTask):
         """Run scancode tool."""
         result_data = {'status': 'unknown',
                        'summary': {},
-                       'details': {}}
+                       'details': {},
+                       'command': 'N/A'}
         command = [path.join(configuration.SCANCODE_PATH,
                              'scancode'),
                    # Scan for licenses
@@ -82,6 +83,7 @@ class LicenseCheckTask(BaseTask):
         result_data['details'] = details
         result_data['status'] = 'success'
         result_data['summary'] = {'sure_licenses': list(details['licenses'].keys())}
+        result_data['command'] = command
 
         return result_data
 
@@ -112,8 +114,10 @@ class LicenseCheckTask(BaseTask):
 
         result_data = self.run_scancode(cache_path)
         if 'error' in result_data:
-            self.log.info ("Error (%s) during running command %s: %r" %
-                           (str(result_data["status"]), result_data["command"],
-                            result_data["error"]))
+            self.log.info("Error (%s) during running command %s: %r" %
+                          (str(result_data["status"]), result_data["command"],
+                           result_data["error"]))
         else:
+            if 'command' in result_data:
+                del result_data['command']
             return result_data

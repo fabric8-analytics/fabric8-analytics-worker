@@ -16,7 +16,7 @@ class PythonDataNormalizer(AbstractDataNormalizer):
     )
 
     def __init__(self, mercator_json):
-        """Constructor."""
+        """Initialize function."""
         if 'error' in mercator_json:
             # mercator by default (MERCATOR_INTERPRET_SETUP_PY=false) doesn't interpret setup.py
             mercator_json = {}
@@ -55,7 +55,7 @@ class PythonDistDataNormalizer(AbstractDataNormalizer):
     )
 
     def __init__(self, mercator_json):
-        """Constructor."""
+        """Initialize function."""
         super().__init__(mercator_json)
 
     def normalize(self):
@@ -111,7 +111,7 @@ class PythonRequirementsTxtDataNormalizer(AbstractDataNormalizer):
     """
 
     def __init__(self, mercator_json):
-        """Constructor."""
+        """Initialize function."""
         super().__init__(mercator_json)
 
     def normalize(self):
