@@ -19,7 +19,7 @@ class NugetDataNormalizer(AbstractDataNormalizer):
     )
 
     def __init__(self, mercator_json):
-        """Constructor."""
+        """Initialize function."""
         metadata = mercator_json.get('Metadata', {})
         super().__init__(metadata)
 

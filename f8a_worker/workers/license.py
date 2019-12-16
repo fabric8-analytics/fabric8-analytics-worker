@@ -118,4 +118,6 @@ class LicenseCheckTask(BaseTask):
                           (str(result_data["status"]), result_data["command"],
                            result_data["error"]))
         else:
+            if 'command' in result_data:
+                del result_data['command']
             return result_data

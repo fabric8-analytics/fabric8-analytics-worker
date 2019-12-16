@@ -19,7 +19,7 @@ class AbstractDataNormalizer(abc.ABC):
 
     @abc.abstractmethod
     def __init__(self, mercator_json):
-        """Constructor.
+        """Initialize function.
 
         :param mercator_json: dict, data from mercator
         """

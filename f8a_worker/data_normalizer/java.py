@@ -19,7 +19,7 @@ class MavenDataNormalizer(AbstractDataNormalizer):
     )
 
     def __init__(self, mercator_json):
-        """Constructor."""
+        """Initialize function."""
         pom = mercator_json.get('pom.xml', {})
         super().__init__(pom)
 
@@ -68,7 +68,7 @@ class GradleDataNormalizer(AbstractDataNormalizer):
     """
 
     def __init__(self, mercator_json):
-        """Constructor."""
+        """Initialize function."""
         super().__init__(mercator_json)
 
     def normalize(self):
