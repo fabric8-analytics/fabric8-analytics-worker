@@ -77,7 +77,8 @@ class LicenseCheckTask(BaseTask):
             tc = TimedCommand(command)
             status, output, error = tc.run(is_json=True, timeout=1200)
             if status != 0:
-                return {"status": status, "output": output, "error": error}
+                return {"status": status, "output": output,
+                        "error": error, "command": command}
 
         details = LicenseCheckTask.process_output(output)
         result_data['details'] = details
@@ -119,5 +120,6 @@ class LicenseCheckTask(BaseTask):
                            result_data["error"]))
         else:
             if 'command' in result_data:
+                self.log.info("Successfully executed command {}".format(result_data['command']))
                 del result_data['command']
             return result_data
