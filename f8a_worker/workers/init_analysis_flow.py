@@ -72,6 +72,7 @@ class InitAnalysisFlow(BaseTask):
 
         cache_path = mkdtemp(dir=self.configuration.WORKER_DATA_DIR)
         epv_cache = ObjectCache.get_from_dict(arguments)
+        npm_dir = self.configuration.NPM_DATA_DIR
 
         try:
             if not epv_cache.\
@@ -104,6 +105,8 @@ class InitAnalysisFlow(BaseTask):
         finally:
             # always clean up cache
             shutil.rmtree(cache_path)
+            if arguments['ecosystem'] == "npm":
+                shutil.rmtree(npm_dir, True)
 
         a = Analysis(version=v, access_count=1, started_at=datetime.datetime.utcnow())
         db.add(a)

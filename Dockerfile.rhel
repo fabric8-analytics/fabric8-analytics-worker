@@ -3,6 +3,8 @@ FROM quay.io/openshiftio/rhel-fabric8-analytics-f8a-worker-base:aa8893d
 ENV LANG=en_US.UTF-8 \
     # place where to download & unpack artifacts
     WORKER_DATA_DIR='/var/lib/f8a_worker/worker_data' \
+    # place for npm artifacts
+    NPM_DATA_DIR='/workdir/.npm' \
     # home directory
     HOME='/workdir' \
     F8A_UTILS_VERSION=3bca34e \
