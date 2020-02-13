@@ -61,6 +61,7 @@ class F8AConfiguration(object):
         quote(environ.get('POSTGRESQL_PASSWORD', ''), safe=''))
 
     WORKER_DATA_DIR = environ.get('WORKER_DATA_DIR', 'not-set')
+    NPM_DATA_DIR = path.join(environ.get('HOME', '.npm'))
 
     # Scancode configuration
     SCANCODE_LICENSE_SCORE = environ.get('SCANCODE_LICENSE_SCORE', '20')  # scancode's default is 0
