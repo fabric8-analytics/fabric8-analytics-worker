@@ -20,7 +20,13 @@ class LibrariesIoTask(BaseTask):
     @staticmethod
     def recent_releases(versions, count=10):
         """Sort versions by 'published_at' and return 'count' latest."""
-        return sorted(versions, key=itemgetter('published_at'))[-count:]
+        version_list = sorted(versions, key=itemgetter('published_at'))[-count:]
+        for ver in version_list:
+            if 'spdx_expression' in ver:
+                del ver['spdx_expression']
+            if 'original_license' in ver:
+                del ver['original_license']
+        return version_list
 
     def execute(self, arguments):
         """Task code.
