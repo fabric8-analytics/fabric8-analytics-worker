@@ -32,7 +32,8 @@ val_json = {
             "number": "0.1.1",
             "published_at": "2012-01-19T15:01:53.028Z",
             "spdx_expression": "",
-            "original_license": ""
+            "original_license": "",
+            "researched_at": ""
         }
     ]
 }

@@ -41,7 +41,7 @@ class UnknownDependencyFetcherTask(BaseTask):
                 else:
                     dep_pkg_list_unknown.append(ecosystem + ":" + name + ":" + version)
             else:
-                self.log.error("Error response from graph for {dependency} " +
+                self.log.error("Error response from graph for {dependency} "
                                "with status code as {status_code}"
                                .format(dependency=dependency, status_code=graph_req.status_code))
 

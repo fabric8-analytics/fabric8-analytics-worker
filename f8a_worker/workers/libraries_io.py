@@ -21,12 +21,14 @@ class LibrariesIoTask(BaseTask):
     def recent_releases(versions, count=10):
         """Sort versions by 'published_at' and return 'count' latest."""
         version_list = sorted(versions, key=itemgetter('published_at'))[-count:]
+        final_ver_list = []
         for ver in version_list:
-            if 'spdx_expression' in ver:
-                del ver['spdx_expression']
-            if 'original_license' in ver:
-                del ver['original_license']
-        return version_list
+            tmp = {
+                "number": ver['number'],
+                "published_at": ver['published_at']
+            }
+            final_ver_list.append(tmp)
+        return final_ver_list
 
     def execute(self, arguments):
         """Task code.
