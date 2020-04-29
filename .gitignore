@@ -16,6 +16,7 @@ __pycache__/
 .Python
 env/
 venv/
+myenv/
 # some bower JS components have build/ directory and we want to keep these
 # so we only ignore a top-level build/ directory
 /build/
@@ -29,6 +30,7 @@ sdist/
 dist/
 src/
 var/
+.vscode/
 *.egg-info/
 .installed.cfg
 *.egg

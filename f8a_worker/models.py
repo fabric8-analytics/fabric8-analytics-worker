@@ -402,6 +402,21 @@ class RecommendationFeedback(Base):
                                  back_populates="feedback")
 
 
+class UserDetails(Base):
+    """Table for user details."""
+
+    __tablename__ = "user_details"
+
+    user_id = Column(String(64), primary_key=True)
+    snyk_api_token = Column(String(64))
+    last_validated_date = Column(DateTime)
+    status = Column(String(32))
+    registered_date = Column(DateTime)
+    created_date = Column(DateTime)
+    updated_date = Column(DateTime)
+    user_source = Column(String(32))
+
+
 class OSIORegisteredRepos(Base):
     """Table for OSIO registered repos."""
 
