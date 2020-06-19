@@ -40,8 +40,8 @@ class LicenseCheckTask(BaseTask):
                     licenses[short_name] = _license
                 else:
                     licenses[short_name]['paths'].add(file['path'])
-        for l in licenses.values():
-            l['paths'] = list(l['paths'])  # set -> list
+        for line in licenses.values():
+            line['paths'] = list(line['paths'])  # set -> list
         data['licenses'] = licenses
 
         del data['scancode_options']
