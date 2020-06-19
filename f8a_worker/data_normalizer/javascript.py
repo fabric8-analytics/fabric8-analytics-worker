@@ -174,12 +174,12 @@ class NpmDataNormalizer(AbstractDataNormalizer):
 
     def _transform_declared_licenses_list(self, k, value):
         licenses = []
-        for l in value:
-            if isinstance(l, dict):
-                if isinstance(l.get("type"), str):
-                    licenses.append(l["type"])
-                elif isinstance(l.get("name"), str):
-                    licenses.append(l["name"])
+        for line in value:
+            if isinstance(line, dict):
+                if isinstance(line.get("type"), str):
+                    licenses.append(line["type"])
+                elif isinstance(line.get("name"), str):
+                    licenses.append(line["name"])
         self._data[k] = licenses
 
     def _transform_description(self):

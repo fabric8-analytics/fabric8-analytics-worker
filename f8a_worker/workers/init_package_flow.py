@@ -1,5 +1,4 @@
 """Initialize package level analysis."""
-
 import datetime
 from selinon import FatalTaskError
 from sqlalchemy import desc
@@ -9,6 +8,7 @@ from f8a_worker.errors import NotABugFatalTaskError
 
 from f8a_worker.base import BaseTask
 from f8a_worker.models import Ecosystem, Package, Upstream, PackageAnalysis
+from urllib.parse import urlparse
 
 
 class InitPackageFlow(BaseTask):
@@ -90,7 +90,7 @@ class InitPackageFlow(BaseTask):
                           "upstream URL '%s'", package.ecosystem.name, package.name, url)
             new_upstream = Upstream(
                 package_id=package.id,
-                url=url,
+                url=validate_url(url),
                 updated_at=None,
                 deactivated_at=None,
                 added_at=now
@@ -165,3 +165,19 @@ class InitPackageFlow(BaseTask):
         db.commit()
         arguments['document_id'] = package_analysis.id
         return arguments
+
+
+def validate_url(url):
+    """Check if URL is valid
+
+        :param urk: str, url string
+        return: a dictionary received as input having non UTF characters removed if present.
+        """
+    try:
+        result = urlparse(url)
+        if all([result.scheme, result.netloc]):
+            return url
+        else:
+            return ''
+    except ValueError:
+        return ''
