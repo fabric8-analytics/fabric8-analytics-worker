@@ -17,7 +17,7 @@ from f8a_worker.models import Analysis, Ecosystem, Package, Version, WorkerResul
 from f8a_worker.utils import MavenCoordinates
 
 from .postgres_base import PostgresBase
-
+import string
 
 Base = declarative_base()
 
@@ -45,7 +45,7 @@ class BayesianPostgres(PostgresBase):
             started_at=result.get('_audit', {}).get('started_at') if result else None,
             ended_at=result.get('_audit', {}).get('ended_at') if result else None,
             analysis_id=node_args.get('document_id') if isinstance(node_args, dict) else None,
-            task_result=result,
+            task_result=validate_utf_json(result),
             error=error,
             external_request_id=(node_args.get('external_request_id')
                                  if isinstance(node_args, dict) else None)
@@ -278,3 +278,17 @@ class BayesianPostgres(PostgresBase):
         except SQLAlchemyError:
             PostgresBase.session.rollback()
             raise
+
+
+def validate_utf_json(result):
+    """Remove non UTF-8 characters from description if present.
+
+    :param result: dict, Dictionary having details of task
+    return: a dictionary received as input having non UTF characters removed if present
+    """
+    if 'details' in result and isinstance(result['details'], list) \
+            and len(result['details']) > 0 and 'description' in result['details'][0]:
+        result['details'][0]['description'] = ''.join(
+            x for x in result['details'][0]['description']
+            if x in string.printable)
+    return result
