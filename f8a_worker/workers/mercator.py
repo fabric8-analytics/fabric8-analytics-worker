@@ -285,7 +285,7 @@ def _validate_utf_json(result):
     """
     if result is not None:
         for detail in result['details']:
-            if 'description' in detail:
+            if 'description' in detail and detail['description'] is not None:
                 detail['description'] = ''.join(x for x in detail['description']
                                                 if x in string.printable)
     return result
