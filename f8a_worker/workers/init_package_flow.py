@@ -9,6 +9,9 @@ from f8a_worker.errors import NotABugFatalTaskError
 from f8a_worker.base import BaseTask
 from f8a_worker.models import Ecosystem, Package, Upstream, PackageAnalysis
 from urllib.parse import urlparse
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class InitPackageFlow(BaseTask):
@@ -90,7 +93,7 @@ class InitPackageFlow(BaseTask):
                           "upstream URL '%s'", package.ecosystem.name, package.name, url)
             new_upstream = Upstream(
                 package_id=package.id,
-                url=validate_url(url),
+                url=_validate_url(url),
                 updated_at=None,
                 deactivated_at=None,
                 added_at=now
@@ -167,7 +170,7 @@ class InitPackageFlow(BaseTask):
         return arguments
 
 
-def validate_url(url):
+def _validate_url(url):
     """Check if URL is valid.
 
     :param url: str, url string
@@ -179,5 +182,6 @@ def validate_url(url):
             return url
         else:
             return ''
-    except ValueError:
+    except ValueError as e:
+        logger.error("Invalid External URL: {}".format(str(e)))
         return ''

@@ -32,6 +32,10 @@ from f8a_worker.object_cache import ObjectCache
 from f8a_worker.schemas import SchemaRef
 from f8a_worker.utils import TimedCommand
 from f8a_worker.errors import NotABugFatalTaskError
+import string
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # TODO: we need to unify the output from different ecosystems
@@ -116,7 +120,7 @@ class MercatorTask(BaseTask):
 
         result_data['details'] = [normalize(d) for d in items]
         result_data['status'] = 'success'
-        return result_data
+        return _validate_utf_json(result_data)
 
     def run_gofedlib(self, topdir, timeout):
         """Run gofedlib-cli to extract dependencies from golang sources."""
@@ -271,3 +275,17 @@ class MercatorTask(BaseTask):
             sorted_list = [i for i in sorted_list if
                            len(i['path'].split(os.path.sep)) == outermost_len]
         return sorted_list
+
+
+def _validate_utf_json(result):
+    """Remove non UTF-8 characters from description if present.
+
+    :param result: dict, Dictionary having details of task
+    return: a dictionary received as input having non UTF characters removed if present
+    """
+    if result is not None:
+        for detail in result['details']:
+            if 'description' in detail:
+                detail['description'] = ''.join(x for x in detail['description']
+                                                if x in string.printable)
+    return result

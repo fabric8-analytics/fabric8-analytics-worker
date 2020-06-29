@@ -6,7 +6,7 @@ import pytest
 from flexmock import flexmock
 from f8a_worker.object_cache import EPVCache
 from f8a_worker.process import IndianaJones
-from f8a_worker.workers.mercator import MercatorTask
+from f8a_worker.workers.mercator import MercatorTask, _validate_utf_json
 
 
 def compare_dictionaries(a, b):
@@ -141,3 +141,15 @@ class TestMercator(object):
         assert len(result) == len(expected)
         for i in range(len(expected)):
             assert compare_dictionaries(result[i], expected[i])
+
+
+def test_validate_utf_json():
+    """Test the function to remove non UTF-8 characters from description if present."""
+    assert _validate_utf_json(None) is None
+    assert _validate_utf_json({'details': [{'description': 'test description'}]}) == \
+           {'details': [{'description': 'test description'}]}
+    assert _validate_utf_json({'details': [{
+        'description': '��C\x00h\x00a\x00n\x00g\x00e\x00 \x001\x00'}]}) == \
+        {'details': [{'description': 'Change 1'}]}
+    assert _validate_utf_json({'details': []}) == {'details': []}
+    assert _validate_utf_json({'details': {}}) == {'details': {}}
