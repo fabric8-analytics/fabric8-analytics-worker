@@ -153,3 +153,5 @@ def test_validate_utf_json():
         {'details': [{'description': 'Change 1'}]}
     assert _validate_utf_json({'details': []}) == {'details': []}
     assert _validate_utf_json({'details': {}}) == {'details': {}}
+    assert _validate_utf_json({'details': [{'description': None}]}) == \
+           {'details': [{'description': None}]}
