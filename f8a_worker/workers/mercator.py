@@ -120,7 +120,7 @@ class MercatorTask(BaseTask):
 
         result_data['details'] = [normalize(d) for d in items]
         result_data['status'] = 'success'
-        return _validate_utf_json(result_data)
+        return result_data
 
     def run_gofedlib(self, topdir, timeout):
         """Run gofedlib-cli to extract dependencies from golang sources."""

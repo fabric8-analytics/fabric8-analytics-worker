@@ -93,7 +93,7 @@ class InitPackageFlow(BaseTask):
                           "upstream URL '%s'", package.ecosystem.name, package.name, url)
             new_upstream = Upstream(
                 package_id=package.id,
-                url=_validate_url(url),
+                url=url,
                 updated_at=None,
                 deactivated_at=None,
                 added_at=now
