@@ -23,5 +23,3 @@
           to: 'RepositoryDescCollectorTask'
           condition: &repositoryDescCollectorCheck
             name: 'alwaysFalse'
-        - from:
-          to: 'libraries_io'

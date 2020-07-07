@@ -27,15 +27,6 @@
       edges:
         - from:
           to:
-            - 'source_licenses'
-          condition:
-            not:
-              name: 'argsFieldEqual'
-              args:
-                key: 'ecosystem_backend'
-                value: 'nuget'
-        - from:
-          to:
             - 'metadata'
         - from:
           to:
