@@ -10,7 +10,8 @@ from selinon import FatalTaskError
 from f8a_worker.base import BaseTask
 from f8a_worker.errors import F8AConfigurationException, NotABugTaskError, NotABugFatalTaskError
 from f8a_worker.schemas import SchemaRef
-from f8a_worker.utils import parse_gh_repo, get_response
+from f8a_worker.utils import parse_gh_repo, get_response, get_gh_contributors
+import time
 
 REPO_PROPS = ('forks_count', 'subscribers_count', 'stargazers_count', 'open_issues_count')
 
@@ -52,13 +53,25 @@ class GithubTask(BaseTask):
         """Collect various repository properties."""
         try:
             if repo.get('contributors_url', ''):
-                contributors = get_response(repo.get('contributors_url', ''), self._headers)
+                contributors_url = repo.get('contributors_url', '')
+                page_count = 1
+                contributors = []
+
+                while True:
+                    url = contributors_url + "?per_page=100&page=" + str(page_count)
+                    contributors_batch = get_gh_contributors(url, self._headers)
+
+                    if len(contributors_batch) > 0:
+                        page_count += 1
+                        contributors.extend(contributors_batch)
+                        time.sleep(1)
+                    else:
+                        break
             else:
-                contributors = {}
+                contributors = []
         except NotABugTaskError as e:
             self.log.debug(e)
-            contributors = {}
-        d = {'contributors_count': len(list(contributors)) if contributors is not None else 'N/A'}
+        d = {'contributors_count': len(contributors) if contributors is not None else 'N/A'}
         for prop in REPO_PROPS:
             d[prop] = repo.get(prop, -1)
         return d
