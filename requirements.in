@@ -34,7 +34,7 @@ lxml
 mando
 mccabe
 pathtools
-psycopg2-binary
+psycopg2<2.8
 pycodestyle
 pyflakes
 pyrsistent

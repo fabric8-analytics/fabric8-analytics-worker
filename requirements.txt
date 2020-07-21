@@ -43,7 +43,7 @@ lxml==4.5.2               # via -r requirements.in, fabric8-analytics-utils
 mando==0.6.4              # via -r requirements.in, radon
 mccabe==0.6.1             # via -r requirements.in, flake8
 pathtools==0.1.2          # via -r requirements.in, watchdog
-psycopg2-binary==2.8.5    # via -r requirements.in
+psycopg2==2.7.7           # via -r requirements.in
 pycodestyle==2.6.0        # via -r requirements.in, flake8
 pyflakes==2.2.0           # via -r requirements.in, flake8
 pyrsistent==0.16.0        # via -r requirements.in, jsonschema

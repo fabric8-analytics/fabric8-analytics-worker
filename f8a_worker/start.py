@@ -18,6 +18,7 @@ class NotABugFatalTaskError(SelinonException):
 
     def __init__(self, state):
         """Make sure flow errors capture final state of the flow.
+
         :param state: final flow details
         """
         super().__init__(json.dumps(state))
@@ -29,9 +30,10 @@ class NotABugFatalTaskError(SelinonException):
 
 
 def _check_hung_task(self, flow_info):
-    """A custom function to remove tasks which are rotating in dispatcher for more than given time.
-   :param flow_info: information about the current flow
-   """
+    """Function to remove tasks which are rotating in dispatcher for more than given time.
+
+    :param flow_info: information about the current flow
+    """
     node_args = flow_info['node_args']
     if node_args is not None and 'flow_start_time' in node_args \
             and node_args['flow_start_time'] is not None:
