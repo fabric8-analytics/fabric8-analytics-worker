@@ -596,3 +596,31 @@ def peek(iterable):
     except StopIteration:
         return None
     return first
+
+
+def get_gh_contributors(url, headers=None, sleep_time=2, retry_count=3):
+    """Wrap requests which tries to get response.
+
+    :param url: URL where to do the request
+    :param headers: additional headers for request
+    :param sleep_time: sleep time between retries
+    :param retry_count: number of retries
+    :return: content of response's json
+    """
+    try:
+        for _ in range(retry_count):
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            if response.status_code == 204:
+                # json() below would otherwise fail with JSONDecodeError
+                raise HTTPError('No content')
+            response = response.json()
+            if response:
+                return response
+            time.sleep(sleep_time)
+        else:
+            return []
+    except HTTPError as err:
+        message = "Failed to get results from {url} with {err}".format(url=url, err=err)
+        logger.error(message)
+        raise NotABugTaskError(message) from err
