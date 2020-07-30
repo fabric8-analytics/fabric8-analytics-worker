@@ -2,7 +2,7 @@
 
 import pytest
 import os
-from f8a_worker.start import _check_hung_task
+from f8a_worker.monkey_patch import _check_hung_task
 from datetime import datetime, timedelta
 
 
