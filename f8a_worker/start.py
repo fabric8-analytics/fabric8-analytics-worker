@@ -27,7 +27,7 @@ class SentryCelery(celery.Celery):
 
         patched_diapatcher()
 
-        
+
 app = SentryCelery('tasks')
 init_celery(app)
 init_selinon(app)
