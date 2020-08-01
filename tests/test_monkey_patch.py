@@ -3,7 +3,6 @@
 import pytest
 import os
 import time
-from datetime import datetime, timedelta
 from f8a_worker.monkey_patch import _check_hung_task
 
 _SQS_MSG_LIFETIME_IN_SEC = (int(os.environ.get('SQS_MSG_LIFETIME', '24')) + 1) * 60 * 60
