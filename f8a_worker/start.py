@@ -7,7 +7,7 @@ import os
 from f8a_worker.setup_celery import init_celery, init_selinon
 import raven
 from raven.contrib.celery import register_signal, register_logger_signal
-from f8a_worker.monkey_patch import patched_diapatcher
+from f8a_worker.monkey_patch import patch
 
 
 class SentryCelery(celery.Celery):
@@ -25,7 +25,8 @@ class SentryCelery(celery.Celery):
             "f8a_worker.errors.TaskAlreadyExistsError"
         ]
 
-        patched_diapatcher()
+        # Patch to drain out old messages
+        patch(self)
 
 
 app = SentryCelery('tasks')

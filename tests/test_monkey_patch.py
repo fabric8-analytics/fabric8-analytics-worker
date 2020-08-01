@@ -2,8 +2,11 @@
 
 import pytest
 import os
-from f8a_worker.monkey_patch import _check_hung_task
+import time
 from datetime import datetime, timedelta
+from f8a_worker.monkey_patch import _check_hung_task
+
+_SQS_MSG_LIFETIME_IN_SEC = (int(os.environ.get('SQS_MSG_LIFETIME', '24')) + 1) * 60 * 60
 
 
 class TestStartFunctions():
@@ -15,15 +18,7 @@ class TestStartFunctions():
         _check_hung_task(self, flow_info)
         assert flow_info['node_args']['flow_start_time'] is not None
 
-        time_limit = datetime.now() - timedelta(hours=5)
-        flow_info = {'node_args': {'flow_start_time': str(time_limit)}}
-        _check_hung_task(self, flow_info)
-        assert flow_info['node_args']['flow_start_time'] is not None
-        assert flow_info['node_args']['no_of_hours'] == 5
-
-        dispatcher_time_out_in_hrs = int(os.environ.get('DISPATCHER_TIME_OUT_IN_HRS', '24')) + 2
-
-        time_limit = datetime.now() - timedelta(hours=dispatcher_time_out_in_hrs + 2)
-        flow_info = {'node_args': {'flow_start_time': str(time_limit)}}
+        old_time = time.time() - _SQS_MSG_LIFETIME_IN_SEC
+        flow_info = {'node_args': {'flow_start_time': old_time}}
         with pytest.raises(Exception):
             assert _check_hung_task(self, flow_info)
