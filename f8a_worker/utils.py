@@ -602,7 +602,7 @@ def peek(iterable):
 
 @retry(reraise=True, stop=tenacity.stop_after_attempt(3), wait=tenacity.wait_fixed(1))
 def get_gh_contributors(url):
-    """Wrap requests which tries to get response.
+    """Get number of contributors from Git URL.
 
     :param url: URL where to do the request
     :return:  length of contributor's list
