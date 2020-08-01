@@ -14,7 +14,9 @@ from shlex import split
 from subprocess import Popen, PIPE, check_output, CalledProcessError, TimeoutExpired
 from threading import Thread
 from traceback import format_exc
-from urllib.parse import unquote, urlparse
+from urllib.parse import unquote, urlparse, parse_qs
+import tenacity
+from tenacity import retry
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -598,28 +600,25 @@ def peek(iterable):
     return first
 
 
-def get_gh_contributors(url, headers=None, sleep_time=2, retry_count=3):
+@retry(reraise=True, stop=tenacity.stop_after_attempt(3), wait=tenacity.wait_fixed(1))
+def get_gh_contributors(url):
     """Wrap requests which tries to get response.
 
     :param url: URL where to do the request
-    :param headers: additional headers for request
-    :param sleep_time: sleep time between retries
-    :param retry_count: number of retries
-    :return: content of response's json
+    :return:  length of contributor's list
     """
     try:
-        for _ in range(retry_count):
-            response = requests.get(url, headers=headers)
-            response.raise_for_status()
-            if response.status_code == 204:
-                # json() below would otherwise fail with JSONDecodeError
-                raise HTTPError('No content')
-            response = response.json()
-            if response:
-                return response
-            time.sleep(sleep_time)
+        url += "?per_page=1"
+        response = requests.head(url)
+        response.raise_for_status()
+
+        if response.status_code == 204:
+            raise HTTPError('No content')
+        elif response.status_code == 200:
+            contributors_count = int(parse_qs(response.links['last']['url'])['page'][0])
+            return contributors_count
         else:
-            return []
+            return 0
     except HTTPError as err:
         message = "Failed to get results from {url} with {err}".format(url=url, err=err)
         logger.error(message)
