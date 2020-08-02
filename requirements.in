@@ -61,5 +61,5 @@ watchdog
 werkzeug
 xmltodict
 zipp
-git+https://github.com/fabric8-analytics/fabric8-analytics-utils.git
-git+https://github.com/fabric8-analytics/fabric8-analytics-version-comparator.git
+git+https://github.com/fabric8-analytics/fabric8-analytics-utils.git@21ea911
+git+https://github.com/fabric8-analytics/fabric8-analytics-version-comparator.git@8a57ac7

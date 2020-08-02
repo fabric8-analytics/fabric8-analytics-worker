@@ -10,8 +10,7 @@ attrs==19.3.0             # via -r requirements.in, pytest
 certifi==2020.6.20        # via -r requirements.in, requests
 chardet==3.0.4            # via -r requirements.in, requests
 codecov==2.1.8            # via -r requirements.in
-coverage==5.2             # via -r requirements.in, codecov, pytest-cov
-datadiff==2.0.0           # via -r requirements.in
+coverage==5.2.1           # via -r requirements.in, codecov, pytest-cov
 flexmock==0.10.4          # via -r requirements.in
 idna==2.10                # via -r requirements.in, requests
 importlib-metadata==1.7.0  # via pluggy
