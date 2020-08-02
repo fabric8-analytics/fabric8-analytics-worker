@@ -619,4 +619,4 @@ def get_gh_contributors(url):
         else:
             return -1
     except HTTPError as err:
-        raise NotABugTaskError(err)
+        raise NotABugTaskError(err) from err
