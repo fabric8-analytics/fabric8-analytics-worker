@@ -55,10 +55,10 @@ class GithubTask(BaseTask):
             if url:
                 contributors = get_gh_contributors(url)
             else:
-                contributors = 0
+                contributors = -1
         except NotABugTaskError as e:
             self.log.debug(e)
-            contributors = 0
+            contributors = -1
         d = {'contributors_count': contributors}
         for prop in REPO_PROPS:
             d[prop] = repo.get(prop, -1)

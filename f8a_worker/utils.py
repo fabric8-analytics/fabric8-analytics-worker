@@ -16,7 +16,6 @@ from threading import Thread
 from traceback import format_exc
 from urllib.parse import unquote, urlparse, parse_qs
 import tenacity
-from tenacity import retry
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -600,7 +599,7 @@ def peek(iterable):
     return first
 
 
-@retry(reraise=True, stop=tenacity.stop_after_attempt(3), wait=tenacity.wait_fixed(1))
+@tenacity.retry(reraise=True, stop=tenacity.stop_after_attempt(3), wait=tenacity.wait_fixed(1))
 def get_gh_contributors(url):
     """Get number of contributors from Git URL.
 
@@ -608,18 +607,16 @@ def get_gh_contributors(url):
     :return:  length of contributor's list
     """
     try:
-        url += "?per_page=1"
-        response = requests.head(url)
+        response = requests.head("{}?per_page=1".format(url))
         response.raise_for_status()
 
         if response.status_code == 204:
             raise HTTPError('No content')
         elif response.status_code == 200:
-            contributors_count = int(parse_qs(response.links['last']['url'])['page'][0])
+            contributors_count = int(parse_qs(response.links['last']['url'])['page'][0]) \
+                if response.links else 1
             return contributors_count
         else:
-            return 0
+            return -1
     except HTTPError as err:
-        message = "Failed to get results from {url} with {err}".format(url=url, err=err)
-        logger.error(message)
-        raise NotABugTaskError(message) from err
+        raise NotABugTaskError(err)
