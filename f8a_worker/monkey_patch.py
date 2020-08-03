@@ -18,7 +18,7 @@ def _check_hung_task(self, flow_info):
     if flow_start_time > 0:
         now = time.time()
         if now - flow_start_time > _SQS_MSG_LIFETIME_IN_SEC:
-            exc = NotABugFatalTaskError("Flow could not completed in configured time limit. "
+            exc = NotABugFatalTaskError("Flow could not be completed in configured time limit. "
                                         "It is being stopped forcefully. "
                                         "Flow information: {}".format(flow_info))
             raise self.retry(max_retries=0, exc=exc)
@@ -34,7 +34,7 @@ def patch(self):
 
     def patched_migrate_message(self, flow_info):
         res = original_migrate_message(self, flow_info)
-        # Adding patch to throw error on message is too old
+        # Adding patch to throw error if the message is older than SQS_MSG_LIFETIME
         _check_hung_task(self, flow_info)
         return res
 
