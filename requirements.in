@@ -16,7 +16,6 @@ configobj
 docutils
 flake8-polyfill
 flake8
-future
 git2json
 gitdb
 gitpython<=3.1.0
@@ -32,7 +31,6 @@ logutils
 lxml
 mando
 mccabe
-pathtools
 psycopg2-binary
 pycodestyle
 pyflakes
@@ -53,11 +51,8 @@ smmap
 soupsieve
 sqlalchemy
 toml<=0.9.4
-typing
-unidiff
 urllib3
 vine
-watchdog
 werkzeug
 xmltodict
 zipp
