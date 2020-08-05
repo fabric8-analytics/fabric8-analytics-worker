@@ -14,7 +14,8 @@ from shlex import split
 from subprocess import Popen, PIPE, check_output, CalledProcessError, TimeoutExpired
 from threading import Thread
 from traceback import format_exc
-from urllib.parse import unquote, urlparse
+from urllib.parse import unquote, urlparse, parse_qs
+import tenacity
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -596,3 +597,26 @@ def peek(iterable):
     except StopIteration:
         return None
     return first
+
+
+@tenacity.retry(reraise=True, stop=tenacity.stop_after_attempt(3), wait=tenacity.wait_fixed(1))
+def get_gh_contributors(url):
+    """Get number of contributors from Git URL.
+
+    :param url: URL where to do the request
+    :return:  length of contributor's list
+    """
+    try:
+        response = requests.head("{}?per_page=1".format(url))
+        response.raise_for_status()
+
+        if response.status_code == 204:
+            raise HTTPError('No content')
+        elif response.status_code == 200:
+            contributors_count = int(parse_qs(response.links['last']['url'])['page'][0]) \
+                if response.links else 1
+            return contributors_count
+        else:
+            return -1
+    except HTTPError as err:
+        raise NotABugTaskError(err) from err
