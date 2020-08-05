@@ -59,4 +59,5 @@ vine==1.1.4               # via amqp
 watchdog==0.9.0
 werkzeug==0.14.1          # via flask
 xmltodict==0.11.0         # via anymarkup
+selinon[celery]==1.0.0
 tenacity==6.2.0
