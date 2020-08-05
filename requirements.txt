@@ -4,60 +4,60 @@
 #
 #    pip-compile --output-file requirements.txt requirements.in
 #
-amqp==2.1.4
+amqp==2.1.4               # via -r requirements.in, kombu
 anymarkup-core==0.7.1     # via anymarkup
-anymarkup==0.7.0
+anymarkup==0.7.0          # via -r requirements.in
 argh==0.26.2              # via watchdog
-beautifulsoup4==4.6.3
+beautifulsoup4==4.6.3     # via -r requirements.in
 billiard==3.5.0.4         # via celery
-boto3==1.9.44
-boto==2.49.0
+boto3==1.9.44             # via -r requirements.in
+boto==2.49.0              # via -r requirements.in
 botocore==1.12.44         # via boto3, s3transfer
 celery==4.2.1             # via selinon
 certifi==2018.10.15       # via requests
 chardet==3.0.4            # via requests
 click==7.0                # via selinon
 codegen==1.0              # via selinon
-colorama==0.3.9           # via radon, rainbow-logging-handler
+colorama==0.4.3           # via radon, rainbow-logging-handler
 configobj==5.0.6          # via anymarkup
 docutils==0.14            # via botocore
 flake8-polyfill==1.0.2    # via radon
 flake8==3.6.0             # via flake8-polyfill
-git2json==0.2.3
+git2json==0.2.3           # via -r requirements.in
+gitdb==4.0.5              # via gitpython
+gitpython==3.1.0          # via -r requirements.in
 graphviz==0.10.1          # via selinon
-gitpython==3.1.0
 idna==2.7                 # via requests
 jmespath==0.9.3           # via boto3, botocore
-jsl==0.2.4
+jsl==0.2.4                # via -r requirements.in
 json5==0.6.1              # via anymarkup
-jsonschema==2.6.0
+jsonschema==2.6.0         # via -r requirements.in, selinon
 kombu==4.2.1              # via celery
 logutils==0.3.5           # via rainbow-logging-handler
-lxml==4.2.5
+lxml==4.2.5               # via -r requirements.in
 mando==0.6.4              # via radon
 mccabe==0.6.1             # via flake8
 pathtools==0.1.2          # via watchdog
-psycopg2==2.7.6.1
+psycopg2==2.7.6.1         # via -r requirements.in
 pycodestyle==2.4.0        # via flake8
 pyflakes==2.0.0           # via flake8
 python-dateutil==2.7.5    # via botocore
 pytz==2018.7              # via celery
 pyyaml==3.13              # via anymarkup, selinon, watchdog
-radon==3.0.1
+radon==3.0.1              # via -r requirements.in
 rainbow-logging-handler==2.2.2  # via selinon
-raven==6.9.0
-requests==2.20.1
-requests-futures==0.9.7
+raven==6.9.0              # via -r requirements.in
+requests-futures==0.9.7   # via -r requirements.in
+requests==2.20.1          # via -r requirements.in, requests-futures
 s3transfer==0.1.13        # via boto3
-semantic-version==2.6.0
+selinon[celery]==1.0.0    # via -r requirements.in
+semantic-version==2.6.0   # via -r requirements.in
 six==1.11.0               # via anymarkup-core, configobj, mando, python-dateutil
-sqlalchemy==1.2.14
+smmap==3.0.4              # via gitdb
+sqlalchemy==1.2.14        # via -r requirements.in
 toml==0.9.4               # via anymarkup
-unidiff==0.5.5
-urllib3==1.24.1           # via botocore, requests
+unidiff==0.5.5            # via -r requirements.in
+urllib3==1.24.2           # via botocore, requests
 vine==1.1.4               # via amqp
-watchdog==0.9.0
-werkzeug==0.14.1          # via flask
+watchdog==0.9.0           # via -r requirements.in
 xmltodict==0.11.0         # via anymarkup
-selinon[celery]==1.0.0
-tenacity==6.2.0

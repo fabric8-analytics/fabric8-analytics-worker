@@ -9,10 +9,10 @@ atomicwrites==1.2.1       # via pytest
 attrs==18.2.0             # via pytest
 certifi==2018.10.15       # via requests
 chardet==3.0.4            # via requests
-codecov==2.0.15
+codecov==2.0.15           # via -r tests/requirements.in
 coverage==4.5.2           # via codecov, pytest-cov
-datadiff==2.0.0
-flexmock==0.10.2
+datadiff==2.0.0           # via -r tests/requirements.in
+flexmock==0.10.2          # via -r tests/requirements.in
 idna==2.7                 # via requests
 isort==4.3.4              # via pylint
 lazy-object-proxy==1.3.1  # via astroid
@@ -20,13 +20,13 @@ mccabe==0.6.1             # via pylint
 more-itertools==4.3.0     # via pytest
 pluggy==0.8.0             # via pytest
 py==1.7.0                 # via pytest
-pylint==2.2.2
-pytest-cov==2.6.0
-pytest-mock==1.10.0
-pytest-rerunfailures==5.0
-pytest-timeout==1.3.3
-pytest==3.10.1
-requests==2.20.1
+pylint==2.2.2             # via -r tests/requirements.in
+pytest-cov==2.6.0         # via -r tests/requirements.in
+pytest-mock==1.10.0       # via -r tests/requirements.in
+pytest-rerunfailures==5.0  # via -r tests/requirements.in
+pytest-timeout==1.3.3     # via -r tests/requirements.in
+pytest==3.10.1            # via -r tests/requirements.in, pytest-cov, pytest-mock, pytest-rerunfailures, pytest-timeout
+requests==2.20.1          # via -r tests/requirements.in, codecov
 six==1.11.0               # via astroid, more-itertools, pytest
-urllib3==1.24.1           # via requests
+urllib3==1.24.2           # via requests
 wrapt==1.10.11            # via astroid
