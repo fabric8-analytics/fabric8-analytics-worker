@@ -168,7 +168,7 @@ objects:
                 name: bayesian-config
                 key: auth-url
           - name: SQS_MSG_LIFETIME
-            value: 24
+            value: "${SQS_MSG_LIFETIME}"
           image: "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${IMAGE_TAG}"
           name: bayesian-worker
           readinessProbe:
@@ -287,3 +287,9 @@ parameters:
   required: false
   name: SENTRY_DSN
   value: ""
+
+- description: SQS message life time in hours
+  displayName: SQS message life time
+  required: true
+  name: SQS_MSG_LIFETIME
+  value: "24"

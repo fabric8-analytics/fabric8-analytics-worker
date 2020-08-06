@@ -147,11 +147,11 @@ def test_validate_utf_json():
     """Test the function to remove non UTF-8 characters from description if present."""
     assert _validate_utf_json(None) is None
     assert _validate_utf_json({'details': [{'description': 'test description'}]}) == \
-           {'details': [{'description': 'test description'}]}
+        {'details': [{'description': 'test description'}]}
     assert _validate_utf_json({'details': [{
         'description': '��C\x00h\x00a\x00n\x00g\x00e\x00 \x001\x00'}]}) == \
         {'details': [{'description': 'Change 1'}]}
     assert _validate_utf_json({'details': []}) == {'details': []}
     assert _validate_utf_json({'details': {}}) == {'details': {}}
     assert _validate_utf_json({'details': [{'description': None}]}) == \
-           {'details': [{'description': None}]}
+        {'details': [{'description': None}]}

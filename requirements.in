@@ -1,26 +1,20 @@
-# normally pulled in by kombu, but version 2.2.0 is broken
-amqp<=2.1.4
-# also handles Celery as a requirement
-selinon[celery]
-sqlalchemy
-psycopg2
-lxml
-beautifulsoup4
-# We install a patched version from dnf as we cannot use requests from PyPI - we need own certificates
-#requests
-anymarkup
-jsl
-jsonschema
-unidiff
 requests
-requests-futures
+anymarkup
+beautifulsoup4
+boto3
+botocore
 git2json
 gitpython
-# Amazon AWS SQS
-# Celery transparently uses boto
-boto
-boto3
-semantic_version
-radon==3.0.1
-watchdog
+jsl
+jsonschema
+lxml
+pyyaml
 raven
+requests-futures
+selinon[celery]==1.0.0
+semantic-version
+sqlalchemy
+tenacity
+toml<=0.9.4
+werkzeug
+f8a_utils @ git+https://github.com/fabric8-analytics/fabric8-analytics-utils.git@44c123b#egg=f8a_utils
