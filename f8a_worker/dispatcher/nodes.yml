@@ -188,6 +188,41 @@
       queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_ReportGenerationTask_v0'
       storage: 'BayesianPostgres'
 
+    # New tasks for new ingestion flow 'newPackageFlow'
+    - name: 'NewInitPackageFlow'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_NewInitPackageFlow_v0'
+
+    - name: 'NewMetaDataTask'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_NewMetaDataTask_v0'
+
+    - name: 'NewGithubDetails'
+      classname: 'NewGithubTask'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_NewGithubTask_v0'
+
+    - name: 'NewPackageGraphImporterTask'
+      classname: 'NewPackageGraphImporterTask'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_NewPackageGraphImporterTask_v0'
+
+    - name: 'NewPackageAnalysisGraphImporterTask'
+      classname: 'NewPackageAnalysisGraphImporterTask'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_NewVersionGraphImporterTask_v0'
+
+    - name: 'NewInitPackageAnlysisFlow'
+      import: 'f8a_worker.workers'
+      max_retry: 0
+      queue: '{DEPLOYMENT_PREFIX}_{WORKER_ADMINISTRATION_REGION}_NewInitPackageAnlysisFlow_v0'
+
+
   flows:
     - 'osioAnalysisFlow'
     - 'bayesianFlow'
@@ -204,6 +239,8 @@
     - 'osioUserNotificationFlow'
     - 'gitOperationsFlow'
     - 'golangCVEPredictionsFlow'
+    - 'newPackageFlow'
+    - 'newPackageAnalysisFlow'
 
   storages:
     - name: 'BayesianPostgres'
@@ -354,6 +391,33 @@
         region_name: 'us-east-1'
         encryption: false
         versioned: false
+
+    - name: 'S3GitHub'
+      import: 'f8a_worker.storages'
+      configuration:
+        <<: *configurationS3
+        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-package-data'
+        region_name: 'us-east-1'
+        encryption: false
+        versioned: true
+
+    - name: 'S3MetaData'
+      import: 'f8a_worker.storages'
+      configuration:
+        <<: *configurationS3
+        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-data'
+        region_name: 'us-east-1'
+        encryption: false
+        versioned: true
+
+    - name: 'S3InItData'
+      import: 'f8a_worker.storages'
+      configuration:
+        <<: *configurationS3
+        bucket_name: '{DEPLOYMENT_PREFIX}-bayesian-core-data'
+        region_name: 'us-east-1'
+        encryption: false
+        versioned: true
 
   global:
     trace:

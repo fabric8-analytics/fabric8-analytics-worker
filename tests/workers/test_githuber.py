@@ -29,7 +29,9 @@ class TestGithuber(object):
                                                   'subscribers_count',
                                                   'contributors_count',
                                                   'topics',
-                                                  'license'}
+                                                  'license',
+                                                  'updated_issues',
+                                                  'updated_pull_requests'}
         assert results['details']['forks_count'] > 0
         assert set(results['details']['last_year_commits'].keys()) == {'sum', 'weekly'}
         assert results['details']['license'] == {'key': 'bsd-3-clause',
