@@ -168,7 +168,7 @@ objects:
                 name: bayesian-config
                 key: auth-url
           - name: SQS_MSG_LIFETIME
-            value: 24
+            value: "24"
           image: "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${IMAGE_TAG}"
           name: bayesian-worker
           readinessProbe:
