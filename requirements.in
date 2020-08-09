@@ -11,6 +11,7 @@ jsonschema
 lxml
 pyyaml
 raven
+radon<=3.0.1
 requests-futures
 selinon[celery]==1.0.0
 semantic-version
