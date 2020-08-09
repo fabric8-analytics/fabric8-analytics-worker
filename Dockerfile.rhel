@@ -22,8 +22,6 @@ RUN cd /tmp/f8a_worker/ && \
 
 COPY alembic.ini hack/run-db-migrations.sh ${ALEMBIC_DIR}/
 COPY alembic/ ${ALEMBIC_DIR}/alembic
-COPY selinon-2.0.0.tar.gz ${HOME}
-RUN pip3 install ${HOME}/selinon-2.0.0.tar.gz
 
 # Install f8a_worker
 COPY ./ /tmp/f8a_worker/
