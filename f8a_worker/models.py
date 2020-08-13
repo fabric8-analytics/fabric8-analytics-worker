@@ -408,7 +408,7 @@ class UserDetails(Base):
     __tablename__ = "user_details"
 
     user_id = Column(String(64), primary_key=True)
-    snyk_api_token = Column(String(64))
+    snyk_api_token = Column(String(255))
     last_validated_date = Column(DateTime)
     status = Column(String(32))
     registered_date = Column(DateTime)

@@ -10,7 +10,7 @@ from selinon import FatalTaskError
 from f8a_worker.base import BaseTask
 from f8a_worker.errors import F8AConfigurationException, NotABugTaskError, NotABugFatalTaskError
 from f8a_worker.schemas import SchemaRef
-from f8a_worker.utils import parse_gh_repo, get_response
+from f8a_worker.utils import parse_gh_repo, get_response, get_gh_contributors
 
 REPO_PROPS = ('forks_count', 'subscribers_count', 'stargazers_count', 'open_issues_count')
 
@@ -51,14 +51,15 @@ class GithubTask(BaseTask):
     def _get_repo_stats(self, repo):
         """Collect various repository properties."""
         try:
-            if repo.get('contributors_url', ''):
-                contributors = get_response(repo.get('contributors_url', ''), self._headers)
+            url = repo.get('contributors_url', '')
+            if url:
+                contributors = get_gh_contributors(url)
             else:
-                contributors = {}
+                contributors = -1
         except NotABugTaskError as e:
             self.log.debug(e)
-            contributors = {}
-        d = {'contributors_count': len(list(contributors)) if contributors is not None else 'N/A'}
+            contributors = -1
+        d = {'contributors_count': contributors}
         for prop in REPO_PROPS:
             d[prop] = repo.get(prop, -1)
         return d
