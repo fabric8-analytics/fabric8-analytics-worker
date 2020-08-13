@@ -1,5 +1,6 @@
 codecov
 pylint
-pytest<=3.10.1
+pytest
 flexmock
 radon
+toml<=0.9.4
