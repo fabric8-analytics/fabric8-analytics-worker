@@ -2,3 +2,4 @@ pytest
 radon
 flexmock
 toml<=0.9.4
+pytest-cov
