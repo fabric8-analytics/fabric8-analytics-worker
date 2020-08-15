@@ -6,12 +6,16 @@
 #
 atomicwrites==1.4.0       # via pytest
 attrs==19.3.0             # via pytest
+certifi==2020.6.20        # via requests
+chardet==3.0.4            # via requests
+codecov==2.1.8            # via -r requirements.in
 colorama==0.4.3           # via radon
-coverage==5.2.1           # via pytest-cov
+coverage==5.2.1           # via codecov, pytest-cov
 flake8-polyfill==1.0.2    # via radon
 flake8==3.8.3             # via flake8-polyfill
 flexmock==0.10.4          # via -r requirements.in
 future==0.18.2            # via radon
+idna==2.10                # via requests
 importlib-metadata==1.7.0  # via flake8, pluggy
 mando==0.6.4              # via radon
 mccabe==0.6.1             # via flake8
@@ -23,8 +27,10 @@ pyflakes==2.2.0           # via flake8
 pytest-cov==2.6.0         # via -r requirements.in
 pytest==3.10.1            # via -r requirements.in, pytest-cov
 radon==4.2.0              # via -r requirements.in
+requests==2.24.0          # via codecov
 six==1.15.0               # via mando, pytest
 toml==0.9.4               # via -r requirements.in
+urllib3==1.25.10          # via requests
 zipp==3.1.0               # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
