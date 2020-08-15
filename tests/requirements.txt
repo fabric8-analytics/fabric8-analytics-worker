@@ -4,36 +4,25 @@
 #
 #    pip-compile
 #
-astroid==2.4.2            # via pylint
-atomicwrites==1.4.0       # via pytest
 attrs==19.3.0             # via pytest
-certifi==2020.6.20        # via requests
-chardet==3.0.4            # via requests
-codecov==2.1.8            # via -r requirements.in
-coverage==5.2.1           # via codecov, pytest-cov
+colorama==0.4.3           # via radon
+flake8-polyfill==1.0.2    # via radon
+flake8==3.8.3             # via flake8-polyfill
 flexmock==0.10.4          # via -r requirements.in
-idna==2.10                # via requests
-importlib-metadata==1.7.0  # via pluggy
-isort==4.3.21             # via pylint
-lazy-object-proxy==1.4.3  # via astroid
-mccabe==0.6.1             # via pylint
+future==0.18.2            # via radon
+importlib-metadata==1.7.0  # via flake8, pluggy, pytest
+iniconfig==1.0.1          # via pytest
+mando==0.6.4              # via radon
+mccabe==0.6.1             # via flake8
 more-itertools==8.4.0     # via pytest
+packaging==20.4           # via pytest
 pluggy==0.13.1            # via pytest
 py==1.9.0                 # via pytest
-pylint==2.5.3             # via -r requirements.in
-pytest-cov==2.6.0         # via -r requirements.in
-pytest-mock==1.10.0       # via -r requirements.in
-pytest-rerunfailures==5.0  # via -r requirements.in
-pytest-timeout==1.3.3     # via -r requirements.in
-pytest==3.10.1            # via -r requirements.in, pytest-cov, pytest-mock, pytest-rerunfailures, pytest-timeout
-requests==2.24.0          # via codecov
-six==1.15.0               # via astroid, pytest
-toml==0.9.4               # via -r requirements.in, pylint
-typed-ast==1.4.1          # via astroid
-urllib3==1.25.10          # via requests
-wrapt==1.12.1             # via astroid
+pycodestyle==2.6.0        # via flake8
+pyflakes==2.2.0           # via flake8
+pyparsing==2.4.7          # via packaging
+pytest==6.0.1             # via -r requirements.in
+radon==4.2.0              # via -r requirements.in
+six==1.15.0               # via mando, packaging
+toml==0.9.4               # via -r requirements.in, pytest
 zipp==3.1.0               # via importlib-metadata
-radon==3.0.1              # via -r requirements.in
-
-# The following packages are considered to be unsafe in a requirements file:
-# setuptools
