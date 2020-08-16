@@ -3,7 +3,6 @@ anymarkup
 beautifulsoup4
 boto3
 botocore
-flexmock
 git2json
 gitpython
 jsl
