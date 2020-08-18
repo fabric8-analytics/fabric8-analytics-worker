@@ -7,19 +7,17 @@ from setuptools import setup, find_packages
 
 
 def get_requirements():
-    """Parse all packages mentioned in the 'requirements.txt' file."""
+    """Parse dependencies from 'requirements.in' file."""
     with open('requirements.in') as fd:
         lines = fd.read().splitlines()
-        reqs, dep_links = [], []
+        requires = []
         for line in lines:
-            if line.startswith('git+'):
-                dep_links.append(line)
-            else:
-                reqs.append(line)
-        return reqs, dep_links
+            requires.append(line)
+        return requires
 
 
-reqs, dep_links = get_requirements()
+install_requires = get_requirements()
+
 
 setup(
     name='f8a_worker',
@@ -39,8 +37,7 @@ setup(
     },
     packages=find_packages(exclude=['tests', 'tests.*']),
     include_package_data=True,
-    install_requires=reqs,
-    dependency_links=dep_links,
+    install_requires=install_requires,
     author='Pavel Odvody',
     author_email='podvody@redhat.com',
     description='fabric8-analytics workers & utilities',
