@@ -1,10 +1,6 @@
-datadiff
+pytest<=3.10.1
+radon
 flexmock
-pylint
-pytest==3.*
-pytest-timeout
-pytest-rerunfailures
-pytest-cov
-pytest-mock
+toml<=0.9.4
+pytest-cov<=2.6.0
 codecov
-requests

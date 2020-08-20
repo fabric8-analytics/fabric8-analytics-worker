@@ -7,9 +7,16 @@ from setuptools import setup, find_packages
 
 
 def get_requirements():
-    """Parse all packages mentioned in the 'requirements.txt' file."""
-    with open('requirements.txt') as fd:
-        return fd.read().splitlines()
+    """Parse dependencies from 'requirements.in' file."""
+    with open('requirements.in') as fd:
+        lines = fd.read().splitlines()
+        requires = []
+        for line in lines:
+            requires.append(line)
+        return requires
+
+
+install_requires = get_requirements()
 
 
 setup(
@@ -30,7 +37,7 @@ setup(
     },
     packages=find_packages(exclude=['tests', 'tests.*']),
     include_package_data=True,
-    install_requires=get_requirements(),
+    install_requires=install_requires,
     author='Pavel Odvody',
     author_email='podvody@redhat.com',
     description='fabric8-analytics workers & utilities',
