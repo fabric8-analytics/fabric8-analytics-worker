@@ -24,7 +24,8 @@ class TestInitPackageFlowNew(TestCase):
     """Tests for the NewInitPackageFlow task."""
 
     def _strict_assert(self, assert_cond):
-        return False
+        if not assert_cond:
+            False
 
     def test_execute(self):
         """Tests for 'execute'."""

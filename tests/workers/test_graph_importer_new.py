@@ -28,7 +28,8 @@ class TestGraphImporterNew(TestCase):
     """Tests for the NewGraphImporterTask task."""
 
     def _strict_assert(self, assert_cond):
-        return False
+        if not assert_cond:
+            False
 
     @mock.patch('f8a_worker.workers.graph_importer_new.requests.post', return_value=ErrorResponse())
     def test_execute(self, _mock1):
