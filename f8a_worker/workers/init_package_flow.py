@@ -93,7 +93,7 @@ class InitPackageFlow(BaseTask):
                           "upstream URL '%s'", package.ecosystem.name, package.name, url)
             new_upstream = Upstream(
                 package_id=package.id,
-                url=_validate_url(url),
+                url=validate_url(url),
                 updated_at=None,
                 deactivated_at=None,
                 added_at=now
@@ -170,7 +170,7 @@ class InitPackageFlow(BaseTask):
         return arguments
 
 
-def _validate_url(url):
+def validate_url(url):
     """Check if URL is valid.
 
     :param url: str, url string

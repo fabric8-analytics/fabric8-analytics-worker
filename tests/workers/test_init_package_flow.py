@@ -4,7 +4,7 @@ import pytest
 from selinon import FatalTaskError
 
 from f8a_worker.workers import InitPackageFlow
-from f8a_worker.workers.init_package_flow import _validate_url
+from f8a_worker.workers.init_package_flow import validate_url
 
 
 @pytest.mark.usefixtures("dispatcher_setup")
@@ -25,7 +25,7 @@ class TestInitPackageFlow(object):
 
     def test_validate_url(self):
         """Test the function to validate the URL."""
-        assert _validate_url('') == ''
-        assert _validate_url('https://github.com') == 'https://github.com'
-        assert _validate_url('https://github.com') != ''
-        assert _validate_url('github.com: Jordantsui/lunzi-demo.git[D') == ''
+        assert validate_url('') == ''
+        assert validate_url('https://github.com') == 'https://github.com'
+        assert validate_url('https://github.com') != ''
+        assert validate_url('github.com: Jordantsui/lunzi-demo.git[D') == ''
