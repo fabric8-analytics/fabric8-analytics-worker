@@ -1,0 +1,16 @@
+---
+  flow-definitions:
+    - &newPackageFlow
+      name: 'newIngestionFlow'
+      queue: '{DEPLOYMENT_PREFIX}_ingestion_newIngestionFlow_v0'
+      sampling:
+        name: 'constant'
+        args:
+          retry: 10
+      edges:
+        - from:
+          to: 'NewInitIngestionFlow'
+        - from: 'NewInitIngestionFlow'
+          to: 'NewMetadataTask'
+        - from: 'NewMetadataTask'
+          to: 'newPackageFlow'

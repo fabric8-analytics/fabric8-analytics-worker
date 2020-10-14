@@ -22,6 +22,10 @@ class NewInitPackageFlow(BaseTask):
 
         if arguments['ecosystem'] not in _SUPPORTED_ECOSYSTEMS:
             raise FatalTaskError('Unknown ecosystem: %r' % arguments['ecosystem'])
+
+        if 'url' not in arguments:
+            raise FatalTaskError('Github URL is not found in node arguments')
+
         # Checking for github url validation
         arguments['url'] = validate_url(arguments['url'])
 

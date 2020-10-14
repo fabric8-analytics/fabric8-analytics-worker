@@ -21,8 +21,11 @@ from f8a_worker.workers.user_notifier import UserNotificationTask
 from f8a_worker.workers.repo_dependency_finder import RepoDependencyFinderTask
 from f8a_worker.workers.git_operations import GitOperationTask
 from f8a_worker.workers.golangcvepredictor import GitIssuesPRsTask
-from f8a_worker.workers.init_package_flow_new import NewInitPackageFlow
-from f8a_worker.workers.graph_importer_new import NewGraphImporterTask
+from f8a_worker.workers.new_init_package_flow import NewInitPackageFlow
+from f8a_worker.workers.new_graph_importer import NewGraphImporterTask
+from f8a_worker.workers.new_githuber import NewGithubTask
+from f8a_worker.workers.init_ingestion_flow import InitIngestion
+from f8a_worker.workers.new_metadata import NewMetadataTask
 
 # avoid Vulture and Pyflakes warnings
 assert BookkeeperTask is not None
@@ -48,3 +51,6 @@ assert GitOperationTask is not None
 assert GitIssuesPRsTask is not None
 assert NewInitPackageFlow is not None
 assert NewGraphImporterTask is not None
+assert NewGithubTask is not None
+assert InitIngestion is not None
+assert NewMetadataTask is not None
