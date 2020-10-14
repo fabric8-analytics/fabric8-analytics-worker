@@ -1,7 +1,7 @@
 """Tests for NewGraphImporterTask module."""
 
 from unittest import TestCase, mock
-from f8a_worker.workers.new_graph_importer import NewGraphImporterTask
+from f8a_worker.workers.graph_importer_new import NewGraphImporterTask
 
 data = {
         "ecosystem": "dummy_eco",
@@ -31,12 +31,12 @@ class TestGraphImporterNew(TestCase):
         if not assert_cond:
             False
 
-    @mock.patch('f8a_worker.workers.new_graph_importer.requests.post', return_value=ErrorResponse())
+    @mock.patch('f8a_worker.workers.graph_importer_new.requests.post', return_value=ErrorResponse())
     def test_execute(self, _mock1):
         """Tests for 'execute'."""
         self.assertRaises(RuntimeError, NewGraphImporterTask.execute, self, data)
 
-    @mock.patch('f8a_worker.workers.new_graph_importer.requests.post', return_value=Response())
+    @mock.patch('f8a_worker.workers.graph_importer_new.requests.post', return_value=Response())
     def test_execute1(self, _mock1):
         """Tests for 'execute'."""
         NewGraphImporterTask.execute(self, data)

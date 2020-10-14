@@ -2,7 +2,7 @@
 
 from unittest import TestCase
 from selinon import FatalTaskError
-from f8a_worker.workers.new_init_package_flow import NewInitPackageFlow
+from f8a_worker.workers.init_package_flow_new import NewInitPackageFlow
 
 data_v1 = {
         "ecosystem": "dummy_eco",
