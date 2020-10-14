@@ -20,7 +20,7 @@ codegen==1.0              # via selinon
 colorama==0.4.3           # via rainbow-logging-handler
 configobj==5.0.6          # via anymarkup
 docutils==0.15.2          # via botocore
-git+https://github.com/fabric8-analytics/fabric8-analytics-utils.git@44c123b#egg=f8a_utils  # via -r requirements.in
+git+https://github.com/fabric8-analytics/fabric8-analytics-utils.git@f6f7f74#egg=f8a_utils  # via -r requirements.in
 git+https://github.com/fabric8-analytics/fabric8-analytics-version-comparator.git@8a57ac7#egg=f8a_version_comparator  # via f8a-utils
 git2json==0.2.3           # via -r requirements.in
 gitdb==4.0.5              # via gitpython

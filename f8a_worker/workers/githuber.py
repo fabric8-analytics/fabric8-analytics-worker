@@ -11,6 +11,9 @@ from f8a_worker.base import BaseTask
 from f8a_worker.errors import F8AConfigurationException, NotABugTaskError, NotABugFatalTaskError
 from f8a_worker.schemas import SchemaRef
 from f8a_worker.utils import parse_gh_repo, get_response, get_gh_contributors
+import logging
+
+logger = logging.getLogger(__name__)
 
 REPO_PROPS = ('forks_count', 'subscribers_count', 'stargazers_count', 'open_issues_count')
 
@@ -48,12 +51,12 @@ class GithubTask(BaseTask):
             return []
         return [x['total'] for x in activity]
 
-    def _get_repo_stats(self, repo):
+    def _get_repo_stats(self, repo, header):
         """Collect various repository properties."""
         try:
             url = repo.get('contributors_url', '')
             if url:
-                contributors = get_gh_contributors(url)
+                contributors = get_gh_contributors(url, header)
             else:
                 contributors = -1
         except NotABugTaskError as e:
@@ -108,7 +111,7 @@ class GithubTask(BaseTask):
 
         issues = {}
         # Get Repo Statistics
-        notoriety = self._get_repo_stats(repo)
+        notoriety = self._get_repo_stats(repo, self._headers)
 
         if notoriety:
             issues.update(notoriety)

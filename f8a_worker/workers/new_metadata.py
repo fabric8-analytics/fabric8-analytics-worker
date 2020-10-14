@@ -1,27 +1,15 @@
-"""Initialize package-version level analysis."""
-
-import re
+"""Initialize package-version level analysis for metadata collection."""
 from f8a_worker.base import BaseTask
-
-pattern = r'[\*Xx\-\>\=\<\~\^\|\/\:\+]'
-pattern_ignore = re.compile(pattern)
+from f8a_utils.golang_utils import GolangUtils
+from selinon import StoragePool
+from f8a_worker.utils import store_data_to_s3
 import logging
 
 logger = logging.getLogger(__name__)
 
-import sys
-def fun_name():
-    file_details = "File::"+sys._getframe(1).f_code.co_filename+"_:_Function::_"+sys._getframe(1).f_code.co_name
-    return file_details
 
-def print_log(cls_name, arg1, arg2=""):
-    msg = "Message from logger"+"__:__"+str(cls_name)+"__:__"+str(arg1)+"__:__"+str(arg2)
-    logger.info(msg)
-    print(cls_name, str(arg1), str(arg2) ,sep="__:__")
-
-
-class NewMetadataTask(BaseTask):
-    """Download source and start whole analysis."""
+class NewMetaDataTask(BaseTask):
+    """Initialize package-version-level analysis for metadata."""
 
     def execute(self, arguments):
         """Task code.
@@ -29,9 +17,35 @@ class NewMetadataTask(BaseTask):
         :param arguments: dictionary with task arguments
         :return: {}, results
         """
-        self.log.debug("Input Arguments: {}".format(arguments))
+        result_data = {'status': 'success',
+                       'details': []}
 
-        arguments['test2'] = 'new metadata.'
-        print_log(fun_name(), "test2", arguments)
+        metadata_dict = {
+            'description': '',
+            'name': arguments.get('name'),
+            'version': arguments.get('version'),
+            'ecosystem': arguments.get('ecosystem')
+        }
+
+        result_data['details'].append(metadata_dict)
+
+        # Store base file required by Data importer
+        store_data_to_s3(arguments,
+                              StoragePool.get_connected_storage('S3InItData'),
+                              result_data)
+
+        # Get the license for package
+        golang_util = GolangUtils(arguments.get('name'))
+        license = golang_util.get_license()
+
+        if license is not None:
+            metadata_dict['declared_licenses'] = license
+        else:
+            metadata_dict['declared_licenses'] = []
+
+        # Store metadata file for being used in Data-Importer
+        store_data_to_s3(arguments,
+                              StoragePool.get_connected_storage('S3MetaData'),
+                              result_data)
 
         return arguments

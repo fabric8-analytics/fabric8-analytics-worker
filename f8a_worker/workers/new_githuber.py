@@ -8,8 +8,12 @@ from selinon import FatalTaskError
 from f8a_worker.base import BaseTask
 from f8a_worker.errors import F8AConfigurationException, NotABugTaskError, NotABugFatalTaskError
 from f8a_worker.schemas import SchemaRef
-from f8a_worker.utils import parse_gh_repo, get_response, get_gh_contributors
+from f8a_worker.utils import parse_gh_repo, get_response, get_gh_contributors, store_data_to_s3
+from f8a_utils.golang_utils import GolangUtils
+from selinon import StoragePool
+import logging
 
+logger = logging.getLogger(__name__)
 REPO_PROPS = ('forks_count', 'subscribers_count', 'stargazers_count', 'open_issues_count')
 
 
@@ -42,20 +46,20 @@ class NewGithubTask(BaseTask):
         try:
             activity = get_response(urljoin(repo_url + '/', "stats/commit_activity"), self._headers)
         except NotABugTaskError as e:
-            self.log.debug(e)
+            logger.debug(e)
             return []
         return [x['total'] for x in activity]
 
-    def _get_repo_stats(self, repo):
+    def _get_repo_stats(self, repo, headers):
         """Collect various repository properties."""
         try:
             url = repo.get('contributors_url', '')
             if url:
-                contributors = get_gh_contributors(url)
+                contributors = get_gh_contributors(url, headers)
             else:
                 contributors = -1
         except NotABugTaskError as e:
-            self.log.debug(e)
+            logger.error(e)
             contributors = -1
         d = {'contributors_count': contributors}
         for prop in REPO_PROPS:
@@ -66,7 +70,7 @@ class NewGithubTask(BaseTask):
         """Retrieve GitHub repo from a preceding Mercator scan."""
         parsed = parse_gh_repo(url)
         if not parsed:
-            self.log.debug('Could not parse Github repo URL %s', url)
+            logger.debug('Could not parse Github repo URL %s', url)
         else:
             self._repo_url = 'https://github.com/' + parsed
         return parsed
@@ -80,6 +84,16 @@ class NewGithubTask(BaseTask):
         result_data = {'status': 'unknown',
                        'summary': [],
                        'details': {}}
+
+        if arguments['ecosystem'] == 'golang':
+            go_obj = GolangUtils(arguments.get('name'))
+            url = go_obj.get_gh_link()
+
+            if url:
+                arguments['url'] = url
+            else:
+                return result_data
+
         # For testing purposes, a repo may be specified at task creation time
         if self._repo_name is None:
             # Otherwise, get the repo name from earlier Mercator scan results
@@ -92,21 +106,21 @@ class NewGithubTask(BaseTask):
             _, header = self.configuration.select_random_github_token()
             self._headers.update(header)
         except F8AConfigurationException as e:
-            self.log.error(e)
+            logger.error(e)
             raise FatalTaskError from e
 
         repo_url = urljoin(self.configuration.GITHUB_API + "repos/", self._repo_name)
         try:
             repo = get_response(repo_url, self._headers)
         except NotABugTaskError as e:
-            self.log.error(e)
+            logger.error(e)
             raise NotABugFatalTaskError from e
 
         result_data['status'] = 'success'
 
         issues = {}
         # Get Repo Statistics
-        notoriety = self._get_repo_stats(repo)
+        notoriety = self._get_repo_stats(repo, self._headers)
 
         if notoriety:
             issues.update(notoriety)
@@ -117,13 +131,16 @@ class NewGithubTask(BaseTask):
         last_year_commits = self._get_last_years_commits(repo['url'])
         commits = {'last_year_commits': {'sum': sum(last_year_commits),
                                          'weekly': last_year_commits}}
+
         t_stamp = datetime.datetime.utcnow()
         refreshed_on = {'updated_on': t_stamp.strftime("%Y-%m-%d %H:%M:%S")}
         issues.update(refreshed_on)
         issues.update(commits)
-        issues['latest_version'] = "some version"
         result_data['details'] = issues
-        self.log.debug('============================================')
-        self.log.debug(result_data)
-        self.log.debug('------------------------------------------------')
+
+        # Store github details for being used in Data-Importer
+        store_data_to_s3(arguments,
+                              StoragePool.get_connected_storage('S3GitHub'),
+                              result_data)
+
         return result_data
