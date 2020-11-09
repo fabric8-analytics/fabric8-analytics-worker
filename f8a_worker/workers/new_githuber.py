@@ -140,7 +140,7 @@ class NewGithubTask(BaseTask):
 
         # Store github details for being used in Data-Importer
         store_data_to_s3(arguments,
-                              StoragePool.get_connected_storage('S3GitHub'),
-                              result_data)
+                         StoragePool.get_connected_storage('S3GitHub'),
+                         result_data)
 
         return result_data

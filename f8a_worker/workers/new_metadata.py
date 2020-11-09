@@ -31,8 +31,8 @@ class NewMetaDataTask(BaseTask):
 
         # Store base file required by Data importer
         store_data_to_s3(arguments,
-                              StoragePool.get_connected_storage('S3InItData'),
-                              result_data)
+                         StoragePool.get_connected_storage('S3InItData'),
+                         result_data)
 
         # Get the license for package
         golang_util = GolangUtils(arguments.get('name'))
@@ -45,7 +45,7 @@ class NewMetaDataTask(BaseTask):
 
         # Store metadata file for being used in Data-Importer
         store_data_to_s3(arguments,
-                              StoragePool.get_connected_storage('S3MetaData'),
-                              result_data)
+                         StoragePool.get_connected_storage('S3MetaData'),
+                         result_data)
 
         return arguments

@@ -44,6 +44,12 @@ class TestNewMetaDataTask(TestCase):
 
     def store_data_to_s3(self, arguments, s3, result):
         """Test Function."""
+        if not arguments:
+            raise
+        if not s3:
+            raise
+        if not result:
+            raise
         pass
 
     @mock.patch('f8a_worker.workers.new_metadata.StoragePool.get_connected_storage',
