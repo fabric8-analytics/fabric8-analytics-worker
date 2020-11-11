@@ -18,11 +18,15 @@ fail=0
 function prepare_venv() {
     VIRTUALENV="$(which virtualenv)"
     if [ $? -eq 1 ]; then
-        # python36 which is in CentOS does not have virtualenv binary
+        # python34 which is in CentOS does not have virtualenv binary
         VIRTUALENV="$(which virtualenv-3)"
     fi
-
-    ${VIRTUALENV} -p python3 venv && source venv/bin/activate && python3 "$(which pip3)" install vulture
+    if [ $? -eq 1 ]; then
+        # still don't have virtual environment -> use python3 directly
+        python3 -m venv venv && source venv/bin/activate && python3 "$(which pip3)" install vulture
+    else
+        ${VIRTUALENV} -p python3 venv && source venv/bin/activate && python3 "$(which pip3)" install vulture
+    fi
 }
 
 pushd "${SCRIPT_DIR}/.."
