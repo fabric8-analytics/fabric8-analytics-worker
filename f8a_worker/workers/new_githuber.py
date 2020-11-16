@@ -3,7 +3,6 @@
 from urllib.parse import urljoin
 
 import datetime
-from selinon import FatalTaskError
 
 from f8a_worker.base import BaseTask
 from f8a_worker.errors import F8AConfigurationException, NotABugTaskError, NotABugFatalTaskError
@@ -33,7 +32,7 @@ class NewGithubTask(BaseTask):
         """Create instance of task for tests."""
         assert cls
         instance = super().create_test_instance()
-        # set for testing as we are not querying DB for mercator results
+        # set for testing
         instance._repo_name = repo_name
         instance._repo_url = repo_url
         return instance
@@ -64,7 +63,7 @@ class NewGithubTask(BaseTask):
         return d
 
     def _get_repo_name(self, url):
-        """Retrieve GitHub repo from a preceding Mercator scan."""
+        """Get GitHub repo URL."""
         parsed = parse_gh_repo(url)
         if not parsed:
             logger.debug('Could not parse Github repo URL %s', url)
@@ -93,7 +92,7 @@ class NewGithubTask(BaseTask):
 
         # For testing purposes, a repo may be specified at task creation time
         if self._repo_name is None:
-            # Otherwise, get the repo name from earlier Mercator scan results
+            # Otherwise, get the repo name from URL
             self._repo_name = self._get_repo_name(arguments['url'])
             if self._repo_name is None:
                 # Not a GitHub hosted project
@@ -104,14 +103,13 @@ class NewGithubTask(BaseTask):
             self._headers.update(header)
         except F8AConfigurationException as e:
             logger.error(e)
-            raise FatalTaskError from e
 
         repo_url = urljoin(self.configuration.GITHUB_API + "repos/", self._repo_name)
+        repo = {}
         try:
             repo = get_response(repo_url, self._headers)
         except NotABugTaskError as e:
             logger.error(e)
-            raise NotABugFatalTaskError from e
 
         result_data['status'] = 'success'
 
@@ -125,7 +123,7 @@ class NewGithubTask(BaseTask):
         issues['license'] = repo.get('license') or {}
 
         # Get Commit Statistics
-        last_year_commits = self._get_last_years_commits(repo['url'])
+        last_year_commits = self._get_last_years_commits(repo.get('url', ''))
         commits = {'last_year_commits': {'sum': sum(last_year_commits),
                                          'weekly': last_year_commits}}
 
