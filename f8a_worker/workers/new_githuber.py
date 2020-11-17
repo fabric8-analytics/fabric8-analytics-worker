@@ -5,7 +5,7 @@ from urllib.parse import urljoin
 import datetime
 
 from f8a_worker.base import BaseTask
-from f8a_worker.errors import F8AConfigurationException, NotABugTaskError, NotABugFatalTaskError
+from f8a_worker.errors import F8AConfigurationException, NotABugTaskError
 from f8a_worker.utils import parse_gh_repo, get_response, get_gh_contributors, store_data_to_s3
 from f8a_utils.golang_utils import GolangUtils
 from selinon import StoragePool
