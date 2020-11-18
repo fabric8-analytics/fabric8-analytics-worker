@@ -3,13 +3,13 @@
 from . import AmazonS3
 
 
-class S3GitHub(AmazonS3):
+class S3InItData(AmazonS3):
     """S3 storage for Github details files."""
 
     @staticmethod
     def _construct_object_key(**arguments):
         """Construct object key."""
-        return "{ecosystem}/{name}/github_details.json".format(**arguments)
+        return "{ecosystem}/{name}/{version}.json".format(**arguments)
 
     def store_data(self, node_args, result):
         """Store github details as a json."""

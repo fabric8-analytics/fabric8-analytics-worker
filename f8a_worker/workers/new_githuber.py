@@ -2,27 +2,22 @@
 
 from urllib.parse import urljoin
 
-import requests
 import datetime
-from collections import OrderedDict
-from selinon import FatalTaskError
 
 from f8a_worker.base import BaseTask
-from f8a_worker.errors import F8AConfigurationException, NotABugTaskError, NotABugFatalTaskError
-from f8a_worker.schemas import SchemaRef
-from f8a_worker.utils import parse_gh_repo, get_response, get_gh_contributors
+from f8a_worker.errors import F8AConfigurationException, NotABugTaskError
+from f8a_worker.utils import parse_gh_repo, get_response, get_gh_contributors, store_data_to_s3
+from f8a_utils.golang_utils import GolangUtils
+from selinon import StoragePool
 import logging
 
 logger = logging.getLogger(__name__)
-
 REPO_PROPS = ('forks_count', 'subscribers_count', 'stargazers_count', 'open_issues_count')
 
 
-class GithubTask(BaseTask):
+class NewGithubTask(BaseTask):
     """Collects statistics using Github API."""
 
-    _analysis_name = "github_details"
-    schema_ref = SchemaRef(_analysis_name, '2-0-2')
     # used for testing
     _repo_name = None
     _repo_url = None
@@ -37,7 +32,7 @@ class GithubTask(BaseTask):
         """Create instance of task for tests."""
         assert cls
         instance = super().create_test_instance()
-        # set for testing as we are not querying DB for mercator results
+        # set for testing
         instance._repo_name = repo_name
         instance._repo_url = repo_url
         return instance
@@ -47,20 +42,20 @@ class GithubTask(BaseTask):
         try:
             activity = get_response(urljoin(repo_url + '/', "stats/commit_activity"), self._headers)
         except NotABugTaskError as e:
-            self.log.debug(e)
+            logger.debug(e)
             return []
         return [x['total'] for x in activity]
 
-    def _get_repo_stats(self, repo, header):
+    def _get_repo_stats(self, repo, headers):
         """Collect various repository properties."""
         try:
             url = repo.get('contributors_url', '')
             if url:
-                contributors = get_gh_contributors(url, header)
+                contributors = get_gh_contributors(url, headers)
             else:
                 contributors = -1
         except NotABugTaskError as e:
-            self.log.debug(e)
+            logger.error(e)
             contributors = -1
         d = {'contributors_count': contributors}
         for prop in REPO_PROPS:
@@ -68,10 +63,10 @@ class GithubTask(BaseTask):
         return d
 
     def _get_repo_name(self, url):
-        """Retrieve GitHub repo from a preceding Mercator scan."""
+        """Get GitHub repo URL."""
         parsed = parse_gh_repo(url)
         if not parsed:
-            self.log.debug('Could not parse Github repo URL %s', url)
+            logger.debug('Could not parse Github repo URL %s', url)
         else:
             self._repo_url = 'https://github.com/' + parsed
         return parsed
@@ -85,9 +80,19 @@ class GithubTask(BaseTask):
         result_data = {'status': 'unknown',
                        'summary': [],
                        'details': {}}
+
+        if arguments['ecosystem'] == 'golang':
+            go_obj = GolangUtils(arguments.get('name'))
+            url = go_obj.get_gh_link()
+
+            if url:
+                arguments['url'] = url
+            else:
+                return result_data
+
         # For testing purposes, a repo may be specified at task creation time
         if self._repo_name is None:
-            # Otherwise, get the repo name from earlier Mercator scan results
+            # Otherwise, get the repo name from URL
             self._repo_name = self._get_repo_name(arguments['url'])
             if self._repo_name is None:
                 # Not a GitHub hosted project
@@ -97,15 +102,14 @@ class GithubTask(BaseTask):
             _, header = self.configuration.select_random_github_token()
             self._headers.update(header)
         except F8AConfigurationException as e:
-            self.log.error(e)
-            raise FatalTaskError from e
+            logger.error(e)
 
         repo_url = urljoin(self.configuration.GITHUB_API + "repos/", self._repo_name)
+        repo = {}
         try:
             repo = get_response(repo_url, self._headers)
         except NotABugTaskError as e:
-            self.log.error(e)
-            raise NotABugFatalTaskError from e
+            logger.error(e)
 
         result_data['status'] = 'success'
 
@@ -119,71 +123,19 @@ class GithubTask(BaseTask):
         issues['license'] = repo.get('license') or {}
 
         # Get Commit Statistics
-        last_year_commits = self._get_last_years_commits(repo['url'])
+        last_year_commits = self._get_last_years_commits(repo.get('url', ''))
         commits = {'last_year_commits': {'sum': sum(last_year_commits),
                                          'weekly': last_year_commits}}
+
         t_stamp = datetime.datetime.utcnow()
         refreshed_on = {'updated_on': t_stamp.strftime("%Y-%m-%d %H:%M:%S")}
         issues.update(refreshed_on)
         issues.update(commits)
         result_data['details'] = issues
+
+        # Store github details for being used in Data-Importer
+        store_data_to_s3(arguments,
+                         StoragePool.get_connected_storage('S3GitHub'),
+                         result_data)
+
         return result_data
-
-
-class GitReadmeCollectorTask(BaseTask):
-    """Collect README files stored on Github."""
-
-    _GITHUB_README_PATH = \
-        'https://raw.githubusercontent.com/{project}/{repo}/master/README{extension}'
-
-    # Based on https://github.com/github/markup#markups
-    # Markup type to its possible extensions mapping, we use OrderedDict as we
-    # check the most used types first
-    README_TYPES = OrderedDict((
-        ('Markdown', ('md', 'markdown', 'mdown', 'mkdn')),
-        ('reStructuredText', ('rst',)),
-        ('AsciiDoc', ('asciidoc', 'adoc', 'asc')),
-        ('Textile', ('textile',)),
-        ('RDoc', ('rdoc',)),
-        ('Org', ('org',)),
-        ('Creole', ('creole',)),
-        ('MediaWiki', ('mediawiki', 'wiki')),
-        ('Pod', ('pod',)),
-        ('Unknown', ('',)),
-    ))
-
-    def _get_github_readme(self, url):
-        """Get README from url."""
-        repo_tuple = parse_gh_repo(url)
-        if repo_tuple:
-            project, repo = repo_tuple.split('/')
-        else:
-            return None
-
-        for readme_type, extensions in self.README_TYPES.items():
-            for extension in extensions:
-                if extension:
-                    extension = '.' + extension
-                url = self._GITHUB_README_PATH.format(project=project, repo=repo,
-                                                      extension=extension)
-                response = requests.get(url)
-                if response.status_code != 200:
-                    self.log.debug('No README%s found for type "%s" at "%s"', extension,
-                                   readme_type, url)
-                    continue
-
-                self.log.debug('README%s found for type "%s" at "%s"', extension, readme_type, url)
-                return {'type': readme_type, 'content': response.text}
-
-    def run(self, arguments):
-        """Task's entrypoint."""
-        self._strict_assert(arguments.get('name'))
-        self._strict_assert(arguments.get('ecosystem'))
-        self._strict_assert(arguments.get('url'))
-
-        readme = self._get_github_readme(arguments['url'])
-        if not readme:
-            self.log.warning("No README file found for '%s/%s'", arguments['ecosystem'],
-                             arguments['name'])
-
-        return readme

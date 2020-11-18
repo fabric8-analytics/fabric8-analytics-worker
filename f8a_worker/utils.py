@@ -600,14 +600,15 @@ def peek(iterable):
 
 
 @tenacity.retry(reraise=True, stop=tenacity.stop_after_attempt(3), wait=tenacity.wait_fixed(1))
-def get_gh_contributors(url):
+def get_gh_contributors(url, headers):
     """Get number of contributors from Git URL.
 
     :param url: URL where to do the request
     :return:  length of contributor's list
     """
     try:
-        response = requests.head("{}?per_page=1".format(url))
+        response = requests.get("{}?per_page=1".format(url),
+                                headers=headers)
         response.raise_for_status()
 
         if response.status_code == 204:
@@ -620,3 +621,11 @@ def get_gh_contributors(url):
             return -1
     except HTTPError as err:
         raise NotABugTaskError(err) from err
+
+
+def store_data_to_s3(arguments, s3, result):
+    """Store data to S3 bucket."""
+    try:
+        s3.store_data(arguments, result)
+    except Exception as e:
+        logger.error(e)
