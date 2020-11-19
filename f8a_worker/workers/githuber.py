@@ -8,9 +8,13 @@ from collections import OrderedDict
 from selinon import FatalTaskError
 
 from f8a_worker.base import BaseTask
-from f8a_worker.errors import F8AConfigurationException, NotABugTaskError, NotABugFatalTaskError
-from f8a_worker.schemas import SchemaRef
-from f8a_worker.utils import parse_gh_repo, get_response, get_gh_contributors
+from f8a_worker.errors import F8AConfigurationException, \
+    NotABugTaskError, \
+    NotABugFatalTaskError
+from f8a_worker.utils import parse_gh_repo, \
+    get_response, \
+    get_gh_contributors, \
+    get_gh_pr_issue_counts
 import logging
 
 logger = logging.getLogger(__name__)
@@ -21,8 +25,6 @@ REPO_PROPS = ('forks_count', 'subscribers_count', 'stargazers_count', 'open_issu
 class GithubTask(BaseTask):
     """Collects statistics using Github API."""
 
-    _analysis_name = "github_details"
-    schema_ref = SchemaRef(_analysis_name, '2-0-2')
     # used for testing
     _repo_name = None
     _repo_url = None
@@ -126,6 +128,11 @@ class GithubTask(BaseTask):
         refreshed_on = {'updated_on': t_stamp.strftime("%Y-%m-%d %H:%M:%S")}
         issues.update(refreshed_on)
         issues.update(commits)
+
+        # Get PR/Issue details for previous Month and Year
+        gh_pr_issue_details = get_gh_pr_issue_counts(header, self._repo_name)
+        issues.update(gh_pr_issue_details)
+
         result_data['details'] = issues
         return result_data
 
