@@ -5,8 +5,13 @@ from urllib.parse import urljoin
 import datetime
 
 from f8a_worker.base import BaseTask
-from f8a_worker.errors import F8AConfigurationException, NotABugTaskError
-from f8a_worker.utils import parse_gh_repo, get_response, get_gh_contributors, store_data_to_s3
+from f8a_worker.errors import F8AConfigurationException, \
+    NotABugTaskError
+from f8a_worker.utils import parse_gh_repo, \
+    get_response, \
+    get_gh_contributors, \
+    store_data_to_s3, \
+    get_gh_pr_issue_counts
 from f8a_utils.golang_utils import GolangUtils
 from selinon import StoragePool
 import logging
@@ -131,6 +136,11 @@ class NewGithubTask(BaseTask):
         refreshed_on = {'updated_on': t_stamp.strftime("%Y-%m-%d %H:%M:%S")}
         issues.update(refreshed_on)
         issues.update(commits)
+
+        # Get PR/Issue details for previous Month and Year
+        gh_pr_issue_details = get_gh_pr_issue_counts(header, self._repo_name)
+
+        issues.update(gh_pr_issue_details)
         result_data['details'] = issues
 
         # Store github details for being used in Data-Importer
