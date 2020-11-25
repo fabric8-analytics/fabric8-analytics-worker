@@ -632,6 +632,7 @@ def store_data_to_s3(arguments, s3, result):
         logger.error(e)
 
 
+@tenacity.retry(reraise=True, stop=tenacity.stop_after_attempt(3), wait=tenacity.wait_fixed(1))
 def get_gh_query_response(headers, repo_name, status, type, start_date, end_date, event):
     """Get details of PRs and Issues from given Github repo.
 
