@@ -737,7 +737,6 @@ def get_gh_pr_issue_counts(headers, repo_name):
     last_yesr_start_date = '{}-01-01'.format(previous_year)
     last_year_end_date = '{}-12-31'.format(previous_year)
 
-
     # Get PR/Issue counts for previous year
     pr_opened_last_year, pr_closed_last_year, issues_opened_last_year, issues_closed_last_year = \
         execute_gh_queries(headers, repo_name, last_yesr_start_date, last_year_end_date)
