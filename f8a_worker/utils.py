@@ -680,6 +680,7 @@ def get_gh_query_response(headers, repo_name, status, type, start_date, end_date
             resp = response.json()
             return resp.get('total_count', 0)
         else:
+            logger.info('No response from github url: {}'.format(url))
             return -1
     except Exception as e:
         logger.error(e)
@@ -733,8 +734,9 @@ def get_gh_pr_issue_counts(headers, repo_name):
 
     # Get previous year and start and end dates of year
     previous_year = today.year - 1
-    last_yesr_start_date = '01-01-{}'.format(previous_year)
-    last_year_end_date = '12-31-{}'.format(previous_year)
+    last_yesr_start_date = '{}-01-01'.format(previous_year)
+    last_year_end_date = '{}-12-31'.format(previous_year)
+
 
     # Get PR/Issue counts for previous year
     pr_opened_last_year, pr_closed_last_year, issues_opened_last_year, issues_closed_last_year = \
