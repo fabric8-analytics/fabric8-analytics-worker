@@ -29,5 +29,7 @@ ls
 
 # this is necessary - codecov expect proper git repo
 cp -r /f8a_worker/.git ./
+cp -r coverage.txt /f8a_worker
+cd f8a_worker && ls && cd ..
 
 codecov --token=04560f69-79e3-48a3-9731-92c9e767a2ff
