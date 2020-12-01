@@ -27,6 +27,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.errors import TaskError, NotABugTaskError
 from f8a_worker.models import (Analysis, Ecosystem, Package, Version)
+from f8a_worker.defaults import configuration
 
 logger = logging.getLogger(__name__)
 
@@ -600,14 +601,15 @@ def peek(iterable):
 
 
 @tenacity.retry(reraise=True, stop=tenacity.stop_after_attempt(3), wait=tenacity.wait_fixed(1))
-def get_gh_contributors(url):
+def get_gh_contributors(url, headers):
     """Get number of contributors from Git URL.
 
     :param url: URL where to do the request
     :return:  length of contributor's list
     """
     try:
-        response = requests.head("{}?per_page=1".format(url))
+        response = requests.get("{}?per_page=1".format(url),
+                                headers=headers)
         response.raise_for_status()
 
         if response.status_code == 204:
@@ -620,3 +622,135 @@ def get_gh_contributors(url):
             return -1
     except HTTPError as err:
         raise NotABugTaskError(err) from err
+
+
+def store_data_to_s3(arguments, s3, result):
+    """Store data to S3 bucket."""
+    try:
+        s3.store_data(arguments, result)
+    except Exception as e:
+        logger.error(e)
+
+
+@tenacity.retry(reraise=True, stop=tenacity.stop_after_attempt(3), wait=tenacity.wait_fixed(1))
+def get_gh_query_response(headers, repo_name, status, type, start_date, end_date, event):
+    """Get details of PRs and Issues from given Github repo.
+
+    :param headers: headers to set in request
+    :param repo_name: Github repo name
+    :param status: status of issue Ex. open/closed
+    :param type: type of issue to set in search query Ex. pr/issue
+    :param start_date: date since data has to be collected
+    :param end_date: date upto data has to be collected
+    :param event: even which need to be considered Ex. created/closed
+    :return:  count of issue/pr based on criteria
+    """
+    try:
+        """
+        Create search query for given criteria
+        page and per_page is set to 1, as search query provides count of entities
+        matching with given criteria in all pages we dont need to collect all data.
+        """
+
+        url = "{GITHUB_API}search/issues?" \
+              "page=1" \
+              "&per_page=1" \
+              "&q=repo:{repo_name}" \
+              "+is:{type}" \
+              "+{event}:{start_date}..{end_date}"\
+            .format(GITHUB_API=configuration.GITHUB_API,
+                    repo_name=repo_name,
+                    start_date=start_date,
+                    end_date=end_date,
+                    type=type,
+                    event=event)
+
+        # If status is set to closed by default open & closed both are set
+        if status:
+            url = '{url}+is:{status}'.format(url=url, status=status)
+
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 200:
+            """
+            Get value of total_count, search query gives max 1000 entities
+            as we dont need to collect information from result entities,
+            we can get total number of rows from total_count field
+            """
+            resp = response.json()
+            return resp.get('total_count', 0)
+        else:
+            logger.info('No response from github url: {}'.format(url))
+            return -1
+    except Exception as e:
+        logger.error(e)
+        return -1
+
+
+def execute_gh_queries(headers, repo_name, start_date, end_date):
+    """Get details of Github PR/Issues based on given date range.
+
+    :param headers: headers to set in request
+    :param repo_name: Github repo name
+    :param start_date: date since data has to be collected
+    :param end_date: date upto data has to be collected
+    :return:  count of issue/pr based on criteria
+    """
+    try:
+        # Get PR details based on date range provided
+        pr_opened = get_gh_query_response(headers, repo_name, '',
+                                          'pr', start_date, end_date, 'created')
+        pr_closed = get_gh_query_response(headers, repo_name, 'closed',
+                                          'pr', start_date, end_date, 'closed')
+
+        # Get Issue details based on date range provided
+        issues_opened = get_gh_query_response(headers, repo_name,
+                                              '', 'issue', start_date, end_date, 'created')
+        issues_closed = get_gh_query_response(headers, repo_name,
+                                              'closed', 'issue', start_date, end_date, 'closed')
+
+        return pr_opened, pr_closed, issues_opened, issues_closed
+    except Exception as e:
+        logger.error(e)
+        return -1, -1, -1, -1
+
+
+def get_gh_pr_issue_counts(headers, repo_name):
+    """Get details of Github PR/Issues for given repo.
+
+    :param headers: headers to set in request
+    :param repo_name: Github repo name
+    :return: Dict having Issue/PR details
+    """
+    today = datetime.date.today()
+
+    # Get previous month start and end dates
+    last_month_end_date = today.replace(day=1) - datetime.timedelta(days=1)
+    last_month_start_date = today.replace(day=1) - datetime.timedelta(days=last_month_end_date.day)
+
+    # Get PR/Issue counts for previous month
+    pr_opened_last_month, pr_closed_last_month, issues_opened_last_month, issues_closed_last_month\
+        = execute_gh_queries(headers, repo_name, last_month_start_date, last_month_end_date)
+
+    # Get previous year and start and end dates of year
+    previous_year = today.year - 1
+    last_yesr_start_date = '{}-01-01'.format(previous_year)
+    last_year_end_date = '{}-12-31'.format(previous_year)
+
+    # Get PR/Issue counts for previous year
+    pr_opened_last_year, pr_closed_last_year, issues_opened_last_year, issues_closed_last_year = \
+        execute_gh_queries(headers, repo_name, last_yesr_start_date, last_year_end_date)
+
+    # Set output in required format by data importer
+    result = {
+        "updated_pull_requests": {
+            "year": {"opened": pr_opened_last_year, "closed": pr_closed_last_year},
+            "month": {"opened": pr_opened_last_month, "closed": pr_closed_last_month}
+        },
+        "updated_issues": {
+            "year": {"opened": issues_opened_last_year, "closed": issues_closed_last_year},
+            "month": {"opened": issues_opened_last_month, "closed": issues_closed_last_month}
+        }
+    }
+
+    return result

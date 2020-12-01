@@ -16,7 +16,43 @@ _SELECTIVE_API_URL = "http://{host}:{port}/{endpoint}".format(
     endpoint=_SELECTIVE_SERVICE_ENDPOINT)
 
 
-class NewGraphImporterTask(BaseTask):
+class NewPackageGraphImporterTask(BaseTask):
+    """Ingest to graph node."""
+
+    def execute(self, arguments):
+        """Task code.
+
+        :param arguments: dictionary with task arguments
+        :return: {}, results
+        """
+        self._strict_assert(arguments.get('ecosystem'))
+        self._strict_assert(arguments.get('name'))
+
+        package_list = [{
+                'ecosystem': arguments.get('ecosystem'),
+                'name': arguments['name'],
+                'version': arguments.get('version'),
+                'source_repo': arguments.get('ecosystem')
+            }]
+
+        param = {
+            'select_ingest': ['metadata'],
+            'package_list': package_list
+        }
+
+        logger.info("v2_:_Invoke graph importer at url: '%s' for %s",
+                    _SELECTIVE_API_URL, param)
+        # Calling Data Importer API end point to ingest data into graph db.
+        response = requests.post(_SELECTIVE_API_URL, json=param)
+
+        if response.status_code != 200:
+            raise RuntimeError("v2_:_Failed to invoke graph import at '%s' for %s" %
+                               (_SELECTIVE_API_URL, param))
+
+        logger.info("v2_:_Graph import succeeded with response: %s", response.text)
+
+
+class NewPackageAnalysisGraphImporterTask(BaseTask):
     """Ingest to graph node."""
 
     def execute(self, arguments):
@@ -32,7 +68,7 @@ class NewGraphImporterTask(BaseTask):
             {
                         'ecosystem': arguments.get('ecosystem'),
                         'name': arguments['name'],
-                        'version': arguments.get('version'),
+                        'version': '',
                         'source_repo': arguments.get('ecosystem')
             }
         ]

@@ -3,6 +3,7 @@
     - &newPackageFlow
       name: 'newPackageFlow'
       queue: '{DEPLOYMENT_PREFIX}_ingestion_newPackageFlow_v0'
+      propagate_node_args: true
       sampling:
         name: 'constant'
         args:
@@ -11,6 +12,8 @@
         - from:
           to: 'NewInitPackageFlow'
         - from: 'NewInitPackageFlow'
-          to: 'NewGithubDetails'
-        - from: 'NewGithubDetails'
-          to: 'NewGraphImporterTask'
+          to: 'NewMetaDataTask'
+        - from: 'NewMetaDataTask'
+          to: 'newPackageAnalysisFlow'
+        - from: 'newPackageAnalysisFlow'
+          to: 'NewPackageGraphImporterTask'
