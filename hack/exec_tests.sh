@@ -24,12 +24,9 @@ echo "*****************************************"
 # user and will cause exception
 py.test -p no:cacheprovider --cov=/f8a_worker/f8a_worker --cov-report=xml  --cov-fail-under=$COVERAGE_THRESHOLD -vvl "$@"
 
-pwd 
-ls
 
 # this is necessary - codecov expect proper git repo
 cp -r /f8a_worker/.git ./
-cp -r coverage.xml /f8a_worker
-cd f8a_worker && ls && cd ..
+mv coverage.xml shared
 
 codecov --token=04560f69-79e3-48a3-9731-92c9e767a2ff
