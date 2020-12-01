@@ -97,7 +97,7 @@ S3_ENDPOINT_URL="http://${S3_CONTAINER_IP}:33000"
 
 echo "Starting test suite"
 docker run -t \
-  -v "${here}:/f8a_worker:ro,Z" \
+  -v "${here}:/f8a_worker:rw,Z" \
   --network "${DOCKER_NETWORK}" \
   -u 9007 \
   -e PGBOUNCER_SERVICE_HOST="${TESTDB_CONTAINER_NAME}" \
