@@ -37,6 +37,8 @@ jobs:
         python-version: '3.6'
     - name: Run Unit Tests
       run: bash qa/runtest.sh
+    - name: List file system
+      run: ls -a
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
       with:
