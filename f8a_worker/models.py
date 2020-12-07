@@ -366,9 +366,9 @@ class StackAnalysisRequest(Base):
     origin = Column(String(64), nullable=True)
     result = Column(JSON, nullable=True)
     team = Column(String(64), nullable=True)
+    user_id = Column(String(64),nullable=False)
     feedback = relationship('RecommendationFeedback',
                             back_populates="stack_request")
-    dep_snapshot = Column(JSONB, nullable=True)
 
 
 class APIRequests(Base):
