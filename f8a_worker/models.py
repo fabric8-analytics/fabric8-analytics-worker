@@ -362,11 +362,11 @@ class StackAnalysisRequest(Base):
     __tablename__ = "stack_analyses_request"
     id = Column(String(64), primary_key=True)
     submitTime = Column(DateTime, nullable=False)
-    requestJson = Column(JSON, nullable=False)
     origin = Column(String(64), nullable=True)
     result = Column(JSON, nullable=True)
     team = Column(String(64), nullable=True)
     user_id = Column(String(64),nullable=False)
+    dep_snapshot = Column(JSONB, nullable=True)
     feedback = relationship('RecommendationFeedback',
                             back_populates="stack_request")
 
