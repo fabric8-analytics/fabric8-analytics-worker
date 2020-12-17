@@ -1,7 +1,7 @@
 """Script to run the database migrations, online or offline."""
 from __future__ import with_statement
 
-import os
+import os 
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool, MetaData
