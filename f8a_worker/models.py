@@ -1,5 +1,4 @@
 """SQLAlchemy domain models."""
-import uuid
 
 from sqlalchemy import (Column, DateTime, Enum, ForeignKey, Integer, String, UniqueConstraint,
                         create_engine, Boolean, Text)
