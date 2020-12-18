@@ -1,4 +1,4 @@
-"""ading user_id.
+"""adding column user_id to SA table and removing column requestJson.
 
 Revision ID: 0809bdb23579
 Revises: 62010067944d
