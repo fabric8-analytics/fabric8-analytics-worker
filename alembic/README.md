@@ -11,6 +11,6 @@ You need to run the alembic command from the directory in which alembic.ini is l
 3. Enable port forwarding to the DB instance in your dev cluster. This is required because alembic needs to find the 
    difference between the schema in models.p and the database 
     while [ 1 ]; do oc port-forward `<your pgbouncer pod id`> 5432:5432; done
-4. Add `export F8A_POSTGRES=postgresql://localhost:5432/coreapi?password=<yourpassword>&user=coreapi` to your .bashrc and source it.    
+4. Run `export F8A_POSTGRES="postgresql://localhost:5432/coreapi?password=<yourpassword>&user=coreapi"` in your terminal.    
 5. Run alembic revision --autogenerate -m "`<your message`>"
 
