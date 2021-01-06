@@ -4,6 +4,7 @@ from sqlalchemy import (Column, DateTime, Enum, ForeignKey, Integer, String, Uni
                         create_engine, Boolean, Text)
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, scoped_session, sessionmaker
@@ -366,9 +367,10 @@ class StackAnalysisRequest(Base):
     origin = Column(String(64), nullable=True)
     result = Column(JSON, nullable=True)
     team = Column(String(64), nullable=True)
+    user_id = Column(UUID(as_uuid=True), nullable=True)
+    dep_snapshot = Column(JSONB, nullable=True)
     feedback = relationship('RecommendationFeedback',
                             back_populates="stack_request")
-    dep_snapshot = Column(JSONB, nullable=True)
 
 
 class APIRequests(Base):
