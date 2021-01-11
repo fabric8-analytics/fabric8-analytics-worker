@@ -213,7 +213,7 @@ class BayesianPostgres(PostgresBase):
         s3 = StoragePool.get_connected_storage('S3UserProfileStore')
         s3.store_in_bucket(content)
 
-    def store_api_requests(self, external_request_id, data, dep_data):
+    def store_api_requests(self, external_request_id, uuid_data, data, dep_data):
         """Get result of previously scheduled analysis.
 
         :param external_request_id: str, ID of analysis
@@ -246,7 +246,8 @@ class BayesianPostgres(PostgresBase):
             origin=data.get('origin', None),
             team=data.get('team', None),
             recommendation=data.get('recommendation', None),
-            request_digest=request_digest
+            request_digest=request_digest,
+            user_id=uuid_data
         )
 
         try:
