@@ -428,3 +428,18 @@ class OSIORegisteredRepos(Base):
     git_sha = Column(String(255), nullable=False)
     email_ids = Column(String(255), nullable=False)
     last_scanned_at = Column(DateTime)
+
+
+class ComponentAnalysesRequests(Base):
+    """Table for CA request."""
+
+    __tablename__ = "component_analyses_requests"
+
+    component_analyses_request_id = Column(Integer, primary_key=True)
+    request_id = Column(UUID(as_uuid=True), nullable=True)
+    manifest_hash = Column(String(256), nullable=True)
+    ecosystem = Column(String(64), nullable=False)
+    submit_time = Column(DateTime, nullable=False)
+    stack_data = Column(JSON, nullable=False)
+    user_agent = Column(String(256), nullable=False)
+    user_id = Column(UUID(as_uuid=True), nullable=True)
