@@ -434,6 +434,7 @@ class ComponentAnalysesRequests(Base):
     """Table for CA request."""
 
     __tablename__ = "component_analyses_requests"
+
     component_analyses_request_id = Column(String(64), primary_key=True)
     request_id = Column(String(64), nullable=True)
     manifest_hash = Column(String(256), nullable=True)
