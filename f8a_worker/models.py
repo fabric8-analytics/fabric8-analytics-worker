@@ -436,7 +436,7 @@ class ComponentAnalysesRequests(Base):
     __tablename__ = "component_analyses_requests"
 
     component_analyses_request_id = Column(Integer, primary_key=True)
-    request_id = Column(String(64), nullable=True)
+    request_id = Column(UUID(as_uuid=True), nullable=True)
     manifest_hash = Column(String(256), nullable=True)
     ecosystem = Column(String(64), nullable=False)
     submit_time = Column(DateTime, nullable=False)
