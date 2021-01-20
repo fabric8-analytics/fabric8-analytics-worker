@@ -26,6 +26,6 @@ echo "*****************************************"
 py.test -p no:cacheprovider --cov=/f8a_worker/f8a_worker --cov-report=xml  --cov-fail-under=$COVERAGE_THRESHOLD -vvl "$@"
 cd ..
 ls
-chmod 777 -R /shared
+sudo chmod 777 -R /shared
 mv tmp/coverage.xml /shared
 
