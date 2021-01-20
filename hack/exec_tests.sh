@@ -24,8 +24,5 @@ echo "*****************************************"
 # user and will cause exception 
 
 py.test -p no:cacheprovider --cov=/f8a_worker/f8a_worker --cov-report=xml  --cov-fail-under=$COVERAGE_THRESHOLD -vvl "$@"
-cd ..
-ls
-sudo chmod 777 -R /shared
-mv tmp/coverage.xml /shared
+mv -V ~/tmp/* ~/shared/
 
