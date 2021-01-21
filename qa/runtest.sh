@@ -96,12 +96,12 @@ S3_CONTAINER_IP=$(docker inspect --format "{{.NetworkSettings.Networks.${DOCKER_
 S3_ENDPOINT_URL="http://${S3_CONTAINER_IP}:33000"
 
 mkdir shared
+ls -l
 
 echo "Starting test suite"
 docker run -v "$PWD/shared:/tmp/shared:rw,Z" -t \
   -v "${here}:/f8a_worker:rw,Z" \
   --network "${DOCKER_NETWORK}" \
-  -u 9007 \
   -e PGBOUNCER_SERVICE_HOST="${TESTDB_CONTAINER_NAME}" \
   -e S3_ENDPOINT_URL="${S3_ENDPOINT_URL}" \
   -e DEPLOYMENT_PREFIX='test' \
