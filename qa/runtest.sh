@@ -98,7 +98,7 @@ S3_ENDPOINT_URL="http://${S3_CONTAINER_IP}:33000"
 mkdir shared
 
 echo "Starting test suite"
-docker run -v "$PWD/shared:/shared" -t \
+docker run -v "$PWD/shared:/tmp/shared" -t \
   -v "${here}:/f8a_worker:rw,Z" \
   --network "${DOCKER_NETWORK}" \
   -u 9007 \
