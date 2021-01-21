@@ -7,7 +7,4 @@ RUN cd /f8a_worker/tests && pip3 install -r ./requirements.txt
 # This is needed for codecov so the CWD is writeable and codecov can write stats to a file.
 WORKDIR /tmp
 
-
-
-
 CMD ["py.test", "--cov=/f8a_worker/f8a_worker"]
