@@ -83,7 +83,7 @@ for i in {1..10}; do
   if test "$retcode" == "52"; then
     break
   fi;
-  sleep 1
+  
 done;
 set -x
 
@@ -99,7 +99,6 @@ mkdir shared
 
 echo "Starting test suite"
 docker run -v "$PWD/shared:/tmp/shared:rw,Z" -t \
-  -v "${here}:/f8a_worker:rw,Z" \
   --network "${DOCKER_NETWORK}" \
   -e PGBOUNCER_SERVICE_HOST="${TESTDB_CONTAINER_NAME}" \
   -e S3_ENDPOINT_URL="${S3_ENDPOINT_URL}" \
