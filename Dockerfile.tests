@@ -1,6 +1,6 @@
 FROM openshiftio/bayesian-cucos-worker
 ENV PYTHONDONTWRITEBYTECODE 1
-USER root
+
 COPY . /f8a_worker
 RUN cd /f8a_worker/tests && pip3 install -r ./requirements.txt
 
@@ -8,6 +8,6 @@ RUN cd /f8a_worker/tests && pip3 install -r ./requirements.txt
 WORKDIR /tmp
 
 
-RUN ls
+
 
 CMD ["py.test", "--cov=/f8a_worker/f8a_worker"]

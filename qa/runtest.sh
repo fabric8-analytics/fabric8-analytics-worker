@@ -96,7 +96,6 @@ S3_CONTAINER_IP=$(docker inspect --format "{{.NetworkSettings.Networks.${DOCKER_
 S3_ENDPOINT_URL="http://${S3_CONTAINER_IP}:33000"
 
 mkdir shared
-ls -l
 
 echo "Starting test suite"
 docker run -v "$PWD/shared:/tmp/shared:rw,Z" -t \

@@ -22,11 +22,8 @@ echo "*****************************************"
 
 # we need no:cacheprovider, otherwise pytest will try to write to directory .cache which is in /usr under unprivileged
 # user and will cause exception 
-ls
-pwd
+
 py.test -p no:cacheprovider --cov=/f8a_worker/f8a_worker --cov-report=xml  --cov-fail-under=$COVERAGE_THRESHOLD -vvl "$@"
-ls
-ls -l 
-pwd
+
 mv -v coverage.xml shared
 
