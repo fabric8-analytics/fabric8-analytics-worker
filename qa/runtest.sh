@@ -83,7 +83,7 @@ for i in {1..10}; do
   if test "$retcode" == "52"; then
     break
   fi;
-  
+  sleep 1
 done;
 set -x
 
