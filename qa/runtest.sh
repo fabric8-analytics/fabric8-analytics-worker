@@ -79,7 +79,7 @@ DB_CONTAINER_IP=$(docker inspect --format "{{.NetworkSettings.Networks.${DOCKER_
 echo "Waiting for postgres to fully initialize"
 for i in {1..10}; do
   set +e
-  docker exec -it "${TESTDB_CONTAINER_NAME}" bash -c pg_isready
+  docker exec -t "${TESTDB_CONTAINER_NAME}" bash -c pg_isready
   if [[ "$?" == "0" ]]; then
     break
   fi;
