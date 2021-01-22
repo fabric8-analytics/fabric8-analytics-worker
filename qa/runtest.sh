@@ -77,15 +77,15 @@ DB_CONTAINER_IP=$(docker inspect --format "{{.NetworkSettings.Networks.${DOCKER_
 
 # TODO: this is duplicating code with server's runtest, we should refactor
 echo "Waiting for postgres to fully initialize"
-set +x
 for i in {1..10}; do
-  retcode=$(curl http://${DB_CONTAINER_IP}:5432 &>/dev/null || echo $?)
-  if test "$retcode" == "52"; then
+  set +e
+  docker exec -t "${TESTDB_CONTAINER_NAME}" bash -c pg_isready
+  if [[ "$?" == "0" ]]; then
     break
   fi;
-  sleep 1
+  set -e
+  sleep 2
 done;
-set -x
 echo "Postgres is ready.."
 
 docker run -d \

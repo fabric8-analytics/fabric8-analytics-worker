@@ -3,3 +3,4 @@ ENV PYTHONDONTWRITEBYTECODE 1
 
 COPY . /f8a_worker
 RUN cd /f8a_worker/tests && pip3 install -r ./requirements.txt
+WORKDIR /tmp
