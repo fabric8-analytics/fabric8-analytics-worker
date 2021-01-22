@@ -76,15 +76,15 @@ docker run -d \
 DB_CONTAINER_IP=$(docker inspect --format "{{.NetworkSettings.Networks.${DOCKER_NETWORK}.IPAddress}}" ${TESTDB_CONTAINER_NAME})
 
 # TODO: this is duplicating code with server's runtest, we should refactor
-echo "Waiting for postgres to fully initialize"
-set +x
-for i in {1..10}; do
-  retcode=$(curl http://${DB_CONTAINER_IP}:5432 &>/dev/null || echo $?)
-  if test "$retcode" == "52"; then
-    break
-  fi;
+#echo "Waiting for postgres to fully initialize"
+#set +x
+#for i in {1..10}; do
+#  retcode=$(curl http://${DB_CONTAINER_IP}:5432 &>/dev/null || echo $?)
+#  if test "$retcode" == "52"; then
+#    break
+#  fi;
   
-done;
+#done;
 set -x
 
 docker run -d \
@@ -95,10 +95,9 @@ docker run -d \
 S3_CONTAINER_IP=$(docker inspect --format "{{.NetworkSettings.Networks.${DOCKER_NETWORK}.IPAddress}}" ${TESTS3_CONTAINER_NAME})
 S3_ENDPOINT_URL="http://${S3_CONTAINER_IP}:33000"
 
-mkdir shared
 
 echo "Starting test suite"
-docker run -v "$PWD/shared:/tmp/shared:rw,Z" -t \
+docker run -v "$PWD:/tmp/shared:rw,Z" -t \
   --network "${DOCKER_NETWORK}" \
   -e PGBOUNCER_SERVICE_HOST="${TESTDB_CONTAINER_NAME}" \
   -e S3_ENDPOINT_URL="${S3_ENDPOINT_URL}" \
