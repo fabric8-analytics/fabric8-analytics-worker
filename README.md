@@ -1,5 +1,5 @@
 ![CI](https://github.com/fabric8-analytics/fabric8-analytics-worker/workflows/CI/badge.svg?branch=master)
-![codecov](https://codecov.io/gh/fabric8-analytics/fabric8-analytics-worker/branch/master/graph/badge.svg?token=qi833miGbI)](https://codecov.io/gh/fabric8-analytics/fabric8-analytics-worker)
+[![codecov](https://codecov.io/gh/fabric8-analytics/fabric8-analytics-worker/branch/master/graph/badge.svg?token=qi833miGbI)](https://codecov.io/gh/fabric8-analytics/fabric8-analytics-worker)
 
 Fabric8-Analytics Core library and services
 -------------------------------------------
