@@ -76,15 +76,15 @@ docker run -d \
 DB_CONTAINER_IP=$(docker inspect --format "{{.NetworkSettings.Networks.${DOCKER_NETWORK}.IPAddress}}" ${TESTDB_CONTAINER_NAME})
 
 # TODO: this is duplicating code with server's runtest, we should refactor
-#echo "Waiting for postgres to fully initialize"
-#set +x
-#for i in {1..10}; do
-#  retcode=$(curl http://${DB_CONTAINER_IP}:5432 &>/dev/null || echo $?)
-#  if test "$retcode" == "52"; then
-#    break
-#  fi;
+echo "Waiting for postgres to fully initialize"
+set +x
+for i in {1..10}; do
+  retcode=$(curl http://${DB_CONTAINER_IP}:5432 &>/dev/null || echo $?)
+  if test "$retcode" == "52"; then
+    break
+  fi;
   
-#done;
+done;
 set -x
 
 docker run -d \
