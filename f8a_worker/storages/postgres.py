@@ -14,6 +14,7 @@ from selinon import StoragePool
 
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.models import Analysis, Ecosystem, Package, Version, WorkerResult, APIRequests
+from f8a_worker.models import ComponentAnalysesRequests
 from f8a_worker.utils import MavenCoordinates
 
 from .postgres_base import PostgresBase
@@ -247,6 +248,41 @@ class BayesianPostgres(PostgresBase):
             team=data.get('team', None),
             recommendation=data.get('recommendation', None),
             request_digest=request_digest
+        )
+
+        try:
+            PostgresBase.session.add(req)
+            PostgresBase.session.commit()
+        except IntegrityError:
+            # This is OK, the same request has been processed twice
+            PostgresBase.session.rollback()
+            pass
+        except SQLAlchemyError:
+            PostgresBase.session.rollback()
+            raise
+
+        return True
+
+    def store_api_requests_post(self, arguments):
+        """Store result of previously scheduled component analysis.
+
+        :param request_id: str, ID of analysis
+        :return: True/False
+        """
+        if not self.is_connected():
+            self.connect()
+
+        dt = datetime.datetime.utcnow()
+
+        req = ComponentAnalysesRequests(
+            request_id=arguments.get('request_id'),
+            user_id=arguments.get('user_id'),
+            submit_time=str(dt),
+            ecosystem=arguments.get('ecosystem'),
+            user_agent="xyz",
+            stack_data=json.dumps(arguments.get('package_lists')),
+            component_analyses_request_id=1,
+            manifest_hash='xyz'
         )
 
         try:
