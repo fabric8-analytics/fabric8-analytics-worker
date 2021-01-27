@@ -20,12 +20,9 @@ radon cc -s -a -i venv .
 
 popd
 
-if [[ "$1" == "--fail-on-error" ]]
+defects="$(radon cc -s -n D -i venv . | wc -l)"
+if [[ $defects -gt 0 ]]
 then
-    defects="$(radon cc -s -n D -i venv . | wc -l)"
-    if [[ $defects -gt 0 ]]
-    then
-        echo "File(s) with too high cyclomatic complexity detected!"
-        exit 1
-    fi
+    echo "File(s) with too high cyclomatic complexity detected!"
+    exit 1
 fi
