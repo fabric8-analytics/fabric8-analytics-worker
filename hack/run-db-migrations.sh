@@ -32,5 +32,5 @@ done
 # run alembic migrations
 pushd "${ALEMBIC_DIR}"
   export MIGRATE_ONLY=1
-  alembic upgrade head
+  alembic downgrade 8608c3fa6d42
 popd
