@@ -4,64 +4,160 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
-amqp==2.6.1               # via kombu
-anymarkup-core==0.8.1     # via anymarkup
-anymarkup==0.8.1          # via -r requirements.in
-attrs==19.3.0             # via jsonschema
-beautifulsoup4==4.9.1     # via -r requirements.in, bs4
-billiard==3.6.3.0         # via celery
-boto3==1.14.43            # via -r requirements.in
-botocore==1.17.43         # via -r requirements.in, boto3, s3transfer
-bs4==0.0.1                # via f8a-utils
-celery==4.4.7             # via -r requirements.in
-certifi==2020.6.20        # via requests
-cffi==1.14.4              # via cryptography
-chardet==3.0.4            # via requests
-click==7.1.2              # via anymarkup, selinon
-codegen==1.0              # via selinon
-colorama==0.4.3           # via rainbow-logging-handler
-configobj==5.0.6          # via anymarkup
-cryptography==3.3.1       # via f8a-utils
-docutils==0.15.2          # via botocore
-git+https://github.com/fabric8-analytics/fabric8-analytics-utils.git@95ebbf2#egg=f8a_utils  # via -r requirements.in
-git+https://github.com/fabric8-analytics/fabric8-analytics-version-comparator.git@8a57ac7#egg=f8a_version_comparator  # via f8a-utils
-git2json==0.2.3           # via -r requirements.in
-gitdb==4.0.5              # via gitpython
-gitpython==3.1.7          # via -r requirements.in
-graphviz==0.14.1          # via selinon
-idna==2.10                # via requests
-importlib-metadata==1.7.0  # via jsonschema, kombu
-jmespath==0.10.0          # via boto3, botocore
-jsl==0.2.4                # via -r requirements.in
-json5==0.9.5              # via anymarkup
-jsonschema==3.2.0         # via -r requirements.in, selinon
-kombu==4.6.11             # via celery
-logutils==0.3.5           # via rainbow-logging-handler
-lxml==4.5.2               # via -r requirements.in, f8a-utils
-pycparser==2.20           # via cffi
-pyrsistent==0.16.0        # via jsonschema
-python-dateutil==2.8.1    # via botocore
-pytz==2020.1              # via celery
-pyyaml==5.3.1             # via -r requirements.in, anymarkup, selinon
-rainbow-logging-handler==2.2.2  # via selinon
-raven==6.10.0             # via -r requirements.in
-requests-futures==1.0.0   # via -r requirements.in, f8a-utils
-requests==2.24.0          # via -r requirements.in, f8a-utils, requests-futures
-s3transfer==0.3.3         # via boto3
-selinon==1.0.0            # via -r requirements.in
-semantic-version==2.8.5   # via -r requirements.in
-semver==2.13.0            # via f8a-utils
-six==1.15.0               # via anymarkup-core, configobj, cryptography, jsonschema, pyrsistent, python-dateutil, tenacity
-smmap==3.0.4              # via gitdb
-soupsieve==2.0.1          # via beautifulsoup4
-sqlalchemy==1.3.18        # via -r requirements.in
-tenacity==6.2.0           # via -r requirements.in, f8a-utils
-toml==0.9.4               # via -r requirements.in, anymarkup
-urllib3==1.25.10          # via botocore, requests
-vine==1.3.0               # via amqp, celery
-werkzeug==1.0.1           # via -r requirements.in
-xmltodict==0.12.0         # via anymarkup
-zipp==3.1.0               # via importlib-metadata
+amqp==2.6.1
+    # via kombu
+anymarkup-core==0.8.1
+    # via anymarkup
+anymarkup==0.8.1
+    # via -r requirements.in
+attrs==19.3.0
+    # via jsonschema
+beautifulsoup4==4.9.1
+    # via
+    #   -r requirements.in
+    #   bs4
+billiard==3.6.3.0
+    # via celery
+boto3==1.14.43
+    # via -r requirements.in
+botocore==1.17.43
+    # via
+    #   -r requirements.in
+    #   boto3
+    #   s3transfer
+bs4==0.0.1
+    # via f8a-utils
+celery==4.4.7
+    # via -r requirements.in
+certifi==2020.6.20
+    # via requests
+cffi==1.14.4
+    # via cryptography
+chardet==3.0.4
+    # via requests
+click==7.1.2
+    # via
+    #   anymarkup
+    #   selinon
+codegen==1.0
+    # via selinon
+colorama==0.4.3
+    # via rainbow-logging-handler
+configobj==5.0.6
+    # via anymarkup
+cryptography==3.3.1
+    # via f8a-utils
+docutils==0.15.2
+    # via botocore
+git+https://github.com/fabric8-analytics/fabric8-analytics-utils.git@95ebbf2#egg=f8a_utils
+    # via -r requirements.in
+git+https://github.com/fabric8-analytics/fabric8-analytics-version-comparator.git@8a57ac7#egg=f8a_version_comparator
+    # via f8a-utils
+git2json==0.2.3
+    # via -r requirements.in
+gitdb==4.0.5
+    # via gitpython
+gitpython==3.1.7
+    # via -r requirements.in
+graphviz==0.14.1
+    # via selinon
+idna==2.10
+    # via requests
+importlib-metadata==1.7.0
+    # via
+    #   jsonschema
+    #   kombu
+jmespath==0.10.0
+    # via
+    #   boto3
+    #   botocore
+jsl==0.2.4
+    # via -r requirements.in
+json5==0.9.5
+    # via anymarkup
+jsonschema==3.2.0
+    # via
+    #   -r requirements.in
+    #   selinon
+kombu==4.6.11
+    # via celery
+logutils==0.3.5
+    # via rainbow-logging-handler
+lxml==4.5.2
+    # via
+    #   -r requirements.in
+    #   f8a-utils
+pycparser==2.20
+    # via cffi
+pyrsistent==0.16.0
+    # via jsonschema
+python-dateutil==2.8.1
+    # via botocore
+pytz==2020.1
+    # via celery
+pyyaml==5.3.1
+    # via
+    #   -r requirements.in
+    #   anymarkup
+    #   selinon
+rainbow-logging-handler==2.2.2
+    # via selinon
+raven==6.10.0
+    # via -r requirements.in
+requests-futures==1.0.0
+    # via
+    #   -r requirements.in
+    #   f8a-utils
+requests==2.24.0
+    # via
+    #   -r requirements.in
+    #   f8a-utils
+    #   requests-futures
+s3transfer==0.3.3
+    # via boto3
+selinon==1.0.0
+    # via -r requirements.in
+semantic-version==2.8.5
+    # via -r requirements.in
+semver==2.13.0
+    # via f8a-utils
+six==1.15.0
+    # via
+    #   anymarkup-core
+    #   configobj
+    #   cryptography
+    #   jsonschema
+    #   pyrsistent
+    #   python-dateutil
+    #   tenacity
+smmap==3.0.4
+    # via gitdb
+soupsieve==2.0.1
+    # via beautifulsoup4
+sqlalchemy==1.3.18
+    # via -r requirements.in
+tenacity==6.2.0
+    # via
+    #   -r requirements.in
+    #   f8a-utils
+toml==0.9.4
+    # via
+    #   -r requirements.in
+    #   anymarkup
+urllib3==1.25.10
+    # via
+    #   botocore
+    #   requests
+vine==1.3.0
+    # via
+    #   amqp
+    #   celery
+werkzeug==1.0.1
+    # via -r requirements.in
+xmltodict==0.12.0
+    # via anymarkup
+zipp==3.1.0
+    # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
