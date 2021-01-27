@@ -100,7 +100,6 @@ echo "Starting test suite"
 docker run -t \
   -v "${here}:/f8a_worker:rw,Z" \
   --network "${DOCKER_NETWORK}" \
-  -u 9007 \
   -e PGBOUNCER_SERVICE_HOST="${TESTDB_CONTAINER_NAME}" \
   -e S3_ENDPOINT_URL="${S3_ENDPOINT_URL}" \
   -e DEPLOYMENT_PREFIX='test' \
