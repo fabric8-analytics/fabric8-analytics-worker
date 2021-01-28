@@ -386,7 +386,6 @@ class APIRequests(Base):
     team = Column(String(64), nullable=True)
     recommendation = Column(JSON, nullable=True)
     request_digest = Column(String(128), nullable=True)
-    user_id = Column(UUID(as_uuid=True), nullable=True)
 
 
 class RecommendationFeedback(Base):
