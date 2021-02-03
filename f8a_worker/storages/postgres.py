@@ -280,7 +280,8 @@ class BayesianPostgres(PostgresBase):
             submit_time=str(dt),
             ecosystem=arguments.get('ecosystem'),
             user_agent=arguments.get('user_agent'),
-            stack_data=json.dumps(arguments.get('packages_list'))
+            stack_data=json.dumps(arguments.get('packages_list')),
+            manifest_hash=arguments.get('manifest_hash')
         )
 
         try:
