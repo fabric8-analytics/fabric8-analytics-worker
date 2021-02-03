@@ -71,13 +71,13 @@ class BookkeeperTask(BaseTask):
         self._strict_assert(arguments.get('data'))
 
         aggregated = ''
-        if arguments.get('api_name') == 'stack_analyses' and \
+        if arguments['data'].get('api_name') == 'stack_analyses' and \
            'email' in arguments['data'].get('user_profile', {}):
             aggregated = self.parent_task_result('GraphAggregatorTask')
             self.store_user_node(arguments, aggregated)
 
         postgres = StoragePool.get_connected_storage('BayesianPostgres')
-        if arguments.get('api_name') == 'component_analyses_post':
+        if arguments['data'].get('api_name') == 'component_analyses_post':
             postgres.store_api_requests_post(arguments)
         else:
             postgres.store_api_requests(arguments.get('external_request_id'),
