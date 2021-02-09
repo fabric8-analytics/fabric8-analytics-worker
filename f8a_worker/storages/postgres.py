@@ -226,12 +226,12 @@ class BayesianPostgres(PostgresBase):
 
         req = ComponentAnalysesRequests(
             request_id=arguments.get('external_request_id'),
-            user_id=arguments.get('user_id'),
+            user_id=arguments['data'].get('user_id'),
             submit_time=str(dt),
-            ecosystem=arguments.get('ecosystem'),
-            user_agent=arguments.get('user_agent'),
-            stack_data=json.dumps(arguments.get('packages_list')),
-            manifest_hash=arguments.get('manifest_hash')
+            ecosystem=arguments['data'].get('ecosystem'),
+            user_agent=arguments['data'].get('user_agent'),
+            stack_data=json.dumps(arguments['data'].get('packages_list')),
+            manifest_hash=arguments['data'].get('manifest_hash')
         )
 
         try:
