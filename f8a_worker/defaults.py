@@ -10,6 +10,7 @@ from os import environ, path
 
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.errors import F8AConfigurationException
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -115,11 +116,21 @@ class F8AConfiguration(object):
     @classmethod
     def _rate_limit_exceeded(cls, headers):
         """Return True if Github API rate limit has been exceeded."""
-        # avoid cyclic import
-        from f8a_worker.utils import get_response
-        response = get_response(urljoin(cls.GITHUB_API, "rate_limit"), headers=headers)
-        remaining_attempts = response.get('rate', {}).get('remaining', 0)
-        return remaining_attempts == 0
+        try:
+            response = requests.get(urljoin(cls.GITHUB_API, "rate_limit"),
+                                    headers=headers)
+            response.raise_for_status()
+        except Exception as e:
+            logger.error(e)
+            return True
+
+        if response.status_code == 204:
+            # json() below would otherwise fail with JSONDecodeError
+            return True
+        response = response.json()
+        if response:
+            remaining_attempts = response.get('rate', {}).get('remaining', 0)
+            return remaining_attempts == 0
 
     @classmethod
     def _decide_token_usage(cls):

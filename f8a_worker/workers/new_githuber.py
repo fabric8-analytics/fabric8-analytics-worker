@@ -5,13 +5,12 @@ from urllib.parse import urljoin
 import datetime
 
 from f8a_worker.base import BaseTask
-from f8a_worker.errors import F8AConfigurationException, \
-    NotABugTaskError
-from f8a_worker.utils import parse_gh_repo, \
-    get_response, \
-    get_gh_contributors, \
-    store_data_to_s3, \
-    get_gh_pr_issue_counts
+from f8a_worker.errors import NotABugTaskError
+from f8a_worker.utils import (parse_gh_repo,
+                              get_response,
+                              get_gh_contributors,
+                              store_data_to_s3,
+                              get_gh_pr_issue_counts)
 from f8a_utils.golang_utils import GolangUtils
 from selinon import StoragePool
 import logging
@@ -27,11 +26,6 @@ class NewGithubTask(BaseTask):
     _repo_name = None
     _repo_url = None
 
-    _headers = {
-        'Accept': 'application/vnd.github.mercy-preview+json, '  # for topics
-                  'application/vnd.github.v3+json'  # recommended by GitHub for License API
-    }
-
     @classmethod
     def create_test_instance(cls, repo_name, repo_url):
         """Create instance of task for tests."""
@@ -45,18 +39,18 @@ class NewGithubTask(BaseTask):
     def _get_last_years_commits(self, repo_url):
         """Get weekly commit activity for last year."""
         try:
-            activity = get_response(urljoin(repo_url + '/', "stats/commit_activity"), self._headers)
+            activity = get_response(urljoin(repo_url + '/', "stats/commit_activity"))
         except NotABugTaskError as e:
             logger.debug(e)
             return []
         return [x['total'] for x in activity]
 
-    def _get_repo_stats(self, repo, headers):
+    def _get_repo_stats(self, repo):
         """Collect various repository properties."""
         try:
             url = repo.get('contributors_url', '')
             if url:
-                contributors = get_gh_contributors(url, headers)
+                contributors = get_gh_contributors(url)
             else:
                 contributors = -1
         except NotABugTaskError as e:
@@ -103,16 +97,10 @@ class NewGithubTask(BaseTask):
                 # Not a GitHub hosted project
                 return result_data
 
-        try:
-            _, header = self.configuration.select_random_github_token()
-            self._headers.update(header)
-        except F8AConfigurationException as e:
-            logger.error(e)
-
         repo_url = urljoin(self.configuration.GITHUB_API + "repos/", self._repo_name)
         repo = {}
         try:
-            repo = get_response(repo_url, self._headers)
+            repo = get_response(repo_url)
         except NotABugTaskError as e:
             logger.error(e)
 
@@ -120,7 +108,7 @@ class NewGithubTask(BaseTask):
 
         issues = {}
         # Get Repo Statistics
-        notoriety = self._get_repo_stats(repo, self._headers)
+        notoriety = self._get_repo_stats(repo)
 
         if notoriety:
             issues.update(notoriety)
@@ -138,7 +126,7 @@ class NewGithubTask(BaseTask):
         issues.update(commits)
 
         # Get PR/Issue details for previous Month and Year
-        gh_pr_issue_details = get_gh_pr_issue_counts(header, self._repo_name)
+        gh_pr_issue_details = get_gh_pr_issue_counts(self._repo_name)
 
         issues.update(gh_pr_issue_details)
         result_data['details'] = issues
