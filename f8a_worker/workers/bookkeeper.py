@@ -77,5 +77,5 @@ class BookkeeperTask(BaseTask):
             self.store_user_node(arguments, aggregated)
 
         postgres = StoragePool.get_connected_storage('BayesianPostgres')
-        postgres.store_api_requests(arguments.get('external_request_id'),
-                                    arguments.get('data'), aggregated)
+        if arguments['data'].get('api_name') == 'component_analyses_post':
+            postgres.store_api_requests_post(arguments)
