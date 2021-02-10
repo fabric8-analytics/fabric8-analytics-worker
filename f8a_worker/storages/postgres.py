@@ -3,7 +3,6 @@
 """Adapter used for EPV analyses."""
 
 import datetime
-import hashlib
 import json
 from itertools import chain
 
@@ -14,6 +13,7 @@ from selinon import StoragePool
 
 from f8a_worker.enums import EcosystemBackend
 from f8a_worker.models import Analysis, Ecosystem, Package, Version, WorkerResult, APIRequests
+from f8a_worker.models import ComponentAnalysesRequests
 from f8a_worker.utils import MavenCoordinates
 
 from .postgres_base import PostgresBase
@@ -213,40 +213,25 @@ class BayesianPostgres(PostgresBase):
         s3 = StoragePool.get_connected_storage('S3UserProfileStore')
         s3.store_in_bucket(content)
 
-    def store_api_requests(self, external_request_id, data, dep_data):
-        """Get result of previously scheduled analysis.
+    def store_api_requests_post(self, arguments):
+        """Store result of previously scheduled component analysis.
 
-        :param external_request_id: str, ID of analysis
-        :param data: bookkeeping data
+        :param request_id: str, ID of analysis
         :return: True/False
         """
         if not self.is_connected():
             self.connect()
 
-        # Add user_profile to S3 if there is no api_requests entry available for today
-        req = self.check_api_user_entry(data.get('user_email', None))
-
-        profile = json.dumps(data.get('user_profile'))
-        profile_digest = hashlib.sha256(profile.encode('utf-8')).hexdigest()
-        request_digest = hashlib.sha256(json.dumps(dep_data).encode('utf-8')).hexdigest()
-
         dt = datetime.datetime.utcnow()
-        if req:
-            if profile_digest != req.user_profile_digest:
-                self.store_in_bucket(data.get('user_profile'))
-        else:
-            self.store_in_bucket(data.get('user_profile'))
 
-        req = APIRequests(
-            id=external_request_id,
-            api_name=data.get('api_name', None),
+        req = ComponentAnalysesRequests(
+            request_id=arguments.get('external_request_id'),
+            user_id=arguments['data'].get('user_id'),
             submit_time=str(dt),
-            user_email=data.get('user_email', None),
-            user_profile_digest=profile_digest,
-            origin=data.get('origin', None),
-            team=data.get('team', None),
-            recommendation=data.get('recommendation', None),
-            request_digest=request_digest
+            ecosystem=arguments['data'].get('ecosystem'),
+            user_agent=arguments['data'].get('user_agent'),
+            stack_data=json.dumps(arguments['data'].get('packages_list')),
+            manifest_hash=arguments['data'].get('manifest_hash')
         )
 
         try:
