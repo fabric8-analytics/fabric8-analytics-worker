@@ -668,6 +668,8 @@ def get_gh_query_response(repo_name, status, type, start_date, end_date, event):
         if status:
             url = '{url}+is:{status}'.format(url=url, status=status)
 
+        logger.info("url ===== {}".format(url))
+
         response = requests.get(url, headers=get_header())
 
         if response.status_code == 200:
@@ -722,21 +724,20 @@ def get_gh_pr_issue_counts(repo_name):
     today = datetime.date.today()
 
     # Get previous month start and end dates
-    last_month_end_date = today.replace(day=1) - datetime.timedelta(days=1)
-    last_month_start_date = today.replace(day=1) - datetime.timedelta(days=last_month_end_date.day)
+    last_month_end_date = today
+    last_month_start_date = today - datetime.timedelta(days=30)
 
     # Get PR/Issue counts for previous month
     pr_opened_last_month, pr_closed_last_month, issues_opened_last_month, issues_closed_last_month\
         = execute_gh_queries(repo_name, last_month_start_date, last_month_end_date)
 
     # Get previous year and start and end dates of year
-    previous_year = today.year - 1
-    last_yesr_start_date = '{}-01-01'.format(previous_year)
-    last_year_end_date = '{}-12-31'.format(previous_year)
+    last_year_start_date = today - datetime.timedelta(days=365)
+    last_year_end_date = today
 
     # Get PR/Issue counts for previous year
     pr_opened_last_year, pr_closed_last_year, issues_opened_last_year, issues_closed_last_year = \
-        execute_gh_queries(repo_name, last_yesr_start_date, last_year_end_date)
+        execute_gh_queries(repo_name, last_year_start_date, last_year_end_date)
 
     # Set output in required format by data importer
     result = {

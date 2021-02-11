@@ -3,6 +3,8 @@
 from unittest import TestCase
 from selinon import FatalTaskError
 from f8a_worker.workers.new_init_package_analysis_flow import NewInitPackageAnlysisFlow
+from unittest import mock
+
 
 data_v1 = {
         "ecosystem": "dummy_eco",
@@ -26,7 +28,9 @@ class TestInitPackageFlowNew(TestCase):
         """Tests for 'execute'."""
         self.assertRaises(FatalTaskError, NewInitPackageAnlysisFlow.execute, self, data_v1)
 
-    def test_execute1(self):
+    @mock.patch('f8a_worker.workers.new_init_package_analysis_flow.is_pkg_public',
+                return_value=True)
+    def test_execute1(self, _mock):
         """Tests for 'execute'."""
         result = NewInitPackageAnlysisFlow.execute(self, data_v2)
         expected = {'ecosystem': 'golang', 'name': 'dummy_name'}
