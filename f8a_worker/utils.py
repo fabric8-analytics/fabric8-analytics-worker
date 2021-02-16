@@ -668,8 +668,6 @@ def get_gh_query_response(repo_name, status, type, start_date, end_date, event):
         if status:
             url = '{url}+is:{status}'.format(url=url, status=status)
 
-        logger.info("url ===== {}".format(url))
-
         response = requests.get(url, headers=get_header())
 
         if response.status_code == 200:
