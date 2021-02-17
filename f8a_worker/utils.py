@@ -5,7 +5,6 @@ import getpass
 import json
 import logging
 import signal
-import time
 import re
 from contextlib import contextmanager
 from os import path as os_path, walk, getcwd, chdir, environ as os_environ, killpg, getpgid
@@ -25,8 +24,13 @@ from selinon import StoragePool
 from sqlalchemy.exc import SQLAlchemyError
 
 from f8a_worker.enums import EcosystemBackend
-from f8a_worker.errors import TaskError, NotABugTaskError
-from f8a_worker.models import (Analysis, Ecosystem, Package, Version)
+from f8a_worker.errors import (TaskError,
+                               NotABugTaskError,
+                               F8AConfigurationException)
+from f8a_worker.models import (Analysis,
+                               Ecosystem,
+                               Package,
+                               Version)
 from f8a_worker.defaults import configuration
 
 logger = logging.getLogger(__name__)
@@ -552,28 +556,24 @@ def get_user_email(user_profile):
         return default_email
 
 
-def get_response(url, headers=None, sleep_time=2, retry_count=10):
+@tenacity.retry(reraise=True, stop=tenacity.stop_after_attempt(3), wait=tenacity.wait_fixed(1))
+def get_response(url):
     """Wrap requests which tries to get response.
 
     :param url: URL where to do the request
-    :param headers: additional headers for request
     :param sleep_time: sleep time between retries
     :param retry_count: number of retries
     :return: content of response's json
     """
     try:
-        for _ in range(retry_count):
-            response = requests.get(url, headers=headers)
-            response.raise_for_status()
-            if response.status_code == 204:
-                # json() below would otherwise fail with JSONDecodeError
-                raise HTTPError('No content')
-            response = response.json()
-            if response:
-                return response
-            time.sleep(sleep_time)
-        else:
-            raise NotABugTaskError("Number of retries exceeded")
+        response = requests.get(url, headers=get_header())
+        response.raise_for_status()
+        if response.status_code == 204:
+            # json() below would otherwise fail with JSONDecodeError
+            raise HTTPError('No content')
+        response = response.json()
+        if response:
+            return response
     except HTTPError as err:
         message = "Failed to get results from {url} with {err}".format(url=url, err=err)
         logger.error(message)
@@ -601,7 +601,7 @@ def peek(iterable):
 
 
 @tenacity.retry(reraise=True, stop=tenacity.stop_after_attempt(3), wait=tenacity.wait_fixed(1))
-def get_gh_contributors(url, headers):
+def get_gh_contributors(url):
     """Get number of contributors from Git URL.
 
     :param url: URL where to do the request
@@ -609,7 +609,7 @@ def get_gh_contributors(url, headers):
     """
     try:
         response = requests.get("{}?per_page=1".format(url),
-                                headers=headers)
+                                headers=get_header())
         response.raise_for_status()
 
         if response.status_code == 204:
@@ -633,10 +633,9 @@ def store_data_to_s3(arguments, s3, result):
 
 
 @tenacity.retry(reraise=True, stop=tenacity.stop_after_attempt(3), wait=tenacity.wait_fixed(1))
-def get_gh_query_response(headers, repo_name, status, type, start_date, end_date, event):
+def get_gh_query_response(repo_name, status, type, start_date, end_date, event):
     """Get details of PRs and Issues from given Github repo.
 
-    :param headers: headers to set in request
     :param repo_name: Github repo name
     :param status: status of issue Ex. open/closed
     :param type: type of issue to set in search query Ex. pr/issue
@@ -669,7 +668,7 @@ def get_gh_query_response(headers, repo_name, status, type, start_date, end_date
         if status:
             url = '{url}+is:{status}'.format(url=url, status=status)
 
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=get_header())
 
         if response.status_code == 200:
             """
@@ -687,10 +686,9 @@ def get_gh_query_response(headers, repo_name, status, type, start_date, end_date
         return -1
 
 
-def execute_gh_queries(headers, repo_name, start_date, end_date):
+def execute_gh_queries(repo_name, start_date, end_date):
     """Get details of Github PR/Issues based on given date range.
 
-    :param headers: headers to set in request
     :param repo_name: Github repo name
     :param start_date: date since data has to be collected
     :param end_date: date upto data has to be collected
@@ -698,15 +696,15 @@ def execute_gh_queries(headers, repo_name, start_date, end_date):
     """
     try:
         # Get PR details based on date range provided
-        pr_opened = get_gh_query_response(headers, repo_name, '',
+        pr_opened = get_gh_query_response(repo_name, '',
                                           'pr', start_date, end_date, 'created')
-        pr_closed = get_gh_query_response(headers, repo_name, 'closed',
+        pr_closed = get_gh_query_response(repo_name, 'closed',
                                           'pr', start_date, end_date, 'closed')
 
         # Get Issue details based on date range provided
-        issues_opened = get_gh_query_response(headers, repo_name,
+        issues_opened = get_gh_query_response(repo_name,
                                               '', 'issue', start_date, end_date, 'created')
-        issues_closed = get_gh_query_response(headers, repo_name,
+        issues_closed = get_gh_query_response(repo_name,
                                               'closed', 'issue', start_date, end_date, 'closed')
 
         return pr_opened, pr_closed, issues_opened, issues_closed
@@ -715,31 +713,29 @@ def execute_gh_queries(headers, repo_name, start_date, end_date):
         return -1, -1, -1, -1
 
 
-def get_gh_pr_issue_counts(headers, repo_name):
+def get_gh_pr_issue_counts(repo_name):
     """Get details of Github PR/Issues for given repo.
 
-    :param headers: headers to set in request
     :param repo_name: Github repo name
     :return: Dict having Issue/PR details
     """
     today = datetime.date.today()
 
     # Get previous month start and end dates
-    last_month_end_date = today.replace(day=1) - datetime.timedelta(days=1)
-    last_month_start_date = today.replace(day=1) - datetime.timedelta(days=last_month_end_date.day)
+    last_month_end_date = today
+    last_month_start_date = today - datetime.timedelta(days=30)
 
     # Get PR/Issue counts for previous month
     pr_opened_last_month, pr_closed_last_month, issues_opened_last_month, issues_closed_last_month\
-        = execute_gh_queries(headers, repo_name, last_month_start_date, last_month_end_date)
+        = execute_gh_queries(repo_name, last_month_start_date, last_month_end_date)
 
     # Get previous year and start and end dates of year
-    previous_year = today.year - 1
-    last_yesr_start_date = '{}-01-01'.format(previous_year)
-    last_year_end_date = '{}-12-31'.format(previous_year)
+    last_year_start_date = today - datetime.timedelta(days=365)
+    last_year_end_date = today
 
     # Get PR/Issue counts for previous year
     pr_opened_last_year, pr_closed_last_year, issues_opened_last_year, issues_closed_last_year = \
-        execute_gh_queries(headers, repo_name, last_yesr_start_date, last_year_end_date)
+        execute_gh_queries(repo_name, last_year_start_date, last_year_end_date)
 
     # Set output in required format by data importer
     result = {
@@ -754,3 +750,19 @@ def get_gh_pr_issue_counts(headers, repo_name):
     }
 
     return result
+
+
+def get_header():
+    """Get random Github token from env variables."""
+    headers = {
+        'Accept': 'application/vnd.github.mercy-preview+json, '  # for topics
+                  'application/vnd.github.v3+json'  # recommended by GitHub for License API
+    }
+
+    try:
+        _, header = configuration.select_random_github_token()
+        headers.update(header)
+    except F8AConfigurationException as e:
+        logger.error(e)
+        headers.update({})
+    return headers
