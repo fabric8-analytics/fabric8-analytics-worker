@@ -32,6 +32,7 @@ from f8a_worker.models import (Analysis,
                                Package,
                                Version)
 from f8a_worker.defaults import configuration
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -698,12 +699,14 @@ def execute_gh_queries(repo_name, start_date, end_date):
         # Get PR details based on date range provided
         pr_opened = get_gh_query_response(repo_name, '',
                                           'pr', start_date, end_date, 'created')
+        time.sleep(3)
         pr_closed = get_gh_query_response(repo_name, 'closed',
                                           'pr', start_date, end_date, 'closed')
-
+        time.sleep(3)
         # Get Issue details based on date range provided
         issues_opened = get_gh_query_response(repo_name,
                                               '', 'issue', start_date, end_date, 'created')
+        time.sleep(3)
         issues_closed = get_gh_query_response(repo_name,
                                               'closed', 'issue', start_date, end_date, 'closed')
 
@@ -728,7 +731,7 @@ def get_gh_pr_issue_counts(repo_name):
     # Get PR/Issue counts for previous month
     pr_opened_last_month, pr_closed_last_month, issues_opened_last_month, issues_closed_last_month\
         = execute_gh_queries(repo_name, last_month_start_date, last_month_end_date)
-
+    time.sleep(3)
     # Get previous year and start and end dates of year
     last_year_start_date = today - datetime.timedelta(days=365)
     last_year_end_date = today

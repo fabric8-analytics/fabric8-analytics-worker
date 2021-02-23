@@ -14,6 +14,7 @@ from f8a_worker.utils import (parse_gh_repo,
                               get_gh_contributors,
                               get_gh_pr_issue_counts)
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ class GithubTask(BaseTask):
         except NotABugTaskError as e:
             self.log.debug(e)
             return []
-        return [x['total'] for x in activity]
+        return [x.get('total', 0) for x in activity]
 
     def _get_repo_stats(self, repo):
         """Collect various repository properties."""
@@ -107,6 +108,7 @@ class GithubTask(BaseTask):
         issues['license'] = repo.get('license') or {}
 
         # Get Commit Statistics
+        time.sleep(3)
         last_year_commits = self._get_last_years_commits(repo['url'])
         commits = {'last_year_commits': {'sum': sum(last_year_commits),
                                          'weekly': last_year_commits}}
@@ -116,6 +118,7 @@ class GithubTask(BaseTask):
         issues.update(commits)
 
         # Get PR/Issue details for previous Month and Year
+        time.sleep(3)
         gh_pr_issue_details = get_gh_pr_issue_counts(self._repo_name)
         issues.update(gh_pr_issue_details)
 

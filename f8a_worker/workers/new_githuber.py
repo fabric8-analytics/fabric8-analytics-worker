@@ -14,6 +14,7 @@ from f8a_worker.utils import (parse_gh_repo,
 from f8a_utils.golang_utils import GolangUtils
 from selinon import StoragePool
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 REPO_PROPS = ('forks_count', 'subscribers_count', 'stargazers_count', 'open_issues_count')
@@ -126,6 +127,7 @@ class NewGithubTask(BaseTask):
         issues.update(commits)
 
         # Get PR/Issue details for previous Month and Year
+        time.sleep(3)
         gh_pr_issue_details = get_gh_pr_issue_counts(self._repo_name)
 
         issues.update(gh_pr_issue_details)
