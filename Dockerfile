@@ -1,4 +1,4 @@
-FROM quay.io/openshiftio/fabric8-analytics-f8a-worker-base:aa8893d
+FROM quay.io/app-sre/fabric8-analytics-f8a-worker-base:aa8893d
 
 ENV LANG=en_US.UTF-8 \
     # place where to download & unpack artifacts
