@@ -8,6 +8,12 @@ metadata:
     description: bayesian-worker
 objects:
 - apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: bayesian-worker
+  imagePullSecrets:
+  - name: ${IMAGE_PULL_SECRET_NAME}
+- apiVersion: v1
   kind: DeploymentConfig
   metadata:
     labels:
@@ -191,6 +197,8 @@ objects:
               memory: ${MEMORY_LIMIT}
               cpu: ${CPU_LIMIT}
         restartPolicy: Always
+        serviceAccount: bayesian-worker
+        serviceAccountName: bayesian-worker
     test: false
     triggers:
     - type: ConfigChange
@@ -293,3 +301,8 @@ parameters:
   required: true
   name: SQS_MSG_LIFETIME
   value: "24"
+
+- description: Private pull secret name
+  displayName: Private pull secret name
+  name: IMAGE_PULL_SECRET_NAME
+  value: "quay.io"
