@@ -67,7 +67,7 @@ class BookkeeperTask(BaseTask):
         :param arguments: dictionary with task arguments
         :return: {}, results
         """
-        if arguments['data'].get('stack_analyses'):
+        if arguments['data'].get('api-name') == 'stack_analyses':
             self._strict_assert(arguments.get('external_request_id'))
 
         self._strict_assert(arguments.get('data'))
