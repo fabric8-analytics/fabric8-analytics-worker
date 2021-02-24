@@ -10,7 +10,7 @@ objects:
 - apiVersion: v1
   kind: ServiceAccount
   metadata:
-    name: bayesian-worker
+    name: bayesian-worker-${WORKER_ADMINISTRATION_REGION}${WORKER_NAME_SUFFIX}
   imagePullSecrets:
   - name: ${IMAGE_PULL_SECRET_NAME}
 - apiVersion: v1
