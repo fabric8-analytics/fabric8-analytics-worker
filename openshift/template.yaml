@@ -197,8 +197,8 @@ objects:
               memory: ${MEMORY_LIMIT}
               cpu: ${CPU_LIMIT}
         restartPolicy: Always
-        serviceAccount: bayesian-worker
-        serviceAccountName: bayesian-worker
+        serviceAccount: bayesian-worker-${WORKER_ADMINISTRATION_REGION}${WORKER_NAME_SUFFIX}
+        serviceAccountName: bayesian-worker-${WORKER_ADMINISTRATION_REGION}${WORKER_NAME_SUFFIX}
     test: false
     triggers:
     - type: ConfigChange
