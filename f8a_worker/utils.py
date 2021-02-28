@@ -632,7 +632,8 @@ def store_data_to_s3(arguments, s3, result):
         logger.error(e)
 
 
-@tenacity.retry(reraise=True, stop=tenacity.stop_after_attempt(3), wait=tenacity.wait_fixed(1))
+@tenacity.retry(stop=tenacity.stop_after_attempt(5),
+                wait=tenacity.wait_exponential(multiplier=5, min=15, max=80))
 def get_gh_query_response(repo_name, status, type, start_date, end_date, event):
     """Get details of PRs and Issues from given Github repo.
 
@@ -669,23 +670,16 @@ def get_gh_query_response(repo_name, status, type, start_date, end_date, event):
             url = '{url}+is:{status}'.format(url=url, status=status)
 
         response = requests.get(url, headers=get_header())
-
-        if response.status_code == 200:
-            """
-            Get value of total_count, search query gives max 1000 entities
-            as we dont need to collect information from result entities,
-            we can get total number of rows from total_count field
-            """
-            resp = response.json()
-            return resp.get('total_count', 0)
-        else:
-            logger.info('No response from github url: {}'.format(url))
-            return -1
+        response.raise_for_status()
+        resp = response.json()
+        return resp.get('total_count', 0)
     except Exception as e:
         logger.error(e)
-        return -1
+        raise
 
 
+@tenacity.retry(stop=tenacity.stop_after_attempt(5),
+                wait=tenacity.wait_exponential(multiplier=5, min=15, max=80))
 def execute_gh_queries(repo_name, start_date, end_date):
     """Get details of Github PR/Issues based on given date range.
 
@@ -710,7 +704,7 @@ def execute_gh_queries(repo_name, start_date, end_date):
         return pr_opened, pr_closed, issues_opened, issues_closed
     except Exception as e:
         logger.error(e)
-        return -1, -1, -1, -1
+        raise
 
 
 def get_gh_pr_issue_counts(repo_name):
@@ -726,16 +720,38 @@ def get_gh_pr_issue_counts(repo_name):
     last_month_start_date = today - datetime.timedelta(days=30)
 
     # Get PR/Issue counts for previous month
-    pr_opened_last_month, pr_closed_last_month, issues_opened_last_month, issues_closed_last_month\
-        = execute_gh_queries(repo_name, last_month_start_date, last_month_end_date)
+    try:
+        pr_opened_last_month, \
+            pr_closed_last_month, \
+            issues_opened_last_month, \
+            issues_closed_last_month = execute_gh_queries(repo_name,
+                                                          last_month_start_date,
+                                                          last_month_end_date)
+    except Exception as e:
+        logger.error(e)
+        pr_opened_last_month = \
+            pr_closed_last_month = \
+            issues_opened_last_month = \
+            issues_closed_last_month = -1
 
     # Get previous year and start and end dates of year
     last_year_start_date = today - datetime.timedelta(days=365)
     last_year_end_date = today
 
     # Get PR/Issue counts for previous year
-    pr_opened_last_year, pr_closed_last_year, issues_opened_last_year, issues_closed_last_year = \
-        execute_gh_queries(repo_name, last_year_start_date, last_year_end_date)
+    try:
+        pr_opened_last_year, \
+            pr_closed_last_year, \
+            issues_opened_last_year, \
+            issues_closed_last_year = execute_gh_queries(repo_name,
+                                                         last_year_start_date,
+                                                         last_year_end_date)
+    except Exception as e:
+        logger.error(e)
+        pr_opened_last_year = \
+            pr_closed_last_year = \
+            issues_opened_last_year = \
+            issues_closed_last_year = -1
 
     # Set output in required format by data importer
     result = {
