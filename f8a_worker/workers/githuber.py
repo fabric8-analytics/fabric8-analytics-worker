@@ -44,7 +44,7 @@ class GithubTask(BaseTask):
         except NotABugTaskError as e:
             self.log.debug(e)
             return []
-        return [x['total'] for x in activity]
+        return [x.get('total', 0) for x in activity]
 
     def _get_repo_stats(self, repo):
         """Collect various repository properties."""
