@@ -41,10 +41,12 @@ class GithubTask(BaseTask):
         """Get weekly commit activity for last year."""
         try:
             activity = get_response(urljoin(repo_url + '/', "stats/commit_activity"))
+            if activity is None:
+                return []
+            return [x.get('total', 0) for x in activity]
         except NotABugTaskError as e:
             self.log.debug(e)
             return []
-        return [x.get('total', 0) for x in activity]
 
     def _get_repo_stats(self, repo):
         """Collect various repository properties."""
@@ -116,7 +118,7 @@ class GithubTask(BaseTask):
         issues.update(commits)
 
         # Get PR/Issue details for previous Month and Year
-        gh_pr_issue_details = get_gh_pr_issue_counts(self._repo_name)
+        gh_pr_issue_details = get_gh_pr_issue_counts(repo['full_name'])
         issues.update(gh_pr_issue_details)
 
         result_data['details'] = issues
