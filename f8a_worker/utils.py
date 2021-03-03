@@ -556,7 +556,8 @@ def get_user_email(user_profile):
         return default_email
 
 
-@tenacity.retry(reraise=True, stop=tenacity.stop_after_attempt(3), wait=tenacity.wait_fixed(1))
+@tenacity.retry(stop=tenacity.stop_after_attempt(3),
+                wait=tenacity.wait_exponential(multiplier=2, min=10, max=60))
 def get_response(url):
     """Wrap requests which tries to get response.
 
@@ -568,12 +569,8 @@ def get_response(url):
     try:
         response = requests.get(url, headers=get_header())
         response.raise_for_status()
-        if response.status_code == 204:
-            # json() below would otherwise fail with JSONDecodeError
-            raise HTTPError('No content')
         response = response.json()
-        if response:
-            return response
+        return response
     except HTTPError as err:
         message = "Failed to get results from {url} with {err}".format(url=url, err=err)
         logger.error(message)
@@ -600,7 +597,8 @@ def peek(iterable):
     return first
 
 
-@tenacity.retry(reraise=True, stop=tenacity.stop_after_attempt(3), wait=tenacity.wait_fixed(1))
+@tenacity.retry(stop=tenacity.stop_after_attempt(3),
+                wait=tenacity.wait_exponential(multiplier=2, min=10, max=60))
 def get_gh_contributors(url):
     """Get number of contributors from Git URL.
 
@@ -611,15 +609,9 @@ def get_gh_contributors(url):
         response = requests.get("{}?per_page=1".format(url),
                                 headers=get_header())
         response.raise_for_status()
-
-        if response.status_code == 204:
-            raise HTTPError('No content')
-        elif response.status_code == 200:
-            contributors_count = int(parse_qs(response.links['last']['url'])['page'][0]) \
-                if response.links else 1
-            return contributors_count
-        else:
-            return -1
+        contributors_count = int(parse_qs(response.links['last']['url'])['page'][0]) \
+            if response.links else 1
+        return contributors_count
     except HTTPError as err:
         raise NotABugTaskError(err) from err
 
@@ -632,8 +624,8 @@ def store_data_to_s3(arguments, s3, result):
         logger.error(e)
 
 
-@tenacity.retry(stop=tenacity.stop_after_attempt(5),
-                wait=tenacity.wait_exponential(multiplier=5, min=15, max=80))
+@tenacity.retry(stop=tenacity.stop_after_attempt(4),
+                wait=tenacity.wait_exponential(multiplier=3, min=10, max=60))
 def get_gh_query_response(repo_name, status, type, start_date, end_date, event):
     """Get details of PRs and Issues from given Github repo.
 
@@ -678,8 +670,8 @@ def get_gh_query_response(repo_name, status, type, start_date, end_date, event):
         raise
 
 
-@tenacity.retry(stop=tenacity.stop_after_attempt(5),
-                wait=tenacity.wait_exponential(multiplier=5, min=15, max=80))
+@tenacity.retry(stop=tenacity.stop_after_attempt(2),
+                wait=tenacity.wait_exponential(multiplier=1, min=4, max=10))
 def execute_gh_queries(repo_name, start_date, end_date):
     """Get details of Github PR/Issues based on given date range.
 
