@@ -231,7 +231,9 @@ class BayesianPostgres(PostgresBase):
             ecosystem=arguments['data'].get('ecosystem'),
             user_agent=arguments['data'].get('user_agent'),
             stack_data=json.dumps(arguments['data'].get('packages_list')),
-            manifest_hash=arguments['data'].get('manifest_hash')
+            manifest_hash=arguments['data'].get('manifest_hash'),
+            source=arguments['data'].get('source'),
+            telemetry_id=arguments['data'].get('telemetry_id')
         )
 
         try:

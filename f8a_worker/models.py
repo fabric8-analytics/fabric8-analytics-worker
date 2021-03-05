@@ -443,3 +443,5 @@ class ComponentAnalysesRequests(Base):
     stack_data = Column(JSON, nullable=False)
     user_agent = Column(String(256), nullable=False)
     user_id = Column(UUID(as_uuid=True), nullable=True)
+    source = Column(String(256), nullable=True)
+    telemetry_id = Column(UUID(as_uuid=True), nullable=True)
