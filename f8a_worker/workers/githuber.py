@@ -93,6 +93,8 @@ class GithubTask(BaseTask):
         repo_url = urljoin(self.configuration.GITHUB_API + "repos/", self._repo_name)
         try:
             repo = get_response(repo_url)
+            if not repo:
+                raise NotABugFatalTaskError('Page not found on {}'.format(repo_url))
         except NotABugTaskError as e:
             self.log.error(e)
             raise NotABugFatalTaskError from e
