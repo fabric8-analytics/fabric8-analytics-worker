@@ -5,7 +5,8 @@ from urllib.parse import urljoin
 import datetime
 
 from f8a_worker.base import BaseTask
-from f8a_worker.errors import NotABugTaskError
+from f8a_worker.errors import (NotABugTaskError,
+                               NotABugFatalTaskError)
 from f8a_worker.utils import (parse_gh_repo,
                               get_response,
                               get_gh_contributors,
@@ -40,10 +41,12 @@ class NewGithubTask(BaseTask):
         """Get weekly commit activity for last year."""
         try:
             activity = get_response(urljoin(repo_url + '/', "stats/commit_activity"))
+            if activity is None:
+                return []
+            return [x.get('total', 0) for x in activity]
         except NotABugTaskError as e:
             logger.debug(e)
             return []
-        return [x['total'] for x in activity]
 
     def _get_repo_stats(self, repo):
         """Collect various repository properties."""
@@ -101,6 +104,8 @@ class NewGithubTask(BaseTask):
         repo = {}
         try:
             repo = get_response(repo_url)
+            if not repo:
+                raise NotABugFatalTaskError('Page not found on {}'.format(repo_url))
         except NotABugTaskError as e:
             logger.error(e)
 

@@ -568,6 +568,10 @@ def get_response(url):
     """
     try:
         response = requests.get(url, headers=get_header())
+        # If status code is 404 or 204 then don't retry
+        if response.status_code in [404, 204]:
+            return {}
+
         response.raise_for_status()
         response = response.json()
         return response
@@ -608,6 +612,11 @@ def get_gh_contributors(url):
     try:
         response = requests.get("{}?per_page=1".format(url),
                                 headers=get_header())
+        # If status code is 404 or 204 then don't retry
+        if response.status_code == 404:
+            return -1
+        if response.status_code == 204:
+            return 0
         response.raise_for_status()
         contributors_count = int(parse_qs(response.links['last']['url'])['page'][0]) \
             if response.links else 1
