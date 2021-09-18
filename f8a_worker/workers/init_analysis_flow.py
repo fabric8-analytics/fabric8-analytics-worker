@@ -47,8 +47,7 @@ class InitAnalysisFlow(BaseTask):
         if len(pattern_ignore.findall(arguments['version'])) > 0:
             self.log.info("Incorrect version alert {} {}".format(
                 arguments['name'], arguments['version']))
-            raise NotABugFatalTaskError("Incorrect version alert {} {}".format(
-                arguments['name'], arguments['version']))
+            raise NotABugFatalTaskError("Incorrect version alert")
 
         # Dont try ingestion for private packages
         if is_pkg_public(arguments['ecosystem'], arguments['name']):
@@ -57,8 +56,7 @@ class InitAnalysisFlow(BaseTask):
         else:
             self.log.info("Private package ingestion ignored {} {}".format(
                 arguments['ecosystem'], arguments['name']))
-            raise NotABugFatalTaskError("Private package alert {} {}".format(
-                arguments['ecosystem'], arguments['name']))
+            raise NotABugFatalTaskError("Private package alert")
 
         p = Package.get_or_create(db, ecosystem_id=ecosystem.id, name=arguments['name'])
         v = Version.get_or_create(db, package_id=p.id, identifier=arguments['version'])

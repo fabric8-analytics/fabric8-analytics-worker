@@ -19,10 +19,16 @@ docker build  --no-cache \
               -f ./Dockerfile.rhel.app-sre .
 
 # push the image
-skopeo copy --dest-creds "${QUAY_USER}:${QUAY_TOKEN}" \
-    "docker-daemon:${IMG}" \
-    "docker://${QUAY_IMAGE}:latest"
+docker tag ${IMG} "${QUAY_IMAGE}:latest"
+docker push "${QUAY_IMAGE}:latest"
 
-skopeo copy --dest-creds "${QUAY_USER}:${QUAY_TOKEN}" \
-    "docker-daemon:${IMG}" \
-    "docker://${QUAY_IMAGE}:${GIT_HASH}"
+docker tag ${IMG} "${QUAY_IMAGE}:${GIT_HASH}"
+docker push "${QUAY_IMAGE}:${GIT_HASH}"
+
+#skopeo copy --dest-creds "${QUAY_USER}:${QUAY_TOKEN}" \
+#    "docker-daemon:${IMG}" \
+#    "docker://${QUAY_IMAGE}:latest"
+
+#skopeo copy --dest-creds "${QUAY_USER}:${QUAY_TOKEN}" \
+#    "docker-daemon:${IMG}" \
+#    "docker://${QUAY_IMAGE}:${GIT_HASH}"
