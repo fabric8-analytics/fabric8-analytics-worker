@@ -13,6 +13,7 @@ docker build  --no-cache \
               -t ${IMG}  \
               -f ./Dockerfile.app-sre .
 
+docker login  -u="$QUAY_USER" -p="$QUAY_TOKEN" quay.io
 # push the image
 docker tag ${IMG} "${QUAY_IMAGE}:latest"
 docker push "${QUAY_IMAGE}:latest"
