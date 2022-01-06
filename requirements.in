@@ -17,5 +17,5 @@ sqlalchemy
 tenacity
 toml<=0.9.4
 werkzeug
-celery<=4.4.7
+celery<5.2.3
 f8a_utils @ git+https://github.com/fabric8-analytics/fabric8-analytics-utils.git@f4fef58#egg=f8a_utils
