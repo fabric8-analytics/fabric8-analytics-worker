@@ -161,7 +161,7 @@ class TimedCommand(object):
     @staticmethod
     def get_command_output(args, graceful=True, is_json=False, timeout=300, **kwargs):
         """Wrap the function to get command output with implicit timeout of 5 minutes."""
-        kwargs['timeout'] = 10800
+        kwargs['timeout'] = timeout
         return get_command_output(args, graceful, is_json, **kwargs)
 
 
@@ -187,7 +187,7 @@ def get_command_output(args, graceful=True, is_json=False, **kwargs):
             logger.warning("command %s ended with %s\n%s", args, ex.returncode, ex.output)
 
         if not graceful:
-            logger.error(ex)
+            logger.error("exception is fatal")
             # we don't know whether this is a bug or the command was simply called
             # with invalid/unsupported input. Caller needs to catch the exception
             # and decide.
