@@ -113,7 +113,7 @@ def configure_logging(*_args, **_kwargs):
     loggers = {
         '': {
             'handlers': ['default'],
-            'level': 'INFO',
+            'level': 'ERROR',
         },
         'selinon': {
             'handlers': ['verbose'],
