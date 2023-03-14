@@ -113,31 +113,31 @@ def configure_logging(*_args, **_kwargs):
     loggers = {
         '': {
             'handlers': ['default'],
-            'level': 'INFO',
+            'level': 'ERROR',
         },
         'selinon': {
             'handlers': ['verbose'],
-            'level': 'DEBUG',
+            'level': 'ERROR',
             'propagate': False
         },
         'f8a_worker.dispatcher.trace': {
             'handlers': ['selinon_trace'],
-            'level': 'DEBUG',
+            'level': 'ERROR',
             'propagate': False
         },
         'f8a_worker': {
             'handlers': ['verbose'],
-            'level': 'DEBUG',
+            'level': 'ERROR',
             'propagate': False
         },
         'kombu': {
             'handlers': ['verbose'],
-            'level': 'DEBUG',
+            'level': 'ERROR',
             'propagate': False
         },
         'celery': {
             'handlers': ['verbose'],
-            'level': 'DEBUG',
+            'level': 'ERROR',
             'propagate': False
         }
     }
