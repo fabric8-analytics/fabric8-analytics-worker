@@ -19,7 +19,7 @@ TIMESTAMP="$(date +%F-%H-%M-%S)"
 IMAGE_NAME=${IMAGE_NAME:-openshiftio/bayesian-cucos-worker}
 TEST_IMAGE_NAME="worker-tests"
 POSTGRES_IMAGE_NAME="registry.centos.org/centos/postgresql-94-centos7:latest"
-S3_IMAGE_NAME="quay.io/ricardbejarano/minio"
+S3_IMAGE_NAME="quay.io/minio/minio"
 
 CONTAINER_NAME="worker-tests-${TIMESTAMP}"
 # we don't want to wipe local "database" container, so we create a custom one just for tests

@@ -19,10 +19,10 @@ jobs:
           - measure-maintainability-index    
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.6
-      uses: actions/setup-python@v2
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
       with:
-        python-version: '3.6'
+        python-version: '3.10'
     - name: Install virtualenv
       run: pip install -U pip && pip install virtualenv
     - name: ${{ matrix.scripts }}
@@ -31,10 +31,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.6
-      uses: actions/setup-python@v2
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
       with:
-        python-version: '3.6'
+        python-version: '3.10'
     - name: Run Unit Tests
       run: bash qa/runtest.sh
     - name: Upload coverage to Codecov
