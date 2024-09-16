@@ -445,3 +445,22 @@ class ComponentAnalysesRequests(Base):
     user_id = Column(UUID(as_uuid=True), nullable=True)
     source = Column(String(256), nullable=True)
     telemetry_id = Column(UUID(as_uuid=True), nullable=True)
+
+
+class StackSummary(Base):
+    """Table for storing aggregated stack from CA calls."""
+
+    __tablename__ = "stack_summary"
+
+    stack_id = Column(Integer, primary_key=True)
+    manifest_hash = Column(String(256), nullable=True)
+    ecosystem = Column(String(64), nullable=False)
+    submit_time = Column(DateTime, nullable=False)
+    stack = Column(JSON, nullable=False)
+    stack_hash = Column(String(256), nullable=True)
+    user_agent = Column(String(256), nullable=False)
+    user_id = Column(UUID(as_uuid=True), nullable=True)
+    source = Column(String(256), nullable=True)
+    telemetry_id = Column(UUID(as_uuid=True), nullable=True)
+    num_of_packages = Column(Integer, nullable=True)
+    num_of_vulnerabilities = Column(Integer, nullable=True)
