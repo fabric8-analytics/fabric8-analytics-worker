@@ -8,7 +8,7 @@ atomicwrites==1.4.0
     # via pytest
 attrs==19.3.0
     # via pytest
-certifi==2020.6.20
+certifi==2022.12.7
     # via requests
 chardet==3.0.4
     # via requests
@@ -20,20 +20,16 @@ coverage==5.4
     # via
     #   codecov
     #   pytest-cov
-flake8-polyfill==1.0.2
-    # via radon
 flake8==3.8.3
     # via flake8-polyfill
+flake8-polyfill==1.0.2
+    # via radon
 flexmock==0.10.4
     # via -r tests/requirements.in
 future==0.18.2
     # via radon
 idna==2.10
     # via requests
-importlib-metadata==1.7.0
-    # via
-    #   flake8
-    #   pluggy
 mando==0.6.4
     # via radon
 mccabe==0.6.1
@@ -48,12 +44,12 @@ pycodestyle==2.6.0
     # via flake8
 pyflakes==2.2.0
     # via flake8
-pytest-cov==2.6.0
-    # via -r tests/requirements.in
 pytest==3.10.1
     # via
     #   -r tests/requirements.in
     #   pytest-cov
+pytest-cov==2.6.0
+    # via -r tests/requirements.in
 radon==4.2.0
     # via -r tests/requirements.in
 requests==2.24.0
@@ -66,8 +62,6 @@ toml==0.9.4
     # via -r tests/requirements.in
 urllib3==1.25.10
     # via requests
-zipp==3.1.0
-    # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
