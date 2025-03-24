@@ -6,10 +6,10 @@
 #
 amqp==2.6.1
     # via kombu
-anymarkup-core==0.8.1
-    # via anymarkup
 anymarkup==0.8.1
     # via -r requirements.in
+anymarkup-core==0.8.1
+    # via anymarkup
 attrs==19.3.0
     # via jsonschema
 beautifulsoup4==4.9.1
@@ -49,9 +49,9 @@ cryptography==3.3.1
     # via f8a-utils
 docutils==0.15.2
     # via botocore
-git+https://github.com/fabric8-analytics/fabric8-analytics-utils.git@f4fef58#egg=f8a_utils
+f8a_utils @ git+https://github.com/fabric8-analytics/fabric8-analytics-utils.git@f4fef58
     # via -r requirements.in
-git+https://github.com/fabric8-analytics/fabric8-analytics-version-comparator.git@8a57ac7#egg=f8a_version_comparator
+f8a_version_comparator @ git+https://github.com/fabric8-analytics/fabric8-analytics-version-comparator.git@8a57ac7
     # via f8a-utils
 git2json==0.2.3
     # via -r requirements.in
@@ -63,10 +63,6 @@ graphviz==0.14.1
     # via selinon
 idna==2.10
     # via requests
-importlib-metadata==1.7.0
-    # via
-    #   jsonschema
-    #   kombu
 jmespath==0.10.0
     # via
     #   boto3
@@ -83,7 +79,7 @@ kombu==4.6.11
     # via celery
 logutils==0.3.5
     # via rainbow-logging-handler
-lxml==4.5.2
+lxml==4.9.1
     # via
     #   -r requirements.in
     #   f8a-utils
@@ -104,15 +100,15 @@ rainbow-logging-handler==2.2.2
     # via selinon
 raven==6.10.0
     # via -r requirements.in
-requests-futures==1.0.0
-    # via
-    #   -r requirements.in
-    #   f8a-utils
 requests==2.24.0
     # via
     #   -r requirements.in
     #   f8a-utils
     #   requests-futures
+requests-futures==1.0.0
+    # via
+    #   -r requirements.in
+    #   f8a-utils
 s3transfer==0.3.3
     # via boto3
 selinon==1.0.0
@@ -156,8 +152,6 @@ werkzeug==1.0.1
     # via -r requirements.in
 xmltodict==0.12.0
     # via anymarkup
-zipp==3.1.0
-    # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
